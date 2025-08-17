@@ -29,6 +29,8 @@ dependencies {
 
     testFixturesImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
     testFixturesImplementation("io.kotest:kotest-property:$kotestVersion")
+
+//    testImplementation(testFixtures(project(":kosmos")))
 }
 
 tasks.withType<Test>().configureEach {
