@@ -24,10 +24,11 @@ fun <A> StringSpec.registerMonoidLaws(
 
 class MonoidLaws<A>(
     private val M: Monoid<A>,
-    private val arb: Arb<A>,
-    private val EQ: Eq<A>
+    private val arb: Arb<A>,        // for identity laws
+    private val EQ: Eq<A>,
+    private val assoc: AssocGen<A> = assocFrom(arb)  // for associativity laws
 ) {
-    suspend fun associativity() = checkAll(arb, arb, arb) { a, b, c ->
+    suspend fun associativity() = checkAll(assoc.triples()) { (a, b, c) ->
         check(EQ.eqv(M.combine(a, M.combine(b, c)), M.combine(M.combine(a, b), c))) {
             "Associativity failed for $a, $b, $c"
         }

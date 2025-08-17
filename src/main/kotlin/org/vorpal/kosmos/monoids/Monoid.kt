@@ -1,5 +1,7 @@
 package org.vorpal.monoids
 
+import java.math.BigDecimal
+import java.math.BigInteger
 import kotlin.math.abs
 
 interface Monoid<M> {
@@ -26,6 +28,8 @@ object Monoids {
         override fun combine(x: Int, y: Int) = x * y
     }
 
+    val IntEq = Eq<Int> { a, b -> a == b }
+
     val DoubleSumMonoid = object : Monoid<Double> {
         override val empty = 0.0
         override fun combine(x: Double, y: Double) = x + y
@@ -43,8 +47,6 @@ object Monoids {
             diff <= 1e-9 || diff <= 1e-9 * maxOf(abs(x), abs(y))
         }
     }
-
-    val IntEq = Eq<Int> { a, b -> a == b }
 
     val StringConcatMonoid = object : Monoid<String> {
         override val empty = ""
@@ -76,4 +78,28 @@ object Monoids {
             else -> inner.eqv(x, y)
         }
     }
+
+    val BigIntegerSumMonoid = object : Monoid<BigInteger> {
+        override val empty = BigInteger.ZERO
+        override fun combine(x: BigInteger, y: BigInteger): BigInteger = x + y
+    }
+
+    val BigIntegerProductMonoid = object : Monoid<BigInteger> {
+        override val empty = BigInteger.ONE
+        override fun combine(x: BigInteger, y: BigInteger): BigInteger = x * y
+    }
+
+    val BigIntegerEq = Eq<BigInteger> { a, b -> a == b}
+
+    val BigDecimalSumMonoid = object : Monoid<BigDecimal> {
+        override val empty = BigDecimal.ZERO
+        override fun combine(x: BigDecimal, y: BigDecimal): BigDecimal = x + y
+    }
+
+    val BigDecimalProductMonoid = object : Monoid<BigDecimal> {
+        override val empty = BigDecimal.ONE
+        override fun combine(x: BigDecimal, y: BigDecimal): BigDecimal = x * y
+    }
+
+    val BigDecimalEq = Eq<BigDecimal> { a, b -> a == b }
 }
