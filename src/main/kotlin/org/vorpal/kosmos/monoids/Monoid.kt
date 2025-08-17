@@ -30,24 +30,6 @@ object Monoids {
 
     val IntEq = Eq<Int> { a, b -> a == b }
 
-    val DoubleSumMonoid = object : Monoid<Double> {
-        override val empty = 0.0
-        override fun combine(x: Double, y: Double) = x + y
-    }
-
-    val DoubleProductMonoid = object : Monoid<Double> {
-        override val empty = 1.0
-        override fun combine(x: Double, y: Double) = x * y
-    }
-
-    val approxDoubleEq = Eq<Double> { x, y ->
-        if (x.isNaN() && y.isNaN()) true
-        else {
-            val diff = abs(x - y)
-            diff <= 1e-9 || diff <= 1e-9 * maxOf(abs(x), abs(y))
-        }
-    }
-
     val StringConcatMonoid = object : Monoid<String> {
         override val empty = ""
         override fun combine(x: String, y: String) = x + y
@@ -68,8 +50,6 @@ object Monoids {
 
     // Convenience function to extend to an Eq<A> to handle lists.
     fun <A> Eq<A>.toListEq(): Eq<List<A>> = listEq(this)
-
-    val listOfDoublesEq = listEq(approxDoubleEq)
 
     fun <A> nullableEq(inner: Eq<A>): Eq<A?> = Eq { x, y ->
         when {
@@ -102,4 +82,11 @@ object Monoids {
     }
 
     val BigDecimalEq = Eq<BigDecimal> { a, b -> a == b }
+
+    fun <A> setMonoid(): Monoid<Set<A>> = object : Monoid<Set<A>> {
+        override val empty: Set<A> = emptySet()
+        override fun combine(x: Set<A>, y: Set<A>): Set<A> = x + y
+    }
+
+    val SetEq = Eq<Set<*>> { a, b -> a == b }
 }
