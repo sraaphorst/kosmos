@@ -37,13 +37,11 @@ open class CommutativeQuasigroupLaws<A, S>(
 ) : QuasigroupLaws<A, S>(S, arb, EQ)
         where S : CommutativeQuasigroup<A, *> {
 
-    open suspend fun commutativity() = checkAll(arb, arb) { a, b ->
-        EQ.assertEquals(S.combine(a, b), S.combine(b, a))
-    }
+    private val commutativity = CommutativityLaws(S, arb, EQ)
 
     override suspend fun all() {
         super.all()
-        commutativity()
+        commutativity.holds()
     }
 }
 
@@ -52,16 +50,13 @@ open class IdempotentQuasigroupLaws<A, S>(
 ) : QuasigroupLaws<A, S>(S, arb, EQ)
         where S : IdempotentQuasigroup<A, *> {
 
-    open suspend fun idempotency() = checkAll(arb) { a ->
-        EQ.assertEquals(S.combine(a, a), a)
-    }
+    private val idempotency = IdempotencyLaws(S, arb, EQ)
 
     override suspend fun all() {
         super.all()
-        idempotency()
+        idempotency.holds()
     }
 }
-
 
 class CommutativeIdempotentQuasigroupLaws<A, S>(
     S: S, arb: Arb<A>, EQ: Eq<A>
@@ -75,16 +70,12 @@ class CommutativeIdempotentQuasigroupLaws<A, S>(
         EQ: Eq<A>
     ) : this(S, Arb.element(points.toList()), EQ)
 
-    suspend fun commutativity() = checkAll(arb, arb) { a, b ->
-        EQ.assertEquals(S.combine(a, b), S.combine(b, a))
-    }
-    suspend fun idempotency() = checkAll(arb) { a ->
-        EQ.assertEquals(S.combine(a, a), a)
-}
+    private val commutativity = CommutativityLaws(S, arb, EQ)
+    private val idempotency = IdempotencyLaws(S, arb, EQ)
 
     override suspend fun all() {
         super.all()
-        commutativity()
-        idempotency()
+        commutativity.holds()
+        idempotency.holds()
     }
 }

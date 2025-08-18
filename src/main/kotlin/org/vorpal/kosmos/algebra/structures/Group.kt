@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.algebra.ops.Add
 import org.vorpal.kosmos.algebra.ops.OpTag
 import org.vorpal.kosmos.algebra.props.Invertible
 

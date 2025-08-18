@@ -43,7 +43,7 @@ fun <A, S> StringSpec.registerAbelianGroup(
 
 fun <A> StringSpec.registerRing(
     name: String,
-    laws: RingLaws<A, *>
+    laws: RingLaws<A>
 ) = apply {
     "$name :: all (ring)" { laws.all() }
 }

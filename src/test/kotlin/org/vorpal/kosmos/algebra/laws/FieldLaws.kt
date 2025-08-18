@@ -1,40 +1,28 @@
+// src/test/kotlin/.../FieldLaws.kt
 package org.vorpal.kosmos.algebra.laws
 
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.filter
-import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.ops.Mul
+import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.assertEquals
+import org.vorpal.kosmos.testing.excluding
 
 class FieldLaws<A>(
-    private val F: Field<A>,
-    private val arb: Arb<A>,
-    private val EQ: Eq<A>
+    F: Field<A>,       // has add: AbelianGroup<A, Add>, mul: AbelianGroup<A, Mul>
+    arb: Arb<A>,    // may include 0
+    EQ: Eq<A>
 ) {
-    private val ring = RingLaws(F, arb, EQ)
+    private val ringLaws = RingLaws(F, arb, EQ)
 
-    suspend fun ringAxioms() = ring.all()
+    // Elements for the multiplicative group: F \ {0}
+    private val nonzero: Arb<A> = arb.excluding(EQ, F.add.identity)
 
-    suspend fun multiplicativeAbelianGroup() {
-        val G = F.mul
-        val nonzero = arb.filter { a -> !EQ.eqv(a, F.add.identity) }  // a ≠ 0
-
-        // commutativity
-        checkAll(arb, arb) { a, b ->
-            EQ.assertEquals(G.combine(a, b), G.combine(b, a))
-        }
-
-        // inverses exist on F\{0}
-        checkAll(nonzero) { a ->
-            val inv = G.inverse(a) // safe: generator never yields 0
-            EQ.assertEquals(G.combine(a, inv), G.identity)
-            EQ.assertEquals(G.combine(inv, a), G.identity)
-        }
-    }
+    /** Multiplicative abelian group on F \ {0}. */
+    private val mulLaws = AbelianGroupLaws<A, AbelianGroup<A, Mul>>(F.mul, nonzero, EQ)
 
     suspend fun all() {
-        ringAxioms()
-        multiplicativeAbelianGroup()
+        ringLaws.all()
+        mulLaws.all()
     }
 }
