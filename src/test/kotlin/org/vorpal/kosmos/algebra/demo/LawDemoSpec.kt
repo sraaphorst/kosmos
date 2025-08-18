@@ -2,6 +2,7 @@ package org.vorpal.kosmos.algebra.demo
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.string
@@ -10,8 +11,12 @@ import org.vorpal.kosmos.algebra.ops.Add
 import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.list
+import org.vorpal.kosmos.std.Int2
+import org.vorpal.kosmos.std.Q2
 import org.vorpal.kosmos.std.arbRational
+import org.vorpal.kosmos.std.modules.ZModule_Int2
 import org.vorpal.kosmos.std.nonzeroRational
+import org.vorpal.kosmos.std.vectorspaces.Q2OverQ
 
 /* --- Example instances (replace with your real ones) --- */
 
@@ -108,5 +113,25 @@ class LawDemoSpec : StringSpec({
             points = Quasigroups.FanoPoints,
             EQ = Eqs.int
         ),
+    )
+
+    registerModule(
+        name = "Z-module on Int2",
+        laws = ModuleLaws(
+            M    = ZModule_Int2,
+            arbS = Arb.int(),
+            arbV = Arb.bind(Arb.int(), Arb.int()) { x, y -> Int2(x, y) },
+            EQv  = { a, b -> Eqs.int.eqv(a.x, b.x) && Eqs.int.eqv(a.y, b.y) }
+        )
+    )
+
+    registerVectorSpace(
+        name = "Q2 over Q",
+        laws = VectorSpaceLaws(
+            VS   = Q2OverQ,
+            arbS = arbRational,
+            arbV = Arb.bind(arbRational, arbRational) { x, y -> Q2(x, y) },
+            eqV  = { a, b -> Eqs.rational.eqv(a.x, b.x) && Eqs.rational.eqv(a.y, b.y) }
+        )
     )
 })

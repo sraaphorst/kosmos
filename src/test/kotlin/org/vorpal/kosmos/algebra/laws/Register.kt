@@ -65,3 +65,21 @@ fun <A> StringSpec.registerCIQ(
 ) = apply {
     "$name :: all (CIQ)" { laws.all() }
 }
+
+/* -------------- Modules --------------*/
+
+fun <S, V, RM> StringSpec.registerModule(
+    name: String,
+    laws: ModuleLaws<S, V, RM>
+) where RM : Monoid<S, org.vorpal.kosmos.algebra.ops.Mul> = apply {
+    "$name :: all (module)" { laws.all() }
+}
+
+/* ------------ Vector Spaces ------------*/
+
+fun <S, V> StringSpec.registerVectorSpace(
+    name: String,
+    laws: VectorSpaceLaws<S, V>
+) = apply {
+    "$name :: all (vector space)" { laws.all() }
+}
