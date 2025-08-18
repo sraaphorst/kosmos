@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.monoids
+package org.vorpal.kosmos.algebra
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.triple
