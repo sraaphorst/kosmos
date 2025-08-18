@@ -1,8 +1,11 @@
 package org.vorpal.kosmos.algebra.laws
 
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.element
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.ops.OpTag
 import org.vorpal.kosmos.algebra.structures.*
+import org.vorpal.kosmos.categories.FiniteSet
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.assertEquals
 
@@ -24,7 +27,9 @@ open class QuasigroupLaws<A, S>(
         EQ.assertEquals(S.rdiv(S.combine(b, a), a), b)
     }
 
-    open suspend fun all() { divisionIdentities() }
+    open suspend fun all() {
+        divisionIdentities()
+    }
 }
 
 open class CommutativeQuasigroupLaws<A, S>(
@@ -57,16 +62,25 @@ open class IdempotentQuasigroupLaws<A, S>(
     }
 }
 
+
 class CommutativeIdempotentQuasigroupLaws<A, S>(
     S: S, arb: Arb<A>, EQ: Eq<A>
 ) : QuasigroupLaws<A, S>(S, arb, EQ)
-        where S : CommutativeIdempotentQuasigroup<A, *> {
+        where S : CommutativeIdempotentQuasigroup<A, out OpTag> {
 
-    private val comm = CommutativityLaws(S, arb, EQ) // you already have this
-    private val idemp = IdempotentQuasigroupLaws(S, arb, EQ)
+    // convenience ctor from FiniteSet
+    constructor(
+        S: S,
+        points: FiniteSet<A>,
+        EQ: Eq<A>
+    ) : this(S, Arb.element(points.toList()), EQ)
 
-    suspend fun commutativity() = comm.holds()
-    suspend fun idempotency() = idemp.idempotency()
+    suspend fun commutativity() = checkAll(arb, arb) { a, b ->
+        EQ.assertEquals(S.combine(a, b), S.combine(b, a))
+    }
+    suspend fun idempotency() = checkAll(arb) { a ->
+        EQ.assertEquals(S.combine(a, a), a)
+}
 
     override suspend fun all() {
         super.all()

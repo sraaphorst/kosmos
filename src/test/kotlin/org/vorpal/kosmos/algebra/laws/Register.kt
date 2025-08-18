@@ -56,3 +56,12 @@ fun <A> StringSpec.registerField(
 ) = apply {
     "$name :: all (field)" { laws.all() }
 }
+
+/* ------------ Quasigroups ------------*/
+
+fun <A> StringSpec.registerCIQ(
+    name: String,
+    laws: CommutativeIdempotentQuasigroupLaws<A, *>
+) = apply {
+    "$name :: all (CIQ)" { laws.all() }
+}

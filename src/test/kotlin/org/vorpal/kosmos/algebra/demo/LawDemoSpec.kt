@@ -100,4 +100,13 @@ class LawDemoSpec : StringSpec({
             EQ  = Eqs.rational
         )
     )
+
+    registerCIQ(
+        name = "Fano plane CIQ",
+        laws = CommutativeIdempotentQuasigroupLaws(
+            S = Quasigroups.Fano,
+            points = Quasigroups.FanoPoints,
+            EQ = Eqs.int
+        ),
+    )
 })
