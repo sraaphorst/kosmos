@@ -9,3 +9,4 @@ fun interface BinOp<A> {
 sealed interface OpTag
 object Add: OpTag
 object Mul: OpTag
+object Star: OpTag
