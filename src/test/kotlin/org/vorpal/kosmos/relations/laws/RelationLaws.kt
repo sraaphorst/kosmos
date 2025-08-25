@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.assertEquals
-import org.vorpal.kosmos.relations.*
 import org.vorpal.org.vorpal.kosmos.relations.Antisymmetric
+import org.vorpal.org.vorpal.kosmos.relations.Asymmetric
+import org.vorpal.org.vorpal.kosmos.relations.Irreflexive
 import org.vorpal.org.vorpal.kosmos.relations.Reflexive
 import org.vorpal.org.vorpal.kosmos.relations.Symmetric
+import org.vorpal.org.vorpal.kosmos.relations.TotalOnInequality
 import org.vorpal.org.vorpal.kosmos.relations.Transitive
+import org.vorpal.org.vorpal.kosmos.relations.TransitiveS
 
 class ReflexivityLaws<A>(
     private val P: Reflexive<A>,

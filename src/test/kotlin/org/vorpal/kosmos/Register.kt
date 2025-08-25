@@ -15,7 +15,12 @@ import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.relations.laws.EquivalenceLaws
 import org.vorpal.kosmos.relations.laws.PosetLaws
 import org.vorpal.kosmos.relations.laws.PreorderLaws
+import org.vorpal.kosmos.relations.laws.StrictTotalOrderLaws
 import org.vorpal.kosmos.relations.laws.TotalOrderLaws
+
+/**
+ * This file comprises registration methods to register testing classes.
+ */
 
 /* ------------ Semigroup ------------ */
 
@@ -125,5 +130,12 @@ fun <A> StringSpec.registerTotalOrder(
     name: String,
     laws: TotalOrderLaws<A>
 ) = apply {
-    "$name :: all (total set)" { laws.all() }
+    "$name :: all (total order)" { laws.all() }
+}
+
+fun <A> StringSpec.registerStrictTotalOrder(
+    name: String,
+    laws: StrictTotalOrderLaws<A>
+) {
+    "$name :: all (strict total order)" { laws.all() }
 }

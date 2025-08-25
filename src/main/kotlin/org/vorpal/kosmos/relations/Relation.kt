@@ -13,6 +13,6 @@ interface Transitive<A> { val R: Relation<A> }
 interface Preorder<A> : Reflexive<A>, Transitive<A>
 interface Equivalence<A> : Reflexive<A>, Symmetric<A>, Transitive<A>
 
-// For total order, totality is a law and not a marker
+// For total order, totality is a law and not a marker.
 interface Poset<A> : Reflexive<A>, Antisymmetric<A>, Transitive<A>
 interface TotalOrder<A> : Poset<A>

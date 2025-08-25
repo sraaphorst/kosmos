@@ -1,19 +1,17 @@
 package org.vorpal.kosmos.relations.laws
 
-import com.sun.org.apache.xalan.internal.xsltc.compiler.sym
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.relations.*
 import org.vorpal.org.vorpal.kosmos.relations.Equivalence
 import org.vorpal.org.vorpal.kosmos.relations.Poset
 import org.vorpal.org.vorpal.kosmos.relations.Preorder
-import org.vorpal.org.vorpal.kosmos.relations.Symmetric
+import org.vorpal.org.vorpal.kosmos.relations.StrictTotalOrder
 import org.vorpal.org.vorpal.kosmos.relations.TotalOrder
 
 class PreorderLaws<A>(
-    private val S: Preorder<A>,
-    private val arb: Arb<A>
+    S: Preorder<A>,
+    arb: Arb<A>
 ) {
     private val ref = ReflexivityLaws(S, arb)
     private val tra = TransitivityLaws(S, arb)
@@ -24,8 +22,8 @@ class PreorderLaws<A>(
 }
 
 class EquivalenceLaws<A> (
-    private val S: Equivalence<A>,
-    private val arb: Arb<A>
+    S: Equivalence<A>,
+    arb: Arb<A>
 ) {
     private val ref = ReflexivityLaws(S, arb)
     private val sym = SymmetryLaws(S, arb)
@@ -38,9 +36,9 @@ class EquivalenceLaws<A> (
 }
 
 class PosetLaws<A> (
-    private val S: Poset<A>,
-    private val arb: Arb<A>,
-    private val EQ: Eq<A>
+    S: Poset<A>,
+    arb: Arb<A>,
+    EQ: Eq<A>
 ) {
     private val ref = ReflexivityLaws(S, arb)
     private val anti = AntisymmetryLaws(S, arb, EQ)
@@ -55,7 +53,7 @@ class PosetLaws<A> (
 class TotalOrderLaws<A>(
     private val S: TotalOrder<A>,
     private val arb: Arb<A>,
-    private val EQ: Eq<A>
+    EQ: Eq<A>
 ) {
     private val poset = PosetLaws(S, arb, EQ)
     suspend fun totality() = checkAll(arb, arb) { a, b ->
@@ -64,5 +62,23 @@ class TotalOrderLaws<A>(
     suspend fun all() {
         poset.all()
         totality()
+    }
+}
+
+class StrictTotalOrderLaws<A>(
+    S: StrictTotalOrder<A>,
+    arb: Arb<A>,
+    EQ: Eq<A>
+) {
+    private val irr = IrreflexivityLaws(S, arb)
+    private val asym = AsymmetryLaws(S, arb)
+    private val trans = TransitivityStrictLaws(S, arb)
+    private val total = TotalOnInequalityLaws(S, arb, EQ)
+
+    suspend fun all() {
+        irr.holds()
+        asym.holds()
+        trans.holds()
+        total.holds()
     }
 }
