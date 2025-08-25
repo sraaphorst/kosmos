@@ -1,7 +1,21 @@
-package org.vorpal.kosmos.algebra.laws
+package org.vorpal.kosmos
 
 import io.kotest.core.spec.style.StringSpec
+import org.vorpal.kosmos.algebra.laws.AbelianGroupLaws
+import org.vorpal.kosmos.algebra.laws.CommutativeIdempotentQuasigroupLaws
+import org.vorpal.kosmos.algebra.laws.FieldLaws
+import org.vorpal.kosmos.algebra.laws.GroupLaws
+import org.vorpal.kosmos.algebra.laws.ModuleLaws
+import org.vorpal.kosmos.algebra.laws.MonoidLaws
+import org.vorpal.kosmos.algebra.laws.RingLaws
+import org.vorpal.kosmos.algebra.laws.SemigroupLaws
+import org.vorpal.kosmos.algebra.laws.VectorSpaceLaws
+import org.vorpal.kosmos.algebra.ops.Mul
 import org.vorpal.kosmos.algebra.structures.*
+import org.vorpal.kosmos.relations.laws.EquivalenceLaws
+import org.vorpal.kosmos.relations.laws.PosetLaws
+import org.vorpal.kosmos.relations.laws.PreorderLaws
+import org.vorpal.kosmos.relations.laws.TotalOrderLaws
 
 /* ------------ Semigroup ------------ */
 
@@ -57,7 +71,7 @@ fun <A> StringSpec.registerField(
     "$name :: all (field)" { laws.all() }
 }
 
-/* ------------ Quasigroups ------------*/
+/* ------------ Quasigroups ------------ */
 
 fun <A> StringSpec.registerCIQ(
     name: String,
@@ -66,20 +80,50 @@ fun <A> StringSpec.registerCIQ(
     "$name :: all (CIQ)" { laws.all() }
 }
 
-/* -------------- Modules --------------*/
+/* -------------- Modules -------------- */
 
 fun <S, V, RM> StringSpec.registerModule(
     name: String,
     laws: ModuleLaws<S, V, RM>
-) where RM : Monoid<S, org.vorpal.kosmos.algebra.ops.Mul> = apply {
+) where RM : Monoid<S, Mul> = apply {
     "$name :: all (module)" { laws.all() }
 }
 
-/* ------------ Vector Spaces ------------*/
+/* ------------ Vector Spaces ------------ */
 
 fun <S, V> StringSpec.registerVectorSpace(
     name: String,
     laws: VectorSpaceLaws<S, V>
 ) = apply {
     "$name :: all (vector space)" { laws.all() }
+}
+
+/* ------------- Relations -------------*/
+
+fun <A> StringSpec.registerPreorder(
+    name: String,
+    laws: PreorderLaws<A>
+) = apply {
+    "$name :: all (preorder)" { laws.all() }
+}
+
+fun <A> StringSpec.registerEquivalence(
+    name: String,
+    laws: EquivalenceLaws<A>
+) = apply {
+    "$name :: all (equivalence)" { laws.all() }
+}
+
+fun <A> StringSpec.registerPoset(
+    name: String,
+    laws: PosetLaws<A>
+) = apply {
+    "$name :: all (poset)" { laws.all() }
+}
+
+fun <A> StringSpec.registerTotalOrder(
+    name: String,
+    laws: TotalOrderLaws<A>
+) = apply {
+    "$name :: all (total set)" { laws.all() }
 }

@@ -5,12 +5,23 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.set
 import io.kotest.property.arbitrary.string
 import org.vorpal.kosmos.algebra.laws.*
 import org.vorpal.kosmos.algebra.ops.Add
 import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.list
+import org.vorpal.kosmos.core.set
+import org.vorpal.kosmos.registerAbelianGroup
+import org.vorpal.kosmos.registerCIQ
+import org.vorpal.kosmos.registerField
+import org.vorpal.kosmos.registerGroup
+import org.vorpal.kosmos.registerModule
+import org.vorpal.kosmos.registerMonoid
+import org.vorpal.kosmos.registerRing
+import org.vorpal.kosmos.registerSemigroup
+import org.vorpal.kosmos.registerVectorSpace
 import org.vorpal.kosmos.std.Int2
 import org.vorpal.kosmos.std.Q2
 import org.vorpal.kosmos.std.arbRational
@@ -31,9 +42,15 @@ object IntListConcatMonoid : Monoid<List<Int>, Add> {
     override fun combine(a: List<Int>, b: List<Int>) = a + b
 }
 
+// Monoid: set union
+object IntSetUnionMonoid: Monoid<Set<Int>, Add> {
+    override val identity: Set<Int> = emptySet()
+    override fun combine(a: Set<Int>, b: Set<Int>) = a + b
+}
+
 /* --------------- Spec registering laws --------------- */
 
-class LawDemoSpec : StringSpec({
+class AlgebraSpec : StringSpec({
     registerSemigroup(
         name = "String (+) as semigroup",
         laws = SemigroupLaws(
@@ -49,6 +66,15 @@ class LawDemoSpec : StringSpec({
             S = IntListConcatMonoid,
             arb = Arb.list(Arb.int(), 0..10),
             EQ  = Eqs.int.list()
+        )
+    )
+
+    registerMonoid(
+        name = "Set<Int> union monoid",
+        laws = MonoidLaws(
+            S = IntSetUnionMonoid,
+            arb = Arb.set(Arb.int(), 0..10),
+            EQ  = Eqs.int.set()
         )
     )
 
