@@ -9,10 +9,10 @@ pluginManagement {
     }
 }
 
-rootProject.name = "kosmos-root"
+rootProject.name = "kosmos"
 
-include(":kosmos")
-project(":kosmos").projectDir = file("kosmos")
+include(":kosmos-core")
+project(":kosmos-core").projectDir = file("kosmos-core")
 
 include(":kosmos-lawkit")
 project(":kosmos-lawkit").projectDir = file("kosmos-lawkit")

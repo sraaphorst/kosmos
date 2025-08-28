@@ -5,7 +5,7 @@ plugins {
 val kotestVersion = rootProject.ext["kotestVersion"]
 
 dependencies {
-    implementation(project(":kosmos"))
+    implementation(project(":kosmos-core"))
 
     // Kotest property is enough if you’re invoking property checks inside your API.
     // If you also run/spec tests in this module, add runner + assertions to testImplementation.

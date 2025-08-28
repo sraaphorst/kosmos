@@ -16,3 +16,4 @@ subprojects {
 
 // Centralized versions:
 ext["kotestVersion"] = "5.9.0"
+ext["arrowVersion"] = "2.1.2"
