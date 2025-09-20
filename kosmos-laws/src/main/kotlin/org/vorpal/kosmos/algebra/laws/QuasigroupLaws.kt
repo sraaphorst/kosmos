@@ -8,6 +8,8 @@ import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.categories.FiniteSet
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.assertEquals
+import org.vorpal.kosmos.laws.property.CommutativityLaws
+import org.vorpal.kosmos.laws.property.IdempotencyLaws
 
 open class QuasigroupLaws<A, S>(
     protected val S: S,

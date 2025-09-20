@@ -3,6 +3,7 @@ package org.vorpal.kosmos.algebra.laws
 import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.laws.property.DistributivityLaws
 
 class RingLaws<A>(
     R: Ring<A, *>,

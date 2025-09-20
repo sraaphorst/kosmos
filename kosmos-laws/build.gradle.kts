@@ -1,7 +1,8 @@
-plugins {
-    kotlin("jvm")
-}
+plugins { kotlin("jvm") }
+group = "org.vorpal.kosmos.laws"
+version = "1.0-SNAPSHOT"
 
+val arrowVersion = rootProject.ext["arrowVersion"]
 val kotestVersion = rootProject.ext["kotestVersion"]
 
 dependencies {
@@ -14,10 +15,7 @@ dependencies {
     // If you have tests *in this module*:
     testImplementation("io.kotest:kotest-runner-junit5:$kotestVersion")
     testImplementation("io.kotest:kotest-assertions-core:$kotestVersion")
-    // Optional helper:
-    // testRuntimeOnly("org.junit.platform:junit-platform-launcher")
-}
 
-kotlin {
-    jvmToolchain(21)
+    // We use arrow for validation.
+    implementation("io.arrow-kt:arrow-core:${arrowVersion}")
 }

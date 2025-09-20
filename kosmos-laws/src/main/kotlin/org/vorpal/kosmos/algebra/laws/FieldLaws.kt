@@ -1,10 +1,11 @@
 package org.vorpal.kosmos.algebra.laws
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.ops.Mul
+
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.ops.Mul
 import org.vorpal.kosmos.testing.nonIdentity
 
 class FieldLaws<A>(
@@ -15,7 +16,7 @@ class FieldLaws<A>(
     private val ringLaws = RingLaws(F, arb, EQ)
 
     /** Multiplicative abelian group on F \ {0}. */
-    private val nonzero = nonIdentity(arb, F.add.identity, EQ)
+    private val nonzero = arb.nonIdentity(EQ, F.add.identity)
     private val mulLaws = AbelianGroupLaws<A, AbelianGroup<A, Mul>>(F.mul, nonzero, EQ)
 
     suspend fun all() {

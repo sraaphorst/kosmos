@@ -3,6 +3,7 @@ package org.vorpal.kosmos.algebra.laws
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.Eq
 import io.kotest.property.Arb
+import org.vorpal.kosmos.laws.property.IdentityLaws
 
 open class MonoidLaws<A, S>(
     S: S,
