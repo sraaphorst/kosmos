@@ -37,6 +37,10 @@ data class Permutation<T>(
         return aux()
     }
 
+    /**
+     * The order of the permutation, i.e. the smallest positive integer i  such that for this permutation p,
+     * p^i is the identity permutation.
+     */
     fun order(): Int =
         cycles().fold(1) { acc, cycle -> lcm(acc, cycle.size) }
 
@@ -46,6 +50,16 @@ data class Permutation<T>(
     operator fun times(other: Permutation<T>): Permutation<T> {
         require(domain == other.domain) { "Permutation domains are not composable."}
         return Permutation(domain, domain.associateWith { this[other[it]] })
+    }
+
+    /**
+     * Calculate this permutation to the specified power.
+     * Note that for any power > 0, the smallest value of power such that this permutation will be the identity
+     * on the specified set is order.
+     */
+    fun exp(power: Int): Permutation<T> {
+        require(power >= 0) { "Power must be non-negative, but was $power" }
+        return (1..power).fold(domain.identityPermutation()) { acc, _ -> acc * this }
     }
 
     private fun generateCycle(start: T): List<T> {
@@ -63,6 +77,9 @@ private fun <T> List<T>.shiftPermutation(fs: FiniteSet<T>, shift: Int): Permutat
     }.toMap()
     return Permutation(fs, mapping)
 }
+
+fun <T> FiniteSet<T>.identityPermutation(): Permutation<T> =
+    Permutation(this, this.associateWith { it })
 
 /**
  * Make a cyclic permutation out of the elements in the finite set in the order they appear.
