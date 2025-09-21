@@ -4,9 +4,9 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
 // Reused sets
-private val set03 = FiniteSet.of(0..3)
-private val set04 = FiniteSet.of(0..4)
-private val set09 = FiniteSet.of(0..9)
+private val set03 = FiniteSet.ordered(0..3)
+private val set04 = FiniteSet.ordered(0..4)
+private val set09 = FiniteSet.ordered(0..9)
 
 class MonoEpiSpec : StringSpec({
     "identity on 0..4 is mono (injective)" {

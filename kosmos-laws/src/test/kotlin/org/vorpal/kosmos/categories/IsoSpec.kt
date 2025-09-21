@@ -6,15 +6,15 @@ import io.kotest.matchers.shouldBe
 class IsoSpec : StringSpec({
 
     "identity iso works" {
-        val set = FiniteSet.of(0..4)
+        val set = FiniteSet.ordered(0..4)
         val iso = Isos.identity<Int>()
         set.toList().all { a -> (iso.g then iso.f).apply(a) == a } shouldBe true
         set.toList().all { a -> (iso.f then iso.g).apply(a) == a } shouldBe true
     }
 
     "bijective map a |-> a+10 yields an iso between 0..4 and 10..14" {
-        val setA = FiniteSet.of(0..4)
-        val setB = FiniteSet.of(10 .. 14)
+        val setA = FiniteSet.ordered(0..4)
+        val setB = FiniteSet.ordered(10 .. 14)
         val f = Morphism<Int, Int> { it + 10 }
 
         // Set-theoretic sanity
@@ -40,8 +40,8 @@ class IsoSpec : StringSpec({
     }
 
     "bijective map a |-> a+10 yields an iso between 0..5 and 10..20 step 2" {
-        val setA = FiniteSet.of(0..5)
-        val setB = FiniteSet.of(10 .. 20 step 2)
+        val setA = FiniteSet.ordered(0..5)
+        val setB = FiniteSet.ordered(10 .. 20 step 2)
         val f = Morphism<Int, Int> { 2 * it + 10 }
 
         // Set-theoretic sanity
@@ -67,8 +67,8 @@ class IsoSpec : StringSpec({
     }
 
     "non-bijective map does not yield an iso" {
-        val A = FiniteSet.of(0..4)
-        val B = FiniteSet.of(0..2)
+        val A = FiniteSet.ordered(0..4)
+        val B = FiniteSet.ordered(0..2)
         val f = Morphism<Int, Int> { it % 3 } // surjective but not injective on A
         Isos.isoFromBijection(f, A, B, Int::equals, Int::equals) shouldBe null
     }

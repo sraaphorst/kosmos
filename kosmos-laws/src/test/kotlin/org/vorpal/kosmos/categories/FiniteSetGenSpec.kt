@@ -18,7 +18,7 @@ class FiniteSetGenSpec : StringSpec({
 
     "surjectivity to residues holds iff |A| >= k" {
         checkAll(Arb.int().finiteSet(0..12), Arb.int(1..6)) { A, k ->
-            val B = FiniteSet.of(0 until k)              // canonical residues 0..k-1
+            val B = FiniteSet.ordered(0 until k)              // canonical residues 0..k-1
             val table = A.toList().mapIndexed { i, a -> a to (i % k) }.toMap()
             val f = Morphism<Int, Int> { a -> table.getValue(a) }  // total on A
 

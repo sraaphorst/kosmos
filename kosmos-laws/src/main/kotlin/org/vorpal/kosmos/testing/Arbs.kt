@@ -18,11 +18,11 @@ fun <A> Arb<A>.suchThat(predicate: (A) -> Boolean): Arb<A> =
 
 /** Generate a FiniteSet of a size as given in the size parameter. */
 fun <A> Arb<A>.finiteSet(size: IntRange = 0..8): Arb<FiniteSet<A>> =
-    Arb.set(this, size).map { FiniteSet.ofSet(it) }
+    Arb.set(this, size).map { FiniteSet.ordered(it) }
 
 /** Generate a sorted FiniteSet of a size as given in the size parameter. */
 fun <A : Comparable<A>> Arb<A>.sortedFiniteSet(size: IntRange = 0..8): Arb<FiniteSet<A>> =
-    Arb.set(this, size).map { s -> FiniteSet.ofSet(s, Comparator.naturalOrder()) }
+    Arb.set(this, size).map { s -> FiniteSet.sortedWith(s, Comparator.naturalOrder()) }
 
 /** For a FiniteSet, create a generator that returns an element from the FiniteSet. */
 fun <A> FiniteSet<A>.arb(): Arb<A> = Arb.element(this.toList())
