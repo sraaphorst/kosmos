@@ -12,5 +12,5 @@ val arbRational: Arb<Rational> =
         Arb.bigInt(64).filter { it != BigInteger.ZERO }
     ) { n, d -> Rational.of(n, d) }
 
-val nonzeroRational: Arb<Rational> =
+val arbNonzeroRational: Arb<Rational> =
     arbRational.filter { it.n != BigInteger.ZERO }
