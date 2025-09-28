@@ -1,6 +1,10 @@
 package org.vorpal.kosmos.algebra.structures
 
 /** A vector space is a module where the scalars form a field. */
-interface VectorSpace<S, V> : RModule<S, V, Field<S>> {
-    override val R: Field<S>
+interface VectorSpace<F, V> : RModule<F, V> {
+    override val ring: Field<F>
+
+    // For convenience, we allow the ring to be referred to as a field or a ring.
+    val field: Field<F>
+        get() = ring
 }
