@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.combinatorial
 
-import org.vorpal.kosmos.categories.FiniteSet
+import org.vorpal.kosmos.combinatorial.FiniteSet
 import org.vorpal.kosmos.core.gcd
 import org.vorpal.kosmos.core.lcm
 
@@ -17,7 +17,7 @@ data class Permutation<T>(
         mapping[element] ?: error("Element $element not in domain.")
 
     fun inverse(): Permutation<T> =
-        Permutation(domain, mapping.entries.associate { (k, v) -> v to k })
+        Permutation(domain, mapping.entries.associate { (k, v) -> v to k } )
 
     fun cycles(): List<List<T>> {
         tailrec fun aux(

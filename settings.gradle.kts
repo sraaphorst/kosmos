@@ -1,2 +1,2 @@
 rootProject.name = "kosmos"
-include(":kosmos-core", ":kosmos-laws", ":kosmos-lawkit")
+include(":kosmos-core", ":kosmos-laws", ":kosmos-lawkit", ":kosmos-algorithms")
