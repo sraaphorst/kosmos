@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.combinatorial
 
 import org.vorpal.kosmos.categories.FiniteSet
-import org.vorpal.kosmos.modular.gcd
-import org.vorpal.kosmos.modular.lcm
+import org.vorpal.kosmos.core.gcd
+import org.vorpal.kosmos.core.lcm
 
 data class Permutation<T>(
     val domain: FiniteSet<T>,
