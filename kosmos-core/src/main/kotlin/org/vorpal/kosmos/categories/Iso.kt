@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.categories
 
+import org.vorpal.kosmos.combinatorial.FiniteSet
+
 /** An isomorphism A ≅ B: f : A -> B with inverse g : B -> A. */
 data class Iso<A, B>(val f: Morphism<A, B>, val g: Morphism<B, A>) {
     /** Compose isos: (A ≅ B) ∘ (B ≅ C) = (A ≅ C). */

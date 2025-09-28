@@ -20,10 +20,13 @@ that Kosmos implements are:
     * A `Monoid<A>` typically representing a concept analogous to multiplication.
     * An `AbelianGroup<A>` typically representing a concept analogous to addition.
     * The monoid acts distributively over the abelian group.
+  * It also contains basic algorithms that are required by the structures in `kosmos-core`.
+
 
 * [`kosmos-lawkit`](02-kosmos-lawkit.md): This subproject serves as the Registry and the Certification process that
 Kosmos uses in order to determine if a type is `Lawful` and to cache it for future use, and indicate failures if a type
 does not meet the requirements of a definition.
+
 
 * [`kosmos-laws`](03-kosmos-laws.md): This subproject comprises:
   * The individual laws that Kosmos types can meet, e.g. a `BinOp<A>` (binary operation over a type `A`) can be
@@ -31,3 +34,7 @@ does not meet the requirements of a definition.
   * Collections of laws assembled to provide law suites, which form the contracts an object must meet to be declared as
   a `Lawful` instance of that object.
   * Note that `kosmos-laws` depends on the `kotest` library in its runtime, hence the isolation of this subproject.
+
+
+* [`kosmos-algorithms`](04-kosmos-algorithms.md): This subproject contains more advanced algorithms that the structures
+in `kosmos-core` do not depend directly on.

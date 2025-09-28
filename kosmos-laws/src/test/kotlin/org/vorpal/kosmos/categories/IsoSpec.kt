@@ -2,6 +2,7 @@ package org.vorpal.kosmos.categories
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import org.vorpal.kosmos.combinatorial.FiniteSet
 
 class IsoSpec : StringSpec({
 
