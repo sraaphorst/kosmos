@@ -3,7 +3,6 @@ package org.vorpal.kosmos.algebra.laws
 import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.ops.Mul
 
 class VectorSpaceLaws<S, V>(
