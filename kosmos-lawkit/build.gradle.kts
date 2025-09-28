@@ -5,6 +5,8 @@ version = "1.0-SNAPSHOT"
 val arrowVersion = rootProject.ext["arrowVersion"]
 val kotestVersion = rootProject.ext["kotestVersion"]
 
+// TODO: This needs seriously cleaning up. I don't think we need kotest as an implementation here,
+// TODO: and the testImplementations should be included by the project-level build.gradle.kts.
 dependencies {
     implementation(project(":kosmos-core"))
     implementation(project(":kosmos-laws"))

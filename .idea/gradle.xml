@@ -9,6 +9,7 @@
         <option name="modules">
           <set>
             <option value="$PROJECT_DIR$" />
+            <option value="$PROJECT_DIR$/kosmos-algorithms" />
             <option value="$PROJECT_DIR$/kosmos-core" />
             <option value="$PROJECT_DIR$/kosmos-lawkit" />
             <option value="$PROJECT_DIR$/kosmos-laws" />

@@ -8,8 +8,8 @@ package org.vorpal.kosmos.algebra.structures
  */
 interface Group<A> : Monoid<A>, Loop<A> {
     val inv: (A) -> A
-    override fun ldiv(a: A, b: A): A = inv(a).let { op.combine(it, b) }
-    override fun rdiv(b: A, a: A): A = inv(a).let { op.combine(b, it) }
+    override fun leftDiv(a: A, b: A): A = inv(a).let { op.combine(it, b) }
+    override fun rightDiv(b: A, a: A): A = inv(a).let { op.combine(b, it) }
 }
 
 /**
