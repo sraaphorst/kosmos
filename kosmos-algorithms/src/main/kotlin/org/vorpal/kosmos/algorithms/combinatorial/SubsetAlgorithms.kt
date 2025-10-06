@@ -2,6 +2,9 @@ package org.vorpal.kosmos.algorithms.combinatorial
 
 import org.vorpal.kosmos.combinatorial.FiniteSet
 
+/**
+ * Given an (ordered) subset, generate all subsets of the set as a sequence.
+ */
 fun <A> FiniteSet.Ordered<A>.generateAllSubsets(): Sequence<FiniteSet.Ordered<A>> = sequence {
     val n = size
     (0 until (1 shl n)).asSequence().forEach { mask ->
@@ -11,6 +14,14 @@ fun <A> FiniteSet.Ordered<A>.generateAllSubsets(): Sequence<FiniteSet.Ordered<A>
         yield(FiniteSet.ordered(subset))
     }
 }
+
+/**
+ * Given an (unordered) subset, we impose an order on it so that we can properly generate all subsets of it,
+ * and then generate all subsets (as unordered sets) of the set as a sequence.
+ */
+fun <A> FiniteSet.Unordered<A>.generateAllSubsets(): Sequence<FiniteSet.Unordered<A>> =
+    toOrdered().generateAllSubsets().map(FiniteSet<A>::toUnordered)
+
 
 fun <A> FiniteSet.Ordered<A>.generateAllKSubsets(k: Int): Sequence<FiniteSet.Ordered<A>> {
     require(k in 0..size) { "$k must be between 0 and $size" }
@@ -29,3 +40,6 @@ fun <A> FiniteSet.Ordered<A>.generateAllKSubsets(k: Int): Sequence<FiniteSet.Ord
 
     return go().map { FiniteSet.ordered(it) }
 }
+
+fun <A> FiniteSet.Unordered<A>.generateAllKSubsets(k: Int): Sequence<FiniteSet.Unordered<A>> =
+    toOrdered().generateAllKSubsets(k).map(FiniteSet<A>::toUnordered)
