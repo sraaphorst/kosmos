@@ -5,15 +5,19 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.*
+import io.kotest.property.arbitrary.char
+import io.kotest.property.arbitrary.filter
+import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
 
 class FiniteSetSpec : StringSpec({
 
     // ===== Generators =====
-    val arbInt = Arb.int(-100..100)
-    val arbString = Arb.string(1..5)
-    val arbChar = Arb.char('a'..'z')
+    val arbInt = Arb.Companion.int(-100..100)
+    val arbString = Arb.Companion.string(1..5)
+    val arbChar = Arb.Companion.char('a'..'z')
 
     val arbSmallOrderedSet = generateArbOrderedFiniteSet(arbInt, 0, 10)
     val arbSmallUnorderedSet = generateArbUnorderedFiniteSet(arbInt, 0, 10)
@@ -41,8 +45,8 @@ class FiniteSetSpec : StringSpec({
     }
 
     "ordered set preserves insertion order for distinct elements" {
-        checkAll(Arb.list(arbInt, 0..10)) { elements ->
-            val set = FiniteSet.ordered(elements)
+        checkAll(Arb.Companion.list(arbInt, 0..10)) { elements ->
+            val set = FiniteSet.Companion.ordered(elements)
             val expectedOrder = elements.distinct()
             set.order shouldBe expectedOrder
         }
@@ -224,7 +228,7 @@ class FiniteSetSpec : StringSpec({
 
     "flatMap flattens correctly" {
         checkAll(arbSmallOrderedSet) { set ->
-            val result = set.flatMap { x -> FiniteSet.ordered(x, x + 1, x + 2) }
+            val result = set.flatMap { x -> FiniteSet.Companion.ordered(x, x + 1, x + 2) }
 
             // Every original element and its successors should be in result
             set.all { it in result } shouldBe true
@@ -333,7 +337,7 @@ class FiniteSetSpec : StringSpec({
     // ===== Ordered-Specific Operations =====
 
     "ordered set find returns first match" {
-        val set = FiniteSet.ordered(1, 2, 3, 4, 5, 2, 6) // Will deduplicate to [1,2,3,4,5,6]
+        val set = FiniteSet.Companion.ordered(1, 2, 3, 4, 5, 2, 6) // Will deduplicate to [1,2,3,4,5,6]
         set.find { it > 3 } shouldBe 4 // First element > 3 in order
         set.find { it > 10 } shouldBe null
     }
@@ -350,7 +354,7 @@ class FiniteSetSpec : StringSpec({
     }
 
     "take and drop are complements" {
-        checkAll(arbSmallOrderedSet, Arb.int(0..15)) { set, n ->
+        checkAll(arbSmallOrderedSet, Arb.Companion.int(0..15)) { set, n ->
             val taken = set.take(n)
             val dropped = set.drop(n)
 
@@ -373,7 +377,7 @@ class FiniteSetSpec : StringSpec({
             taken.all(predicate) shouldBe true
 
             // Together they should reconstruct the original
-            FiniteSet.ordered(taken.order + dropped.order) shouldBe set
+            FiniteSet.Companion.ordered(taken.order + dropped.order) shouldBe set
         }
     }
 
@@ -411,23 +415,23 @@ class FiniteSetSpec : StringSpec({
     }
 
     "windowed creates sliding windows" {
-        val set = FiniteSet.ordered(1, 2, 3, 4, 5)
+        val set = FiniteSet.Companion.ordered(1, 2, 3, 4, 5)
         val windowed = set.windowed(3)
 
         windowed.size shouldBe 3
-        windowed[0] shouldBe FiniteSet.ordered(1, 2, 3)
-        windowed[1] shouldBe FiniteSet.ordered(2, 3, 4)
-        windowed[2] shouldBe FiniteSet.ordered(3, 4, 5)
+        windowed[0] shouldBe FiniteSet.Companion.ordered(1, 2, 3)
+        windowed[1] shouldBe FiniteSet.Companion.ordered(2, 3, 4)
+        windowed[2] shouldBe FiniteSet.Companion.ordered(3, 4, 5)
     }
 
     "chunked splits into fixed-size groups" {
-        val set = FiniteSet.ordered(1, 2, 3, 4, 5, 6, 7)
+        val set = FiniteSet.Companion.ordered(1, 2, 3, 4, 5, 6, 7)
         val chunked = set.chunked(3)
 
         chunked.size shouldBe 3
-        chunked[0] shouldBe FiniteSet.ordered(1, 2, 3)
-        chunked[1] shouldBe FiniteSet.ordered(4, 5, 6)
-        chunked[2] shouldBe FiniteSet.ordered(7)
+        chunked[0] shouldBe FiniteSet.Companion.ordered(1, 2, 3)
+        chunked[1] shouldBe FiniteSet.Companion.ordered(4, 5, 6)
+        chunked[2] shouldBe FiniteSet.Companion.ordered(7)
     }
 
     // ===== Type Conversions =====
@@ -447,9 +451,9 @@ class FiniteSetSpec : StringSpec({
     // ===== Equality Semantics =====
 
     "ordered sets have list-like equality" {
-        val set1 = FiniteSet.ordered(1, 2, 3)
-        val set2 = FiniteSet.ordered(1, 2, 3)
-        val set3 = FiniteSet.ordered(3, 2, 1)
+        val set1 = FiniteSet.Companion.ordered(1, 2, 3)
+        val set2 = FiniteSet.Companion.ordered(1, 2, 3)
+        val set3 = FiniteSet.Companion.ordered(3, 2, 1)
 
         set1 shouldBe set2
         set1 shouldNotBe set3 // Different order
@@ -457,9 +461,9 @@ class FiniteSetSpec : StringSpec({
     }
 
     "unordered sets have set-like equality" {
-        val set1 = FiniteSet.unordered(1, 2, 3)
-        val set2 = FiniteSet.unordered(3, 2, 1)
-        val set3 = FiniteSet.unordered(1, 2, 4)
+        val set1 = FiniteSet.Companion.unordered(1, 2, 3)
+        val set2 = FiniteSet.Companion.unordered(3, 2, 1)
+        val set3 = FiniteSet.Companion.unordered(1, 2, 4)
 
         set1 shouldBe set2 // Same elements, different order
         set1 shouldNotBe set3 // Different elements
@@ -469,17 +473,17 @@ class FiniteSetSpec : StringSpec({
     // ===== Builder Functions =====
 
     "buildOrdered creates correct set" {
-        val set = FiniteSet.buildOrdered<Int> {
+        val set = FiniteSet.Companion.buildOrdered<Int> {
             add(1)
             add(2)
             add(1) // Duplicate
             addAll(listOf(3, 4))
         }
-        set shouldBe FiniteSet.ordered(1, 2, 3, 4)
+        set shouldBe FiniteSet.Companion.ordered(1, 2, 3, 4)
     }
 
     "buildUnordered creates correct set" {
-        val set = FiniteSet.buildUnordered<Int> {
+        val set = FiniteSet.Companion.buildUnordered<Int> {
             add(1)
             add(2)
             add(1) // Duplicate
@@ -491,16 +495,16 @@ class FiniteSetSpec : StringSpec({
     // ===== Range and Sequence Builders =====
 
     "rangeOrdered creates sequential sets" {
-        FiniteSet.rangeOrdered(1, 5) shouldBe FiniteSet.ordered(1, 2, 3, 4, 5)
-        FiniteSet.rangeOrdered(3, 3) shouldBe FiniteSet.ordered(3)
+        FiniteSet.Companion.rangeOrdered(1, 5) shouldBe FiniteSet.Companion.ordered(1, 2, 3, 4, 5)
+        FiniteSet.Companion.rangeOrdered(3, 3) shouldBe FiniteSet.Companion.ordered(3)
     }
 
     "sequence conversion preserves order" {
         val sequence = sequenceOf(1, 2, 1, 3, 2, 4)
-        val orderedSet = FiniteSet.fromSequenceOrdered(sequence)
-        val unorderedSet = FiniteSet.fromSequenceUnordered(sequence)
+        val orderedSet = FiniteSet.Companion.fromSequenceOrdered(sequence)
+        val unorderedSet = FiniteSet.Companion.fromSequenceUnordered(sequence)
 
-        orderedSet shouldBe FiniteSet.ordered(1, 2, 3, 4)
+        orderedSet shouldBe FiniteSet.Companion.ordered(1, 2, 3, 4)
         unorderedSet.backing shouldBe setOf(1, 2, 3, 4)
     }
 
@@ -511,13 +515,13 @@ class FiniteSetSpec : StringSpec({
         val array = arrayOf(1, 2, 1, 3)
         val sequence = sequenceOf(1, 2, 1, 3)
 
-        list.toOrderedFiniteSet() shouldBe FiniteSet.ordered(1, 2, 3)
+        list.toOrderedFiniteSet() shouldBe FiniteSet.Companion.ordered(1, 2, 3)
         list.toUnorderedFiniteSet().backing shouldBe setOf(1, 2, 3)
 
-        array.toOrderedFiniteSet() shouldBe FiniteSet.ordered(1, 2, 3)
+        array.toOrderedFiniteSet() shouldBe FiniteSet.Companion.ordered(1, 2, 3)
         array.toUnorderedFiniteSet().backing shouldBe setOf(1, 2, 3)
 
-        sequence.toOrderedFiniteSet() shouldBe FiniteSet.ordered(1, 2, 3)
+        sequence.toOrderedFiniteSet() shouldBe FiniteSet.Companion.ordered(1, 2, 3)
         sequence.toUnorderedFiniteSet().backing shouldBe setOf(1, 2, 3)
     }
 

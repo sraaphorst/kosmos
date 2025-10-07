@@ -2,9 +2,9 @@ package org.vorpal.kosmos.categories
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
-import org.vorpal.kosmos.combinatorial.FiniteSet
 import org.vorpal.kosmos.combinatorial.generateArbOrderedFiniteSet
 import org.vorpal.kosmos.combinatorial.generateArbOrderedFiniteSetOfSize
+import kotlin.random.Random
 
 /**
  * Generate an Arb<Bijection<A, B>> between two sets of the same size.
@@ -36,7 +36,7 @@ fun <A, B> generateArbBijection(
  * Generate an Arb<Bijection<A, A>> (permutation) on a finite set.
  * Creates random permutations of elements in the domain.
  */
-fun <A> generateArbPermutation(
+fun <A> generateArbEndoBijection(
     arb: Arb<A>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -58,7 +58,7 @@ fun <A> generateArbPermutation(
 /**
  * Generate an Arb<Bijection<A, A>> of exact size.
  */
-fun <A> generateArbPermutationOfSize(
+fun <A> generateArbEndoBijectionOfSize(
     arb: Arb<A>,
     exactSize: Int
 ): Arb<Bijection<A, A>> {
@@ -89,7 +89,7 @@ fun <A> generateArbIdentityBijection(
  * Generate bijections constructed from cycle notation.
  * Useful for testing group properties and cycle decomposition.
  */
-fun <A> generateArbCyclicPermutation(
+fun <A> generateArbCyclicEndoBijection(
     arb: Arb<A>,
     minCycleLength: Int = 2,
     maxCycleLength: Int = 8
@@ -108,7 +108,7 @@ fun <A> generateArbCyclicPermutation(
 /**
  * Generate bijections with multiple disjoint cycles.
  */
-fun <A> generateArbMultiCyclePermutation(
+fun <A> generateArbMultiCycleEndoBijection(
     arb: Arb<A>,
     setSize: Int = 10,
     maxCycles: Int = 3
@@ -145,7 +145,7 @@ fun <A> generateArbMultiCyclePermutation(
  * Generate involutions (self-inverse permutations).
  * These are permutations where f(f(x)) = x for all x.
  */
-fun <A> generateArbInvolution(
+fun <A> generateArbInvolutionBijection(
     arb: Arb<A>,
     lowerBound: Int = 2,
     upperBoundInclusive: Int = 10
@@ -158,7 +158,7 @@ fun <A> generateArbInvolution(
             val mapping = mutableMapOf<A, A>()
             var i = 0
 
-            while (i < shuffled.size - 1 && kotlin.random.Random.nextBoolean()) {
+            while (i < shuffled.size - 1 && Random.nextBoolean()) {
                 // Create a 2-cycle (swap)
                 mapping[shuffled[i]] = shuffled[i + 1]
                 mapping[shuffled[i + 1]] = shuffled[i]
@@ -181,22 +181,22 @@ fun <A> generateArbInvolution(
  */
 object BijectionArbs {
 
-    fun arbIntPermutation(
+    fun arbIntBijection(
         lowerBound: Int = 2,
         upperBoundInclusive: Int = 10
     ): Arb<Bijection<Int, Int>> =
-        generateArbPermutation(Arb.int(1..100), lowerBound, upperBoundInclusive)
+        generateArbEndoBijection(Arb.int(1..100), lowerBound, upperBoundInclusive)
 
     fun arbStringBijection(
         lowerBound: Int = 2,
         upperBoundInclusive: Int = 8
     ): Arb<Bijection<String, String>> =
-        generateArbPermutation(Arb.string(1..5), lowerBound, upperBoundInclusive)
+        generateArbEndoBijection(Arb.string(1..5), lowerBound, upperBoundInclusive)
 
     fun arbSmallPermutation(
         size: Int = 5
     ): Arb<Bijection<Int, Int>> =
-        generateArbPermutationOfSize(Arb.int(1..100), size)
+        generateArbEndoBijectionOfSize(Arb.int(1..100), size)
 
     fun arbIntToCharBijection(
         lowerBound: Int = 1,
@@ -208,13 +208,13 @@ object BijectionArbs {
 /**
  * Extension functions for easier usage.
  */
-fun <A> Arb<A>.toPermutationArb(
+fun <A> Arb<A>.toEndoBijectionArb(
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
-): Arb<Bijection<A, A>> = generateArbPermutation(this, lowerBound, upperBoundInclusive)
+): Arb<Bijection<A, A>> = generateArbEndoBijection(this, lowerBound, upperBoundInclusive)
 
 fun <A> Arb<A>.toPermutationOfSize(exactSize: Int): Arb<Bijection<A, A>> =
-    generateArbPermutationOfSize(this, exactSize)
+    generateArbEndoBijectionOfSize(this, exactSize)
 
 fun <A, B> Arb<A>.toBijectionArb(
     arbB: Arb<B>,
@@ -254,7 +254,7 @@ object BijectionTestingCombinations {
     /**
      * Generate pairs of permutations for testing composition.
      */
-    fun <A> arbPermutationPair(
+    fun <A> arbEndoBijectionPair(
         arb: Arb<A>,
         size: Int = 5
     ): Arb<Pair<Bijection<A, A>, Bijection<A, A>>> {
@@ -272,12 +272,12 @@ object BijectionTestingCombinations {
     /**
      * Generate a bijection and an element from its domain.
      */
-    fun <A> arbBijectionWithElement(
+    fun <A> arbEndoBijectionWithElement(
         arb: Arb<A>,
         lowerBound: Int = 2,
         upperBoundInclusive: Int = 10
     ): Arb<Pair<Bijection<A, A>, A>> {
-        return generateArbPermutation(arb, lowerBound, upperBoundInclusive).flatMap { bijection ->
+        return generateArbEndoBijection(arb, lowerBound, upperBoundInclusive).flatMap { bijection ->
             Arb.element(bijection.domain.order).map { element ->
                 bijection to element
             }
@@ -288,7 +288,7 @@ object BijectionTestingCombinations {
 // Usage examples in comments:
 /*
 // Basic usage:
-val permArb = generateArbPermutation(Arb.int(), 3, 8)
+val permArb = generateArbEndoBijection(Arb.int(), 3, 8)
 val bijArb = Arb.int().toBijectionArb(Arb.string(), 2, 6)
 
 // For property testing:
@@ -299,7 +299,7 @@ checkAll(permArb) { perm ->
 }
 
 // Testing composition:
-checkAll(BijectionTestingCombinations.arbPermutationPair(Arb.int(), 5)) { (f, g) ->
+checkAll(BijectionTestingCombinations.arbEndoBijectionPair(Arb.int(), 5)) { (f, g) ->
     val composed = f then g
     // Test properties of composed bijections
 }
