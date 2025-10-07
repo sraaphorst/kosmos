@@ -4,7 +4,12 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.*
+import io.kotest.property.arbitrary.bind
+import io.kotest.property.arbitrary.filter
+import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.long
+import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 import java.math.BigInteger
 import kotlin.math.absoluteValue
@@ -13,24 +18,24 @@ class NumberTheorySpec : StringSpec({
 
     // ===== Arb Generators =====
 
-    val nonZeroInts = Arb.int(-10000..10000).filter { it != 0 }
-    val nonZeroLongs = Arb.long(-10000L..10000L).filter { it != 0L }
-    val positiveInts = Arb.int(1..10000)
-    val positiveLongs = Arb.long(1L..10000L)
+    val nonZeroInts = Arb.Companion.int(-10000..10000).filter { it != 0 }
+    val nonZeroLongs = Arb.Companion.long(-10000L..10000L).filter { it != 0L }
+    val positiveInts = Arb.Companion.int(1..10000)
+    val positiveLongs = Arb.Companion.long(1L..10000L)
 
     // Use smaller ranges to avoid overflow in LCM calculations
     // LCM can grow very quickly and cause Int overflow with large inputs
-    val smallInts = Arb.int(-1000..1000)
-    val smallNonZeroInts = Arb.int(-1000..1000).filter { it != 0 }
+    val smallInts = Arb.Companion.int(-1000..1000)
+    val smallNonZeroInts = Arb.Companion.int(-1000..1000).filter { it != 0 }
 
-    val smallBigInts = Arb.int(-10000..10000).map { BigInteger.valueOf(it.toLong()) }
+    val smallBigInts = Arb.Companion.int(-10000..10000).map { BigInteger.valueOf(it.toLong()) }
     val nonZeroBigInts = smallBigInts.filter { it != BigInteger.ZERO }
-    val positiveBigInts = Arb.int(1..10000).map { BigInteger.valueOf(it.toLong()) }
+    val positiveBigInts = Arb.Companion.int(1..10000).map { BigInteger.valueOf(it.toLong()) }
 
     // Generate coprime pairs for modular inverse testing
-    val coprimePairs = Arb.bind(
-        Arb.int(2..100),
-        Arb.int(2..100)
+    val coprimePairs = Arb.Companion.bind(
+        Arb.Companion.int(2..100),
+        Arb.Companion.int(2..100)
     ) { a, b ->
         if (gcd(a, b) == 1) Pair(a, b) else Pair(a, b + 1)
     }.filter { (a, b) -> gcd(a, b) == 1 }
@@ -38,13 +43,13 @@ class NumberTheorySpec : StringSpec({
     // ===== GCD Property Tests =====
 
     "gcd is commutative" {
-        checkAll(Arb.int(), Arb.int()) { a, b ->
+        checkAll(Arb.Companion.int(), Arb.Companion.int()) { a, b ->
             gcd(a, b) shouldBe gcd(b, a)
         }
     }
 
     "gcd with zero gives absolute value" {
-        checkAll(Arb.int()) { a ->
+        checkAll(Arb.Companion.int()) { a ->
             gcd(a, 0) shouldBe a.absoluteValue
             gcd(0, a) shouldBe a.absoluteValue
         }
@@ -61,26 +66,26 @@ class NumberTheorySpec : StringSpec({
     }
 
     "gcd is associative" {
-        checkAll(Arb.int(), Arb.int(), Arb.int()) { a, b, c ->
+        checkAll(Arb.Companion.int(), Arb.Companion.int(), Arb.Companion.int()) { a, b, c ->
             gcd(gcd(a, b), c) shouldBe gcd(a, gcd(b, c))
             gcd(a, b, c) shouldBe gcd(gcd(a, b), c)
         }
     }
 
     "gcd satisfies Euclidean property" {
-        checkAll(Arb.int(), nonZeroInts) { a, b ->
+        checkAll(Arb.Companion.int(), nonZeroInts) { a, b ->
             gcd(a, b) shouldBe gcd(b, a % b)
         }
     }
 
     "gcd is always non-negative" {
-        checkAll(Arb.int(), Arb.int()) { a, b ->
+        checkAll(Arb.Companion.int(), Arb.Companion.int()) { a, b ->
             gcd(a, b) >= 0
         }
     }
 
     "gcd of one is one" {
-        checkAll(Arb.int()) { a ->
+        checkAll(Arb.Companion.int()) { a ->
             gcd(1, a) shouldBe 1
             gcd(a, 1) shouldBe 1
         }
@@ -89,13 +94,13 @@ class NumberTheorySpec : StringSpec({
     // ===== LCM Property Tests =====
 
     "lcm is commutative" {
-        checkAll(Arb.int(), Arb.int()) { a, b ->
+        checkAll(Arb.Companion.int(), Arb.Companion.int()) { a, b ->
             lcm(a, b) shouldBe lcm(b, a)
         }
     }
 
     "lcm with zero is zero" {
-        checkAll(Arb.int()) { a ->
+        checkAll(Arb.Companion.int()) { a ->
             lcm(a, 0) shouldBe 0
             lcm(0, a) shouldBe 0
         }
@@ -119,13 +124,13 @@ class NumberTheorySpec : StringSpec({
     }
 
     "lcm is always non-negative" {
-        checkAll(Arb.int(), Arb.int()) { a, b ->
+        checkAll(Arb.Companion.int(), Arb.Companion.int()) { a, b ->
             lcm(a, b) >= 0
         }
     }
 
     "lcm with one gives absolute value" {
-        checkAll(Arb.int()) { a ->
+        checkAll(Arb.Companion.int()) { a ->
             lcm(1, a) shouldBe a.absoluteValue
             lcm(a, 1) shouldBe a.absoluteValue
         }
@@ -214,7 +219,7 @@ class NumberTheorySpec : StringSpec({
     // ===== Long Type Properties =====
 
     "long gcd properties match int gcd properties" {
-        checkAll(Arb.long(), Arb.long()) { a, b ->
+        checkAll(Arb.Companion.long(), Arb.Companion.long()) { a, b ->
             gcd(a, b) shouldBe gcd(b, a)  // commutativity
         }
 
@@ -228,7 +233,7 @@ class NumberTheorySpec : StringSpec({
     }
 
     "long lcm properties match int lcm properties" {
-        checkAll(Arb.long(), Arb.long()) { a, b ->
+        checkAll(Arb.Companion.long(), Arb.Companion.long()) { a, b ->
             lcm(a, b) shouldBe lcm(b, a)  // commutativity
         }
 
@@ -242,7 +247,7 @@ class NumberTheorySpec : StringSpec({
     }
 
     "long extended gcd satisfies Bézout identity" {
-        checkAll(Arb.long(), Arb.long()) { a, b ->
+        checkAll(Arb.Companion.long(), Arb.Companion.long()) { a, b ->
             val result = extendedGcd(a, b)
             result.verify() shouldBe true
         }
@@ -284,7 +289,7 @@ class NumberTheorySpec : StringSpec({
     // ===== Collection Properties =====
 
     "collection gcd is associative" {
-        checkAll(Arb.list(Arb.int(), 2..5)) { numbers ->
+        checkAll(Arb.Companion.list(Arb.Companion.int(), 2..5)) { numbers ->
             val result1 = numbers.gcd()
             val result2 = numbers.reduce { acc, num -> gcd(acc, num) }
             result1 shouldBe result2
@@ -292,7 +297,7 @@ class NumberTheorySpec : StringSpec({
     }
 
     "collection lcm is associative" {
-        checkAll(Arb.list(smallNonZeroInts, 2..5)) { numbers ->
+        checkAll(Arb.Companion.list(smallNonZeroInts, 2..5)) { numbers ->
             val result1 = numbers.lcm()
             val result2 = numbers.reduce { acc, num -> lcm(acc, num) }
             result1 shouldBe result2
@@ -308,13 +313,13 @@ class NumberTheorySpec : StringSpec({
     }
 
     "gcd(ka, kb) = k * gcd(a, b) for positive k" {
-        checkAll(Arb.int(1..100), smallInts, smallInts) { k, a, b ->
+        checkAll(Arb.Companion.int(1..100), smallInts, smallInts) { k, a, b ->
             gcd(k * a, k * b) shouldBe k * gcd(a, b)
         }
     }
 
     "lcm(ka, kb) = k * lcm(a, b) for positive k" {
-        checkAll(Arb.int(1..10), smallNonZeroInts, smallNonZeroInts) { k, a, b ->
+        checkAll(Arb.Companion.int(1..10), smallNonZeroInts, smallNonZeroInts) { k, a, b ->
             // Use smaller k to avoid overflow
             lcm(k * a, k * b) shouldBe k * lcm(a, b)
         }

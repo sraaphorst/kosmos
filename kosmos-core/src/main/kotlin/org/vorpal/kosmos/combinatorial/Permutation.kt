@@ -36,6 +36,11 @@ data class Permutation<A>(
             Permutation(domain, { it }, { it })
     }
 
+    val isEmpty: Boolean
+        get() = domain.isEmpty
+    val isNotEmpty: Boolean
+        get() = !isEmpty
+
     /** Apply the permutation to an element. */
     override fun apply(a: A): A =
         forward.apply(a)
