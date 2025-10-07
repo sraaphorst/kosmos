@@ -99,6 +99,62 @@ interface Automorphism<A> : Isomorphism<A, A>, Endomorphism<A> {
     }
 }
 
+// ============================================================================
+// Automorphism extensions - orbit operations on the algebraic structure
+// ============================================================================
+
+/**
+ * Extension: Compute the orbit of an element under an automorphism.
+ * Since automorphisms don't carry domain witnesses, the domain must be provided.
+ */
+fun <A> Automorphism<A>.orbit(element: A, domain: FiniteSet<A>): FiniteSet<A> {
+    require(element in domain) { "Element must be in domain" }
+
+    val seen = mutableSetOf<A>()
+    var current = element
+
+    while (current !in seen) {
+        seen.add(current)
+        current = apply(current)
+    }
+
+    return FiniteSet.ordered(seen)
+}
+
+/**
+ * Extension: Compute the order (period) of an element under this automorphism.
+ */
+fun <A> Automorphism<A>.orderOf(element: A, domain: FiniteSet<A>): Int =
+    orbit(element, domain).size
+
+/**
+ * Extension: Check if this automorphism is the identity on the given domain.
+ */
+fun <A> Automorphism<A>.isIdentity(domain: FiniteSet<A>): Boolean =
+    domain.all { apply(it) == it }
+
+/**
+ * Extension: Get all cycles in an automorphism as a cycle decomposition.
+ */
+fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> {
+    val unvisited = domain.toSet().toMutableSet()
+    val cycles = mutableListOf<List<A>>()
+
+    while (unvisited.isNotEmpty()) {
+        val start = unvisited.first()
+        val cycle = orbit(start, domain).toList()
+
+        if (cycle.size > 1) { // Only include non-trivial cycles
+            cycles.add(cycle)
+        }
+
+        unvisited.removeAll(cycle.toSet())
+    }
+
+    return cycles
+}
+
+
 
 // TODO: *** REMOVE THESE EXAMPLES ***
 val intAutoGroup: Group<Automorphism<Int>> = Group.of(
