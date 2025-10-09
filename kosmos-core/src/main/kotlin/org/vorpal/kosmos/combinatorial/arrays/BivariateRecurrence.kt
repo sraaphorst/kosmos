@@ -1,7 +1,5 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
-import java.math.BigInteger
-
 /**
  * A two-parameter recurrence-defined combinatorial array (e.g. Pascal, Stirling, Lah).
  */

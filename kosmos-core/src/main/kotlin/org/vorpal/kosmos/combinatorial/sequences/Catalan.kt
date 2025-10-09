@@ -42,7 +42,7 @@ import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
  * Every [Recurrence] is a [Sequence], so this can be treated as such.
  * We delegate the things Recurrence needs (initial, iterator()) to NonlinearRecurrence.
  */
-object CatalanNumbers : Recurrence<BigInteger> by NonlinearRecurrence(
+object Catalan : Recurrence<BigInteger> by NonlinearRecurrence(
     initial = listOf(BigInteger.ONE),
 
     // Since each new term depends on all earlier ones, they are already implicitly stored in generator's

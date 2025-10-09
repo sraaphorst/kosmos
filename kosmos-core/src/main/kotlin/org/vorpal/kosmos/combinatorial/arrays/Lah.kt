@@ -63,7 +63,7 @@ object Lah : BivariateRecurrence<BigInteger> {
 
     override fun invoke(n: Int, k: Int): BigInteger = cache(n, k)
 
-    /** Optional: closed form if you ever want a direct path. */
+    /** Closed form calculation for direct result.. */
     fun closedForm(n: Int, k: Int): BigInteger =
         if (k in 1..n)
             Binomial(n - 1, k - 1) * Factorial(n) / Factorial(k)
