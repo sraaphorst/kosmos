@@ -28,7 +28,7 @@ import org.vorpal.kosmos.combinatorial.Binomial
  * - Stirling numbers of the second kind: Bₙ = Σₖ S(n, k)
  * - Exponential generating function: e^{eˣ - 1}
  */
-object BellNumbers : Recurrence<BigInteger> by NonlinearRecurrence(
+object Bell : Recurrence<BigInteger> by NonlinearRecurrence(
     initial = listOf(BigInteger.ONE),
     next = { terms ->
         val n = terms.lastIndex

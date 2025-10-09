@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.combinatorial.recurrence
 
-import org.vorpal.kosmos.combinatorial.LinearRecurrence
 import java.math.BigInteger
 import kotlin.collections.ArrayDeque
 
@@ -53,9 +52,6 @@ data class LinearRecurrence<T>(
 
         fun forBigInt(initial: List<BigInteger>, coeffs: List<BigInteger>) =
             LinearRecurrence(initial, coeffs, BigInteger.ZERO, BigInteger::add, BigInteger::multiply)
-
-        fun forBigInt(initial: List<Int>, coeffs: List<Int>) =
-            forBigInt(initial.map(Int::toBigInteger), coeffs.map(Int::toBigInteger))
 
         fun forBigInt(initial: List<Long>, coeffs: List<Long>) =
             forBigInt(initial.map(Long::toBigInteger), coeffs.map(Long::toBigInteger))

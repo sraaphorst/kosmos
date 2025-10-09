@@ -53,7 +53,7 @@ import java.math.BigInteger
  */
 object StirlingFirst : BivariateRecurrence<BigInteger> {
     private val cache = memoize<Int, Int, BigInteger> { n, k ->
-        when(k) {
+        when (k) {
             n -> BigInteger.ONE
             0 -> BigInteger.ZERO
             else -> this(n - 1, k - 1) - (n - 1).toBigInteger() * this(n - 1, k)

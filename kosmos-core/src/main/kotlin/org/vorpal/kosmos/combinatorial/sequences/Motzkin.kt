@@ -25,15 +25,13 @@ import java.math.BigInteger
  * - Catalan numbers (restricted paths without horizontal steps)
  * - Schröder numbers (paths allowing larger horizontal steps)
  */
-object MotzkinNumbers : Recurrence<BigInteger> by NonlinearRecurrence(
+object Motzkin : Recurrence<BigInteger> by NonlinearRecurrence(
     initial = listOf(BigInteger.ONE, BigInteger.ONE),
     next = { terms ->
         val n = terms.lastIndex         // we have M₀..Mₙ; compute M_{n+1}
         var acc = terms[n]              // M_n
-        if (n >= 1) {
-            for (i in 0 until n) {
-                acc += terms[i] * terms[n - 1 - i]
-            }
+        for (i in 0 until n) {
+            acc += terms[i] * terms[n - 1 - i]
         }
         acc
     }
