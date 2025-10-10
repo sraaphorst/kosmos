@@ -37,7 +37,7 @@ import java.math.MathContext
  * - Pell sequence (different coefficient)
  * - Tribonacci sequence (order-3 analog)
  */
-object Lucas : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Lucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(2, 1),
     coeffs = listOf(1, 1)
 ), ClosedForm<BigInteger> {

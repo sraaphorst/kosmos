@@ -26,7 +26,7 @@ import java.math.MathContext
  * - Appears in nature and mathematics via the golden ratio φ.
  * - Exponential generating function: (eˣ - 1) / (eˣ + 1)
  */
-object Fibonacci : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Fibonacci : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(0, 1),
     coeffs = listOf(1, 1)
 ), ClosedForm<BigInteger> {

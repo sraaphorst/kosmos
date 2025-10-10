@@ -17,7 +17,7 @@ import java.math.BigInteger
  * First few terms:
  *   0, 0, 1, 1, 2, 4, 7, 13, 24, 44, 81, 149, ...
  */
-object Tribonacci : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Tribonacci : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(0, 0, 1),
     coeffs = listOf(1, 1, 1)
 )

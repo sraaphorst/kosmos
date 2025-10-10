@@ -43,19 +43,16 @@ data class LinearRecurrence<T>(
     }
 
     companion object {
-
         fun forInt(initial: List<Int>, coeffs: List<Int>) =
             LinearRecurrence(initial, coeffs, 0, Int::plus, Int::times)
 
         fun forLong(initial: List<Long>, coeffs: List<Long>) =
             LinearRecurrence(initial, coeffs, 0L, Long::plus, Long::times)
 
+        fun forBigInt(initial: List<BigInteger>, coeffs: List<BigInteger>) =
+            LinearRecurrence(initial, coeffs, BigInteger.ZERO, BigInteger::add, BigInteger::multiply)
 
-//        fun forBigInt(initial: List<BigInteger>, coeffs: List<BigInteger>) =
-//            LinearRecurrence(initial, coeffs, BigInteger.ZERO, BigInteger::add, BigInteger::multiply)
-
-        fun forBigInt(initial: List<Long>, coeffs: List<Long>) =
-            LinearRecurrence(initial.map(BigInteger::valueOf), coeffs.map(BigInteger::valueOf), BigInteger.ZERO, BigInteger::add, BigInteger::multiply)
-//            forBigInt(initial.map(Long::toBigInteger), coeffs.map(Long::toBigInteger))
+        fun forBigIntFromLong(initial: List<Long>, coeffs: List<Long>) =
+            forBigInt(initial.map(Long::toBigInteger), coeffs.map(Long::toBigInteger))
     }
 }

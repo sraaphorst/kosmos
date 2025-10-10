@@ -35,7 +35,7 @@ import java.math.BigInteger
  * In [Padovan1], we write it as P_n = P_{n-2} + P_{n-3}, with seeds:
  * - P_0 = P_1 = P_2 = 1.
  */
-object Padovan1 : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Padovan1 : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(1, 1, 1),
     coeffs = listOf(0, 1, 1)
 )
@@ -48,7 +48,7 @@ object Padovan1 : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
  * - P_0 = P_1 = P_2 = 1
  * - P_3 = P_4 = 2
  */
-object Padovan2 : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Padovan2 : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(1, 1, 1, 2, 2),
     coeffs = listOf(1, 0, 0, 0, 1)
 )
