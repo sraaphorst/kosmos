@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorial.arrays
 
 import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
 import java.math.BigInteger
-import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.memoization.recursiveMemoize2
 
 /**
  * **Aitken's Array** (aka Bell's Triangle, Peirce Triangle).
@@ -67,16 +67,19 @@ import org.vorpal.kosmos.memoization.memoize
  *
  * See [StirlingSecond] for the related partition counts S(n, k),
  *      where S(n, k) counts the number of partitions of an n-set into exactly k blocks.
+ *
+ * OEIS A011971
  */
 object Aitken : BivariateRecurrence<BigInteger> {
-    private val cache = memoize<Int, Int, BigInteger> { n, k ->
+
+    private val recursiveCache = recursiveMemoize2<Int, Int, BigInteger> { self, n, k ->
         when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0..n -> BigInteger.ZERO
-            k == 0 -> invoke(n - 1, n - 1)
-            else -> invoke(n, k - 1) + invoke(n - 1, k - 1)
+            k == 0 -> self(n - 1, n - 1)
+            else -> self(n, k - 1) + self(n - 1, k - 1)
         }
     }
 
-    override fun invoke(n: Int, k: Int): BigInteger = cache(n, k)
+    override fun invoke(n: Int, k: Int): BigInteger = recursiveCache(n, k)
 }

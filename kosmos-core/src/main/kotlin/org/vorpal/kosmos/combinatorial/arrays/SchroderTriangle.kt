@@ -5,7 +5,7 @@ import org.vorpal.kosmos.memoization.memoize
 import java.math.BigInteger
 
 /**
- * The Schröder triangle is a triangle associated with the [Schroder] numbers.
+ * The Schröder triangle is a triangle associated with the [Schroder][org.vorpal.kosmos.combinatorial.sequences.Schroder] numbers.
  *
  */
 object SchroderTriangle : BivariateRecurrence<BigInteger> {

@@ -1,39 +1,60 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
 import java.math.BigInteger
-import org.vorpal.kosmos.combinatorial.recurrence.NonlinearRecurrence
+import org.vorpal.kosmos.combinatorial.arrays.Aitken
+import org.vorpal.kosmos.combinatorial.arrays.StirlingSecond
+import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
 import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.combinatorial.Binomial
+import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.memoization.recursiveMemoize
 
 /**
- * Infinite sequence of **Bell numbers** Bₙ.
+ * **Bell numbers** Bₙ:
+ * count of all distinct partitions of an n-element set.
  *
- * Bell numbers count the number of ways to partition a set of n elements into
- * non-empty, disjoint subsets (set partitions).
+ * Definitions:
+ * ```
+ * B₀ = 1
+ * Bₙ = Σₖ₌₀ⁿ Aitken(n, k)
+ * ```
+ * or equivalently (closed form):
+ * ```
+ * Bₙ = Σₖ₌₀ⁿ StirlingSecond(n, k)
+ * ```
  *
- * Example:
- * - B₀ = 1 (the empty set has one partition)
- * - B₁ = 1 ({1})
- * - B₂ = 2 ({ {1,2}, { {1},{2} } })
- * - B₃ = 5
+ * Recurrence (Dobinski / Bell identity form):
+ * ```
+ * B₀ = 1
+ * Bₙ₊₁ = Σₖ₌₀ⁿ (n choose k) * Bₖ
+ * ```
  *
- * Recurrence:
- *   B₀ = 1
- *   B_{n+1} = Σ_{k=0}^{n} (n choose k) · B_k
- *
- * First few terms:
- *   1, 1, 2, 5, 15, 52, 203, 877, ...
- *
- * Related:
- * - Stirling numbers of the second kind: Bₙ = Σₖ S(n, k)
- * - Exponential generating function: e^{eˣ - 1}
+ * OEIS A000110
  */
-object Bell : Recurrence<BigInteger> by NonlinearRecurrence(
-    initial = listOf(BigInteger.ONE),
-    next = { terms ->
-        val n = terms.lastIndex
-        var acc = BigInteger.ZERO
-        for (k in 0..n) acc += Binomial(n, k) * terms[k]
-        acc
+object Bell : Recurrence<BigInteger>, ClosedForm<BigInteger> {
+    /** Recursive definition using the Aitken (Bell) triangle. */
+    private val recursiveCache = recursiveMemoize<Int, BigInteger> { self, n ->
+        when (n) {
+            0 -> BigInteger.ONE
+            else -> (0..n).fold(BigInteger.ZERO) { acc, k -> acc + Aitken(n, k) }
+        }
     }
-)
+
+    /** Closed form using Stirling numbers of the second kind. */
+    private val closedFormCache = memoize<Int, BigInteger> { n ->
+        when (n) {
+            0 -> BigInteger.ONE
+            else -> (0..n).fold(BigInteger.ZERO) { acc, k -> acc + StirlingSecond(n, k) }
+        }
+    }
+
+    /** Returns Bₙ = Bell(n). */
+    operator fun invoke(n: Int): BigInteger = recursiveCache(n)
+
+    override fun iterator(): Iterator<BigInteger> = object : Iterator<BigInteger> {
+        private var n = 0
+        override fun hasNext(): Boolean = true
+        override fun next(): BigInteger = recursiveCache(n++)
+    }
+
+    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
+}
