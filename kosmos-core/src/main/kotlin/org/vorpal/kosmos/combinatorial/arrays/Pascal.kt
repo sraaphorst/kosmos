@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
+import org.vorpal.kosmos.combinatorial.Factorial
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
 import org.vorpal.kosmos.memoization.memoize
 import java.math.BigInteger
 
@@ -34,7 +37,7 @@ import java.math.BigInteger
  * n=4: 1 4 6 4 1
  * ```
  */
-object Pascal : BivariateRecurrence<BigInteger> {
+object Pascal : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigInteger> {
     private val cache = memoize<Int, Int, BigInteger> { n, k ->
         when (k) {
             !in 0..n -> BigInteger.ZERO
@@ -44,4 +47,14 @@ object Pascal : BivariateRecurrence<BigInteger> {
     }
 
     override fun invoke(n: Int, k: Int): BigInteger = cache(n, k)
+
+    private val closedFormCache = memoize<Int, Int, BigInteger> { n, k ->
+        when (k) {
+            !in 0..n -> BigInteger.ZERO
+            0, n           -> BigInteger.ONE
+            else           -> Factorial(n) / Factorial(k) / Factorial(n - k)
+        }
+    }
+
+    override fun closedForm(n: Int, k: Int): BigInteger = closedFormCache(n, k)
 }

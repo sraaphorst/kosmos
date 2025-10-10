@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
 import org.vorpal.kosmos.memoization.memoize
 import java.math.BigInteger
 

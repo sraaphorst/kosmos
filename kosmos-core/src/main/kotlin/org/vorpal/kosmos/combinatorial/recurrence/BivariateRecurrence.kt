@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.combinatorial.arrays
+package org.vorpal.kosmos.combinatorial.recurrence
 
 /**
  * A two-parameter recurrence-defined combinatorial array (e.g. Pascal, Stirling, Lah).
