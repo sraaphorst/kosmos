@@ -19,7 +19,7 @@ data class LinearRecurrence<T>(
     val zero: T,
     val add: (T, T) -> T,
     val multiply: (T, T) -> T
-) : Recurrence<T> {
+) : WindowedRecurrence<T> {
 
     init {
         require(initial.isNotEmpty()) { "initial cannot be empty" }

@@ -11,7 +11,7 @@ package org.vorpal.kosmos.combinatorial.recurrence
 data class NonlinearRecurrence<T>(
     override val initial: List<T>,
     val next: (List<T>) -> T
-) : Recurrence<T> {
+) : WindowedRecurrence<T> {
 
     init { require(initial.isNotEmpty()) { "initial cannot be empty" } }
 

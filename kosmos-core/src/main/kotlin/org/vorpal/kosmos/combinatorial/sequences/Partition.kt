@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
 import java.math.BigInteger
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.combinatorial.recurrence.WindowedRecurrence
 import org.vorpal.kosmos.memoization.memoize
 
 /**
@@ -33,7 +33,7 @@ import org.vorpal.kosmos.memoization.memoize
  * - See [StirlingSecond][org.vorpal.kosmos.combinatorial.arrays.StirlingSecond]
  * - See [Catalan]
  */
-object Partition : Recurrence<BigInteger> {
+object Partition : WindowedRecurrence<BigInteger> {
     override val initial: List<BigInteger> = listOf(BigInteger.ONE)
 
     // Memoized recursive partition function
