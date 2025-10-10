@@ -31,7 +31,7 @@ import java.math.BigInteger
  * @see Jacobsthal for the base sequence.
  * @see JacobsthalOblong for the oblong (product) sequence.
  */
-object JacobsthalLucas : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object JacobsthalLucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(2, 1),
     coeffs = listOf(1, 2)
 ) {

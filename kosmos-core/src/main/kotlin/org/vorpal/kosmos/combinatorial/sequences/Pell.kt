@@ -34,7 +34,7 @@ import java.math.BigInteger
  *
  * @see PellLucas for the companion sequence generating the numerators of √2 approximants.
  */
-object Pell : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Pell : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(0, 1),
     coeffs = listOf(2, 1)
 )

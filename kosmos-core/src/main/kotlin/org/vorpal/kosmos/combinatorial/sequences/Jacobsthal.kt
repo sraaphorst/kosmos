@@ -29,7 +29,7 @@ import java.math.BigInteger
  * - [Jacobsthal–Lucas][JacobsthalLucas]: same recurrence, different initial conditions.
  * - [Jacobsthal–Oblong][JacobsthalOblong]: product of consecutive Jacobsthal numbers.
  */
-object Jacobsthal : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object Jacobsthal : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(0, 1),
     coeffs = listOf(1, 2)
 ) {

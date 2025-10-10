@@ -30,7 +30,7 @@ import java.math.BigInteger
  *
  * @see Pell for the companion denominator sequence.
  */
-object PellLucas : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
+object PellLucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
     initial = listOf(1, 1),
     coeffs = listOf(2, 1)
 )
