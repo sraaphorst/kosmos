@@ -1,8 +1,11 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import java.math.BigInteger
+import org.vorpal.kosmos.combinatorial.Factorial
+import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
 import org.vorpal.kosmos.combinatorial.recurrence.NonlinearRecurrence
 import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.memoization.memoize
+import java.math.BigInteger
 
 /**
  * Represents the infinite sequence of **Catalan numbers** Cₙ.
@@ -53,4 +56,10 @@ object Catalan : Recurrence<BigInteger> by NonlinearRecurrence(
         for (i in 0..n) acc += terms[i] * terms[n - i]
         acc
     }
-)
+), ClosedForm<BigInteger> {
+    private val closedFormCache = memoize<Int, BigInteger> { n  ->
+        Factorial(2 * n) / (Factorial(n + 1) * Factorial(n))
+    }
+
+    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
+}

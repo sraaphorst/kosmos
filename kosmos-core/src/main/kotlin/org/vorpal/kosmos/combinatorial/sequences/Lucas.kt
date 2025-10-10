@@ -1,8 +1,12 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
+import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
 import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
 import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.memoization.memoize
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.MathContext
 
 /**
  * Infinite sequence of **Lucas numbers** Lₙ.
@@ -36,10 +40,11 @@ import java.math.BigInteger
 object Lucas : Recurrence<BigInteger> by LinearRecurrence.forBigInt(
     initial = listOf(2, 1),
     coeffs = listOf(1, 1)
-)
+), ClosedForm<BigInteger> {
+    private val phi = (BigDecimal.ONE + BigDecimal(5.0).sqrt(MathContext.DECIMAL64)) / BigDecimal.TWO
+    private val closedFormCache = memoize<Int, BigInteger> { n  ->
+        (phi.pow(n) + (BigDecimal.ONE - phi).pow(n)).toBigInteger()
+    }
 
-/** Lightweight 64-bit Fibonacci implementation (overflows around 92). */
-object Lucas64 : Recurrence<Long> by LinearRecurrence.forLong(
-    initial = listOf(2, 1),
-    coeffs = listOf(1, 1)
-)
+    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
+}

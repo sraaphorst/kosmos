@@ -2,6 +2,8 @@ package org.vorpal.kosmos.combinatorial.arrays
 
 import org.vorpal.kosmos.combinatorial.Binomial
 import org.vorpal.kosmos.combinatorial.Factorial
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
 import org.vorpal.kosmos.memoization.memoize
 import java.math.BigInteger
 
@@ -46,13 +48,13 @@ import java.math.BigInteger
  * ```
  * meaning there are 36 ways to arrange 4 labeled elements into 2 ordered lists.
  */
-object Lah : BivariateRecurrence<BigInteger> {
-    private val cache = memoize<Int, Int, BigInteger> { n, k ->
+object Lah : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigInteger> {
+    private val recurrenceCache = memoize<Int, Int, BigInteger> { n, k ->
         when {
             n == 0 && k == 0 -> BigInteger.ONE
             k == 0 || k > n  -> BigInteger.ZERO
             n == k           -> BigInteger.ONE
-            else             -> {
+            else -> {
                 val term1 = invoke(n - 1, k - 1)
                 val factor = BigInteger.valueOf((n + k - 1).toLong())
                 val term2 = factor * invoke(n - 1, k)
@@ -60,12 +62,14 @@ object Lah : BivariateRecurrence<BigInteger> {
             }
         }
     }
+    override fun invoke(n: Int, k: Int): BigInteger = recurrenceCache(n, k)
 
-    override fun invoke(n: Int, k: Int): BigInteger = cache(n, k)
-
-    /** Closed form calculation for direct result.. */
-    fun closedForm(n: Int, k: Int): BigInteger =
-        if (k in 1..n)
-            Binomial(n - 1, k - 1) * Factorial(n) / Factorial(k)
-        else if (n == 0 && k == 0) BigInteger.ONE else BigInteger.ZERO
+    private val closedFormCache = memoize<Int, Int, BigInteger> { n, k ->
+        when {
+            n == 0 && k == 0 -> BigInteger.ONE
+            k in 1..n  -> Binomial(n - 1, k - 1) * Factorial(n) / Factorial(k)
+            else             -> BigInteger.ZERO
+        }
+    }
+    override fun closedForm(n: Int, k: Int): BigInteger = closedFormCache(n, k)
 }
