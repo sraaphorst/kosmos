@@ -28,7 +28,7 @@ object EulerianSecond : BivariateRecurrence<BigInteger> {
                 k !in 0 until n -> BigInteger.ZERO
                 else -> {
                     val a = BigInteger.valueOf((k + 1L)) * invoke(n - 1, k)
-                    val b = BigInteger.valueOf((n - k).toLong()) * invoke(n - 1, k - 1)
+                    val b = BigInteger.valueOf((2L * n - k - 1L)) * invoke(n - 1, k - 1)
                     a + b
                 }
             }
