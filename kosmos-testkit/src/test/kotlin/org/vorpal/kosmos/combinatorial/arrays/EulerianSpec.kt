@@ -2,6 +2,7 @@ package org.vorpal.kosmos.combinatorial.arrays
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import org.vorpal.kosmos.combinatorial.Factorial
 import java.math.BigInteger
 
 /**
@@ -291,13 +292,15 @@ class EulerianSpec : StringSpec({
         val n = 12
         val row = (0 until n).map { k -> Eulerian(n, k) }
         row.size shouldBe 12
+
         // First and last should be 1
         row.first() shouldBe BigInteger.ONE
         row.last() shouldBe BigInteger.ONE
+
         // Row should sum to 12!
         val sum = row.fold(BigInteger.ZERO) { acc, v -> acc + v }
-        val factorial12 = BigInteger.valueOf(479001600L)
-        sum shouldBe factorial12
+        val factorial = Factorial(n)
+        sum shouldBe factorial
     }
 
     "closed form handles large values correctly" {
