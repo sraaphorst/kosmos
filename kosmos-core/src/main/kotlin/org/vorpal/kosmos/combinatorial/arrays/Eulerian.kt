@@ -31,8 +31,6 @@ object Eulerian : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigIntege
 
     override fun invoke(n: Int, k: Int): BigInteger {
         val key = n to k
-
-        // check first to avoid double recursion
         recursiveCache[key]?.let { return it }
 
         val result = when {
@@ -49,7 +47,6 @@ object Eulerian : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigIntege
         return result
     }
 
-    /** Closed-form computation (memoized). */
     override fun closedForm(n: Int, k: Int): BigInteger {
         val key = n to k
         closedFormCache[key]?.let { return it }
@@ -57,13 +54,10 @@ object Eulerian : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigIntege
         val result = when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0 until n -> BigInteger.ZERO
-            else -> {
+            else ->
                 (0..k).fold(BigInteger.ZERO) { acc, j ->
-                    val term = Binomial(n + 1, j) *
-                            BigInteger.valueOf((k + 1L - j)).pow(n)
-                    acc + bigIntSgn(j) * term
+                    acc + bigIntSgn(j) * Binomial(n + 1, j) * BigInteger.valueOf((k + 1L - j)).pow(n)
                 }
-            }
         }
 
         closedFormCache[key] = result

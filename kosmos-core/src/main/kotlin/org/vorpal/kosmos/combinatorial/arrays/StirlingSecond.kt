@@ -1,8 +1,12 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
+import org.vorpal.kosmos.combinatorial.Binomial
+import org.vorpal.kosmos.combinatorial.Factorial
+import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
 import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
+import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
-import org.vorpal.kosmos.memoization.memoize
+import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Represents the **Stirling numbers of the second kind** S(n, k).
@@ -43,15 +47,39 @@ import org.vorpal.kosmos.memoization.memoize
  * S(n, k) = 1/k! * Σ_{j=0}^{k} (-1)^{k-j} * (k choose j) * j^n
  * ```
  */
-object StirlingSecond : BivariateRecurrence<BigInteger> {
-    private val cache = memoize<Int, Int, BigInteger> { n, k ->
-        when {
+object StirlingSecond : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigInteger> {
+    private val recursiveCache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
+    private val closedFormCache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
+
+    override fun invoke(n: Int, k: Int): BigInteger {
+        val key = n to k
+        recursiveCache[key]?.let { return it }
+
+        val result = when {
             n == 0 && k == 0  -> BigInteger.ONE
             k == 0 || k > n   -> BigInteger.ZERO
             n == k            -> BigInteger.ONE
             else              -> invoke(n - 1, k - 1) + BigInteger.valueOf(k.toLong()) * invoke(n - 1, k)
         }
-    }
 
-    override fun invoke(n: Int, k: Int): BigInteger = cache(n, k)
+        recursiveCache[key] = result
+        return result
+    }
+    override fun closedForm(n: Int, k: Int): BigInteger {
+        val key = n to k
+        closedFormCache[key]?.let { return it }
+
+        val result = when {
+            n == 0 && k == 0 -> BigInteger.ONE
+            k == 0 || k > n  -> BigInteger.ZERO
+            n == k           -> BigInteger.ONE
+            else ->
+                (0..k).fold(BigInteger.ZERO) { acc, j ->
+                    acc + bigIntSgn(k - j) * Binomial(k, j) * j.toBigInteger().pow(n)
+                } / Factorial(k)
+            }
+
+        closedFormCache[key] = result
+        return result
+    }
 }
