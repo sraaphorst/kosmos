@@ -1,11 +1,9 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
 import org.vorpal.kosmos.combinatorial.Binomial
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedBivariateArray
 import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * **Eulerian numbers of type B** B(n, k):
@@ -29,16 +27,10 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * OEIS A060187
  */
-object EulerianTypeB : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigInteger> {
+object EulerianTypeB : CachedBivariateArray() {
 
-    private val recursiveCache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
-    private val closedFormCache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
-
-    override fun invoke(n: Int, k: Int): BigInteger {
-        val key = n to k
-        recursiveCache[key]?.let { return it }
-
-        val result = when {
+    override fun recursiveCalculator(n: Int, k: Int): BigInteger =
+        when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0..n -> BigInteger.ZERO
             else -> {
@@ -48,15 +40,8 @@ object EulerianTypeB : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigI
             }
         }
 
-        recursiveCache[key] = result
-        return result
-    }
-
-    override fun closedForm(n: Int, k: Int): BigInteger {
-        val key = n to k
-        closedFormCache[key]?.let { return it }
-
-        val result = when {
+    override fun closedFormCalculator(n: Int, k: Int): BigInteger =
+        when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0..n -> BigInteger.ZERO
             else ->
@@ -64,8 +49,4 @@ object EulerianTypeB : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigI
                     acc + bigIntSgn(j) * Binomial(n + 1, j) * BigInteger.valueOf(2L * (k - j) + 1L).pow(n)
                 }
         }
-
-        closedFormCache[key] = result
-        return result
-    }
 }

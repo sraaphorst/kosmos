@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedClosedForm
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
 import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
@@ -27,14 +27,15 @@ import java.math.BigInteger
  *
  *     jₙ = Jₙ₊₁ + 2·Jₙ
  *     jₙ² – 8·Jₙ² = 9(–1)ⁿ
- *
- * @see Jacobsthal for the base sequence.
- * @see JacobsthalOblong for the oblong (product) sequence.
  */
-object JacobsthalLucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(2, 1),
-    coeffs = listOf(1, 2)
-) {
-    fun closedForm(n: Int): BigInteger =
-        BigInteger.ONE.shl(n) + bigIntSgn(n)
+object JacobsthalLucas :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.TWO, BigInteger.ONE),
+        coefficients = listOf(BigInteger.ONE, BigInteger.TWO)
+    ),
+    CachedClosedForm {
+    override fun closedFormCalculator(n: Int): BigInteger = when {
+        n < 0 -> BigInteger.ZERO
+        else  -> BigInteger.ONE.shl(n) + bigIntSgn(n)
+    }
 }

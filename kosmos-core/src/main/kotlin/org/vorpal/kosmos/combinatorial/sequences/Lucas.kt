@@ -1,12 +1,11 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.combinatorial.recurrence.CachedClosedForm
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
+import java.math.RoundingMode
 
 /**
  * Infinite sequence of **Lucas numbers** Lₙ.
@@ -37,14 +36,21 @@ import java.math.MathContext
  * - Pell sequence (different coefficient)
  * - Tribonacci sequence (order-3 analog)
  */
-object Lucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(2, 1),
-    coeffs = listOf(1, 1)
-), ClosedForm<BigInteger> {
-    private val phi = (BigDecimal.ONE + BigDecimal(5.0).sqrt(MathContext.DECIMAL64)) / BigDecimal.TWO
-    private val closedFormCache = memoize<Int, BigInteger> { n  ->
-        (phi.pow(n) + (BigDecimal.ONE - phi).pow(n)).toBigInteger()
-    }
+object Lucas :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.TWO, BigInteger.ONE),
+        coefficients = listOf(BigInteger.ONE, BigInteger.ONE)
+    ),
+    CachedClosedForm {
 
-    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
+    private val mc = MathContext(50, RoundingMode.HALF_EVEN)
+    private val sqrt5 = BigDecimal(5).sqrt(mc)
+    private val phi = (BigDecimal.ONE + sqrt5).divide(BigDecimal(2), mc)
+    private val psi = (BigDecimal.ONE - sqrt5).divide(BigDecimal(2), mc)
+
+    override fun closedFormCalculator(n: Int): BigInteger {
+        if (n < 0) return BigInteger.ZERO
+        val ln = phi.pow(n, mc) + psi.pow(n, mc)
+        return ln.setScale(0, RoundingMode.HALF_UP).toBigInteger()
+    }
 }

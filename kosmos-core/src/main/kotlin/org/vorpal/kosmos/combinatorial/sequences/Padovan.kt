@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
 import java.math.BigInteger
 
 /**
@@ -34,21 +33,31 @@ import java.math.BigInteger
  *
  * In [Padovan1], we write it as P_n = P_{n-2} + P_{n-3}, with seeds:
  * - P_0 = P_1 = P_2 = 1.
+ *
+ * Its characteristic polynomial is `x³ - x - 1 = 0`.
+ *
+ * The closed form uses the real root `ρ` (plastic constant):
+ *
+ * ```
+ * Pₙ = A·ρⁿ + B·αⁿ + C·βⁿ
+ * ```
  */
-object Padovan1 : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(1, 1, 1),
-    coeffs = listOf(0, 1, 1)
+object Padovan1 :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE),
+        coefficients = listOf(BigInteger.ZERO, BigInteger.ONE, BigInteger.ONE)
 )
 
 /**
  * See [Padovan1] for a more thorough definition.
  *
  * In [Padovan2], we write this recurrence as:
- * - P_n = P_{n-1} + P_{n_5} with seeds:
+ * - P_n = P_{n-1} + P_{n-5} with seeds:
  * - P_0 = P_1 = P_2 = 1
- * - P_3 = P_4 = 2
+ * - P_3 = P_4 = 2.
  */
-object Padovan2 : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(1, 1, 1, 2, 2),
-    coeffs = listOf(1, 0, 0, 0, 1)
+object Padovan2 :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.TWO, BigInteger.TWO),
+        coefficients = listOf(BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE)
 )

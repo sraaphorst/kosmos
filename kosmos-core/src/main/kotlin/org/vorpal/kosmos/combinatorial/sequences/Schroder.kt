@@ -2,8 +2,7 @@ package org.vorpal.kosmos.combinatorial.sequences
 
 import java.math.BigInteger
 import org.vorpal.kosmos.combinatorial.arrays.SchroderTriangle
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.combinatorial.recurrence.CachedRecursiveSequence
 
 /**
  * **Large Schröder numbers** Sₙ.
@@ -27,21 +26,20 @@ import org.vorpal.kosmos.memoization.memoize
  *
  * OEIS A006318
  */
-object Schroder : Recurrence<BigInteger> {
+object Schroder : CachedRecursiveSequence() {
+    override val initial = listOf(BigInteger.ONE)
 
     /** Memoized row-sum definition via the Schröder triangle. */
-    private val recursiveCache = memoize<Int, BigInteger> { n ->
-        when (n) {
-            0 -> BigInteger.ONE
-            else -> (0..n).fold(BigInteger.ZERO) { acc, k -> acc + SchroderTriangle(n, k) }
-        }
+    override fun recursiveCalculator(n: Int): BigInteger = when {
+        n == 0 -> BigInteger.ONE
+        else   -> SchroderTriangle.row(n).sumOf { it }
     }
 
-    operator fun invoke(n: Int): BigInteger = recursiveCache(n)
-
-    override fun iterator(): Iterator<BigInteger> = object : Iterator<BigInteger> {
-        private var n = 0
-        override fun hasNext(): Boolean = true
-        override fun next(): BigInteger = recursiveCache(n++)
-    }
+    // Alternatively, we could do:
+//    override fun recursiveCalculator(n: Int): BigInteger = when {
+//        n == 0 -> BigInteger.ONE
+//        else -> Schroder(n - 1) + (0 until n).fold(BigInteger.ZERO) { acc, k ->
+//            acc + Schroder(k) * Schroder(n - 1 - k)
+//        }
+//    }
 }

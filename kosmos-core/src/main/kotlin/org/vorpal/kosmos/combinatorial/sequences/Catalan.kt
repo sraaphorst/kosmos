@@ -1,65 +1,39 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
 import org.vorpal.kosmos.combinatorial.Factorial
-import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
-import org.vorpal.kosmos.combinatorial.recurrence.NonlinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.combinatorial.recurrence.CachedNonlinearRecurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedClosedForm
 import java.math.BigInteger
 
 /**
- * Represents the infinite sequence of **Catalan numbers** Cₙ.
+ * **Catalan numbers** Cₙ:
+ * number of Dyck paths, binary trees, or correct bracket expressions with n pairs.
  *
- * These count a wide variety of combinatorial objects, including:
- * - the number of correct bracketings of n+1 factors;
- * - the number of rooted binary trees with n+1 leaves; and
- * - the number of monotonic lattice paths along the edges of an n×n grid
- *   that do not cross the diagonal.
- *
- * ### Definition
- * The Catalan numbers are defined by:
- * ```
- * Cₙ = (1 / (n + 1)) * (2n choose n)
- * ```
- *
- * ### Equivalent factorial form
- * ```
- * Cₙ = (2n)! / ((n + 1)! * n!)
- * ```
- *
- * ### Recurrence relation
+ * Recurrence (nonlinear):
  * ```
  * C₀ = 1
- * C_{n+1} = Σ_{i=0}^{n} C_i * C_{n-i}
+ * Cₙ₊₁ = Σₖ₌₀ⁿ Cₖ · Cₙ₋ₖ
  * ```
  *
- * ### Example
+ * Closed form:
  * ```
- * C₀ = 1
- * C₁ = 1
- * C₂ = 2
- * C₃ = 5
- * C₄ = 14
+ * Cₙ = (1 / (n + 1)) · (2n choose n)
+ *     = (2n)! / ((n + 1)! · n!)
  * ```
  *
- * Every [Recurrence] is a [Sequence], so this can be treated as such.
- * We delegate the things Recurrence needs (initial, iterator()) to NonlinearRecurrence.
+ * OEIS A000108
  */
-object Catalan : Recurrence<BigInteger> by NonlinearRecurrence(
-    initial = listOf(BigInteger.ONE),
-
-    // Since each new term depends on all earlier ones, they are already implicitly stored in generator's
-    // internal list: no explicit memoization needed, which is only useful for random access.
-    next = { terms ->
-        val n = terms.lastIndex
-        var acc = BigInteger.ZERO
-        for (i in 0..n) acc += terms[i] * terms[n - i]
-        acc
-    }
-), ClosedForm<BigInteger> {
-    private val closedFormCache = memoize<Int, BigInteger> { n  ->
+object Catalan :
+    CachedNonlinearRecurrence(
+        initial = listOf(BigInteger.ONE),
+        next = { prefix ->
+            val n = prefix.lastIndex
+            (0..n).fold(BigInteger.ZERO) { acc, i ->
+                acc + prefix[i] * prefix[n - i]
+            }
+        }
+    ),
+    CachedClosedForm {
+    override fun closedFormCalculator(n: Int): BigInteger =
         Factorial(2 * n) / (Factorial(n + 1) * Factorial(n))
-    }
-
-    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
 }

@@ -1,36 +1,35 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedClosedForm
+import java.math.BigDecimal
 import java.math.BigInteger
+import java.math.MathContext
+import java.math.RoundingMode
 
 /**
- * **Pell–Lucas numbers** — the companion sequence to the [Pell] numbers,
- * defined by the same recurrence:
+ * **Pell–Lucas numbers** Qₙ:
  *
- *     Q₀ = 1, Q₁ = 1,
- *     Qₙ₊₁ = 2·Qₙ + Qₙ₋₁
+ * Q₀ = 1, Q₁ = 1, Qₙ = 2·Qₙ₋₁ + Qₙ₋₂  (n ≥ 2)
  *
- * The first few terms are:
- *
- *     1, 1, 3, 7, 17, 41, 99, 239, 577, ...
- *
- * The Pell–Lucas numbers occur as the **numerators** of the best rational
- * approximations to √2:
- *
- *     √2 ≈ Qₙ / Pₙ
- *
- * where Pₙ are the [Pell] numbers.
- *
- * They satisfy the Diophantine identity:
- *
- *     Qₙ² - 2·Pₙ² = (–1)ⁿ
- *
- * and form a Lucas-type sequence with parameters (P, Q) = (2, –1).
- *
- * @see Pell for the companion denominator sequence.
+ * Closed form:
+ *   Qₙ = ½·((1+√2)ⁿ + (1−√2)ⁿ)
  */
-object PellLucas : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(1, 1),
-    coeffs = listOf(2, 1)
-)
+object PellLucas :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.ONE, BigInteger.ONE),
+        coefficients = listOf(BigInteger.TWO, BigInteger.ONE)
+    ),
+    CachedClosedForm {
+    private val mc = MathContext(50, RoundingMode.HALF_EVEN)
+    private val sqrt2 = BigDecimal(2).sqrt(mc)
+    private val a = BigDecimal.ONE + sqrt2
+    private val b = BigDecimal.ONE - sqrt2
+    private val two = BigDecimal(2)
+
+    override fun closedFormCalculator(n: Int): BigInteger {
+        if (n < 0) return BigInteger.ZERO
+        val qn = (a.pow(n, mc) + b.pow(n, mc)).divide(two, mc)
+        return qn.setScale(0, RoundingMode.HALF_UP).toBigInteger()
+    }
+}
