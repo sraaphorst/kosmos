@@ -1,8 +1,7 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedBivariateRecurrence
 import java.math.BigInteger
-import org.vorpal.kosmos.memoization.recursiveMemoize2
 
 /**
  * **Aitken's Array** (aka Bell's Triangle, Peirce Triangle).
@@ -70,16 +69,12 @@ import org.vorpal.kosmos.memoization.recursiveMemoize2
  *
  * OEIS A011971
  */
-object Aitken : BivariateRecurrence<BigInteger> {
-
-    private val recursiveCache = recursiveMemoize2<Int, Int, BigInteger> { self, n, k ->
+object Aitken : CachedBivariateRecurrence() {
+    override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0..n -> BigInteger.ZERO
-            k == 0 -> self(n - 1, n - 1)
-            else -> self(n, k - 1) + self(n - 1, k - 1)
+            k == 0 -> this(n - 1, n - 1)
+            else -> this(n, k - 1) + this(n - 1, k - 1)
         }
-    }
-
-    override fun invoke(n: Int, k: Int): BigInteger = recursiveCache(n, k)
 }

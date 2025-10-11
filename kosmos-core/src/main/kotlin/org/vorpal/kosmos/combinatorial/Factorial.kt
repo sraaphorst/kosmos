@@ -1,54 +1,21 @@
 package org.vorpal.kosmos.combinatorial
 
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.combinatorial.recurrence.WindowedRecurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedRecursiveSequence
 import java.math.BigInteger
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * **Factorial numbers** n!:
- * the product of all positive integers up to n.
  *
- * Recurrence:
- * ```
- * 0! = 1
- * n! = n × (n−1)!
- * ```
+ * fac(0) = 1, and fac(n) = n · fac(n−1) for n ≥ 1.
  *
  * OEIS A000142
  */
-object Factorial : WindowedRecurrence<BigInteger> {
-    override val initial: List<BigInteger> = listOf(BigInteger.ONE)
-
-    /** Thread-safe cache for computed values. */
-    private val cache = ConcurrentHashMap<Int, BigInteger>().apply {
-        put(0, BigInteger.ONE)
-        put(1, BigInteger.ONE)
-    }
-
-    /**
-     * Computes n! recursively with memoization.
-     *
-     * @param n the non-negative integer
-     * @return n! as a BigInteger
-     */
-    operator fun invoke(n: Int): BigInteger {
-        require(n >= 0) { "Factorial is undefined for negative n: $n" }
-        cache[n]?.let { return it }
-
-        val result = when (n) {
-            0, 1 -> BigInteger.ONE
-            else -> BigInteger.valueOf(n.toLong()) * invoke(n - 1)
+object Factorial : CachedRecursiveSequence() {
+    override val initial = listOf(BigInteger.ONE)
+    override fun recursiveCalculator(n: Int): BigInteger =
+        when {
+            n < 0  -> error("Factorial is undefined for negative n: $n")
+            n == 0 -> BigInteger.ONE          // also covered by initial
+            else   -> BigInteger.valueOf(n.toLong()) * this(n - 1)
         }
-
-        cache[n] = result
-        return result
-    }
-
-    /** Infinite iterator of factorial numbers: 0!, 1!, 2!, … */
-    override fun iterator(): Iterator<BigInteger> = object : Iterator<BigInteger> {
-        private var n = 0
-        override fun hasNext(): Boolean = true
-        override fun next(): BigInteger = invoke(n++)
-    }
 }

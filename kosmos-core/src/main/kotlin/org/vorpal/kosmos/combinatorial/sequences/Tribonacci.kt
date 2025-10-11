@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
 import java.math.BigInteger
 
 /**
@@ -17,13 +16,8 @@ import java.math.BigInteger
  * First few terms:
  *   0, 0, 1, 1, 2, 4, 7, 13, 24, 44, 81, 149, ...
  */
-object Tribonacci : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(0, 0, 1),
-    coeffs = listOf(1, 1, 1)
-)
-
-/** Lightweight 64-bit Tribonacci implementation. */
-object Tribonacci64 : Recurrence<Long> by LinearRecurrence.forLong(
-    initial = listOf(0, 0, 1),
-    coeffs = listOf(1, 1, 1)
-)
+object Tribonacci :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE),
+        coefficients = listOf(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE)
+    )

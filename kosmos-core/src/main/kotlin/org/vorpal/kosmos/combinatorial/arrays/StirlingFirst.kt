@@ -1,13 +1,7 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
-import org.vorpal.kosmos.combinatorial.Binomial
-import org.vorpal.kosmos.combinatorial.Factorial
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
-import org.vorpal.kosmos.memoization.memoize
-import org.vorpal.kosmos.std.bigIntSgn
+import org.vorpal.kosmos.combinatorial.recurrence.CachedBivariateRecurrence
 import java.math.BigInteger
-import java.util.concurrent.ConcurrentHashMap
 
 /**
  * Represents the **Stirling numbers of the first kind** s(n, k).
@@ -59,28 +53,13 @@ import java.util.concurrent.ConcurrentHashMap
  *
  * Note that there is no closed form for Stirling numbers of the first kind.
  */
-object StirlingFirst : BivariateRecurrence<BigInteger> {
-    private val recursiveCache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
-
-    override fun invoke(n: Int, k: Int): BigInteger {
-        val key = n to k
-        recursiveCache[key]?.let { return it }
-
-        val result = when {
+object StirlingFirst : CachedBivariateRecurrence() {
+    override fun recursiveCalculator(n: Int, k: Int): BigInteger =
+        when {
             n == 0 && k == 0 -> BigInteger.ONE
             k !in 0..n -> BigInteger.ZERO
             k == 0 -> BigInteger.ZERO
             // TODO: Change - to + for unsigned
             else -> invoke(n - 1, k - 1) - (n - 1).toBigInteger() * invoke(n - 1, k)
         }
-
-        recursiveCache[key] = result
-        return result
-    }
-}
-
-fun main() {
-    for (n in 0..8)
-        for (l in 0..n)
-            println("$n, $l, ${StirlingFirst(n, l)}")
 }

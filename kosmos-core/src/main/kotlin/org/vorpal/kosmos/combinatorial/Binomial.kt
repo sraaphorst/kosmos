@@ -15,17 +15,17 @@ import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
  *
  * OEIS A007318
  */
-object Binomial : BivariateRecurrence<BigInteger> {
+object Binomial : BivariateRecurrence {
 
     private val cache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
 
-    override fun invoke(n: Int, k: Int): BigInteger {
+    override operator fun invoke(n: Int, k: Int): BigInteger {
         val key = n to k
         cache[key]?.let { return it }
 
-        val result = when {
-            k !in 0..n -> BigInteger.ZERO
-            k == 0 || k == n -> BigInteger.ONE
+        val result = when (k) {
+            !in 0..n -> BigInteger.ZERO
+            0, n -> BigInteger.ONE
             else -> invoke(n - 1, k - 1) + invoke(n - 1, k)
         }
 

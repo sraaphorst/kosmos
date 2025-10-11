@@ -1,40 +1,39 @@
 package org.vorpal.kosmos.combinatorial.sequences
 
-import org.vorpal.kosmos.combinatorial.recurrence.ClosedForm
-import org.vorpal.kosmos.combinatorial.recurrence.LinearRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.Recurrence
-import org.vorpal.kosmos.memoization.memoize
+import org.vorpal.kosmos.combinatorial.recurrence.CachedLinearSequence
+import org.vorpal.kosmos.combinatorial.recurrence.CachedClosedForm
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.MathContext
+import java.math.RoundingMode
 
 /**
- * Infinite sequence of **Fibonacci numbers** Fₙ.
+ * **Fibonacci numbers** Fₙ:
+ * F₀ = 0, F₁ = 1, Fₙ = Fₙ₋₁ + Fₙ₋₂
  *
- * Defined by:
- *   F(0) = 0, F(1) = 1,
- *   F(n) = F(n−1) + F(n−2)
+ * Closed form (Binet’s formula):
+ * ```
+ * Fₙ = (φⁿ − ψⁿ) / √5
+ * φ = (1 + √5)/2, ψ = (1 − √5)/2
+ * ```
  *
- * Recurrence coefficients: [1, 1]
- * Initial values: [0, 1]
- *
- * First few terms:
- *   0, 1, 1, 2, 3, 5, 8, 13, ...
- *
- * Properties:
- * - Linear recurrence with constant coefficients.
- * - Appears in nature and mathematics via the golden ratio φ.
- * - Exponential generating function: (eˣ - 1) / (eˣ + 1)
+ * OEIS A000045
  */
-object Fibonacci : Recurrence<BigInteger> by LinearRecurrence.forBigIntFromLong(
-    initial = listOf(0, 1),
-    coeffs = listOf(1, 1)
-), ClosedForm<BigInteger> {
-    private val phi = (BigDecimal.ONE + BigDecimal(5.0).sqrt(MathContext.DECIMAL64)) / BigDecimal.TWO
-    private val psi = (BigDecimal.ONE - BigDecimal(5.0).sqrt(MathContext.DECIMAL64)) / BigDecimal.TWO
-    private val closedFormCache = memoize<Int, BigInteger> { n  ->
-        ((phi.pow(n) - psi.pow(n))/(phi - psi)).toBigInteger()
-    }
+object Fibonacci :
+    CachedLinearSequence(
+        initial = listOf(BigInteger.ZERO, BigInteger.ONE),
+        coefficients = listOf(BigInteger.ONE, BigInteger.ONE)
+    ),
+    CachedClosedForm {
+    private val mc = MathContext(50, RoundingMode.HALF_EVEN)
+    private val sqrt5 = BigDecimal(5).sqrt(mc)
+    private val phi = (BigDecimal.ONE + sqrt5).divide(BigDecimal(2), mc)
+    private val psi = (BigDecimal.ONE - sqrt5).divide(BigDecimal(2), mc)
 
-    override fun closedForm(n: Int): BigInteger = closedFormCache(n)
+    /** Binet’s closed form for Fₙ. */
+    override fun closedFormCalculator(n: Int): BigInteger {
+        if (n < 0) return BigInteger.ZERO
+        val fn = (phi.pow(n, mc) - psi.pow(n, mc)).divide(sqrt5, mc)
+        return fn.setScale(0, RoundingMode.HALF_UP).toBigInteger()
+    }
 }

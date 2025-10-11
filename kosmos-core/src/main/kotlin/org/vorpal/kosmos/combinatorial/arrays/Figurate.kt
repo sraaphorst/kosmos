@@ -1,10 +1,7 @@
 package org.vorpal.kosmos.combinatorial.arrays
 
 import java.math.BigInteger
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateRecurrence
-import org.vorpal.kosmos.combinatorial.recurrence.BivariateClosedForm
-import org.vorpal.kosmos.memoization.memoize
-import org.vorpal.kosmos.memoization.recursiveMemoize2
+import org.vorpal.kosmos.combinatorial.recurrence.CachedBivariateArray
 
 /**
  * **Figurate (polygonal) numbers** P(s, n):
@@ -30,22 +27,18 @@ import org.vorpal.kosmos.memoization.recursiveMemoize2
  * ```
  * OEIS families: A000217 (triangular), A000290 (square), A000326 (pentagonal)
  */
-object Figurate : BivariateRecurrence<BigInteger>, BivariateClosedForm<BigInteger> {
-
-    private val recursiveCache = recursiveMemoize2<Int, Int, BigInteger> { self, s, n ->
-        when {
+object Figurate : CachedBivariateArray() {
+    override fun recursiveCalculator(s: Int, n: Int): BigInteger = when {
             s < 3 || n < 1 -> BigInteger.ZERO
             n == 1 -> BigInteger.ONE
-            else -> self(s, n - 1) + BigInteger.valueOf((s - 2L) * (n - 1L) + 1L)
+            else -> this(s, n - 1) + BigInteger.valueOf((s - 2L) * (n - 1L) + 1L)
         }
-    }
 
-    override fun invoke(s: Int, n: Int): BigInteger = recursiveCache(s, n)
-
-    private val closedFormCache = memoize<Int, Int, BigInteger> { s, n ->
+    override fun closedFormCalculator(s: Int, n: Int): BigInteger =
         if (s < 3 || n < 1) BigInteger.ZERO
-        else BigInteger.valueOf((s - 2L) * n * n - (s - 4L) * n).divide(BigInteger.TWO)
-    }
-
-    override fun closedForm(s: Int, n: Int): BigInteger = closedFormCache(s, n)
+        else {
+            val sBig = s.toBigInteger()
+            val nBig = n.toBigInteger()
+            ((sBig - BigInteger.TWO) * nBig * nBig - (sBig - BigInteger.valueOf(4)) * nBig) / BigInteger.TWO
+        }
 }
