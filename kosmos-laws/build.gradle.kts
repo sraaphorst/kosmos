@@ -1,5 +1,5 @@
 plugins { kotlin("jvm") }
-group = "org.vorpal.kosmos.laws"
+group = "org.vorpal.kosmos.kosmos-laws"
 version = "1.0-SNAPSHOT"
 
 val arrowVersion = rootProject.ext["arrowVersion"]
