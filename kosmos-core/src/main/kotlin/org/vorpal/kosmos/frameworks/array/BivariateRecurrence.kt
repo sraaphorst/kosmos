@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.combinatorics.recurrence
+package org.vorpal.kosmos.frameworks.array
 
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap

@@ -1,7 +1,9 @@
 package org.vorpal.kosmos.combinatorics.sequences
 
-import org.vorpal.kosmos.combinatorics.recurrence.CachedClosedForm
-import org.vorpal.kosmos.combinatorics.recurrence.CachedNonlinearRecurrence
+import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
+import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
+import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
+import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
 import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
@@ -9,44 +11,48 @@ import java.math.BigInteger
  * **Jacobsthal–Oblong numbers** (or **Jacobsthal pronic numbers**) —
  * the products of consecutive [Jacobsthal] numbers:
  *
- *     Oₙ = Jₙ · Jₙ₊₁
+ * ```
+ * Oₙ = Jₙ · Jₙ₊₁
+ * ```
  *
- * with base cases:
+ * Base cases:
+ * ```
+ * O₀ = 0,  O₁ = 0
+ * ```
  *
- *     O₀ = 0, O₁ = 0,
- *     Oₙ₊₁ = Jₙ₊₁ (Jₙ₊₁ + Jₙ)
+ * First few terms:
+ * ```
+ * 0, 0, 1, 3, 15, 55, 231, 903, 3875, ...
+ * ```
  *
- * Equivalently, they satisfy the nonlinear recurrence:
+ * ### Closed form
+ * ```
+ * Oₙ = (1/9) · (2ⁿ − (–1)ⁿ) · (2ⁿ⁺¹ − (–1)ⁿ⁺¹)
+ * ```
  *
- *     Oₙ₊₁ = (√(Oₙ + Jₙ²))² + 2Oₙ  // using Jₙ = (2ⁿ – (–1)ⁿ) / 3
- *
- * The first few terms are:
- *
- *     0, 0, 1, 3, 15, 55, 231, 903, 3875, ...
- *
- * The closed form is:
- *
- *     Oₙ = (1/9) · (2ⁿ – (–1)ⁿ) · (2ⁿ⁺¹ – (–1)ⁿ⁺¹)
+ * OEIS A001045 (Jacobsthal) and A007482 (Jacobsthal–Oblong)
  */
 object JacobsthalOblong :
-    CachedNonlinearRecurrence(
-        initial = listOf(BigInteger.ZERO, BigInteger.ONE),
-        next = { terms ->
-            // We have O₀..Oₙ; compute Oₙ₊₁ using Jacobsthal closed form for Jₙ, Jₙ₊₁
-            val n = terms.lastIndex
-            Jacobsthal(n) * Jacobsthal(n + 1)
+    CachedRecurrence<BigInteger> by JacobsthalOblongRecurrence,
+    CachedClosedForm<BigInteger> by JacobsthalOblongClosedForm
+
+private object JacobsthalOblongRecurrence : CachedRecurrenceImplementation<BigInteger>() {
+    override fun recursiveCalculator(n: Int): BigInteger = when {
+        n < 0 -> BigInteger.ZERO
+        else -> Jacobsthal(n) * Jacobsthal(n + 1)
+    }
+}
+
+private object JacobsthalOblongClosedForm : CachedClosedFormImplementation<BigInteger>() {
+    private val NINE = BigInteger.valueOf(9L)
+    override fun closedFormCalculator(n: Int): BigInteger = when {
+        n < 0 -> BigInteger.ZERO
+        else -> {
+            val a = BigInteger.ONE.shl(n)
+            val b = bigIntSgn(n)
+            val c = a.shl(1)
+            val d = -b
+            (a - b) * (c - d) / NINE
         }
-), CachedClosedForm {
-    /**
-     * Closed form for Jacobsthal–Oblong numbers:
-     *     Oₙ = (1/9) · (2ⁿ – (–1)ⁿ) · (2ⁿ⁺¹ – (–1)ⁿ⁺¹)
-     */
-    override fun closedFormCalculator(n: Int): BigInteger {
-        if (n < 0) return BigInteger.ZERO
-        val a = BigInteger.ONE.shl(n)
-        val b = bigIntSgn(n)
-        val c = a.shl(1)
-        val d = -b
-        return (a - b) * (c - d) / BigInteger.valueOf(9)
     }
 }

@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.combinatorics.arrays
 
 import java.math.BigInteger
-import org.vorpal.kosmos.combinatorics.recurrence.CachedBivariateArray
+import org.vorpal.kosmos.frameworks.array.CachedBivariateArray
 
 /**
  * **Figurate (polygonal) numbers** P(s, n):

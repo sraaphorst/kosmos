@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics
 
 import java.math.BigInteger
 import java.util.concurrent.ConcurrentHashMap
-import org.vorpal.kosmos.combinatorics.recurrence.BivariateRecurrence
+import org.vorpal.kosmos.frameworks.array.BivariateRecurrence
 
 /**
  * **Binomial coefficients** C(n,k) = n choose k.
