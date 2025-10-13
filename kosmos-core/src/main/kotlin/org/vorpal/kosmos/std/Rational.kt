@@ -25,8 +25,8 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
         fun of(n: Long) = of(n.toBigInteger(), BigInteger.ONE)
         fun of(n: BigInteger) = of(n, BigInteger.ONE)
 
-        val zero = of(0, 1)
-        val one  = of(1, 1)
+        val ZERO = of(0, 1)
+        val ONE  = of(1, 1)
     }
 
     // Note: all operators that do not directly call of(...) delegate to ones that do to reduce and normalize.

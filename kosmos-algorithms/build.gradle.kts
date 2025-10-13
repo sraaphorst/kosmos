@@ -6,5 +6,6 @@ version = "1.0-SNAPSHOT"
 // TODO: re-add kosmos-lawkit once it is working.
 dependencies {
     implementation(project(":kosmos-core"))
+    implementation(project(":kosmos-testkit"))
 //    implementation(project(":kosmos-lawkit"))
 }

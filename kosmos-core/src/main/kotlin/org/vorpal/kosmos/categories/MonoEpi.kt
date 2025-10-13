@@ -1,7 +1,8 @@
 package org.vorpal.kosmos.categories
 
-import org.vorpal.kosmos.combinatorial.FiniteSet
+import org.vorpal.kosmos.combinatorics.FiniteSet
 
+// TODO: This needs to be moved, probably to a testing location.
 fun <A, B> isMonoSet(
     f: Morphism<A, B>,
     domain: FiniteSet<A>,
