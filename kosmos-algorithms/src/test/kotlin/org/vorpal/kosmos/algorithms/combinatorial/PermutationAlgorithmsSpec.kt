@@ -12,10 +12,10 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.combinatorial.FiniteSet
-import org.vorpal.kosmos.combinatorial.Permutation
-import org.vorpal.kosmos.combinatorial.generateArbOrderedFiniteSetOfSize
-import org.vorpal.kosmos.combinatorial.generateArbPermutationOfSize
+import org.vorpal.kosmos.combinatorics.FiniteSet
+import org.vorpal.kosmos.combinatorics.Permutation
+import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSetOfSize
+import org.vorpal.kosmos.combinatorics.generateArbPermutationOfSize
 import org.vorpal.kosmos.core.bigFactorial
 import java.math.BigInteger
 import java.util.Random
@@ -418,7 +418,7 @@ class PermutationAlgorithmsSpec : FunSpec({
         test("lexicographic iteration matches rank sequence") {
             val base = FiniteSet.ordered(1, 2, 3)
 
-            var current: org.vorpal.kosmos.combinatorial.Permutation<Int>? = permutations(base).first()
+            var current: org.vorpal.kosmos.combinatorics.Permutation<Int>? = permutations(base).first()
             var expectedRank = BigInteger.ZERO
 
             while (current != null) {

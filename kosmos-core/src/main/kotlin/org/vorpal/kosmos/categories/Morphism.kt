@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.categories
 
 import org.vorpal.kosmos.algebra.structures.Group
-import org.vorpal.kosmos.combinatorial.FiniteSet
+import org.vorpal.kosmos.combinatorics.FiniteSet
 
 /** A general morphism from one type to another. */
 fun interface Morphism<A, B> {
