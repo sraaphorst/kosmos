@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.combinatorics.arrays
 
-import org.vorpal.kosmos.combinatorics.recurrence.CachedBivariateRecurrence
+import org.vorpal.kosmos.frameworks.array.CachedBivariateRecurrence
 import java.math.BigInteger
 
 /**
