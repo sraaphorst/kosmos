@@ -7,7 +7,7 @@ import java.math.BigInteger
  * The Schröder triangle is a triangle associated with the [Schroder][org.vorpal.kosmos.combinatorics.sequences.Schroder] numbers.
  *
  */
-object SchroderTriangle : CachedBivariateRecurrence() {
+object SchroderTriangle : CachedBivariateRecurrence<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             k == 0 -> BigInteger.ONE

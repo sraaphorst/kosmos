@@ -83,7 +83,7 @@ import kotlin.math.min
  * - OEIS [A008288](https://oeis.org/A008288) — Delannoy numbers
  * - OEIS [A001850](https://oeis.org/A001850) — Central Delannoy numbers
  */
-object Delannoy : CachedBivariateArray() {
+object Delannoy : CachedBivariateArray<BigInteger>() {
 
     override fun recursiveCalculator(m: Int, n: Int): BigInteger =
         when {

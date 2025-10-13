@@ -1,18 +1,16 @@
 package org.vorpal.kosmos.frameworks.array
 
-import java.math.BigInteger
-
 /**
  * A bivariate array whose terms can be calculated recursively.
  */
-abstract class CachedBivariateRecurrence: BivariateRecurrence {
+abstract class CachedBivariateRecurrence<T>: BivariateRecurrence<T> {
     private val recursiveCache = createCache()
 
     /** Function that defines how to compute a term t(n, k) recursively. */
-    abstract fun recursiveCalculator(n: Int, k: Int): BigInteger
+    abstract fun recursiveCalculator(n: Int, k: Int): T
 
     /** Cached recursive invocation. */
-    final override fun invoke(n: Int, k: Int): BigInteger {
+    final override fun invoke(n: Int, k: Int): T {
         val key = n to k
         recursiveCache[key]?.let { return it }
         val result = recursiveCalculator(n, k)

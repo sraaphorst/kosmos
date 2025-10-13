@@ -35,7 +35,7 @@ import java.math.BigInteger
  * n=4: 1 4 6 4 1
  * ```
  */
-object Pascal : CachedBivariateArray() {
+object Pascal : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when (k) {
             !in 0..n -> BigInteger.ZERO

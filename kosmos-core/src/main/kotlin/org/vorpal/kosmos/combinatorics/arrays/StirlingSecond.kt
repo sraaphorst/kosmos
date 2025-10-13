@@ -45,7 +45,7 @@ import java.math.BigInteger
  * S(n, k) = 1/k! * Σ_{j=0}^{k} (-1)^{k-j} * (k choose j) * j^n
  * ```
  */
-object StirlingSecond : CachedBivariateArray() {
+object StirlingSecond : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0  -> BigInteger.ONE

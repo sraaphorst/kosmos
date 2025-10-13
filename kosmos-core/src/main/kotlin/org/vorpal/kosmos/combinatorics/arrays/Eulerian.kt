@@ -22,7 +22,7 @@ import java.math.BigInteger
  *
  * OEIS A008292
  */
-object Eulerian : CachedBivariateArray() {
+object Eulerian : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0 -> BigInteger.ONE

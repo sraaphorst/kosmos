@@ -27,7 +27,7 @@ import java.math.BigInteger
  *
  * OEIS A060187
  */
-object EulerianTypeB : CachedBivariateArray() {
+object EulerianTypeB : CachedBivariateArray<BigInteger>() {
 
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
@@ -46,7 +46,8 @@ object EulerianTypeB : CachedBivariateArray() {
             k !in 0..n -> BigInteger.ZERO
             else ->
                 (0..k).fold(BigInteger.ZERO) { acc, j ->
-                    acc + bigIntSgn(j) * Binomial(n + 1, j) * BigInteger.valueOf(2L * (k - j) + 1L).pow(n)
+                    acc + bigIntSgn(j) * Binomial(n + 1, j) *
+                            BigInteger.valueOf(2L * (k - j) + 1L).pow(n)
                 }
         }
 }

@@ -15,56 +15,56 @@ class RationalSpec : StringSpec({
 
     // ===== Additional Generators =====
 
-    val arbSmallInts = Arb.Companion.int(-1000..1000)
+    val arbSmallInts = Arb.int(-1000..1000)
     val arbPositiveRational = arbRational.filter { it.isPositive }
     val arbIntegerRational = arbRational.filter { it.isInteger }
 
     // Generate rationals that won't cause overflow in operations
-    val arbSafeRational = Arb.Companion.bind(
-        Arb.Companion.int(-1000..1000),
-        Arb.Companion.int(1..1000)
-    ) { n, d -> Rational.Companion.of(n, d) }
+    val arbSafeRational = Arb.bind(
+        Arb.int(-1000..1000),
+        Arb.int(1..1000)
+    ) { n, d -> Rational.of(n, d) }
 
     val arbSafeNonzeroRational = arbSafeRational.filter { !it.isZero }
 
     // ===== Construction and Normalization Tests =====
 
     "rational is always in reduced form" {
-        checkAll(Arb.Companion.bigInt(32), Arb.Companion.bigInt(32).filter { it != BigInteger.ZERO }) { n, d ->
-            val r = Rational.Companion.of(n, d)
+        checkAll(Arb.bigInt(32), Arb.bigInt(32).filter { it != BigInteger.ZERO }) { n, d ->
+            val r = Rational.of(n, d)
             r.n.gcd(r.d) shouldBe BigInteger.ONE
         }
     }
 
     "rational denominator is always positive" {
-        checkAll(Arb.Companion.bigInt(32), Arb.Companion.bigInt(32).filter { it != BigInteger.ZERO }) { n, d ->
-            val r = Rational.Companion.of(n, d)
+        checkAll(Arb.bigInt(32), Arb.bigInt(32).filter { it != BigInteger.ZERO }) { n, d ->
+            val r = Rational.of(n, d)
             r.d.signum() shouldBe 1
         }
     }
 
     "rational handles negative denominators correctly" {
         checkAll(arbSmallInts, arbSmallInts.filter { it != 0 }) { n, d ->
-            val r1 = Rational.Companion.of(n, d)
-            val r2 = Rational.Companion.of(-n, -d)
+            val r1 = Rational.of(n, d)
+            val r2 = Rational.of(-n, -d)
             r1 shouldBe r2
         }
     }
 
     "zero denominator throws exception" {
         shouldThrow<IllegalArgumentException> {
-            Rational.Companion.of(1, 0)
+            Rational.of(1, 0)
         }
         shouldThrow<IllegalArgumentException> {
-            Rational.Companion.of(BigInteger.ONE, BigInteger.ZERO)
+            Rational.of(BigInteger.ONE, BigInteger.ZERO)
         }
     }
 
     "factory methods create equivalent rationals" {
         checkAll(arbSmallInts) { n ->
-            Rational.Companion.of(n) shouldBe Rational.Companion.of(n, 1)
-            Rational.Companion.of(n.toLong()) shouldBe Rational.Companion.of(n)
-            Rational.Companion.of(n.toBigInteger()) shouldBe Rational.Companion.of(n)
+            Rational.of(n) shouldBe Rational.of(n, 1)
+            Rational.of(n.toLong()) shouldBe Rational.of(n)
+            Rational.of(n.toBigInteger()) shouldBe Rational.of(n)
         }
     }
 
@@ -84,15 +84,15 @@ class RationalSpec : StringSpec({
 
     "zero is additive identity" {
         checkAll(arbSafeRational) { r ->
-            r + Rational.Companion.zero shouldBe r
-            Rational.Companion.zero + r shouldBe r
+            r + Rational.ZERO shouldBe r
+            Rational.ZERO + r shouldBe r
         }
     }
 
     "additive inverses work correctly" {
         checkAll(arbSafeRational) { r ->
-            r + (-r) shouldBe Rational.Companion.zero
-            (-r) + r shouldBe Rational.Companion.zero
+            r + (-r) shouldBe Rational.ZERO
+            (-r) + r shouldBe Rational.ZERO
         }
     }
 
@@ -110,15 +110,15 @@ class RationalSpec : StringSpec({
 
     "one is multiplicative identity" {
         checkAll(arbSafeRational) { r ->
-            r * Rational.Companion.one shouldBe r
-            Rational.Companion.one * r shouldBe r
+            r * Rational.ONE shouldBe r
+            Rational.ONE * r shouldBe r
         }
     }
 
     "multiplicative inverses work correctly" {
         checkAll(arbSafeNonzeroRational) { r ->
-            r * r.reciprocal() shouldBe Rational.Companion.one
-            r.reciprocal() * r shouldBe Rational.Companion.one
+            r * r.reciprocal() shouldBe Rational.ONE
+            r.reciprocal() * r shouldBe Rational.ONE
         }
     }
 
@@ -156,7 +156,7 @@ class RationalSpec : StringSpec({
 
     "comparison is transitive" {
         checkAll(arbSafeRational, arbSafeRational, arbSafeRational) { a, b, c ->
-            if (a <= b && b <= c) {
+            if (b in a..c) {
                 a <= c
             }
         }
@@ -175,22 +175,22 @@ class RationalSpec : StringSpec({
     // ===== Power Operation Tests =====
 
     "positive integer powers work correctly" {
-        checkAll(arbSafeNonzeroRational, Arb.Companion.int(0..10)) { r, exp ->
+        checkAll(arbSafeNonzeroRational, Arb.int(0..10)) { r, exp ->
             val result = r.pow(exp)
-            result shouldBe generateSequence { r }.take(exp).fold(Rational.Companion.one) { acc, x -> acc * x }
+            result shouldBe generateSequence { r }.take(exp).fold(Rational.ONE) { acc, x -> acc * x }
         }
     }
 
     "negative integer powers work correctly" {
-        checkAll(arbSafeNonzeroRational, Arb.Companion.int(1..10)) { r, exp ->
+        checkAll(arbSafeNonzeroRational, Arb.int(1..10)) { r, exp ->
             r.pow(-exp) shouldBe r.reciprocal().pow(exp)
-            r.pow(-exp) shouldBe Rational.Companion.one / r.pow(exp)
+            r.pow(-exp) shouldBe Rational.ONE / r.pow(exp)
         }
     }
 
     "power of zero" {
         checkAll(arbSafeNonzeroRational) { r ->
-            r.pow(0) shouldBe Rational.Companion.one
+            r.pow(0) shouldBe Rational.ONE
         }
     }
 
@@ -201,7 +201,7 @@ class RationalSpec : StringSpec({
     }
 
     "power laws hold" {
-        checkAll(arbSafeNonzeroRational, Arb.Companion.int(-5..5), Arb.Companion.int(-5..5)) { r, a, b ->
+        checkAll(arbSafeNonzeroRational, Arb.int(-5..5), Arb.int(-5..5)) { r, a, b ->
             if (a + b in -10..10) { // Avoid overflow
                 r.pow(a) * r.pow(b) shouldBe r.pow(a + b)
             }
@@ -246,14 +246,14 @@ class RationalSpec : StringSpec({
 
     "integer rationals toString without denominator" {
         checkAll(arbSmallInts) { n ->
-            val r = Rational.Companion.of(n)
+            val r = Rational.of(n)
             r.toString() shouldBe n.toString()
         }
     }
 
     "non-integer rationals toString with denominator" {
         checkAll(arbSmallInts, arbSmallInts.filter { it > 1 }) { n, d ->
-            val r = Rational.Companion.of(n, d)
+            val r = Rational.of(n, d)
             if (!r.isInteger) {
                 r.toString() shouldBe "${r.n}/${r.d}"
             }
@@ -321,14 +321,14 @@ class RationalSpec : StringSpec({
 
     "reciprocal of zero throws exception" {
         shouldThrow<IllegalArgumentException> {
-            Rational.Companion.zero.reciprocal()
+            Rational.ZERO.reciprocal()
         }
     }
 
     "division by zero throws exception" {
         checkAll(arbSafeRational) { r ->
             shouldThrow<IllegalArgumentException> {
-                r / Rational.Companion.zero
+                r / Rational.ZERO
             }
         }
     }
@@ -337,17 +337,17 @@ class RationalSpec : StringSpec({
 
     "operations with zero" {
         checkAll(arbSafeRational) { r ->
-            r + Rational.Companion.zero shouldBe r
-            r * Rational.Companion.zero shouldBe Rational.Companion.zero
-            Rational.Companion.zero * r shouldBe Rational.Companion.zero
+            r + Rational.ZERO shouldBe r
+            r * Rational.ZERO shouldBe Rational.ZERO
+            Rational.ZERO * r shouldBe Rational.ZERO
         }
     }
 
     "operations with one" {
         checkAll(arbSafeRational) { r ->
-            r * Rational.Companion.one shouldBe r
+            r * Rational.ONE shouldBe r
             if (!r.isZero) {
-                r / Rational.Companion.one shouldBe r
+                r / Rational.ONE shouldBe r
             }
         }
     }
@@ -368,9 +368,9 @@ class RationalSpec : StringSpec({
 
     "data class equality works correctly" {
         checkAll(arbSmallInts, arbSmallInts.filter { it != 0 }) { n, d ->
-            val r1 = Rational.Companion.of(n, d)
-            val r2 = Rational.Companion.of(n, d)
-            val r3 = Rational.Companion.of(2 * n, 2 * d)
+            val r1 = Rational.of(n, d)
+            val r2 = Rational.of(n, d)
+            val r3 = Rational.of(2 * n, 2 * d)
 
             r1 shouldBe r2
             r1 shouldBe r3  // Should be equal due to normalization
@@ -381,8 +381,8 @@ class RationalSpec : StringSpec({
 
     "different representations of same value are equal" {
         checkAll(arbSmallInts.filter { it != 0 }, arbSmallInts.filter { it != 0 }) { n, k ->
-            val r1 = Rational.Companion.of(n, 1)
-            val r2 = Rational.Companion.of(n * k, k)
+            val r1 = Rational.of(n, 1)
+            val r2 = Rational.of(n * k, k)
             r1 shouldBe r2
         }
     }

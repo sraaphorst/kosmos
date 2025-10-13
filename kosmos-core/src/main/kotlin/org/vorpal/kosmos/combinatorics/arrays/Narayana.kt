@@ -83,7 +83,7 @@ import java.math.BigInteger
  * @see org.vorpal.kosmos.combinatorics.sequences.Catalan
  * @see org.vorpal.kosmos.combinatorics.Binomial
  */
-object Narayana : CachedBivariateArray() {
+object Narayana : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger = when {
         n <= 0 || k <= 0 || k > n -> BigInteger.ZERO
         n == 1 -> BigInteger.ONE
