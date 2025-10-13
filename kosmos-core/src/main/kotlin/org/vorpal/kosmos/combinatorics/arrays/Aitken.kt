@@ -69,7 +69,7 @@ import java.math.BigInteger
  *
  * OEIS A011971
  */
-object Aitken : CachedBivariateRecurrence() {
+object Aitken : CachedBivariateRecurrence<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0 -> BigInteger.ONE

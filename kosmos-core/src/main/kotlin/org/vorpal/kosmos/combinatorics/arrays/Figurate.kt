@@ -27,7 +27,7 @@ import org.vorpal.kosmos.frameworks.array.CachedBivariateArray
  * ```
  * OEIS families: A000217 (triangular), A000290 (square), A000326 (pentagonal)
  */
-object Figurate : CachedBivariateArray() {
+object Figurate : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(s: Int, n: Int): BigInteger = when {
             s < 3 || n < 1 -> BigInteger.ZERO
             n == 1 -> BigInteger.ONE

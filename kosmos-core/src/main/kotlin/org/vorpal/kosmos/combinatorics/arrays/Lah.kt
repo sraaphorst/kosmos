@@ -46,7 +46,7 @@ import java.math.BigInteger
  * ```
  * meaning there are 36 ways to arrange 4 labeled elements into 2 ordered lists.
  */
-object Lah : CachedBivariateArray() {
+object Lah : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0 -> BigInteger.ONE

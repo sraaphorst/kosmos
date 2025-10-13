@@ -15,7 +15,7 @@ import org.vorpal.kosmos.frameworks.array.BivariateRecurrence
  *
  * OEIS A007318
  */
-object Binomial : BivariateRecurrence {
+object Binomial : BivariateRecurrence<BigInteger> {
 
     private val cache = ConcurrentHashMap<Pair<Int, Int>, BigInteger>()
 

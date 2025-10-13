@@ -68,7 +68,7 @@ import java.math.BigInteger
  * @property n the power (n ≥ 0)
  * @property k the coefficient index (0 ≤ k ≤ 2n)
  */
-object Trinomial : CachedBivariateArray() {
+object Trinomial : CachedBivariateArray<BigInteger>() {
 
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {

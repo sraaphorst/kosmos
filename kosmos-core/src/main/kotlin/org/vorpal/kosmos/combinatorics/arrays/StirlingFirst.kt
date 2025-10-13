@@ -53,7 +53,7 @@ import java.math.BigInteger
  *
  * Note that there is no closed form for Stirling numbers of the first kind.
  */
-object StirlingFirst : CachedBivariateRecurrence() {
+object StirlingFirst : CachedBivariateRecurrence<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger =
         when {
             n == 0 && k == 0 -> BigInteger.ONE

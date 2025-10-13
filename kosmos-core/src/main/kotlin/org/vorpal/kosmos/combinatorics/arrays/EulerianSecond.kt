@@ -96,7 +96,7 @@ import java.math.BigInteger
  * @see StirlingSecond
  * @see Binomial
  */
-object EulerianSecond : CachedBivariateArray() {
+object EulerianSecond : CachedBivariateArray<BigInteger>() {
     override fun recursiveCalculator(n: Int, k: Int): BigInteger = when {
         n == 0 && k == 0 -> BigInteger.ONE
         n == 0 || k < 0 || k >= n -> BigInteger.ZERO
