@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.categories
 
-import org.vorpal.kosmos.combinatorial.FiniteSet
+import org.vorpal.kosmos.combinatorics.FiniteSet
 
 /**
  * A bijection between finite sets: an isomorphism with domain / codomain witnesses.

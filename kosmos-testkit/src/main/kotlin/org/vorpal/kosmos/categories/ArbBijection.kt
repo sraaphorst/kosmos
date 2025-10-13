@@ -2,8 +2,8 @@ package org.vorpal.kosmos.categories
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
-import org.vorpal.kosmos.combinatorial.generateArbOrderedFiniteSet
-import org.vorpal.kosmos.combinatorial.generateArbOrderedFiniteSetOfSize
+import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSet
+import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSetOfSize
 import kotlin.random.Random
 
 /**

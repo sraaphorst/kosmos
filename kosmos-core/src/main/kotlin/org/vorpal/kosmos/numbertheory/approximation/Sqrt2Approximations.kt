@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.numbertheory.approximation
 
-import org.vorpal.kosmos.combinatorial.sequences.Pell
-import org.vorpal.kosmos.combinatorial.sequences.PellLucas
+import org.vorpal.kosmos.combinatorics.sequences.Pell
+import org.vorpal.kosmos.combinatorics.sequences.PellLucas
 import org.vorpal.kosmos.std.Rational
 
 /**
@@ -9,7 +9,7 @@ import org.vorpal.kosmos.std.Rational
  *
  * `[1; 2, 2, 2, 2, ...]`.
  *
- * Each convergent is given by the ratio of the [Pell–Lucas][org.vorpal.kosmos.combinatorial.sequences.PellLucas] and [Pell][org.vorpal.kosmos.combinatorial.sequences.Pell] numbers:
+ * Each convergent is given by the ratio of the [Pell–Lucas][org.vorpal.kosmos.combinatorics.sequences.PellLucas] and [Pell][org.vorpal.kosmos.combinatorics.sequences.Pell] numbers:
  *
  *     √2 ≈ Qₙ / Pₙ
  *
