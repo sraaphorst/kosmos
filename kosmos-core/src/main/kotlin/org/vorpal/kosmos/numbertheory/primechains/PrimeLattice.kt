@@ -8,8 +8,5 @@ import java.math.BigInteger
  * The prime lattice:  n ↦ pₙ
  * Built from PrimeSequence and cached lazily.
  */
-object PrimeLattice : RecurrenceLattice<BigInteger>(
-    name = "Prime",
-    recurrence = PrimeSequence,
-    converter = { it }
-)
+val PrimeLattice: RecurrenceLattice<BigInteger> =
+    RecurrenceLattice.of("Prime", PrimeSequence, { it - 1 }) { it }

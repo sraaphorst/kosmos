@@ -8,7 +8,6 @@ import org.vorpal.kosmos.frameworks.lattice.LatticeIndexFunction
 import org.vorpal.kosmos.frameworks.lattice.asIndexFunction
 import org.vorpal.kosmos.frameworks.lattice.RecurrenceLattice
 import org.vorpal.kosmos.laws.core.IndexFunctionLaws
-import org.vorpal.kosmos.laws.core.IndexableFixedPointLaws
 import org.vorpal.kosmos.laws.core.IndexableLaws
 import java.math.BigInteger
 
