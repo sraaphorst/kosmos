@@ -5,7 +5,6 @@ import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.frameworks.lattice.*
 import org.vorpal.kosmos.laws.core.IndexFunctionLaws
-import org.vorpal.kosmos.laws.core.IndexableFixedPointLaws
 import org.vorpal.kosmos.laws.core.IndexableLaws
 import java.math.BigInteger
 
@@ -15,32 +14,18 @@ class FibonacciLatticeSpec : StringSpec({
 
     // --- Smoke ---
     "FibonacciLattice basic smoke tests" {
-        FibonacciLattice.index(1) shouldBe bi(0)
+        FibonacciLattice.index(1) shouldBe bi(1)
         FibonacciLattice.index(2) shouldBe bi(1)
-        FibonacciLattice.index(3) shouldBe bi(1)
+        FibonacciLattice.index(3) shouldBe bi(2)
     }
 
     // --- Sequence values ---
     "first 11 Fibonacci numbers via lattice index (1-based)" {
-        val got = (1..11).map(FibonacciLattice::index)
-        val exp = listOf(0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(::bi)
+        val got = (1..10).map(FibonacciLattice::index)
+        val exp = listOf(1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(::bi)
         got shouldContainExactly exp
     }
 
-    // --- Fixed points ---
-    "no fixed points F_n = n in range 1..200" {
-        val ctx = IndexableFixedPointLaws.Context<
-                LatticeAsIndexable<RecurrenceLattice<BigInteger>>,
-                BigInteger
-                >(
-            instance = LatticeAsIndexable(FibonacciLattice, "FibonacciLattice"),
-            range = 1..200,
-            expectNone = true
-        )
-        IndexableFixedPointLaws.verifyFixedPoints(ctx)
-    }
-
-    // --- Indexable laws ---
     "FibonacciLattice satisfies IndexableLaws" {
         val lawsCtx = IndexFunctionLaws.Context<
                 LatticeIndexFunction<RecurrenceLattice<BigInteger>>
@@ -52,15 +37,14 @@ class FibonacciLatticeSpec : StringSpec({
 
         println("Running IndexableLaws for FibonacciLattice...")
 
+        // two fixed points F_1 = 1 and F_5 = 5
         IndexableLaws.sanity(
-            IndexableLaws.Config<
-                    LatticeIndexFunction<RecurrenceLattice<BigInteger>>,
-                    LatticeAsIndexable<RecurrenceLattice<BigInteger>>
-                    >(
+            IndexableLaws.Config(
                 name = "FibonacciLattice",
                 indexable = LatticeAsIndexable(FibonacciLattice, "FibonacciLattice"),
                 ctx = lawsCtx,
-                expectNone = true,
+                expectNone = false,
+                expectedFixedPoints = listOf(1, 5),
                 range = 1..500
             )
         )

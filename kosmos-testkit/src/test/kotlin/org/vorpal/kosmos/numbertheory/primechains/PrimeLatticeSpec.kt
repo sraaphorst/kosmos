@@ -38,21 +38,6 @@ class PrimeLatticeSpec : StringSpec({
         superprimes shouldContainExactly listOf(3, 5, 11, 17, 31, 41, 59, 67, 83, 109).map(Int::toBigInteger)
     }
 
-    // --- Lawkit via adapter ------------------------------------------------
-
-    "no fixed points p_n = n in range 1..2000" {
-        // Concrete adapter type so generics are fully determined
-        val i: LatticeAsIndexable<RecurrenceLattice<BigInteger>> =
-            LatticeAsIndexable(PrimeLattice, "PrimeLattice")
-
-        val ctx = IndexableFixedPointLaws.Context(
-            instance = i,
-            range = 1..2000,
-            expectNone = true
-        )
-        IndexableFixedPointLaws.verifyFixedPoints(ctx)
-    }
-
     "PrimeLattice satisfies IndexableLaws" {
         // Concrete types for both T and S:
         // T = LatticeIndexFunction<RecurrenceLattice<BigInteger>>
