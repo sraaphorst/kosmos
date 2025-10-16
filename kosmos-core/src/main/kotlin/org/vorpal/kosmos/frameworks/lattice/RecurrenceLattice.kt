@@ -20,7 +20,10 @@ open class RecurrenceLattice<T>(
     /** Default 1-based indexing: n ↦ recurrence(n-1). */
     override fun index(n: Int): BigInteger {
         require(n >= 1) { "Lattice index must be ≥ 1 (got $n)" }
-        return converter(recurrence(n - 1))
+        // If RecurrenceLattice was written around a Sequence<T> named `recurrence`
+        // and you *don’t* keep an offset flag inside the class, then assume the input
+        // sequence is already aligned so that element 0 == term for n=1.
+        return converter(recurrence(n-1))
     }
 
     override fun iterate(): Sequence<BigInteger> =
