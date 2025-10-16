@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.frameworks.lattice
 
+import org.vorpal.kosmos.frameworks.sequence.Recurrence
 import java.math.BigInteger
 
 /**
@@ -9,14 +10,15 @@ import java.math.BigInteger
  */
 class RecurrenceLattice<T> private constructor(
     val name: String,
-    val recurrence: Sequence<T>,
+    val recurrence: Recurrence<T>,
+    val indexConverter: (Int) -> Int = { it },
     private val converter: (T) -> BigInteger
 ) : IndexableLattice<BigInteger> {
 
     // Assume a 1-based lattice.
     override fun index(n: Int): BigInteger {
         require(n >= 1) { "Lattice index must be ≥ 1 (got $n)" }
-        return converter(recurrence.elementAt(n-1))
+        return converter(recurrence.elementAt(indexConverter(n)))
     }
 
     override fun iterate(): Sequence<BigInteger> =
@@ -32,9 +34,10 @@ class RecurrenceLattice<T> private constructor(
         /** Standard 1-based lattice (for Fibonacci, etc.). */
         fun <T : Any> of(
             name: String,
-            recurrence: Sequence<T>,
+            recurrence: Recurrence<T>,
+            indexConverter: (Int) -> Int,
             converter: (T) -> BigInteger
         ): RecurrenceLattice<T> =
-            RecurrenceLattice(name, recurrence, converter)
+            RecurrenceLattice(name, recurrence, indexConverter,  converter)
     }
 }
