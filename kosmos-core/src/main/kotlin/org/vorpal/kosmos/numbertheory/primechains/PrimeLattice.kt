@@ -13,9 +13,3 @@ object PrimeLattice : RecurrenceLattice<BigInteger>(
     recurrence = PrimeSequence,
     converter = { it }
 )
-
-/**
- * Factory method (preferred): ensures zero-based behavior for primes.
- */
-fun primeLattice(): RecurrenceLattice<BigInteger> =
-    RecurrenceLattice.ofZeroBased("Prime", PrimeSequence) { it }

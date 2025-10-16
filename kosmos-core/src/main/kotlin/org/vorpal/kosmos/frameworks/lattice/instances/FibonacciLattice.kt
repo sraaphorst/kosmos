@@ -9,4 +9,4 @@ import java.math.BigInteger
  * global [Fibonacci] sequence as its base recurrence.
  */
 val FibonacciLattice: RecurrenceLattice<BigInteger> =
-    RecurrenceLattice.of("Fibonacci", Fibonacci) { it }
+    RecurrenceLattice.of("Fibonacci", Fibonacci.drop(1)) { it }
