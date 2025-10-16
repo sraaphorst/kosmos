@@ -1,9 +1,6 @@
 package org.vorpal.kosmos.numbertheory.primechains
 
-import org.vorpal.kosmos.frameworks.lattice.LatticeIndexFunction
 import org.vorpal.kosmos.frameworks.lattice.RecurrenceLattice
-import org.vorpal.kosmos.frameworks.lattice.asIndexFunction
-import org.vorpal.kosmos.frameworks.sequence.Recurrence
 import org.vorpal.kosmos.numbertheory.primes.PrimeSequence
 import java.math.BigInteger
 

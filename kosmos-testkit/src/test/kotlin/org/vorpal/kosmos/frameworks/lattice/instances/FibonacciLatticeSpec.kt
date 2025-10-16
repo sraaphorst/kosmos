@@ -15,15 +15,15 @@ class FibonacciLatticeSpec : StringSpec({
 
     // --- Smoke ---
     "FibonacciLattice basic smoke tests" {
-        FibonacciLattice.index(1) shouldBe bi(1)
+        FibonacciLattice.index(1) shouldBe bi(0)
         FibonacciLattice.index(2) shouldBe bi(1)
-        FibonacciLattice.index(3) shouldBe bi(2)
+        FibonacciLattice.index(3) shouldBe bi(1)
     }
 
     // --- Sequence values ---
-    "first 10 Fibonacci numbers via lattice index (1-based)" {
-        val got = (1..10).map(FibonacciLattice::index)
-        val exp = listOf(1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(::bi)
+    "first 11 Fibonacci numbers via lattice index (1-based)" {
+        val got = (1..11).map(FibonacciLattice::index)
+        val exp = listOf(0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(::bi)
         got shouldContainExactly exp
     }
 
