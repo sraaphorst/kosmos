@@ -9,19 +9,19 @@ import kotlinx.serialization.json.Json
  */
 @Serializable
 class ImmutableStandardTrie(
-    private val root: MutableStandardTrie
+    private val root: MutableStandardTrieNode
 ) : Trie by root
+
+/**
+ * Simple way to create a standard trie.
+ */
+fun Trie.Companion.standard() = MutableStandardTrie()
 
 /**
  * A standard trie implementation, where each node represents a single transition of one character.
  */
 @Serializable
-class MutableStandardTrie : MutableStandardTrieNode(false), Trie {
-    /**
-     * Create an immutable wrapper so the trie cannot be mutated further.
-     */
-    fun toImmutable(): Trie = ImmutableStandardTrie(this)
-}
+class MutableStandardTrie : MutableStandardTrieNode(false)
 
 /**
  * Internal node representation for [MutableStandardTrie].
@@ -45,10 +45,18 @@ open class MutableStandardTrieNode internal constructor(override var isTerminal:
         return if (word.isEmpty()) isTerminal
         else children[word.first()]?.contains(word.drop(1)) ?: false
     }
+
+    override fun subTrie(prefix: String): Trie {
+        var current = this
+        for (c in prefix) current = current.children.get(c) ?: return Trie.Companion.EMPTY
+        return current
+    }
+
+    override fun toImmutable(): Trie = ImmutableStandardTrie(this)
 }
 
 fun main() {
-    val trie = MutableStandardTrie()
+    val trie = Trie.standard()
     trie.insert("alphabet")
     trie.insert("a")
     trie.insert("alpha")

@@ -9,19 +9,19 @@ import kotlinx.serialization.json.Json
  */
 @Serializable
 class ImmutableRadixTrie(
-    private val root: MutableRadixTrie
+    private val root: MutableRadixTrieNode
 ) : Trie by root
 
 /**
  * A RadixTrie implementation.
  */
 @Serializable
-class MutableRadixTrie : MutableRadixTrieNode(false), Trie {
-    /**
-     * Create an immutable wrapper so the Trie cannot be mutated further.
-     */
-    fun toImmutable(): Trie = ImmutableRadixTrie(this)
-}
+class MutableRadixTrie : MutableRadixTrieNode(false)
+
+/**
+ * Simple way to create a radix trie.
+ */
+fun Trie.Companion.radix() = MutableRadixTrie()
 
 /**
  * Internal node representation for [MutableRadixTrie].
@@ -90,10 +90,39 @@ open class MutableRadixTrieNode internal constructor(override var isTerminal: Bo
             return false
         }
     }
+
+    /**
+     * Returns a trie representing words with [prefix] removed.
+     * For RadixTrie, this may create a "virtual" trie structure
+     * that doesn't preserve the original edge compression.
+     */
+    override fun subTrie(prefix: String): Trie {
+        if (prefix.isEmpty()) return this
+
+        val (edge, child) = children.entries.find { prefix.startsWith(it.key) || it.key.startsWith(prefix) }
+            ?: return Trie.Companion.EMPTY
+
+        return when {
+            // Exact edge match: continue searching in that subtree
+            prefix == edge -> child.subTrie("")
+            // Prefix is shorter than the edge: split the edge and descend virtually
+            edge.startsWith(prefix) -> {
+                // Virtual subtree rooted at the suffix
+                val virtualRoot = MutableRadixTrie()
+                virtualRoot.children[edge.drop(prefix.length)] = child
+                virtualRoot
+            }
+            // Edge is shorter than the prefix: recurse deeper into child
+            prefix.startsWith(edge) -> child.subTrie(prefix.drop(edge.length))
+            else -> Trie.Companion.EMPTY
+        }
+    }
+
+    override fun toImmutable(): Trie = ImmutableRadixTrie(this)
 }
 
 fun main() {
-    val trie = MutableRadixTrie()
+    val trie = Trie.radix()
     trie.insert("alphabet")
     trie.insert("a")
     trie.insert("alpha")
@@ -134,4 +163,7 @@ fun main() {
     println(immTrie == myTrie)
     // True
     println(immTrie.toList() == myTrie.toList())
+
+    val subTrie = immTrie.subTrie("alpi")
+    println(subTrie.toList())
 }
