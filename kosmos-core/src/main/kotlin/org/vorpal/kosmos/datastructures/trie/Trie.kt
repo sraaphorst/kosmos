@@ -16,6 +16,42 @@ sealed interface Trie {
     fun nodeCount(): Int
     fun depth(): Int
     fun toPrettyString(useAscii: Boolean): String
+
+    fun isEmpty(): Boolean = wordCount() == 0
+    fun isNotEmpty(): Boolean = !isEmpty()
+    fun startsWith(prefix: String): Boolean =
+        toSequence().any { it.startsWith(prefix) }
+
+    /**
+     * Given a prefix, return a trie that recognizes a dictionary where all words
+     * are assumed to start with prefix, but with prefix removed. For example, if
+     * a trie recognizes:
+     * * undead, unite, unsure
+     *
+     * and prefix "un" is given, the returned trie recognizes:
+     * * dead, ite, sure
+     */
+    fun subTrie(prefix: String): Trie
+
+    companion object {
+        object EMPTY : Trie {
+            override operator fun contains(word: String): Boolean = false
+            override fun toSequence(): Sequence<String> = emptySequence()
+            override fun toList(): List<String> = emptyList()
+            override fun toSet(): Set<String> = emptySet()
+            override fun branchSequence(): Sequence<String> = emptySequence()
+            override fun wordCount(): Int = 0
+            override fun nodeCount(): Int = 0
+            override fun depth(): Int = 0
+            override fun toPrettyString(useAscii: Boolean): String = ""
+            override fun isEmpty(): Boolean = true
+            override fun subTrie(prefix: String): Trie = this
+        }
+    }
+}
+
+sealed interface MutableTrie : Trie {
+    fun toImmutable(): Trie
 }
 
 /**
@@ -23,7 +59,7 @@ sealed interface Trie {
  * the trie implementations.
  */
 @Serializable
-sealed class MutableTrieCoreNode<K : Comparable<K>> : Trie {
+sealed class MutableTrieCoreNode<K : Comparable<K>> : MutableTrie {
     abstract val isTerminal: Boolean
     abstract val children: Map<K, MutableTrieCoreNode<K>>
 
