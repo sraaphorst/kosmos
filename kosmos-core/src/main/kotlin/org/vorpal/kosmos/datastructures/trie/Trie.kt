@@ -1,6 +1,9 @@
 package org.vorpal.kosmos.datastructures.trie
 
-interface Trie<V> {
+import kotlinx.serialization.Serializable
+
+@Serializable
+sealed interface Trie<V> {
     operator fun contains(word: String): Boolean
     fun toSequence(): Sequence<String>
     fun toList(): List<String>

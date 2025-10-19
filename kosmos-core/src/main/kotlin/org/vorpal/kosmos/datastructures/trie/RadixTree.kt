@@ -1,5 +1,17 @@
 package org.vorpal.kosmos.datastructures.trie
 
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+/**
+ * An immutable, serializable wrapper around a MutableRadixTrie<V>.
+ */
+@Serializable
+class ImmutableRadixTrie<V>(
+    private val root: MutableRadixTrie<V>
+) : Trie<V> by root
+
 /**
  * Create a plain RadixTrie with no data attached to the nodes.
  */
@@ -8,8 +20,12 @@ fun MutableRadixTrie() = MutableRadixTrie<Unit>()
 /**
  * A RadixTrie implementation.
  */
-class MutableRadixTrie<V> : RadixTrieNode<V>(false), Trie<V> {
-    fun toImmutable(): Trie<V> = this
+@Serializable
+class MutableRadixTrie<V> : MutableRadixTrieNode<V>(false), Trie<V> {
+    /**
+     * Create an immutable wrapper so the Trie cannot be mutated further.
+     */
+    fun toImmutable(): Trie<V> = ImmutableRadixTrie(this)
 }
 
 /**
@@ -18,8 +34,9 @@ class MutableRadixTrie<V> : RadixTrieNode<V>(false), Trie<V> {
  * Not intended for direct instantiation or external subclassing.
  * Construction is restricted to within this module.
  */
-open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false) {
-    val children: MutableMap<String, RadixTrieNode<V>> = mutableMapOf()
+@Serializable
+open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean = false) {
+    val children: MutableMap<String, MutableRadixTrieNode<V>> = mutableMapOf()
 
     fun insert(word: String) {
         // If we are done processing the word, mark this node as terminal.
@@ -36,7 +53,7 @@ open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false
 
         // If there is no child, then we can just create a new node with word and insert it.
         if (validChildren.isEmpty()) {
-            val newNode = RadixTrieNode<V>(true)
+            val newNode = MutableRadixTrieNode<V>(true)
             children[word] = newNode
             return
         }
@@ -52,7 +69,7 @@ open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false
         // If there is a keyWordSuffix, then we need to create a new node with the shared prefix.
         if (keyWordSuffix.isNotEmpty()) {
             val sharedNodeTerminal = wordSuffix.isEmpty() //|| isTerminal
-            val sharedNode = RadixTrieNode<V>(sharedNodeTerminal)
+            val sharedNode = MutableRadixTrieNode<V>(sharedNodeTerminal)
             sharedNode.children[keyWordSuffix] = node
             children.remove(keyWord)
             children[prefix] = sharedNode
@@ -104,11 +121,11 @@ open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false
     }
 
     fun wordCount(): Int =
-        (if (isTerminal) 1 else 0) + children.values.sumOf(RadixTrieNode<V>::wordCount)
+        (if (isTerminal) 1 else 0) + children.values.sumOf(MutableRadixTrieNode<V>::wordCount)
 
-    fun nodeCount(): Int = 1 + children.values.sumOf(RadixTrieNode<V>::nodeCount)
+    fun nodeCount(): Int = 1 + children.values.sumOf(MutableRadixTrieNode<V>::nodeCount)
 
-    fun depth(): Int = 1 + (children.values.maxOfOrNull(RadixTrieNode<V>::depth) ?: 0)
+    fun depth(): Int = 1 + (children.values.maxOfOrNull(MutableRadixTrieNode<V>::depth) ?: 0)
 
     // In RadixTrieNode
     override fun toString(): String = toPrettyString(useAscii = false)
@@ -157,7 +174,7 @@ open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false
         return sb.toString()
     }
 
-    fun merge(other: RadixTrieNode<V>) =
+    fun merge(other: MutableRadixTrieNode<V>) =
         other.toSequence().forEach(::insert)
 }
 
@@ -188,5 +205,13 @@ fun main() {
     println(immTrie.toPrettyString(false))
 
     if ("alpha" in immTrie && immTrie.contains("alpha"))
+        println("alpha in trie")
+
+    println("\n\nIn JSON:")
+    val json = Json.encodeToString<Trie<Unit>>(immTrie)
+    val myTrie = Json.decodeFromString<Trie<Unit>>(json)
+    println(Json.encodeToString(immTrie))
+
+    if ("alpha" in myTrie && myTrie.contains("alpha"))
         println("alpha in trie")
 }
