@@ -52,49 +52,30 @@ open class MutableStandardTrieNode internal constructor(override var isTerminal:
         return current
     }
 
+    override fun allWordsWithPrefix(prefix: String): Sequence<String> {
+        return when {
+            prefix.isEmpty() ->
+                // We've matched the prefix fully — yield everything from here down
+                toSequence()
+            else -> {
+                val first = prefix.first()
+                val child = children[first] ?: return emptySequence()
+                child.allWordsWithPrefix(prefix.drop(1))
+                    .map { first + it }
+            }
+        }
+    }
+
+    override fun filter(predicate: (String) -> Boolean): Trie {
+        val filtered = Trie.standard()
+        toSequence().filter(predicate).forEach(filtered::insert)
+        return filtered.toImmutable()
+    }
+
+    override fun startsWith(prefix: String): Boolean {
+        return if (prefix.isEmpty()) true
+        else children[prefix.first()]?.startsWith(prefix.drop(1)) ?: false
+    }
+
     override fun toImmutable(): Trie = ImmutableStandardTrie(this)
-}
-
-fun main() {
-    val trie = Trie.standard()
-    trie.insert("alphabet")
-    trie.insert("a")
-    trie.insert("alpha")
-    trie.insert("alien")
-    trie.insert("alpine")
-    trie.insert("banana")
-    trie.insert("airport")
-    trie.insert("airline")
-    trie.insert("air")
-    trie.insert("airbill")
-    trie.insert("ban")
-    trie.insert("barn")
-    trie.insert("bar")
-
-    val immTrie = trie.toImmutable()
-    immTrie.toList().forEach { println(it) }
-    println("Words: ${immTrie.wordCount()}, nodes: ${immTrie.nodeCount()}, depth: ${immTrie.depth()}")
-
-    println("\n\nTrie:")
-    println(immTrie.toString())
-
-    println("\n\nAscii:")
-    println(immTrie.toPrettyString(false))
-
-    if ("alpha" in immTrie && immTrie.contains("alpha"))
-        println("alpha in trie")
-
-    // Note that we need the type specifications here or Json will crash.
-    println("\n\nIn JSON:")
-    val json = Json.encodeToString(immTrie)
-    val myTrie: Trie = Json.decodeFromString(json)
-    println(Json.encodeToString(immTrie))
-
-    if ("alpha" in myTrie && myTrie.contains("alpha"))
-        println("alpha in trie")
-
-    // False
-    println(immTrie == myTrie)
-    // True
-    println(immTrie.toList() == myTrie.toList())
 }
