@@ -1,17 +1,25 @@
 package org.vorpal.kosmos.datastructures.trie
 
 /**
+ * Create a plain RadixTrie with no data attached to the nodes.
+ */
+fun MutableRadixTrie() = MutableRadixTrie<Unit>()
+
+/**
  * A RadixTrie implementation.
  */
-class RadixTree : RadixTrieNode(false) {
-    override fun toString(): String =
-        toPrettyString()
-    fun toAsciiString(): String =
-        toPrettyString(true)
+class MutableRadixTrie<V> : RadixTrieNode<V>(false), Trie<V> {
+    fun toImmutable(): Trie<V> = this
 }
 
-open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
-    val children: MutableMap<String, RadixTrieNode> = mutableMapOf()
+/**
+ * Internal node representation for [RadixTrie].
+ *
+ * Not intended for direct instantiation or external subclassing.
+ * Construction is restricted to within this module.
+ */
+open class RadixTrieNode<V> internal constructor(var isTerminal: Boolean = false) {
+    val children: MutableMap<String, RadixTrieNode<V>> = mutableMapOf()
 
     fun insert(word: String) {
         // If we are done processing the word, mark this node as terminal.
@@ -28,7 +36,7 @@ open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
 
         // If there is no child, then we can just create a new node with word and insert it.
         if (validChildren.isEmpty()) {
-            val newNode = RadixTrieNode(true)
+            val newNode = RadixTrieNode<V>(true)
             children[word] = newNode
             return
         }
@@ -44,7 +52,7 @@ open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
         // If there is a keyWordSuffix, then we need to create a new node with the shared prefix.
         if (keyWordSuffix.isNotEmpty()) {
             val sharedNodeTerminal = wordSuffix.isEmpty() //|| isTerminal
-            val sharedNode = RadixTrieNode(sharedNodeTerminal)
+            val sharedNode = RadixTrieNode<V>(sharedNodeTerminal)
             sharedNode.children[keyWordSuffix] = node
             children.remove(keyWord)
             children[prefix] = sharedNode
@@ -56,7 +64,7 @@ open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
         }
     }
 
-    fun contains(word: String): Boolean {
+    operator fun contains(word: String): Boolean {
         if (word.isEmpty()) return isTerminal
 
         // Determine if there is an entry in the children that word starts with.
@@ -96,11 +104,11 @@ open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
     }
 
     fun wordCount(): Int =
-        (if (isTerminal) 1 else 0) + children.values.sumOf(RadixTrieNode::wordCount)
+        (if (isTerminal) 1 else 0) + children.values.sumOf(RadixTrieNode<V>::wordCount)
 
-    fun nodeCount(): Int = 1 + children.values.sumOf(RadixTrieNode::nodeCount)
+    fun nodeCount(): Int = 1 + children.values.sumOf(RadixTrieNode<V>::nodeCount)
 
-    fun depth(): Int = 1 + (children.values.maxOfOrNull(RadixTrieNode::depth) ?: 0)
+    fun depth(): Int = 1 + (children.values.maxOfOrNull(RadixTrieNode<V>::depth) ?: 0)
 
     // In RadixTrieNode
     override fun toString(): String = toPrettyString(useAscii = false)
@@ -149,12 +157,12 @@ open class RadixTrieNode internal constructor(var isTerminal: Boolean = false) {
         return sb.toString()
     }
 
-    fun merge(other: RadixTrieNode) =
+    fun merge(other: RadixTrieNode<V>) =
         other.toSequence().forEach(::insert)
 }
 
 fun main() {
-    val trie = RadixTree()
+    val trie = MutableRadixTrie()
     trie.insert("alphabet")
     trie.insert("a")
     trie.insert("alpha")
@@ -168,12 +176,17 @@ fun main() {
     trie.insert("ban")
     trie.insert("barn")
     trie.insert("bar")
-    trie.toList().forEach { println(it) }
-    println("Words: ${trie.wordCount()}, nodes: ${trie.nodeCount()}, depth: ${trie.depth()}")
+
+    val immTrie = trie.toImmutable()
+    immTrie.toList().forEach { println(it) }
+    println("Words: ${immTrie.wordCount()}, nodes: ${immTrie.nodeCount()}, depth: ${immTrie.depth()}")
 
     println("\n\nTrie:")
-    println(trie.toString())
+    println(immTrie.toString())
 
     println("\n\nAscii:")
-    println(trie.toAsciiString())
+    println(immTrie.toPrettyString(false))
+
+    if ("alpha" in immTrie && immTrie.contains("alpha"))
+        println("alpha in trie")
 }
