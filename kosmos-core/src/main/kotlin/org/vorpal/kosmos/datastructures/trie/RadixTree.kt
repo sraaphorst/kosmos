@@ -118,52 +118,52 @@ open class MutableRadixTrieNode internal constructor(override var isTerminal: Bo
         }
     }
 
+    override fun allWordsWithPrefix(prefix: String): Sequence<String> {
+        return when {
+            prefix.isEmpty() ->
+                // We've matched the prefix fully — yield everything from here down
+                toSequence()
+            else -> {
+                // alp
+                // alph - yes, stop and return all.
+                // al - yes, recurse.
+                // First case: there is a node that contains (or is) prefix.
+                // Example: prefix = al, child = alp
+                // Then we return the entire sequence from the child.
+                val childTerminal = children.entries.find { it.key.startsWith(prefix) }
+                if (childTerminal != null) return childTerminal.value.toSequence().map { childTerminal.key + it }
+
+                // Second case: prefix contains a child.
+                // Example: prefix = alp, child = al
+                // Then we recurse on the child with prefix p.
+                val childSub = children.entries.find { prefix.startsWith(it.key) }
+                if (childSub != null) return childSub.value.allWordsWithPrefix(prefix.drop(childSub.key.length))
+                    .map { childSub.key + it }
+
+                // Else neither case: there are no words.
+                return emptySequence()
+            }
+        }
+    }
+
+    override fun filter(predicate: (String) -> Boolean): Trie {
+        val filtered = Trie.radix()
+        toSequence().filter(predicate).forEach(filtered::insert)
+        return filtered.toImmutable()
+    }
+
+    override fun startsWith(prefix: String): Boolean {
+        if (prefix.isEmpty()) return true
+
+        // If there is an entry that contains prefix, true.
+        if (children.keys.find { it.startsWith(prefix) } != null) return true
+
+        // Otherwise, find out if there is an entry that prefix contains and recurse to it.
+        val entry = children.entries.find { prefix.startsWith(it.key) }
+        if (entry == null) return false
+
+        return entry.value.startsWith(prefix.drop(entry.key.length))
+    }
+
     override fun toImmutable(): Trie = ImmutableRadixTrie(this)
-}
-
-fun main() {
-    val trie = Trie.radix()
-    trie.insert("alphabet")
-    trie.insert("a")
-    trie.insert("alpha")
-    trie.insert("alien")
-    trie.insert("alpine")
-    trie.insert("banana")
-    trie.insert("airport")
-    trie.insert("airline")
-    trie.insert("air")
-    trie.insert("airbill")
-    trie.insert("ban")
-    trie.insert("barn")
-    trie.insert("bar")
-
-    val immTrie = trie.toImmutable()
-    immTrie.toList().forEach { println(it) }
-    println("Words: ${immTrie.wordCount()}, nodes: ${immTrie.nodeCount()}, depth: ${immTrie.depth()}")
-
-    println("\n\nTrie:")
-    println(immTrie.toString())
-
-    println("\n\nAscii:")
-    println(immTrie.toPrettyString(false))
-
-    if ("alpha" in immTrie && immTrie.contains("alpha"))
-        println("alpha in trie")
-
-    // Note that we need the type specifications here or Json will crash.
-    println("\n\nIn JSON:")
-    val json = Json.encodeToString(immTrie)
-    val myTrie: Trie = Json.decodeFromString(json)
-    println(Json.encodeToString(immTrie))
-
-    if ("alpha" in myTrie && myTrie.contains("alpha"))
-        println("alpha in trie")
-
-    // False
-    println(immTrie == myTrie)
-    // True
-    println(immTrie.toList() == myTrie.toList())
-
-    val subTrie = immTrie.subTrie("alpi")
-    println(subTrie.toList())
 }

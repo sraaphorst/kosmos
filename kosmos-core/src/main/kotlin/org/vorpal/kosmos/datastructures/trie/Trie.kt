@@ -15,12 +15,9 @@ sealed interface Trie {
     fun wordCount(): Int
     fun nodeCount(): Int
     fun depth(): Int
-    fun toPrettyString(useAscii: Boolean): String
-
-    fun isEmpty(): Boolean = wordCount() == 0
+    fun isEmpty(): Boolean
     fun isNotEmpty(): Boolean = !isEmpty()
-    fun startsWith(prefix: String): Boolean =
-        toSequence().any { it.startsWith(prefix) }
+    fun startsWith(prefix: String): Boolean
 
     /**
      * Given a prefix, return a trie that recognizes a dictionary where all words
@@ -33,7 +30,55 @@ sealed interface Trie {
      */
     fun subTrie(prefix: String): Trie
 
+    /**
+     * Generate a sequence of all words with a given prefix from this trie.
+     */
+    fun allWordsWithPrefix(prefix: String): Sequence<String>
+
+    /**
+     * Count the number of words with the specified prefix from this trie.
+     */
+    fun countWithPrefix(prefix: String): Int =
+        allWordsWithPrefix(prefix).count()
+
+    /**
+     * Given a predicate on this trie, create a new trie containing only words that match
+     * the predicate.
+     *
+     * Note that in all implementations, filter manifests the entire list
+     * of words in the trie upon which it is called, so it can be memory-intensive.
+     */
+    fun filter(predicate: (String) -> Boolean): Trie
+
+    /**
+     * Returns a sequence of all n-grams (consecutive n-character substrings)
+     * that appear as word prefixes in this trie.
+     */
+    fun prefixNGrams(n: Int): Sequence<String> = sequence {
+        if (n <= 0) return@sequence
+        toSequence().forEach { word ->
+            (0..(word.length - n)).forEach { i ->
+                yield(word.substring(i, i + n))
+            }
+        }
+    }
+
+    /**
+     * Walk down the spine of the trie while there is only one child, accumulating the
+     * prefix as we go.
+     */
+    fun longestCommonPrefix(): String
+
+    /**
+     * Render the trie as a tree structure, displaying all nodes, their depths, and whether or not
+     * they are terminal points. This can be done using ASCII or UTF8.
+     */
+    fun toPrettyString(useAscii: Boolean): String
+
     companion object {
+        /**
+         * An immutable and empty trie.
+         */
         object EMPTY : Trie {
             override operator fun contains(word: String): Boolean = false
             override fun toSequence(): Sequence<String> = emptySequence()
@@ -45,7 +90,12 @@ sealed interface Trie {
             override fun depth(): Int = 0
             override fun toPrettyString(useAscii: Boolean): String = ""
             override fun isEmpty(): Boolean = true
+            override fun startsWith(prefix: String): Boolean = false
             override fun subTrie(prefix: String): Trie = this
+            override fun allWordsWithPrefix(prefix: String): Sequence<String> = emptySequence()
+            override fun prefixNGrams(n: Int): Sequence<String> = emptySequence()
+            override fun longestCommonPrefix(): String = ""
+            override fun filter(predicate: (String) -> Boolean): Trie = this
         }
     }
 }
@@ -100,7 +150,15 @@ sealed class MutableTrieCoreNode<K : Comparable<K>> : MutableTrie {
 
     override fun depth(): Int = 1 + (children.values.maxOfOrNull { it.depth() } ?: 0)
 
-    // In RadixTrieNode
+    override fun isEmpty(): Boolean = !isTerminal && children.isEmpty()
+
+    override fun longestCommonPrefix(): String =
+        if (children.size != 1 || isTerminal) ""
+        else {
+            val (key, node) = children.entries.first()
+            key.toString() + node.longestCommonPrefix()
+        }
+
     override fun toString(): String = toPrettyString(useAscii = false)
 
     override fun toPrettyString(useAscii: Boolean): String {
