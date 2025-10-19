@@ -25,10 +25,4 @@ interface IndexableLattice<A> {
      * For the prime lattice, row(k) = sequence starting at the k-th composite or prime index.
      */
     fun row(k: Int): Sequence<A>
-
-    /**
-     * "Column" of the lattice beginning at element k.
-     * For the prime lattice, column(k) = iterated self-application of the index function.
-     */
-    fun column(k: Int): Sequence<A>
 }

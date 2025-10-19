@@ -27,9 +27,6 @@ class RecurrenceLattice<T> private constructor(
     override fun row(k: Int): Sequence<BigInteger> =
         generateSequence(k) { index(it).toInt() }.map(::index)
 
-    override fun column(k: Int): Sequence<BigInteger> =
-        generateSequence(index(k).toInt()) { index(it).toInt() }.map(::index)
-
     companion object {
         /** Standard 1-based lattice (for Fibonacci, etc.). */
         fun <T : Any> of(
