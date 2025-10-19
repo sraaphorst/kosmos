@@ -5,38 +5,33 @@ import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 /**
- * An immutable, serializable wrapper around a MutableRadixTrie<V>.
+ * An immutable, serializable wrapper around a MutableRadixTrie.
  */
 @Serializable
-class ImmutableRadixTrie<V>(
-    private val root: MutableRadixTrie<V>
-) : Trie<V> by root
-
-/**
- * Create a plain RadixTrie with no data attached to the nodes.
- */
-fun MutableRadixTrie() = MutableRadixTrie<Unit>()
+class ImmutableRadixTrie(
+    private val root: MutableRadixTrie
+) : Trie by root
 
 /**
  * A RadixTrie implementation.
  */
 @Serializable
-class MutableRadixTrie<V> : MutableRadixTrieNode<V>(false), Trie<V> {
+class MutableRadixTrie : MutableRadixTrieNode(false), Trie {
     /**
      * Create an immutable wrapper so the Trie cannot be mutated further.
      */
-    fun toImmutable(): Trie<V> = ImmutableRadixTrie(this)
+    fun toImmutable(): Trie = ImmutableRadixTrie(this)
 }
 
 /**
- * Internal node representation for [RadixTrie].
+ * Internal node representation for [MutableRadixTrie].
  *
  * Not intended for direct instantiation or external subclassing.
  * Construction is restricted to within this module.
  */
 @Serializable
-open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean = false) {
-    val children: MutableMap<String, MutableRadixTrieNode<V>> = mutableMapOf()
+open class MutableRadixTrieNode internal constructor(var isTerminal: Boolean = false) {
+    val children: MutableMap<String, MutableRadixTrieNode> = mutableMapOf()
 
     fun insert(word: String) {
         // If we are done processing the word, mark this node as terminal.
@@ -53,7 +48,7 @@ open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean 
 
         // If there is no child, then we can just create a new node with word and insert it.
         if (validChildren.isEmpty()) {
-            val newNode = MutableRadixTrieNode<V>(true)
+            val newNode = MutableRadixTrieNode(true)
             children[word] = newNode
             return
         }
@@ -68,8 +63,8 @@ open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean 
 
         // If there is a keyWordSuffix, then we need to create a new node with the shared prefix.
         if (keyWordSuffix.isNotEmpty()) {
-            val sharedNodeTerminal = wordSuffix.isEmpty() //|| isTerminal
-            val sharedNode = MutableRadixTrieNode<V>(sharedNodeTerminal)
+            val sharedNodeTerminal = wordSuffix.isEmpty()
+            val sharedNode = MutableRadixTrieNode(sharedNodeTerminal)
             sharedNode.children[keyWordSuffix] = node
             children.remove(keyWord)
             children[prefix] = sharedNode
@@ -121,11 +116,11 @@ open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean 
     }
 
     fun wordCount(): Int =
-        (if (isTerminal) 1 else 0) + children.values.sumOf(MutableRadixTrieNode<V>::wordCount)
+        (if (isTerminal) 1 else 0) + children.values.sumOf(MutableRadixTrieNode::wordCount)
 
-    fun nodeCount(): Int = 1 + children.values.sumOf(MutableRadixTrieNode<V>::nodeCount)
+    fun nodeCount(): Int = 1 + children.values.sumOf(MutableRadixTrieNode::nodeCount)
 
-    fun depth(): Int = 1 + (children.values.maxOfOrNull(MutableRadixTrieNode<V>::depth) ?: 0)
+    fun depth(): Int = 1 + (children.values.maxOfOrNull(MutableRadixTrieNode::depth) ?: 0)
 
     // In RadixTrieNode
     override fun toString(): String = toPrettyString(useAscii = false)
@@ -174,7 +169,7 @@ open class MutableRadixTrieNode<V> internal constructor(var isTerminal: Boolean 
         return sb.toString()
     }
 
-    fun merge(other: MutableRadixTrieNode<V>) =
+    fun merge(other: MutableRadixTrieNode) =
         other.toSequence().forEach(::insert)
 }
 
@@ -207,11 +202,17 @@ fun main() {
     if ("alpha" in immTrie && immTrie.contains("alpha"))
         println("alpha in trie")
 
+    // Note that we need the type specifications here or Json will crash.
     println("\n\nIn JSON:")
-    val json = Json.encodeToString<Trie<Unit>>(immTrie)
-    val myTrie = Json.decodeFromString<Trie<Unit>>(json)
+    val json = Json.encodeToString(immTrie)
+    val myTrie: Trie = Json.decodeFromString(json)
     println(Json.encodeToString(immTrie))
 
     if ("alpha" in myTrie && myTrie.contains("alpha"))
         println("alpha in trie")
+
+    // False
+    println(immTrie == myTrie)
+    // True
+    println(immTrie.toList() == myTrie.toList())
 }
