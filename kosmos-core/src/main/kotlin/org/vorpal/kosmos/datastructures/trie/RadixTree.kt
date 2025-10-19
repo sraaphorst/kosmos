@@ -30,10 +30,11 @@ class MutableRadixTrie : MutableRadixTrieNode(false), Trie {
  * Construction is restricted to within this module.
  */
 @Serializable
-open class MutableRadixTrieNode internal constructor(var isTerminal: Boolean = false) {
-    val children: MutableMap<String, MutableRadixTrieNode> = mutableMapOf()
+open class MutableRadixTrieNode internal constructor(override var isTerminal: Boolean = false)
+    : MutableTrieCoreNode<String>() {
+    override val children: MutableMap<String, MutableRadixTrieNode> = mutableMapOf()
 
-    fun insert(word: String) {
+    override fun insert(word: String) {
         // If we are done processing the word, mark this node as terminal.
         if (word.isEmpty()) {
             isTerminal = true
@@ -76,7 +77,7 @@ open class MutableRadixTrieNode internal constructor(var isTerminal: Boolean = f
         }
     }
 
-    operator fun contains(word: String): Boolean {
+    override operator fun contains(word: String): Boolean {
         if (word.isEmpty()) return isTerminal
 
         // Determine if there is an entry in the children that word starts with.
@@ -89,88 +90,6 @@ open class MutableRadixTrieNode internal constructor(var isTerminal: Boolean = f
             return false
         }
     }
-
-    fun toSequence(): Sequence<String> = sequence {
-        if (isTerminal) yield("")
-        for ((key, node) in children) {
-            for (suffix in node.toSequence()) {
-                yield(key + suffix)
-            }
-        }
-    }
-
-    fun toList(): List<String> = toSequence().toList()
-    fun toSet(): Set<String> = toSequence().toSet()
-
-    /**
-     * Return the nodes of the RadixTrie that are branches, i.e. represent the shared prefixes of words in the
-     * tree but that are not words themselves.
-     */
-    fun branchSequence(): Sequence<String> = sequence {
-        if (!isTerminal) yield("")
-        for ((key, node) in children) {
-            for (suffix in node.branchSequence()) {
-                yield(key + suffix)
-            }
-        }
-    }
-
-    fun wordCount(): Int =
-        (if (isTerminal) 1 else 0) + children.values.sumOf(MutableRadixTrieNode::wordCount)
-
-    fun nodeCount(): Int = 1 + children.values.sumOf(MutableRadixTrieNode::nodeCount)
-
-    fun depth(): Int = 1 + (children.values.maxOfOrNull(MutableRadixTrieNode::depth) ?: 0)
-
-    // In RadixTrieNode
-    override fun toString(): String = toPrettyString(useAscii = false)
-
-    fun toPrettyString(useAscii: Boolean = false): String {
-        val sb = StringBuilder()
-        val tee = if (useAscii) "+--"  else "├── "
-        val el  = if (useAscii) "+-- " else "└── "
-        val bar = if (useAscii) "|   " else "│   "
-        val sp  = if (useAscii) "    " else "    "
-
-        sb.append("<empty>")
-        if (isTerminal) sb.append(" *")
-        sb.append('\n')
-
-        val entries = children.entries.sortedBy { it.key }
-        entries.forEachIndexed { i, (edge, child) ->
-            val isLast = i == entries.lastIndex
-            sb.append(child.renderPretty(edge, prefix = "", isLast = isLast, tee = tee, el = el, bar = bar, sp = sp))
-        }
-        return sb.toString()
-    }
-
-    private fun renderPretty(
-        edge: String,
-        prefix: String,
-        isLast: Boolean,
-        tee: String,
-        el: String,
-        bar: String,
-        sp: String
-    ): String {
-        val sb = StringBuilder()
-        sb.append(prefix)
-        sb.append(if (isLast) el else tee)
-        sb.append(edge)
-        if (isTerminal) sb.append(" *")
-        sb.append('\n')
-
-        // Children get an extended prefix that either continues the bar or spaces it out.
-        val nextPrefix = prefix + if (isLast) sp else bar
-        val entries = children.entries.sortedBy { it.key }
-        entries.forEachIndexed { i, (childEdge, child) ->
-            sb.append(child.renderPretty(childEdge, nextPrefix, i == entries.lastIndex, tee, el, bar, sp))
-        }
-        return sb.toString()
-    }
-
-    fun merge(other: MutableRadixTrieNode) =
-        other.toSequence().forEach(::insert)
 }
 
 fun main() {
