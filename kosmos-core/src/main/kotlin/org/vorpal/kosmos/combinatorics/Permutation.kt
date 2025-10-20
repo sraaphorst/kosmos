@@ -79,6 +79,17 @@ class Permutation<A>(
         return aux()
     }
 
+    /**
+     * Sign (parity) of the permutation: 1 for even, -1 for odd.
+     * Computed as (-1)^(n - number of cycles)
+     */
+    fun sign(): Int {
+        val cycleCount = cycles().size
+        val fixedPoints = domain.count { apply(it) == it }
+        val totalCycles = cycleCount + fixedPoints
+        return if ((domain.size - totalCycles) % 2 == 0) 1 else -1
+    }
+
     /** Order of the permutation (least positive n with p^n = id). */
     fun order(): Int = cycles().fold(1) { acc, cycle -> lcm(acc, cycle.size) }
 

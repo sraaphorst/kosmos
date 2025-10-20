@@ -115,7 +115,7 @@ class PermutationSpec : FreeSpec({
     "Permutation inverse" - {
 
         "inverse swaps forward and backward" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 val inv = perm.inverse()
                 inv.forward shouldBe perm.backward
                 inv.backward shouldBe perm.forward
@@ -123,7 +123,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "inverse twice is identity" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 perm.inverse().inverse() shouldBe perm
             }
         }
@@ -165,7 +165,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "cycles are disjoint" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 val cycles = perm.cycles()
                 for (i in cycles.indices) {
                     for (j in i + 1 until cycles.size) {
@@ -186,7 +186,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "each cycle element maps to next in cycle" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 val cycles = perm.cycles()
                 cycles.all { cycle ->
                     cycle.indices.all { i ->
@@ -214,7 +214,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "order is positive" {
-            checkAll(generateArbPermutation(Arb.int(), 2, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 2, 10)) { (_, perm) ->
                 perm.order() shouldBeGreaterThan 0
             }
         }
@@ -344,9 +344,20 @@ class PermutationSpec : FreeSpec({
         }
 
         "conjugation preserves order" {
-            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (base, p, q) ->
+            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
                 val conjugate = q then p then q.inverse()
                 conjugate.order() shouldBe p.order()
+            }
+        }
+
+        "conjugation preserves cycle type" {
+            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
+                val conjugate = q then p then q.inverse()
+
+                val pCycles = p.cycles().map { it.size }.sorted()
+                val conjCycles = conjugate.cycles().map { it.size }.sorted()
+
+                pCycles shouldBe conjCycles
             }
         }
 
@@ -355,6 +366,102 @@ class PermutationSpec : FreeSpec({
                 val id = Permutation.identity(base)
                 val commutator = perm then id then perm.inverse() then id.inverse()
                 base.all { x -> commutator.apply(x) == x } shouldBe true
+            }
+        }
+
+        "commutator with self is identity" {
+            checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
+                val commutator = perm then perm then perm.inverse() then perm.inverse()
+                base.all { x -> commutator.apply(x) == x } shouldBe true
+            }
+        }
+    }
+
+    "Permutation sign and parity" - {
+
+        "identity has positive sign" {
+            checkAll(generateArbOrderedFiniteSet(Arb.int(), 1, 10)) { base ->
+                val id = Permutation.identity(base)
+                id.sign() shouldBe 1
+            }
+        }
+
+        "transposition has negative sign" {
+            checkAll(Arb.int(), Arb.int()) { a, b ->
+                if (a != b) {
+                    val base = FiniteSet.ordered(a, b)
+                    val mapping = mapOf(a to b, b to a)
+                    val transposition = Permutation.of(base, mapping)
+                    transposition.sign() shouldBe -1
+                }
+            }
+        }
+
+        "sign is multiplicative: sign(p1 * p2) = sign(p1) * sign(p2)" {
+            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p1, p2) ->
+                val composed = p1 then p2
+                composed.sign() shouldBe (p1.sign() * p2.sign())
+            }
+        }
+
+        "inverse has same sign: sign(p^-1) = sign(p)" {
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
+                perm.inverse().sign() shouldBe perm.sign()
+            }
+        }
+
+        "sign is either 1 or -1" {
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
+                val sign = perm.sign()
+                (sign == 1 || sign == -1) shouldBe true
+            }
+        }
+
+        "even length cycle has odd sign" {
+            checkAll(generateArbCyclicPermutation(Arb.int(), 2, 8)) { (base, perm) ->
+                if (base.size % 2 == 0) {
+                    perm.sign() shouldBe -1
+                } else {
+                    perm.sign() shouldBe 1
+                }
+            }
+        }
+    }
+
+    "Permutation statistics" - {
+
+        "descent set analysis" {
+            checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
+                // A descent is where perm(i) > perm(i+1) in the ordering
+                val sorted = base.toList().sorted()
+                val permuted = sorted.map { perm.apply(it) }
+
+                val descents = (0 until permuted.size - 1).count { i ->
+                    permuted[i] > permuted[i + 1]
+                }
+
+                // Verify descents is in valid range
+                (descents >= 0 && descents < base.size) shouldBe true
+            }
+        }
+
+        "inversion count is well-defined" {
+            checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
+                val sorted = base.toList().sorted()
+                val permuted = sorted.map { perm.apply(it) }
+
+                // Count inversions: pairs (i,j) where i < j but permuted[i] > permuted[j]
+                var inversions = 0
+                for (i in permuted.indices) {
+                    for (j in i + 1 until permuted.size) {
+                        if (permuted[i] > permuted[j]) {
+                            inversions++
+                        }
+                    }
+                }
+
+                // Verify inversions is non-negative and bounded
+                (inversions >= 0 && inversions <= (base.size * (base.size - 1)) / 2) shouldBe true
             }
         }
     }
@@ -369,7 +476,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "isEmpty is false for non-empty domain" {
-            checkAll(generateArbPermutation(Arb.int(), 1, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 1, 10)) { (_, perm) ->
                 perm.isEmpty shouldBe false
                 perm.isNotEmpty shouldBe true
             }
@@ -385,13 +492,13 @@ class PermutationSpec : FreeSpec({
         }
 
         "identity has order 1" {
-            checkAll(generateArbIdentityPermutation(Arb.int(), 1, 10)) { (base, perm) ->
+            checkAll(generateArbIdentityPermutation(Arb.int(), 1, 10)) { (_, perm) ->
                 perm.order() shouldBe 1
             }
         }
 
         "identity has no cycles" {
-            checkAll(generateArbIdentityPermutation(Arb.int(), 1, 10)) { (base, perm) ->
+            checkAll(generateArbIdentityPermutation(Arb.int(), 1, 10)) { (_, perm) ->
                 perm.cycles().isEmpty() shouldBe true
             }
         }
@@ -414,7 +521,7 @@ class PermutationSpec : FreeSpec({
         }
 
         "permutation domain equals codomain" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 perm.domain shouldBe perm.codomain
             }
         }
