@@ -164,7 +164,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
     "Permutation conjugacy classes" - {
 
         "conjugate permutations have same cycle type" {
-            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (base, p, q) ->
+            checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
                 val conjugate = q then p then q.inverse()
 
                 val pCycles = p.cycles().map { it.size }.sorted()
@@ -243,7 +243,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
         }
 
         "power with negative exponent fails" {
-            checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
+            checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (_, perm) ->
                 shouldThrow<IllegalArgumentException> {
                     perm.exp(-1)
                 }
@@ -335,19 +335,16 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
         "maintaining vs breaking sort order" {
             checkAll(generateArbOrderedFiniteSet(Arb.int(), 4, 8)) { base ->
                 val sorted = FiniteSet.sorted(base)
-                val reversed = sorted.reversed()
 
                 // Identity maintains order
                 val id = sorted.identityPermutation()
                 sorted.map { id.apply(it) } shouldBe sorted
 
-                // Other permutations generally don't
-                if (base.size > 2) {
+                // Shifted permutation breaks order
+                if (sorted.size > 2) {
                     val shift = sorted.shiftPermutation(1)
                     val shifted = sorted.map { shift.apply(it) }
-                    if (sorted.size > 2) {
-                        shifted shouldNotBe sorted
-                    }
+                    shifted shouldNotBe sorted
                 }
             }
         }
@@ -359,7 +356,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
             checkAll(
                 generateArbPermutationOfSize(Arb.int(), 3),
                 generateArbPermutationOfSize(Arb.char(), 3)
-            ) { (base1, perm1), (base2, perm2) ->
+            ) { (base1, _), (base2, _) ->
                 val product = base1 cartesianProduct base2
 
                 // Can define a product permutation

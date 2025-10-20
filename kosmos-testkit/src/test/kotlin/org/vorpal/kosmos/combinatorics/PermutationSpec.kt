@@ -117,8 +117,17 @@ class PermutationSpec : FreeSpec({
         "inverse swaps forward and backward" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (_, perm) ->
                 val inv = perm.inverse()
-                inv.forward shouldBe perm.backward
-                inv.backward shouldBe perm.forward
+                val domain = perm.domain.toList()
+
+                // forward of inverse == backward of original
+                domain.forEach { a ->
+                    inv.apply(a) shouldBe perm.applyInverse(a)
+                }
+
+                // backward of inverse == forward of original
+                domain.forEach { a ->
+                    inv.applyInverse(a) shouldBe perm.apply(a)
+                }
             }
         }
 

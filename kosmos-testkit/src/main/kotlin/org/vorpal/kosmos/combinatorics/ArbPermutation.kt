@@ -2,7 +2,6 @@ package org.vorpal.kosmos.combinatorics
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
-import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSet
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
@@ -23,10 +22,7 @@ fun <A> generateArbPermutation(
         generateArbOrderedFiniteSetOfSize(arb, size).flatMap { base ->
             Arb.shuffle(base.order).map { shuffled ->
                 val mapping = base.order.zip(shuffled).toMap()
-                val inv = shuffled.zip(base.order).toMap()
-                val f = Morphism<A, A> { mapping.getValue(it) }
-                val g = Morphism<A, A> { inv.getValue(it) }
-                base to Permutation(base, f, g)
+                base to Permutation.of(base, mapping)
             }
         }
     }
@@ -44,10 +40,7 @@ fun <A> generateArbPermutationOfSize(
     return generateArbOrderedFiniteSetOfSize(arb, exactSize).flatMap { base ->
         Arb.shuffle(base.order).map { shuffled ->
             val mapping = base.order.zip(shuffled).toMap()
-            val inv = shuffled.zip(base.order).toMap()
-            val f = Morphism<A, A> { mapping.getValue(it) }
-            val g = Morphism<A, A> { inv.getValue(it) }
-            base to Permutation(base, f, g)
+            base to Permutation.of(base, mapping)
         }
     }
 }
@@ -62,9 +55,7 @@ fun <A> generateArbIdentityPermutation(
 ): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> {
     return generateArbOrderedFiniteSet(arb, lowerBound, upperBoundInclusive).map { base ->
         val mapping = base.associateWith { it }
-        val f = Morphism<A, A> { it }
-        val g = Morphism<A, A> { it }
-        base to Permutation(base, f, g)
+        base to Permutation.of(base, mapping)
     }
 }
 
@@ -88,10 +79,7 @@ fun <A> generateArbCyclicPermutation(
                 val next = (i + 1) % base.order.size
                 mapping[base[i]] = base[next]
             }
-            val inv = mapping.entries.associate { (k, v) -> v to k }
-            val f = Morphism<A, A> { mapping.getValue(it) }
-            val g = Morphism<A, A> { inv.getValue(it) }
-            base to Permutation(base, f, g)
+            base to Permutation.of(base, mapping)
         }
     }
 }
@@ -107,18 +95,12 @@ fun <A> generateArbPermutationPair(
     return generateArbOrderedFiniteSetOfSize(arb, size).flatMap { base ->
         val perm1Arb = Arb.shuffle(base.order).map { shuffled ->
             val mapping = base.order.zip(shuffled).toMap()
-            val inv = shuffled.zip(base.order).toMap()
-            val f = Morphism<A, A> { mapping.getValue(it) }
-            val g = Morphism<A, A> { inv.getValue(it) }
-            Permutation(base, f, g)
+            Permutation.of(base, mapping)
         }
 
         val perm2Arb = Arb.shuffle(base.order).map { shuffled ->
             val mapping = base.order.zip(shuffled).toMap()
-            val inv = shuffled.zip(base.order).toMap()
-            val f = Morphism<A, A> { mapping.getValue(it) }
-            val g = Morphism<A, A> { inv.getValue(it) }
-            Permutation(base, f, g)
+            Permutation.of(base, mapping)
         }
 
         Arb.bind(perm1Arb, perm2Arb) { p1, p2 ->
@@ -188,10 +170,7 @@ object PermutationTestingCombinations {
             Arb.list(
                 Arb.shuffle(base.order).map { shuffled ->
                     val mapping = base.order.zip(shuffled).toMap()
-                    val inv = shuffled.zip(base.order).toMap()
-                    val f = Morphism<A, A> { mapping.getValue(it) }
-                    val g = Morphism<A, A> { inv.getValue(it) }
-                    Permutation(base, f, g)
+                    Permutation.of(base, mapping)
                 },
                 count..count
             ).map { perms ->
@@ -200,21 +179,3 @@ object PermutationTestingCombinations {
         }
     }
 }
-
-// Usage examples in comments:
-/*
-// Basic usage:
-val permArb = generateArbPermutation(Arb.int(), 3, 8)
-val (base, perm) = permArb.single()
-
-// For property testing:
-checkAll(permArb) { (base, perm) ->
-    // Test properties
-}
-
-// Testing with specific size:
-val fixed = Arb.int().toPermutationOfSize(5)
-checkAll(fixed) { (base, perm) ->
-    base.size shouldBe 5
-}
-*/
