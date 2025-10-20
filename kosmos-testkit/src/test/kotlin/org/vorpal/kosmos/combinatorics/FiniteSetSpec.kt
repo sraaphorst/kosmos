@@ -11,6 +11,12 @@ import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.flatMap
+import org.vorpal.kosmos.core.minus
+import org.vorpal.kosmos.core.plus
+import org.vorpal.kosmos.core.toOrderedFiniteSet
+import org.vorpal.kosmos.core.toUnorderedFiniteSet
 
 class FiniteSetSpec : StringSpec({
 

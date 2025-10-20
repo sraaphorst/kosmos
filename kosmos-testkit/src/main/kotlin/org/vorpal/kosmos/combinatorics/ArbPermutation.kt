@@ -3,6 +3,7 @@ package org.vorpal.kosmos.combinatorics
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import org.vorpal.kosmos.categories.Morphism
+import org.vorpal.kosmos.core.FiniteSet
 
 /**
  * Generate an arbitrary permutation on a finite ordered set.

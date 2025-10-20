@@ -2,6 +2,7 @@ package org.vorpal.kosmos.combinatorics
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
+import org.vorpal.kosmos.core.FiniteSet
 
 /**
  * Generate an Arb<FiniteSet.Ordered<A>> with size bounds.

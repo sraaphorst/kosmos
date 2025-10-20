@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.algorithms.combinatorial
 
 import org.vorpal.kosmos.categories.Morphism
-import org.vorpal.kosmos.combinatorics.FiniteSet
+import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
 import org.vorpal.kosmos.core.bigFactorial
 import java.math.BigInteger
