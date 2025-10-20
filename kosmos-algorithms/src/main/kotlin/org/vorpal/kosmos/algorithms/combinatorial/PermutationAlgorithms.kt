@@ -1,9 +1,9 @@
 package org.vorpal.kosmos.algorithms.combinatorial
 
 import org.vorpal.kosmos.categories.Morphism
+import org.vorpal.kosmos.combinatorics.Factorial
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
-import org.vorpal.kosmos.core.bigFactorial
 import java.math.BigInteger
 import java.util.Random
 
@@ -100,24 +100,24 @@ fun <A> rankPermutation(p: Permutation<A>, base: FiniteSet.Ordered<A>): BigInteg
     val n = base.size
     val code = lehmerCode(p, base)
     return code.withIndex().fold(BigInteger.ZERO) { acc, (i, ci) ->
-        acc + ci.toBigInteger() * (n - 1 - i).bigFactorial()
+        acc + ci.toBigInteger() * Factorial(n - 1 - i)
     }
 }
 
 /**
- * Unrank a permutation from its lexicographic rank [r].
+ * Unrank a permutation from its lexicographic rank [rank].
  * Uses the inverse of the Lehmer encoding.
  */
 fun <A> unrankPermutation(base: FiniteSet.Ordered<A>, rank: BigInteger): Permutation<A> {
     val n = base.size
-    require(rank >= BigInteger.ZERO && rank < n.bigFactorial()) {
+    require(rank >= BigInteger.ZERO && rank < Factorial(n)) {
         "Rank out of bounds for base of size $n."
     }
 
     var r = rank
     val digits = IntArray(n)
     for (i in 0 until n) {
-        val fact = (n - 1 - i).bigFactorial()
+        val fact = Factorial(n - 1 - i)
         val (q, rem) = r.divideAndRemainder(fact)
         digits[i] = q.toInt()
         r = rem

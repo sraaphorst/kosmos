@@ -4,6 +4,7 @@ import org.vorpal.kosmos.categories.Bijection
 import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.FiniteSet.Companion.sorted
+import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.gcd
 import org.vorpal.kosmos.core.lcm
 
@@ -11,7 +12,7 @@ import org.vorpal.kosmos.core.lcm
  * A permutation is a bijection from a finite set to itself.
  * It therefore extends both Bijection<A, A> and Isomorphism<A, A>.
  */
-data class Permutation<A>(
+class Permutation<A>(
     override val domain: FiniteSet<A>,
     override val forward: Morphism<A, A>,
     override val backward: Morphism<A, A>
@@ -94,6 +95,23 @@ data class Permutation<A>(
             else go(this.apply(cur), acc + cur)
         return go()
     }
+
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other !is Permutation<*>) return false
+        if (domain != other.domain) return false
+
+        @Suppress("UNCHECKED_CAST")
+        other as Permutation<A>
+
+        return domain.all { this.apply(it) == other.apply(it) }
+    }
+
+    override fun hashCode(): Int {
+        // Define hash as the hash of the forward mapping
+        val mapping = domain.associateWith { apply(it) }
+        return mapping.hashCode()
+    }
 }
 
 /* -----------------------------------------------------------------------
@@ -106,6 +124,8 @@ fun <A> FiniteSet<A>.identityPermutation(): Permutation<A> =
 
 /** Construct a cyclic permutation with a given shift. */
 fun <A> FiniteSet<A>.cyclicPermutation(shift: Int = 1): Permutation<A> {
+    if (shift == 0) return Permutation(this, Identity(), Identity())
+
     val elements = toList()
     val n = elements.size
     require(gcd(shift.mod(n), n) == 1) {

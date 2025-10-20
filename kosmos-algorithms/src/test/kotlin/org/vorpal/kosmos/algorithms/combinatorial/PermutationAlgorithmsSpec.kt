@@ -12,11 +12,11 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.combinatorics.Factorial
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
-import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSetOfSize
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 import org.vorpal.kosmos.combinatorics.generateArbPermutationOfSize
-import org.vorpal.kosmos.core.bigFactorial
 import java.math.BigInteger
 import java.util.Random
 
@@ -88,7 +88,7 @@ class PermutationAlgorithmsSpec : FunSpec({
         test("property: generates n! permutations") {
             checkAll(30, generateArbOrderedFiniteSetOfSize(Arb.int(1..100), 6)) { base ->
                 val count = permutations(base).count()
-                val expected = base.size.bigFactorial().toInt()
+                val expected = Factorial(base.size).toInt()
 
                 count shouldBe expected
             }
@@ -154,7 +154,7 @@ class PermutationAlgorithmsSpec : FunSpec({
             val last = permutations(base).last()
             val rank = rankPermutation(last, base)
 
-            rank shouldBe 4.bigFactorial() - BigInteger.ONE
+            rank shouldBe Factorial(4) - BigInteger.ONE
         }
 
         test("unrank(rank(p)) = p for all permutations") {
@@ -171,7 +171,7 @@ class PermutationAlgorithmsSpec : FunSpec({
 
         test("rank(unrank(r)) = r for valid ranks") {
             val base = FiniteSet.ordered(1, 2, 3, 4)
-            val maxRank = 4.bigFactorial()
+            val maxRank = Factorial(4)
 
             for (r in 0 until minOf(24, maxRank.toInt())) {
                 val perm = unrankPermutation(base, r.toBigInteger())
@@ -396,7 +396,7 @@ class PermutationAlgorithmsSpec : FunSpec({
 
                 // Manually compute rank from Lehmer code
                 val computedRank = code.withIndex().fold(BigInteger.ZERO) { acc, (i, ci) ->
-                    acc + ci.toBigInteger() * (base.size - 1 - i).bigFactorial()
+                    acc + ci.toBigInteger() * Factorial(base.size - 1 - i)
                 }
 
                 computedRank shouldBe rank
@@ -411,7 +411,7 @@ class PermutationAlgorithmsSpec : FunSpec({
                 val rank: BigInteger = rankPermutation(perm, base)
 
                 rank shouldBeGreaterThanOrEqualTo BigInteger.ZERO
-                rank shouldBeLessThan base.size.bigFactorial()
+                rank shouldBeLessThan Factorial(base.size)
             }
         }
 

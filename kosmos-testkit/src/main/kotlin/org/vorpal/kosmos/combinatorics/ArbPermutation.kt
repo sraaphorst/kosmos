@@ -4,6 +4,8 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSet
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 
 /**
  * Generate an arbitrary permutation on a finite ordered set.

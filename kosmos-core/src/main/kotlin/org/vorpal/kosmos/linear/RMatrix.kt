@@ -20,10 +20,10 @@ open class RMatrix<R>(
     operator fun get(i: Int, j: Int): R = data[i][j]
 
     fun map(f: (R) -> R): RMatrix<R> =
-        RMatrix(rows, cols, data.map { row -> row.map(f) }, ring)
+        RMatrix(rows, cols, ring, data.map { row -> row.map(f) })
 
     fun transpose(): RMatrix<R> =
-        RMatrix(cols, rows, (0 until cols).map { j -> (0 until rows).map { i -> data[i][j] } }, ring)
+        RMatrix(cols, rows, ring, (0 until cols).map { j -> (0 until rows).map { i -> data[i][j] } })
 
     /** Matrix addition over the field. */
     operator fun plus(other: RMatrix<R>): RMatrix<R> {
@@ -33,7 +33,7 @@ open class RMatrix<R>(
                 ring.add.op.combine(this[i, j], other[i, j])
             }
         }
-        return RMatrix(rows, cols, sum, ring)
+        return RMatrix(rows, cols, ring, sum)
     }
 
     /** Matrix multiplication over the field. */
@@ -49,7 +49,7 @@ open class RMatrix<R>(
                 sum
             }
         }
-        return RMatrix(rows, other.cols, product, ring)
+        return RMatrix(rows, other.cols, ring, product)
     }
 
     override fun toString(): String =
