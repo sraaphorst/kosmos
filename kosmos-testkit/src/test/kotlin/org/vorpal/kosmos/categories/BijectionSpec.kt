@@ -10,8 +10,8 @@ import io.kotest.property.arbitrary.shuffle
 import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.FiniteSet
-import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSet
-import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSetOfSize
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSet
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 
 class BijectionSpec : FunSpec({
 
