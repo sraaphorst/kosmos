@@ -12,53 +12,46 @@ import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.combinatorics.FiniteSet
+import org.vorpal.kosmos.combinatorics.Factorial
+import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
-import org.vorpal.kosmos.combinatorics.generateArbOrderedFiniteSetOfSize
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 import org.vorpal.kosmos.combinatorics.generateArbPermutationOfSize
-import org.vorpal.kosmos.core.bigFactorial
 import java.math.BigInteger
 import java.util.Random
 
 class PermutationAlgorithmsSpec : FunSpec({
 
-    // Test data
-    val smallBase = FiniteSet.ordered(1, 2, 3)
-    val mediumBase = FiniteSet.ordered('a', 'b', 'c', 'd')
+    val three = FiniteSet.ordered(1, 2, 3)
+    val four = FiniteSet.ordered(1, 2, 3, 4)
+    val five = FiniteSet.ordered(1, 2, 3, 4, 5)
 
     context("permutations generator") {
         test("generates correct number of permutations") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val allPerms = permutations(base).toList()
-
+            val allPerms = permutations(four).toList()
             allPerms shouldHaveSize 24 // 4!
         }
 
         test("generates all unique permutations") {
-            val base = FiniteSet.ordered(1, 2, 3)
-            val allPerms = permutations(base).toList()
+            val allPerms = permutations(three).toList()
 
             // Check uniqueness by converting each to list representation
             val asLists = allPerms.map { perm ->
-                base.order.map { elem -> perm[elem] }
+                three.order.map { elem -> perm[elem] }
             }
 
             asLists.toSet() shouldHaveSize 6 // All unique
         }
 
         test("starts with identity permutation") {
-            val base = FiniteSet.ordered(1, 2, 3)
-            val first = permutations(base).first()
-
-            base.order.all { elem -> first[elem] == elem } shouldBe true
+            val first = permutations(three).first()
+            three.order.all { elem -> first[elem] == elem } shouldBe true
         }
 
         test("generates permutations in lexicographic order") {
-            val base = FiniteSet.ordered(1, 2, 3)
-            val allPerms = permutations(base).toList()
-
+            val allPerms = permutations(three).toList()
             // Convert to list of lists for easy comparison
-            val asLists = allPerms.map { perm -> base.order.map { perm[it] } }
+            val asLists = allPerms.map { perm -> three.order.map { perm[it] } }
 
             asLists shouldContainExactly listOf(
                 listOf(1, 2, 3),
@@ -88,7 +81,7 @@ class PermutationAlgorithmsSpec : FunSpec({
         test("property: generates n! permutations") {
             checkAll(30, generateArbOrderedFiniteSetOfSize(Arb.int(1..100), 6)) { base ->
                 val count = permutations(base).count()
-                val expected = base.size.bigFactorial().toInt()
+                val expected = Factorial(base.size).toInt()
 
                 count shouldBe expected
             }
@@ -97,35 +90,29 @@ class PermutationAlgorithmsSpec : FunSpec({
 
     context("Lehmer code") {
         test("identity permutation has all-zero Lehmer code") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val identity = permutations(base).first()
-            val code = lehmerCode(identity, base)
-
+            val identity = permutations(four).first()
+            val code = lehmerCode(identity, four)
             code.toList() shouldContainExactly listOf(0, 0, 0, 0)
         }
 
         test("last permutation has descending Lehmer code") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val last = permutations(base).last()
-            val code = lehmerCode(last, base)
-
+            val last = permutations(four).last()
+            val code = lehmerCode(last, four)
             code.toList() shouldContainExactly listOf(3, 2, 1, 0)
         }
 
         test("Lehmer code components are bounded correctly") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
-
             checkAll(50, generateArbPermutationOfSize(Arb.int(1..100), 5)) { (testBase, perm) ->
                 // Use the standard base for consistency
-                val mappedPerm = permutations(base).find { p ->
-                    base.order.map { p[it] } == testBase.order.map { perm[it] }
+                val mappedPerm = permutations(five).find { p ->
+                    five.order.map { p[it] } == testBase.order.map { perm[it] }
                 }
 
                 if (mappedPerm != null) {
-                    val code = lehmerCode(mappedPerm, base)
+                    val code = lehmerCode(mappedPerm, five)
 
                     code.withIndex().all { (i, c) ->
-                        c >= 0 && c < base.size - i
+                        c >= 0 && c < five.size - i
                     } shouldBe true
                 }
             }
@@ -143,57 +130,45 @@ class PermutationAlgorithmsSpec : FunSpec({
 
     context("rank and unrank") {
         test("rank of identity is zero") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val identity = permutations(base).first()
-
-            rankPermutation(identity, base) shouldBe BigInteger.ZERO
+            val identity = permutations(four).first()
+            rankPermutation(identity, four) shouldBe BigInteger.ZERO
         }
 
         test("rank of last permutation is n!-1") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val last = permutations(base).last()
-            val rank = rankPermutation(last, base)
-
-            rank shouldBe 4.bigFactorial() - BigInteger.ONE
+            val last = permutations(four).last()
+            val rank = rankPermutation(last, four)
+            rank shouldBe Factorial(4) - BigInteger.ONE
         }
 
         test("unrank(rank(p)) = p for all permutations") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-
-            permutations(base).forEachIndexed { idx, perm ->
-                val rank = rankPermutation(perm, base)
-                val unranked = unrankPermutation(base, rank)
+            permutations(four).forEachIndexed { idx, perm ->
+                val rank = rankPermutation(perm, four)
+                rank shouldBe idx.toBigInteger()
+                val unranked = unrankPermutation(four, rank)
 
                 // Check that unranked produces the same mapping
-                base.order.all { elem -> unranked[elem] == perm[elem] } shouldBe true
+                four.order.all { elem -> unranked[elem] == perm[elem] } shouldBe true
             }
         }
 
         test("rank(unrank(r)) = r for valid ranks") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-            val maxRank = 4.bigFactorial()
-
+            val maxRank = Factorial(4)
             for (r in 0 until minOf(24, maxRank.toInt())) {
-                val perm = unrankPermutation(base, r.toBigInteger())
-                val ranked = rankPermutation(perm, base)
-
+                val perm = unrankPermutation(four, r.toBigInteger())
+                val ranked = rankPermutation(perm, four)
                 ranked shouldBe r.toBigInteger()
             }
         }
 
         test("unrank throws for negative rank") {
-            val base = FiniteSet.ordered(1, 2, 3)
-
             shouldThrow<IllegalArgumentException> {
-                unrankPermutation(base, BigInteger.valueOf(-1))
+                unrankPermutation(three, BigInteger.valueOf(-1))
             }
         }
 
         test("unrank throws for rank >= n!") {
-            val base = FiniteSet.ordered(1, 2, 3)
-
             shouldThrow<IllegalArgumentException> {
-                unrankPermutation(base, 6.toBigInteger()) // 3! = 6
+                unrankPermutation(three, 6.toBigInteger()) // 3! = 6
             }
         }
 
@@ -219,10 +194,9 @@ class PermutationAlgorithmsSpec : FunSpec({
         }
 
         test("sequential unranking produces permutations in lexicographic order") {
-            val base = FiniteSet.ordered(1, 2, 3)
             val generated = (0 until 6).map { r ->
-                val perm = unrankPermutation(base, r.toBigInteger())
-                base.order.map { perm[it] }
+                val perm = unrankPermutation(three, r.toBigInteger())
+                three.order.map { perm[it] }
             }
 
             generated shouldContainExactly listOf(
@@ -238,31 +212,26 @@ class PermutationAlgorithmsSpec : FunSpec({
 
     context("lexicographic successor") {
         test("identity has a successor") {
-            val base = FiniteSet.ordered(1, 2, 3)
-            val identity = permutations(base).first()
-            val successor = lexicographicSuccessor(identity, base)
+            val identity = permutations(three).first()
+            val successor = lexicographicSuccessor(identity, three)
 
             successor shouldNotBe null
             successor!!.let { s ->
-                base.order.map { s[it] } shouldBe listOf(1, 3, 2)
+                three.order.map { s[it] } shouldBe listOf(1, 3, 2)
             }
         }
 
         test("last permutation has no successor") {
-            val base = FiniteSet.ordered(1, 2, 3)
-            val last = permutations(base).last()
-
-            lexicographicSuccessor(last, base) shouldBe null
+            val last = permutations(three).last()
+            lexicographicSuccessor(last, three) shouldBe null
         }
 
         test("iterating successors generates all permutations") {
-            val base = FiniteSet.ordered(1, 2, 3)
             val generated = mutableListOf<List<Int>>()
-
-            var current: Permutation<Int>? = permutations(base).first()
+            var current: Permutation<Int>? = permutations(three).first()
             while (current != null) {
-                generated.add(base.order.map { current[it] })
-                current = lexicographicSuccessor(current, base)
+                generated.add(three.order.map { current[it] })
+                current = lexicographicSuccessor(current, three)
             }
 
             generated shouldContainExactly listOf(
@@ -276,17 +245,15 @@ class PermutationAlgorithmsSpec : FunSpec({
         }
 
         test("successor produces correct permutation for various cases") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-
             // Test case: [1,2,3,4] -> [1,2,4,3]
-            val p1 = permutations(base).first()
-            val s1 = lexicographicSuccessor(p1, base)!!
-            base.order.map { s1[it] } shouldBe listOf(1, 2, 4, 3)
+            val p1 = permutations(four).first()
+            val s1 = lexicographicSuccessor(p1, four)!!
+            four.order.map { s1[it] } shouldBe listOf(1, 2, 4, 3)
 
             // Test case: [1,4,3,2] -> [2,1,3,4]
-            val p2 = permutations(base).toList()[5] // [1,4,3,2]
-            val s2 = lexicographicSuccessor(p2, base)!!
-            base.order.map { s2[it] } shouldBe listOf(2, 1, 3, 4)
+            val p2 = permutations(four).toList()[5] // [1,4,3,2]
+            val s2 = lexicographicSuccessor(p2, four)!!
+            four.order.map { s2[it] } shouldBe listOf(2, 1, 3, 4)
         }
 
         test("property: successor matches generated sequence") {
@@ -309,32 +276,24 @@ class PermutationAlgorithmsSpec : FunSpec({
 
     context("random permutation") {
         test("generates valid permutation") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
-            val perm = randomPermutation(base)
-
+            val perm = randomPermutation(five)
             // Check it's a valid permutation (bijection)
-            val image = base.order.map { perm[it] }.toSet()
-            image shouldBe base.toSet()
+            val image = five.order.map { perm[it] }.toSet()
+            image shouldBe five.toSet()
         }
 
         test("is deterministic with same seed") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
             val seed = 42L
-
-            val perm1 = randomPermutation(base, Random(seed))
-            val perm2 = randomPermutation(base, Random(seed))
-
-            base.order.all { elem -> perm1[elem] == perm2[elem] } shouldBe true
+            val perm1 = randomPermutation(five, Random(seed))
+            val perm2 = randomPermutation(five, Random(seed))
+            five.order.all { elem -> perm1[elem] == perm2[elem] } shouldBe true
         }
 
         test("produces different results with different seeds") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
-
-            val perm1 = randomPermutation(base, Random(1))
-            val perm2 = randomPermutation(base, Random(2))
-
+            val perm1 = randomPermutation(five, Random(1))
+            val perm2 = randomPermutation(five, Random(2))
             // Very unlikely to be the same
-            base.order.any { elem -> perm1[elem] != perm2[elem] } shouldBe true
+            five.order.any { elem -> perm1[elem] != perm2[elem] } shouldBe true
         }
 
         test("works with singleton set") {
@@ -363,10 +322,9 @@ class PermutationAlgorithmsSpec : FunSpec({
         }
 
         test("property: generates diverse permutations") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
             val generated = (1..100).map {
-                val perm = randomPermutation(base, Random())
-                base.order.map { perm[it] }
+                val perm = randomPermutation(five, Random())
+                five.order.map { perm[it] }
             }.toSet()
 
             // Should generate many different permutations
@@ -376,27 +334,23 @@ class PermutationAlgorithmsSpec : FunSpec({
 
     context("integration tests") {
         test("all permutations can be ranked and unranked") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-
-            permutations(base).forEachIndexed { expectedRank, perm ->
-                val rank = rankPermutation(perm, base)
+            permutations(four).forEachIndexed { expectedRank, perm ->
+                val rank = rankPermutation(perm, four)
                 rank.toInt() shouldBe expectedRank
 
-                val unranked = unrankPermutation(base, rank)
-                base.order.all { elem -> unranked[elem] == perm[elem] } shouldBe true
+                val unranked = unrankPermutation(four, rank)
+                four.order.all { elem -> unranked[elem] == perm[elem] } shouldBe true
             }
         }
 
         test("Lehmer code matches rank") {
-            val base = FiniteSet.ordered(1, 2, 3, 4)
-
-            permutations(base).forEach { perm ->
-                val rank = rankPermutation(perm, base)
-                val code = lehmerCode(perm, base)
+            permutations(four).forEach { perm ->
+                val rank = rankPermutation(perm, four)
+                val code = lehmerCode(perm, four)
 
                 // Manually compute rank from Lehmer code
                 val computedRank = code.withIndex().fold(BigInteger.ZERO) { acc, (i, ci) ->
-                    acc + ci.toBigInteger() * (base.size - 1 - i).bigFactorial()
+                    acc + ci.toBigInteger() * Factorial(four.size - 1 - i)
                 }
 
                 computedRank shouldBe rank
@@ -404,28 +358,24 @@ class PermutationAlgorithmsSpec : FunSpec({
         }
 
         test("random permutations can be ranked") {
-            val base = FiniteSet.ordered(1, 2, 3, 4, 5)
-
             repeat(20) {
-                val perm = randomPermutation(base, Random())
-                val rank: BigInteger = rankPermutation(perm, base)
+                val perm = randomPermutation(five, Random())
+                val rank: BigInteger = rankPermutation(perm, five)
 
                 rank shouldBeGreaterThanOrEqualTo BigInteger.ZERO
-                rank shouldBeLessThan base.size.bigFactorial()
+                rank shouldBeLessThan Factorial(five.size)
             }
         }
 
         test("lexicographic iteration matches rank sequence") {
-            val base = FiniteSet.ordered(1, 2, 3)
-
-            var current: org.vorpal.kosmos.combinatorics.Permutation<Int>? = permutations(base).first()
+            var current: Permutation<Int>? = permutations(three).first()
             var expectedRank = BigInteger.ZERO
 
             while (current != null) {
-                val actualRank = rankPermutation(current, base)
+                val actualRank = rankPermutation(current, three)
                 actualRank shouldBe expectedRank
 
-                current = lexicographicSuccessor(current, base)
+                current = lexicographicSuccessor(current, three)
                 expectedRank += BigInteger.ONE
             }
         }

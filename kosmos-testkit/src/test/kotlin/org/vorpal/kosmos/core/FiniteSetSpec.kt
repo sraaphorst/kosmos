@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.combinatorics
+package org.vorpal.kosmos.core
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -15,9 +15,9 @@ import io.kotest.property.checkAll
 class FiniteSetSpec : StringSpec({
 
     // ===== Generators =====
-    val arbInt = Arb.Companion.int(-100..100)
-    val arbString = Arb.Companion.string(1..5)
-    val arbChar = Arb.Companion.char('a'..'z')
+    val arbInt = Arb.int(-100..100)
+    val arbString = Arb.string(1..5)
+    val arbChar = Arb.char('a'..'z')
 
     val arbSmallOrderedSet = generateArbOrderedFiniteSet(arbInt, 0, 10)
     val arbSmallUnorderedSet = generateArbUnorderedFiniteSet(arbInt, 0, 10)
@@ -187,6 +187,7 @@ class FiniteSetSpec : StringSpec({
                     val expectedOrder = set.order.map { it.toString() }.distinct()
                     mapped.order shouldBe expectedOrder
                 }
+
                 else -> {} // Should not happen for ordered input
             }
         }
