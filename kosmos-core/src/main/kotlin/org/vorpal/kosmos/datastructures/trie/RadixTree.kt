@@ -1,8 +1,6 @@
 package org.vorpal.kosmos.datastructures.trie
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
 
 /**
  * An immutable, serializable wrapper around a MutableRadixTrie.

@@ -5,6 +5,9 @@ import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.gcd
 import org.vorpal.kosmos.core.lcm
+import org.vorpal.kosmos.core.toOrderedFiniteSet
+import org.vorpal.kosmos.random.shuffledFunctional
+import kotlin.random.Random
 
 /**
  * A permutation is a bijection from a finite set to itself.
@@ -156,5 +159,14 @@ fun <A> FiniteSet<A>.cyclicPermutation(shift: Int = 1): Permutation<A> {
 fun <A> FiniteSet<A>.shiftPermutation(shift: Int): Permutation<A> {
     val elems = toList()
     val mapping = elems.mapIndexed { i, e -> e to elems[(i + shift).mod(size)] }.toMap()
+    return Permutation.of(this, mapping)
+}
+
+/** Generate a random permutation using the Fischer-Yates algorithm. */
+fun <A> FiniteSet<A>.fisherYates(seed: Long = 0L): Permutation<A> {
+    val rng = Random(seed)
+    val elems = toList()
+    val shuffled = elems.shuffledFunctional(rng)
+    val mapping = elems.zip(shuffled).toMap()
     return Permutation.of(this, mapping)
 }
