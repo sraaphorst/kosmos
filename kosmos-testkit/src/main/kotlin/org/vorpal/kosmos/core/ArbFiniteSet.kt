@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.combinatorics
+package org.vorpal.kosmos.core
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*

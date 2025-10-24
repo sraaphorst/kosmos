@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.combinatorics
+package org.vorpal.kosmos.core
 
 /**
  * FiniteSets must be created through their companion object builders.
