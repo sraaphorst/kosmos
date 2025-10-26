@@ -9,15 +9,15 @@ import org.vorpal.kosmos.core.ops.BinOp
  * Since a Group is a Loop, which is a Quasigroup, we satisfy the Quasigroup operations here.
  */
 interface Group<A> : Monoid<A>, Loop<A> {
-    val inv: (A) -> A
-    override fun leftDiv(a: A, b: A): A = inv(a).let { op.combine(it, b) }
-    override fun rightDiv(b: A, a: A): A = inv(a).let { op.combine(b, it) }
+    val inverse: (A) -> A
+    override fun leftDiv(a: A, b: A): A = inverse(a).let { op.combine(it, b) }
+    override fun rightDiv(b: A, a: A): A = inverse(a).let { op.combine(b, it) }
 
     companion object {
-        fun <A> of(op: (A, A) -> A, identity: A, inv: (A) -> A): Group<A> = object : Group<A> {
+        fun <A> of(op: (A, A) -> A, identity: A, inverse: (A) -> A): Group<A> = object : Group<A> {
             override val op: BinOp<A> = BinOp(op)
             override val identity = identity
-            override val inv: (A) -> A = inv
+            override val inverse: (A) -> A = inverse
         }
     }
 }
@@ -29,10 +29,10 @@ interface Group<A> : Monoid<A>, Loop<A> {
  */
 interface AbelianGroup<A> : Group<A> {
     companion object {
-        fun <A> of(op: (A, A) -> A, identity: A, inv: (A) -> A): AbelianGroup<A> = object : AbelianGroup<A> {
+        fun <A> of(op: (A, A) -> A, identity: A, inverse: (A) -> A): AbelianGroup<A> = object : AbelianGroup<A> {
             override val op: BinOp<A> = BinOp(op)
             override val identity = identity
-            override val inv: (A) -> A = inv
+            override val inverse: (A) -> A = inverse
         }
     }
 }
