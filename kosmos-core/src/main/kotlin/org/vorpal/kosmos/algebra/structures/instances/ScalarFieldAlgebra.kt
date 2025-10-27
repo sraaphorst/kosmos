@@ -11,63 +11,53 @@ import org.vorpal.kosmos.core.ops.BinOp
 
 object ScalarFieldAlgebra {
     /**
-     * Given a [Field] and a [VectorSpace], this defines the additive group of [ScalarFields] (𝔽^V, +).
+     * Given a [VectorSpace] V over a [Field] 𝔽, this defines the additive abelian group
+     * of [ScalarField]s (𝔽^V, +) under pointwise addition.
      */
     fun <F, V> additiveAbelianGroup(
-        field: Field<F>,
         space: VectorSpace<F, V>
-    ): AbelianGroup<ScalarField<F, V>> where F : Any, V : VectorSpace<F, V> =
+    ): AbelianGroup<ScalarField<F, V>> where F: Any, V: VectorSpace<F, V> =
         object : AbelianGroup<ScalarField<F, V>> {
             override val identity: ScalarField<F, V> =
-                ScalarFields.zero(field, space)
+                ScalarFields.zero(space)
 
             override val op: BinOp<ScalarField<F, V>> = BinOp(
                 combine = { sf1, sf2 ->
-                    ScalarFields.of(field, space) {
-                        v -> field.add.op.combine(sf1(v), sf2(v))
+                    ScalarFields.of(space) {
+                        v -> space.field.add.op(sf1(v), sf2(v))
                     }
                 },
                 symbol = "+"
             )
 
             override val inverse: (ScalarField<F, V>) -> ScalarField<F, V> = { sf ->
-                ScalarFields.of(field, space) {
-                    field.add.inverse(sf(it))
+                ScalarFields.of(space) {
+                    space.field.add.inverse(sf(it))
                 }
             }
         }
 
     /**
-     * Given a [Field] and a [VectorSpace], this defines the multiplicative [Monoid] of [ScalarFields] ((𝔽^*)^V, *).
+     * Given a [VectorSpace] V over a [Field] 𝔽, this defines the multiplicative
+     * [Monoid] of [ScalarField]s ((𝔽^*)^V, ·) under pointwise multiplication.
      */
     fun <F, V> multiplicativeMonoid(
-        field: Field<F>,
         space: VectorSpace<F, V>
     ): Monoid<ScalarField<F, V>> where F : Any, V : VectorSpace<F, V> =
-        object : Monoid<ScalarField<F, V>> {
-            override val identity: ScalarField<F, V> =
-                ScalarFields.one(field, space)
-
-            override val op: BinOp<ScalarField<F, V>> = BinOp(
-                combine = { sf1, sf2 ->
-                    ScalarFields.of(field, space) {
-                        v -> field.mul.op.combine(sf1(v), sf2(v))
-                    }
-                },
-                symbol = "*"
-            )
+        Monoid.of(ScalarFields.one(space)) { sf1, sf2 ->
+            ScalarFields.of(space) { v -> space.field.mul(sf1(v), sf2(v)) }
         }
 
     /**
-     * Given a [Field] and a [VectorSpace], create the [CommutativeRing] of [ScalarField]s (𝔽^V, +, ·),
-     * i.e. the internal Hom(V, 𝔽) under pointwise operations.
+     * Given a [VectorSpace] V over a [Field] 𝔽, create the [CommutativeRing] of
+     * [ScalarField]s (𝔽^V, +, ·), i.e. the internal Hom(V, 𝔽) under
+     * pointwise operations.
      */
     fun <F, V> commutativeRing(
-        field: Field<F>,
         space: VectorSpace<F, V>
     ): CommutativeRing<ScalarField<F, V>> where F: Any, V: VectorSpace<F, V> =
-        object : CommutativeRing<ScalarField<F, V>> {
-            override val add: AbelianGroup<ScalarField<F, V>> = additiveAbelianGroup(field, space)
-            override val mul: Monoid<ScalarField<F, V>> = multiplicativeMonoid(field, space)
-        }
+        CommutativeRing.of(
+            add = additiveAbelianGroup(space),
+            mul = multiplicativeMonoid(space)
+        )
 }

@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 
 /**
@@ -10,14 +11,21 @@ import org.vorpal.kosmos.core.ops.BinOp
  */
 interface Group<A> : Monoid<A>, Loop<A> {
     val inverse: (A) -> A
-    override fun leftDiv(a: A, b: A): A = inverse(a).let { op.combine(it, b) }
-    override fun rightDiv(b: A, a: A): A = inverse(a).let { op.combine(b, it) }
+    override fun leftDiv(a: A, b: A): A = op(inverse(a), b)
+    override fun rightDiv(b: A, a: A): A = op(b, inverse(a))
 
     companion object {
-        fun <A> of(op: (A, A) -> A, identity: A, inverse: (A) -> A): Group<A> = object : Group<A> {
-            override val op: BinOp<A> = BinOp(op)
+        const val DEFAULT_SYMBOL = Symbols.DOT
+
+        fun <A> of(
+            identity: A,
+            inverse: (A) -> A,
+            symbol: String = DEFAULT_SYMBOL,
+            op: (A, A) -> A,
+        ): Group<A> = object : Group<A> {
             override val identity = identity
             override val inverse: (A) -> A = inverse
+            override val op: BinOp<A> = BinOp(symbol, op)
         }
     }
 }
@@ -29,10 +37,17 @@ interface Group<A> : Monoid<A>, Loop<A> {
  */
 interface AbelianGroup<A> : Group<A> {
     companion object {
-        fun <A> of(op: (A, A) -> A, identity: A, inverse: (A) -> A): AbelianGroup<A> = object : AbelianGroup<A> {
-            override val op: BinOp<A> = BinOp(op)
+        const val DEFAULT_SYMBOL = Symbols.PLUS
+
+        fun <A> of(
+            identity: A,
+            inverse: (A) -> A,
+            symbol: String = DEFAULT_SYMBOL,
+            op: (A, A) -> A,
+        ): AbelianGroup<A> = object : AbelianGroup<A> {
             override val identity = identity
             override val inverse: (A) -> A = inverse
+            override val op: BinOp<A> = BinOp(symbol, op)
         }
     }
 }
