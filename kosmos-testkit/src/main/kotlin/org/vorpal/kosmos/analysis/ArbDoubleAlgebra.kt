@@ -72,3 +72,51 @@ fun arbDoubleFunction(): Arb<(Double) -> Double> = arbitrary {
         { exp(it) }
     ).random()
 }
+
+/**
+ * Arbitrary for vector fields over Vec2D.
+ * Creates linear vector fields: F(x, y) = (ax + by + c, dx + ey + f)
+ */
+fun arbVectorField(): Arb<VectorField<Double, Vec2D>> = arbitrary {
+    val a = arbFieldDouble().bind()
+    val b = arbFieldDouble().bind()
+    val c = arbFieldDouble().bind()
+    val d = arbFieldDouble().bind()
+    val e = arbFieldDouble().bind()
+    val f = arbFieldDouble().bind()
+
+    VectorFields.of(Vec2DSpace) { v ->
+        Vec2D(
+            x = a * v.x + b * v.y + c,
+            y = d * v.x + e * v.y + f
+        )
+    }
+}
+
+/**
+ * Arbitrary for rotation vector fields (useful for testing composition).
+ * Creates fields like F(x, y) = (-y, x) scaled by a factor.
+ */
+fun arbRotationVectorField(): Arb<VectorField<Double, Vec2D>> = arbitrary {
+    val scale = arbFieldDouble().bind()
+
+    VectorFields.of(Vec2DSpace) { v ->
+        Vec2D(
+            x = -v.y * scale,
+            y = v.x * scale
+        )
+    }
+}
+
+/**
+ * Arbitrary for vector-to-vector transformations.
+ */
+fun arbVectorTransform(): Arb<(Vec2D) -> Vec2D> = arbitrary {
+    listOf<(Vec2D) -> Vec2D>(
+        { v -> Vec2D(v.x * 2.0, v.y * 2.0) },
+        { v -> Vec2D(v.x + 1.0, v.y + 1.0) },
+        { v -> Vec2D(-v.y, v.x) },
+        { v -> Vec2D(v.x, -v.y) },
+        { v -> Vec2D(v.y, v.x) }
+    ).random()
+}
