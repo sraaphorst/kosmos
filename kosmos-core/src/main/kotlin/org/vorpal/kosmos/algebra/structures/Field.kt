@@ -7,3 +7,5 @@ package org.vorpal.kosmos.algebra.structures
 interface Field<A> : CommutativeRing<A> {
     override val mul: AbelianGroup<A>
 }
+
+val <F> Field<F>.negOne: F get() = add.inverse(mul.identity)
