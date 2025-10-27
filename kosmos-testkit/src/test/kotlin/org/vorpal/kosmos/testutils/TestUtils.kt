@@ -2,6 +2,7 @@ package org.vorpal.kosmos.testutils
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
+import org.vorpal.kosmos.algebra.structures.instances.Vec2D
 import kotlin.math.abs
 
 /**
@@ -27,5 +28,17 @@ fun Double.shouldBeApproximately(other: Double, relTol: Double, absTol: Double) 
 }
 
 fun Double.shouldBeZero() {
-    abs(this) shouldBe 0.0
+    abs(this) shouldBeApproximately 0.0
 }
+
+// Helper to compare Vec2D with tolerance
+infix fun Vec2D.shouldBeApproximately(other: Vec2D) {
+    this.x.shouldBeApproximately(other.x)
+    this.y.shouldBeApproximately(other.y)
+}
+
+fun Vec2D.shouldBeZero() {
+    x.shouldBeZero()
+    y.shouldBeZero()
+}
+
