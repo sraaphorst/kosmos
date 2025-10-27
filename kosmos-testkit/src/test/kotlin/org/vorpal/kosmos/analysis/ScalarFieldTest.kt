@@ -7,11 +7,9 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
-import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.core.ops.Action
-import org.vorpal.kosmos.core.ops.BinOp
 import kotlin.math.abs
 
 // ============================================================================
@@ -91,7 +89,7 @@ fun arbVec2D(): Arb<Vec2D> = arbitrary {
 /**
  * Arbitrary for scalar fields over Vec2D.
  */
-fun arbScalarField(): Arb<ScalarField<Double, Vec2DSpace>> = arbitrary {
+fun arbScalarField(): Arb<ScalarField<Double, Vec2D>> = arbitrary {
     val a = arbFieldDouble().bind()
     val b = arbFieldDouble().bind()
     val c = arbFieldDouble().bind()
@@ -125,6 +123,12 @@ fun arbDoubleFunction(): Arb<(Double) -> Double> = arbitrary {
         { if (it > 0) it else -it }
     )
     choices.random()
+}
+
+infix fun Double.shouldBeApproximately(other: Double) {
+    val eps = 1e-9
+    val relTol = eps * maxOf(1.0, abs(this), abs(other))
+    this shouldBe (other plusOrMinus relTol)
 }
 
 // ============================================================================
@@ -246,7 +250,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, h, point ->
                 val left = (f * g) * h
                 val right = f * (g * h)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -361,7 +365,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { c, f, g, point ->
                 val left = c * (f + g)
                 val right = (c * f) + (c * g)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -375,7 +379,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val cd = c * d
                 val left = cd * f
                 val right = c * (d * f)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -474,7 +478,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val mapped = (f + g).map(linear)
                 val separate = f.map(linear) + g.map(linear)
 
-                mapped(point) shouldBe (separate(point) plusOrMinus tolerance)
+                mapped(point) shouldBeApproximately separate(point)
             }
         }
     }
@@ -540,7 +544,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, h, point ->
                 val left = f * (g + h)
                 val right = (f * g) + (f * h)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -553,7 +557,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, h, point ->
                 val left = (f + g) * h
                 val right = (f * h) + (g * h)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
     }
