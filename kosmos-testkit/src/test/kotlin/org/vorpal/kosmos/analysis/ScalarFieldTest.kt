@@ -1,139 +1,15 @@
 package org.vorpal.kosmos.analysis
 
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import io.kotest.property.Arb
-import io.kotest.property.arbitrary.arbitrary
-import io.kotest.property.arbitrary.double
-import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.*
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.algebra.structures.instances.DoubleField
+import org.vorpal.kosmos.algebra.structures.instances.Vec2DSpace
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
-import kotlin.math.abs
 
-// ============================================================================
-// TEST IMPLEMENTATIONS: Field and VectorSpace
-// ============================================================================
-
-/**
- * Double field implementation for testing.
- */
-object DoubleField : Field<Double> {
-    override val add: AbelianGroup<Double> = AbelianGroup.of(
-        op = Double::plus,
-        identity = 0.0,
-        inverse = Double::unaryMinus
-    )
-
-    override val mul: AbelianGroup<Double> = AbelianGroup.of(
-        op = Double::times,
-        identity = 1.0,
-        inverse = { 1.0 / it }
-    )
-}
-
-/**
- * Simple 2D vector for testing.
- */
-data class Vec2D(val x: Double, val y: Double) {
-    companion object {
-        val ZERO = Vec2D(0.0, 0.0)
-    }
-}
-
-/**
- * 2D vector space over doubles.
- */
-object Vec2DSpace : VectorSpace<Double, Vec2D> {
-    override val ring: Field<Double> = DoubleField
-
-    override val group: AbelianGroup<Vec2D> = AbelianGroup.of(
-        op = { a, b -> Vec2D(a.x + b.x, a.y + b.y) },
-        identity = Vec2D.ZERO,
-        inverse = { Vec2D(-it.x, -it.y) }
-    )
-
-    override val action: Action<Double, Vec2D> = Action { scalar, vec ->
-        Vec2D(scalar * vec.x, scalar * vec.y)
-    }
-}
-
-// ============================================================================
-// KOTEST ARBITRARIES / GENERATORS
-// ============================================================================
-
-/**
- * Arbitrary for finite, non-NaN doubles suitable for field operations.
- */
-fun arbFieldDouble(): Arb<Double> =
-    Arb.double(-1000.0, 1000.0)
-        .filter { it.isFinite() && !it.isNaN() }
-
-/**
- * Arbitrary for non-zero doubles (for division tests).
- */
-fun arbNonZeroDouble(): Arb<Double> =
-    arbFieldDouble().filter { abs(it) > 1e-6 }
-
-/**
- * Arbitrary for Vec2D vectors.
- */
-fun arbVec2D(): Arb<Vec2D> = arbitrary {
-    val x = arbFieldDouble().filter { abs(it) > 1e-300 }.bind()
-    val y = arbFieldDouble().filter { abs(it) > 1e-300 }.bind()
-    Vec2D(x, y)
-}
-
-/**
- * Arbitrary for scalar fields over Vec2D.
- */
-fun arbScalarField(): Arb<ScalarField<Double, Vec2D>> = arbitrary {
-    val a = arbFieldDouble().bind()
-    val b = arbFieldDouble().bind()
-    val c = arbFieldDouble().bind()
-
-    // Create linear scalar field: f(x, y) = a*x + b*y + c
-    ScalarFields.of(Vec2DSpace) { v -> a * v.x + b * v.y + c }
-}
-
-/**
- * Arbitrary for non-zero scalar fields (for division tests).
- */
-fun arbNonZeroScalarField(): Arb<ScalarField<Double, Vec2D>> = arbitrary {
-    val a = arbNonZeroDouble().bind()
-    val offset = arbNonZeroDouble().bind()
-
-    // Create field that's always non-zero: f(x, y) = a*(x² + y² + 1) + offset
-    ScalarFields.of(Vec2DSpace) { v ->
-        a * (v.x * v.x + v.y * v.y + 1.0) + offset
-    }
-}
-
-/**
- * Arbitrary for unary functions on doubles.
- */
-fun arbDoubleFunction(): Arb<(Double) -> Double> = arbitrary {
-    val choices = listOf<(Double) -> Double>(
-        { it * 2.0 },
-        { it + 10.0 },
-        { it * it },
-        { abs(it) },
-        { if (it > 0) it else -it }
-    )
-    choices.random()
-}
-
-
-// ============================================================================
-// PROPERTY-BASED TESTS
-// ============================================================================
 
 class ScalarFieldPropertyTest : FunSpec({
-
-    val tolerance = 1e-9
 
     // ------------------------------------------------------------------------
     // Basic Operations
@@ -217,7 +93,7 @@ class ScalarFieldPropertyTest : FunSpec({
         test("pointwise addition matches field addition") {
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val sum = f + g
-                val expected = DoubleField.add.op(f(point), g(point))
+                val expected = DoubleField.add(f(point), g(point))
                 sum(point) shouldBeApproximately expected
             }
         }
@@ -269,7 +145,7 @@ class ScalarFieldPropertyTest : FunSpec({
         test("pointwise multiplication matches field multiplication") {
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val product = f * g
-                val expected = DoubleField.mul.op.combine(f(point), g(point))
+                val expected = DoubleField.mul(f(point), g(point))
                 product(point) shouldBeApproximately expected
             }
         }
