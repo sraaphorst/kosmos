@@ -9,11 +9,8 @@ import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 import kotlin.math.sqrt
 
-// ============================================================================
-// PROPERTY-BASED TESTS
-// ============================================================================
-
 class VectorFieldPropertyTest : FunSpec({
+
     // ------------------------------------------------------------------------
     // Basic Operations
     // ------------------------------------------------------------------------
@@ -98,7 +95,7 @@ class VectorFieldPropertyTest : FunSpec({
         test("pointwise addition uses vector space group operation") {
             checkAll(arbVectorField(), arbVectorField(), arbVec2D()) { x, y, point ->
                 val sum = x + y
-                val expected = Vec2DSpace.group.op.combine(x(point), y(point))
+                val expected = Vec2DSpace.group(x(point), y(point))
                 sum(point) shouldBeApproximately expected
             }
         }
