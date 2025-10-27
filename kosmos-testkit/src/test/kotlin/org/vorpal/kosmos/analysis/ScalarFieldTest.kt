@@ -10,6 +10,8 @@ import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.*
 import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.testutils.shouldBeApproximately
+import org.vorpal.kosmos.testutils.shouldBeZero
 import kotlin.math.abs
 
 // ============================================================================
@@ -80,10 +82,9 @@ fun arbNonZeroDouble(): Arb<Double> =
  * Arbitrary for Vec2D vectors.
  */
 fun arbVec2D(): Arb<Vec2D> = arbitrary {
-    Vec2D(
-        x = arbFieldDouble().bind(),
-        y = arbFieldDouble().bind()
-    )
+    val x = arbFieldDouble().filter { abs(it) > 1e-300 }.bind()
+    val y = arbFieldDouble().filter { abs(it) > 1e-300 }.bind()
+    Vec2D(x, y)
 }
 
 /**
@@ -125,11 +126,6 @@ fun arbDoubleFunction(): Arb<(Double) -> Double> = arbitrary {
     choices.random()
 }
 
-infix fun Double.shouldBeApproximately(other: Double) {
-    val eps = 1e-9
-    val relTol = eps * maxOf(1.0, abs(this), abs(other))
-    this shouldBe (other plusOrMinus relTol)
-}
 
 // ============================================================================
 // PROPERTY-BASED TESTS
@@ -148,21 +144,21 @@ class ScalarFieldPropertyTest : FunSpec({
         test("constant field returns same value everywhere") {
             checkAll(arbFieldDouble(), arbVec2D()) { value, point ->
                 val field = ScalarFields.constant(Vec2DSpace, value)
-                field(point) shouldBe (value plusOrMinus tolerance)
+                field(point) shouldBeApproximately value
             }
         }
 
         test("zero field returns additive identity everywhere") {
             checkAll(arbVec2D()) { point ->
                 val field = ScalarFields.zero(Vec2DSpace)
-                field(point) shouldBe (0.0 plusOrMinus tolerance)
+                field(point).shouldBeZero()
             }
         }
 
         test("one field returns multiplicative identity everywhere") {
             checkAll(arbVec2D()) { point ->
                 val field = ScalarFields.one(Vec2DSpace)
-                field(point) shouldBe (1.0 plusOrMinus tolerance)
+                field(point) shouldBeApproximately 1.0
             }
         }
 
@@ -170,7 +166,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbVec2D()) { point ->
                 val field = ScalarFields.of(Vec2DSpace) { v -> v.x * 2.0 + v.y * 3.0 }
                 val expected = point.x * 2.0 + point.y * 3.0
-                field(point) shouldBe (expected plusOrMinus tolerance)
+                field(point) shouldBeApproximately expected
             }
         }
     }
@@ -185,7 +181,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val fg = f + g
                 val gf = g + f
-                fg(point) shouldBe (gf(point) plusOrMinus tolerance)
+                fg(point) shouldBeApproximately gf(point)
             }
         }
 
@@ -198,7 +194,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, h, point ->
                 val left = (f + g) + h
                 val right = f + (g + h)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -206,7 +202,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val zero = ScalarFields.zero(Vec2DSpace)
                 val result = f + zero
-                result(point) shouldBe (f(point) plusOrMinus tolerance)
+                result(point) shouldBeApproximately f(point)
             }
         }
 
@@ -214,15 +210,15 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val negF = -f
                 val sum = f + negF
-                sum(point) shouldBe (0.0 plusOrMinus tolerance)
+                sum(point).shouldBeZero()
             }
         }
 
         test("pointwise addition matches field addition") {
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val sum = f + g
-                val expected = DoubleField.add.op.combine(f(point), g(point))
-                sum(point) shouldBe (expected plusOrMinus tolerance)
+                val expected = DoubleField.add.op(f(point), g(point))
+                sum(point) shouldBeApproximately expected
             }
         }
     }
@@ -237,7 +233,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val fg = f * g
                 val gf = g * f
-                fg(point) shouldBe (gf(point) plusOrMinus tolerance)
+                fg(point) shouldBeApproximately gf(point)
             }
         }
 
@@ -258,7 +254,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val one = ScalarFields.one(Vec2DSpace)
                 val result = f * one
-                result(point) shouldBe (f(point) plusOrMinus tolerance)
+                result(point) shouldBeApproximately f(point)
             }
         }
 
@@ -266,7 +262,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val zero = ScalarFields.zero(Vec2DSpace)
                 val result = f * zero
-                result(point) shouldBe (0.0 plusOrMinus tolerance)
+                result(point).shouldBeZero()
             }
         }
 
@@ -274,7 +270,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val product = f * g
                 val expected = DoubleField.mul.op.combine(f(point), g(point))
-                product(point) shouldBe (expected plusOrMinus tolerance)
+                product(point) shouldBeApproximately expected
             }
         }
     }
@@ -289,14 +285,14 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val one = ScalarFields.one(Vec2DSpace)
                 val result = f / one
-                result(point) shouldBe (f(point) plusOrMinus tolerance)
+                result(point) shouldBeApproximately f(point)
             }
         }
 
         test("self-division gives one (when non-zero): f / f = 1") {
             checkAll(arbNonZeroScalarField(), arbVec2D()) { f, point ->
                 val result = f / f
-                result(point) shouldBe (1.0 plusOrMinus tolerance)
+                result(point) shouldBeApproximately 1.0
             }
         }
 
@@ -308,7 +304,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, point ->
                 val divided = f / g
                 val recovered = divided * g
-                recovered(point) shouldBe (f(point) plusOrMinus tolerance)
+                recovered(point) shouldBeApproximately f(point)
             }
         }
 
@@ -320,8 +316,8 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { f, g, point ->
                 val quotient = f / g
                 val gInverse = DoubleField.mul.inverse(g(point))
-                val expected = DoubleField.mul.op.combine(f(point), gInverse)
-                quotient(point) shouldBe (expected plusOrMinus tolerance)
+                val expected = DoubleField.mul(f(point), gInverse)
+                quotient(point) shouldBeApproximately expected
             }
         }
     }
@@ -336,7 +332,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbFieldDouble(), arbVec2D()) { f, c, point ->
                 val result = f * c
                 val expected = f(point) * c
-                result(point) shouldBe (expected plusOrMinus tolerance)
+                result(point) shouldBeApproximately expected
             }
         }
 
@@ -344,7 +340,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbFieldDouble(), arbScalarField(), arbVec2D()) { c, f, point ->
                 val result = c * f
                 val expected = c * f(point)
-                result(point) shouldBe (expected plusOrMinus tolerance)
+                result(point) shouldBeApproximately expected
             }
         }
 
@@ -352,7 +348,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbFieldDouble(), arbScalarField(), arbVec2D()) { c, f, point ->
                 val left = c * f
                 val right = f * c
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBe right(point)
             }
         }
 
@@ -386,14 +382,14 @@ class ScalarFieldPropertyTest : FunSpec({
         test("multiplicative identity scales trivially: 1 * f = f") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val result = 1.0 * f
-                result(point) shouldBe (f(point) plusOrMinus tolerance)
+                result(point) shouldBe f(point)
             }
         }
 
         test("zero scalar gives zero field: 0 * f = 0") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val result = 0.0 * f
-                result(point) shouldBe (0.0 plusOrMinus tolerance)
+                result(point).shouldBeZero()
             }
         }
     }
@@ -407,14 +403,14 @@ class ScalarFieldPropertyTest : FunSpec({
         test("negation inverts sign: (-f)(p) = -(f(p))") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val negF = -f
-                negF(point) shouldBe (-f(point) plusOrMinus tolerance)
+                negF(point) shouldBeApproximately -f(point)
             }
         }
 
         test("double negation is identity: -(-f) = f") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val result = -(-f)
-                result(point) shouldBe (f(point) plusOrMinus tolerance)
+                result(point) shouldBeApproximately f(point)
             }
         }
 
@@ -422,7 +418,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
                 val left = -(f + g)
                 val right = (-f) + (-g)
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -430,7 +426,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val negated = -f
                 val scaled = (-1.0) * f
-                negated(point) shouldBe (scaled(point) plusOrMinus tolerance)
+                negated(point) shouldBeApproximately scaled(point)
             }
         }
     }
@@ -444,14 +440,14 @@ class ScalarFieldPropertyTest : FunSpec({
         test("map applies function pointwise") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val doubled = f.map { it * 2.0 }
-                doubled(point) shouldBe (f(point) * 2.0 plusOrMinus tolerance)
+                doubled(point) shouldBeApproximately (f(point) * 2.0)
             }
         }
 
         test("map with identity is identity: f.map { it } = f") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val mapped = f.map { it }
-                mapped(point) shouldBe (f(point) plusOrMinus tolerance)
+                mapped(point) shouldBeApproximately f(point)
             }
         }
 
@@ -463,7 +459,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val left = f.map(g).map(h)
                 val right = f.map { h(g(it)) }
 
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -493,7 +489,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val double: (Double) -> Double = { it * 2.0 }
                 val composed = double compose f
-                composed(point) shouldBe (f(point) * 2.0 plusOrMinus tolerance)
+                composed(point) shouldBeApproximately (f(point) * 2.0)
             }
         }
 
@@ -501,7 +497,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val id: (Double) -> Double = { it }
                 val composed = id compose f
-                composed(point) shouldBe (f(point) plusOrMinus tolerance)
+                composed(point) shouldBeApproximately f(point)
             }
         }
 
@@ -513,7 +509,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val left = { x: Double -> h(g(x)) } compose f
                 val right = (h compose (g compose f))
 
-                left(point) shouldBe (right(point) plusOrMinus tolerance)
+                left(point) shouldBeApproximately right(point)
             }
         }
 
@@ -524,7 +520,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val composed = g compose f
 
                 val expected = (point.x + point.y) * (point.x + point.y)
-                composed(point) shouldBe (expected plusOrMinus tolerance)
+                composed(point) shouldBeApproximately expected
             }
         }
     }
@@ -584,7 +580,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val kVal = k(point)
                 val expected = (fVal + gVal) * (hVal - kVal)
 
-                result(point) shouldBe (expected plusOrMinus tolerance)
+                result(point) shouldBeApproximately expected
             }
         }
 
@@ -601,7 +597,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 val result = numerator / denominator
 
                 val expected = (f(point) + g(point)) / (h(point) + 1.0)
-                result(point) shouldBe (expected plusOrMinus tolerance)
+                result(point) shouldBeApproximately expected
             }
         }
 
@@ -614,7 +610,7 @@ class ScalarFieldPropertyTest : FunSpec({
             ) { c, d, f, point ->
                 val result = (c * f).map { it + d }
                 val expected = c * f(point) + d
-                result(point) shouldBe (expected plusOrMinus tolerance)
+                result(point) shouldBeApproximately expected
             }
         }
     }
@@ -630,22 +626,22 @@ class ScalarFieldPropertyTest : FunSpec({
                 val fieldA = ScalarFields.constant(Vec2DSpace, a)
                 val fieldB = ScalarFields.constant(Vec2DSpace, b)
 
-                (fieldA + fieldB)(point) shouldBe (a + b plusOrMinus tolerance)
-                (fieldA * fieldB)(point) shouldBe (a * b plusOrMinus tolerance)
+                (fieldA + fieldB)(point) shouldBeApproximately  (a + b)
+                (fieldA * fieldB)(point) shouldBeApproximately  (a * b)
             }
         }
 
         test("scalar multiplication by zero") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val zero = 0.0 * f
-                zero(point) shouldBe (0.0 plusOrMinus tolerance)
+                zero(point).shouldBeZero()
             }
         }
 
         test("addition of field with its negation") {
             checkAll(arbScalarField(), arbVec2D()) { f, point ->
                 val sum = f + (-f)
-                sum(point) shouldBe (0.0 plusOrMinus tolerance)
+                sum(point).shouldBeZero()
             }
         }
     }

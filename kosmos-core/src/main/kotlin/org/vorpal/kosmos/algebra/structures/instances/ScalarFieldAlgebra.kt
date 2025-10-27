@@ -7,7 +7,14 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.analysis.ScalarField
 import org.vorpal.kosmos.analysis.ScalarFields
+import org.vorpal.kosmos.analysis.plus
+import org.vorpal.kosmos.analysis.times
 import org.vorpal.kosmos.core.ops.BinOp
+
+/**
+ * The set of ScalarField<F, V> for a commutative ring.
+ */
+typealias ScalarFieldRing<F, V> = CommutativeRing<ScalarField<F, V>>
 
 object ScalarFieldAlgebra {
     /**
@@ -16,18 +23,14 @@ object ScalarFieldAlgebra {
      */
     fun <F, V> additiveAbelianGroup(
         space: VectorSpace<F, V>
-    ): AbelianGroup<ScalarField<F, V>> where F: Any, V: VectorSpace<F, V> =
+    ): AbelianGroup<ScalarField<F, V>> =
         object : AbelianGroup<ScalarField<F, V>> {
             override val identity: ScalarField<F, V> =
                 ScalarFields.zero(space)
 
             override val op: BinOp<ScalarField<F, V>> = BinOp(
-                combine = { sf1, sf2 ->
-                    ScalarFields.of(space) {
-                        v -> space.field.add.op(sf1(v), sf2(v))
-                    }
-                },
-                symbol = "+"
+                symbol = "+",
+                combine = { sf1, sf2 -> sf1 + sf2 }
             )
 
             override val inverse: (ScalarField<F, V>) -> ScalarField<F, V> = { sf ->
@@ -43,10 +46,8 @@ object ScalarFieldAlgebra {
      */
     fun <F, V> multiplicativeMonoid(
         space: VectorSpace<F, V>
-    ): Monoid<ScalarField<F, V>> where F : Any, V : VectorSpace<F, V> =
-        Monoid.of(ScalarFields.one(space)) { sf1, sf2 ->
-            ScalarFields.of(space) { v -> space.field.mul(sf1(v), sf2(v)) }
-        }
+    ): Monoid<ScalarField<F, V>> =
+        Monoid.of(ScalarFields.one(space)) { sf1, sf2 -> sf1 * sf2 }
 
     /**
      * Given a [VectorSpace] V over a [Field] 𝔽, create the [CommutativeRing] of
@@ -55,7 +56,7 @@ object ScalarFieldAlgebra {
      */
     fun <F, V> commutativeRing(
         space: VectorSpace<F, V>
-    ): CommutativeRing<ScalarField<F, V>> where F: Any, V: VectorSpace<F, V> =
+    ): CommutativeRing<ScalarField<F, V>> =
         CommutativeRing.of(
             add = additiveAbelianGroup(space),
             mul = multiplicativeMonoid(space)

@@ -66,26 +66,17 @@ operator fun <F, V> F.times(sf: ScalarField<F, V>): ScalarField<F, V> =
 infix fun <F, V> ((F) -> F).compose(sf: ScalarField<F, V>): ScalarField<F, V> =
     ScalarFields.of(sf.space) { p -> this(sf(p)) }
 
-
-/**
- * Basic implementation of a scalar field.
- */
-abstract class AbstractScalarField<F, V>(
-    override val space: VectorSpace<F, V>,
-    private val f: (V) -> F
-) : ScalarField<F, V> {
-    override fun invoke(point: V): F = f(point)
-}
-
-
-sealed interface ScalarFieldCompanion {
+object ScalarFields {
     /**
      * Simple way to create a [ScalarField] from a:
      * - [VectorSpace] over a [Field]
      * - Function from the [VectorSpace] to the [Field].
      */
     fun <F, V> of(space: VectorSpace<F, V>, f: (V) -> F): ScalarField<F, V> =
-        object : AbstractScalarField<F, V>(space, f) {}
+        object : ScalarField<F, V> {
+            override val space: VectorSpace<F, V> = space
+            override fun invoke(point: V): F = f(point)
+        }
 
     /**
      * Create a [ScalarField] of a [VectorSpace] over its [Field] that maps every point to a
@@ -109,5 +100,3 @@ sealed interface ScalarFieldCompanion {
         constant(space, space.field.mul.identity)
 }
 
-// Global companion for easy static creation
-object ScalarFields : ScalarFieldCompanion

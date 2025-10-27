@@ -2,6 +2,7 @@ package org.vorpal.kosmos.analysis
 
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.algebra.structures.negOne
 
 /**
  * In this representation, a [VectorField] is a mapping from a [VectorSpace] to itself.
@@ -43,23 +44,13 @@ operator fun <F, V> VectorField<F, V>.times(scalar: F): VectorField<F, V> =
  * i.e. multiply vector assignments of VectorField by -1_F.
  */
 operator fun <F, V> VectorField<F, V>.unaryMinus(): VectorField<F, V> =
-    this * field.add.inverse(field.mul.identity)
+    this * field.negOne
 
 /**
  * Apply a transformation φ: V -> V.
  */
 fun <F, V> VectorField<F, V>.map(f: (V) -> V): VectorField<F, V> =
     VectorFields.of(space) { p -> f(this(p)) }
-
-/**
- * Basic implementation of a vector field.
- */
-abstract class AbstractVectorField<F, V>(
-    override val space: VectorSpace<F, V>,
-    private val f: (V) -> V
-) : VectorField<F, V> {
-    override fun invoke(point: V): V = f(point)
-}
 
 /**
  * Scaling a [VectorField] by an element of the base [Field].
@@ -92,27 +83,24 @@ infix fun <F, V> ((V) -> V).compose(vf: VectorField<F, V>): VectorField<F, V> =
 infix fun <F, V> VectorField<F, V>.compose(other: VectorField<F, V>): VectorField<F, V> =
     VectorFields.of(space) { p -> this(other(p)) }
 
-private interface VectorFieldCompanion {
+object VectorFields {
     /**
      * Simple way to create a [VectorField] from a:
      * - [VectorSpace]
      * - Function from the [VectorSpace] to itself.
      */
-    fun <F, V> of(
-        space: VectorSpace<F, V>,
-        f: (V) -> V
-    ): VectorField<F, V> =
-        VectorFields.of(space) { p -> f(p) }
+    fun <F, V> of(space: VectorSpace<F, V>, f: (V) -> V): VectorField<F, V> =
+        object : VectorField<F, V> {
+            override val space = space
+            override fun invoke(point: V) = f(point)
+        }
 
     /**
      * Create a [VectorField] that maps every vector of a [VectorSpace] to
      * a constant vector.
      */
-    fun <F, V> constant(
-        space: VectorSpace<F, V>,
-        value: V
-    ): VectorField<F, V> =
-        VectorFields.of(space) { value }
+    fun <F, V> constant(space: VectorSpace<F, V>, value: V): VectorField<F, V> =
+        of(space) { value }
 
     /**
      * Create a [VectorField] of a [VectorSpace] that maps every point to
@@ -122,5 +110,3 @@ private interface VectorFieldCompanion {
         constant(space, space.group.identity)
 }
 
-// Global companion for easy static creation
-object VectorFields : VectorFieldCompanion
