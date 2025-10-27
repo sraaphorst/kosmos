@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Action
 
 /**
@@ -67,4 +68,19 @@ interface RModule<R, M> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M
 
     override val rightAction: Action<R, M>
         get() = action
+
+    companion object {
+        private const val DEFAULT_SYMBOL = Symbols.TRIANGLE_RIGHT
+
+        fun <R, M> of(
+            ring: CommutativeRing<R>,
+            group: AbelianGroup<M>,
+            symbol: String = DEFAULT_SYMBOL,
+            action: (R, M) -> M,
+        ): RModule<R, M> = object : RModule<R, M> {
+            override val ring: CommutativeRing<R> = ring
+            override val group: AbelianGroup<M> = group
+            override val action: Action<R, M> = Action(symbol, action)
+        }
+    }
 }
