@@ -13,6 +13,8 @@ data class Action<S, V>(
     val symbol: String = DEFAULT_SYMBOL,
     val apply: (S, V) -> V,
 ) {
+    constructor(apply: (S, V) -> V) : this(DEFAULT_SYMBOL, apply)
+
     operator fun invoke(s: S, v: V): V =
         apply(s, v)
 
