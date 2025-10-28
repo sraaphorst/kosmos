@@ -12,7 +12,7 @@ import org.vorpal.kosmos.analysis.plus
 typealias VectorFieldModule<F, V> = RModule<ScalarField<F, V>, VectorField<F, V>>
 
 object VectorFieldAlgebra {
-    infix fun <F, V> ScalarField<F, V>.actOn(vf: VectorField<F, V>): VectorField<F, V> =
+    infix fun <F: Any, V: Any> ScalarField<F, V>.actOn(vf: VectorField<F, V>): VectorField<F, V> =
         VectorFields.of(vf.space) { p -> vf.space.action(this(p), vf(p)) }
 
     /**
@@ -22,7 +22,7 @@ object VectorFieldAlgebra {
      * We have an additive [AbelianGroup] over `V` in the [VectorSpace] over `<F, V>` that we extend
      * to an additive [AbelianGroup] over [VectorSpace] `<F, V>`.
      */
-    fun <F, V> additiveAbelianGroup(
+    fun <F: Any, V: Any> additiveAbelianGroup(
         space: VectorSpace<F, V>
     ): AbelianGroup<VectorField<F, V>> =
         AbelianGroup.of(
@@ -41,7 +41,7 @@ object VectorFieldAlgebra {
      * to get our module:
      * 𝒞^∞(M) (ring of functions) → 𝔛(M) (module of vector fields).
      */
-    fun <F, V> module(
+    fun <F: Any, V: Any> module(
         space: VectorSpace<F, V>
     ): RModule<ScalarField<F, V>, VectorField<F, V>> =
         RModule.of(

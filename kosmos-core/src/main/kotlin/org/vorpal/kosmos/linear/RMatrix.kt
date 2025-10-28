@@ -5,7 +5,7 @@ import org.vorpal.kosmos.algebra.structures.Ring
 /**
  * The most general form of a matrix over a ring.
  */
-open class RMatrix<R>(
+open class RMatrix<R: Any>(
     val rows: Int,
     val cols: Int,
     val ring: Ring<R>,

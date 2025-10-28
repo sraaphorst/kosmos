@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.BinOp
  * A Loop with inverses.
  * Since a Group is a Loop, which is a Quasigroup, we satisfy the Quasigroup operations here.
  */
-interface Group<A> : Monoid<A>, Loop<A> {
+interface Group<A: Any> : Monoid<A>, Loop<A> {
     val inverse: (A) -> A
     override fun leftDiv(a: A, b: A): A = op(inverse(a), b)
     override fun rightDiv(b: A, a: A): A = op(b, inverse(a))
@@ -17,7 +17,7 @@ interface Group<A> : Monoid<A>, Loop<A> {
     companion object {
         const val DEFAULT_SYMBOL = Symbols.DOT
 
-        fun <A> of(
+        fun <A: Any> of(
             identity: A,
             inverse: (A) -> A,
             symbol: String = DEFAULT_SYMBOL,
@@ -35,11 +35,11 @@ interface Group<A> : Monoid<A>, Loop<A> {
  * they are included as an extension of Group even though they add no inherent properties apart from being tagged
  * as being necessarily commutative.
  */
-interface AbelianGroup<A> : Group<A> {
+interface AbelianGroup<A: Any> : Group<A> {
     companion object {
         const val DEFAULT_SYMBOL = Symbols.PLUS
 
-        fun <A> of(
+        fun <A: Any> of(
             identity: A,
             inverse: (A) -> A,
             symbol: String = DEFAULT_SYMBOL,

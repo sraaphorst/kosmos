@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.DoubleField
-import org.vorpal.kosmos.algebra.structures.instances.Vec2DSpace
+import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 
@@ -18,29 +18,29 @@ class ScalarFieldPropertyTest : FunSpec({
     context("ScalarField evaluation") {
 
         test("constant field returns same value everywhere") {
-            checkAll(arbFieldDouble(), arbVec2D()) { value, point ->
-                val field = ScalarFields.constant(Vec2DSpace, value)
+            checkAll(arbFieldDouble(), arbVec2R()) { value, point ->
+                val field = ScalarFields.constant(Vec2RSpace, value)
                 field(point) shouldBeApproximately value
             }
         }
 
         test("zero field returns additive identity everywhere") {
-            checkAll(arbVec2D()) { point ->
-                val field = ScalarFields.zero(Vec2DSpace)
+            checkAll(arbVec2R()) { point ->
+                val field = ScalarFields.zero(Vec2RSpace)
                 field(point).shouldBeZero()
             }
         }
 
         test("one field returns multiplicative identity everywhere") {
-            checkAll(arbVec2D()) { point ->
-                val field = ScalarFields.one(Vec2DSpace)
+            checkAll(arbVec2R()) { point ->
+                val field = ScalarFields.one(Vec2RSpace)
                 field(point) shouldBeApproximately 1.0
             }
         }
 
         test("of() creates field that evaluates correctly") {
-            checkAll(arbVec2D()) { point ->
-                val field = ScalarFields.of(Vec2DSpace) { v -> v.x * 2.0 + v.y * 3.0 }
+            checkAll(arbVec2R()) { point ->
+                val field = ScalarFields.of(Vec2RSpace) { v -> v.x * 2.0 + v.y * 3.0 }
                 val expected = point.x * 2.0 + point.y * 3.0
                 field(point) shouldBeApproximately expected
             }
@@ -54,7 +54,7 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Pointwise addition (+)") {
 
         test("addition is commutative: f + g = g + f") {
-            checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
+            checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val fg = f + g
                 val gf = g + f
                 fg(point) shouldBeApproximately gf(point)
@@ -66,7 +66,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, point ->
                 val left = (f + g) + h
                 val right = f + (g + h)
@@ -75,15 +75,15 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("zero is additive identity: f + 0 = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
-                val zero = ScalarFields.zero(Vec2DSpace)
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
+                val zero = ScalarFields.zero(Vec2RSpace)
                 val result = f + zero
                 result(point) shouldBeApproximately f(point)
             }
         }
 
         test("additive inverse: f + (-f) = 0") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val negF = -f
                 val sum = f + negF
                 sum(point).shouldBeZero()
@@ -91,7 +91,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("pointwise addition matches field addition") {
-            checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
+            checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val sum = f + g
                 val expected = DoubleField.add(f(point), g(point))
                 sum(point) shouldBeApproximately expected
@@ -106,7 +106,7 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Pointwise multiplication (*)") {
 
         test("multiplication is commutative: f * g = g * f") {
-            checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
+            checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val fg = f * g
                 val gf = g * f
                 fg(point) shouldBeApproximately gf(point)
@@ -118,7 +118,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, point ->
                 val left = (f * g) * h
                 val right = f * (g * h)
@@ -127,23 +127,23 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("one is multiplicative identity: f * 1 = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
-                val one = ScalarFields.one(Vec2DSpace)
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
+                val one = ScalarFields.one(Vec2RSpace)
                 val result = f * one
                 result(point) shouldBeApproximately f(point)
             }
         }
 
         test("multiplication by zero gives zero: f * 0 = 0") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
-                val zero = ScalarFields.zero(Vec2DSpace)
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
+                val zero = ScalarFields.zero(Vec2RSpace)
                 val result = f * zero
                 result(point).shouldBeZero()
             }
         }
 
         test("pointwise multiplication matches field multiplication") {
-            checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
+            checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val product = f * g
                 val expected = DoubleField.mul(f(point), g(point))
                 product(point) shouldBeApproximately expected
@@ -158,15 +158,15 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Pointwise division (/)") {
 
         test("division by one is identity: f / 1 = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
-                val one = ScalarFields.one(Vec2DSpace)
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
+                val one = ScalarFields.one(Vec2RSpace)
                 val result = f / one
                 result(point) shouldBeApproximately f(point)
             }
         }
 
         test("self-division gives one (when non-zero): f / f = 1") {
-            checkAll(arbNonZeroScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbNonZeroScalarField(), arbVec2R()) { f, point ->
                 val result = f / f
                 result(point) shouldBeApproximately 1.0
             }
@@ -176,7 +176,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(
                 arbScalarField(),
                 arbNonZeroScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, point ->
                 val divided = f / g
                 val recovered = divided * g
@@ -188,7 +188,7 @@ class ScalarFieldPropertyTest : FunSpec({
             checkAll(
                 arbScalarField(),
                 arbNonZeroScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, point ->
                 val quotient = f / g
                 val gInverse = DoubleField.mul.inverse(g(point))
@@ -205,7 +205,7 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Scalar multiplication") {
 
         test("scalar multiplication from right: f * c") {
-            checkAll(arbScalarField(), arbFieldDouble(), arbVec2D()) { f, c, point ->
+            checkAll(arbScalarField(), arbFieldDouble(), arbVec2R()) { f, c, point ->
                 val result = f * c
                 val expected = f(point) * c
                 result(point) shouldBeApproximately expected
@@ -213,7 +213,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("scalar multiplication from left: c * f") {
-            checkAll(arbFieldDouble(), arbScalarField(), arbVec2D()) { c, f, point ->
+            checkAll(arbFieldDouble(), arbScalarField(), arbVec2R()) { c, f, point ->
                 val result = c * f
                 val expected = c * f(point)
                 result(point) shouldBeApproximately expected
@@ -221,7 +221,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("scalar multiplication is commutative: c * f = f * c") {
-            checkAll(arbFieldDouble(), arbScalarField(), arbVec2D()) { c, f, point ->
+            checkAll(arbFieldDouble(), arbScalarField(), arbVec2R()) { c, f, point ->
                 val left = c * f
                 val right = f * c
                 left(point) shouldBe right(point)
@@ -233,7 +233,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbFieldDouble(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { c, f, g, point ->
                 val left = c * (f + g)
                 val right = (c * f) + (c * g)
@@ -246,7 +246,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbFieldDouble(),
                 arbFieldDouble(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { c, d, f, point ->
                 val cd = c * d
                 val left = cd * f
@@ -256,14 +256,14 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("multiplicative identity scales trivially: 1 * f = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val result = 1.0 * f
                 result(point) shouldBe f(point)
             }
         }
 
         test("zero scalar gives zero field: 0 * f = 0") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val result = 0.0 * f
                 result(point).shouldBeZero()
             }
@@ -277,21 +277,21 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Unary negation") {
 
         test("negation inverts sign: (-f)(p) = -(f(p))") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val negF = -f
                 negF(point) shouldBeApproximately -f(point)
             }
         }
 
         test("double negation is identity: -(-f) = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val result = -(-f)
                 result(point) shouldBeApproximately f(point)
             }
         }
 
         test("negation distributes over addition: -(f + g) = (-f) + (-g)") {
-            checkAll(arbScalarField(), arbScalarField(), arbVec2D()) { f, g, point ->
+            checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val left = -(f + g)
                 val right = (-f) + (-g)
                 left(point) shouldBeApproximately right(point)
@@ -299,7 +299,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("negation relates to scalar multiplication: -f = (-1) * f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val negated = -f
                 val scaled = (-1.0) * f
                 negated(point) shouldBeApproximately scaled(point)
@@ -314,21 +314,21 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Map transformation") {
 
         test("map applies function pointwise") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val doubled = f.map { it * 2.0 }
                 doubled(point) shouldBeApproximately (f(point) * 2.0)
             }
         }
 
         test("map with identity is identity: f.map { it } = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val mapped = f.map { it }
                 mapped(point) shouldBeApproximately f(point)
             }
         }
 
         test("map composition: f.map(g).map(h) = f.map(g ∘ h)") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val g: (Double) -> Double = { it * 2.0 }
                 val h: (Double) -> Double = { it + 5.0 }
 
@@ -344,7 +344,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbFieldDouble(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, c, point ->
                 val linear: (Double) -> Double = { it * c }
                 val mapped = (f + g).map(linear)
@@ -362,7 +362,7 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Functional composition (∘)") {
 
         test("compose applies outer function to field result") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val double: (Double) -> Double = { it * 2.0 }
                 val composed = double compose f
                 composed(point) shouldBeApproximately (f(point) * 2.0)
@@ -370,7 +370,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("identity composition is identity: id ∘ f = f") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val id: (Double) -> Double = { it }
                 val composed = id compose f
                 composed(point) shouldBeApproximately f(point)
@@ -378,7 +378,7 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("composition associates: (h ∘ g) ∘ f = h ∘ (g ∘ f)") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val g: (Double) -> Double = { it * 2.0 }
                 val h: (Double) -> Double = { it + 10.0 }
 
@@ -390,8 +390,8 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("compose creates correct composite function") {
-            checkAll(arbVec2D()) { point ->
-                val f = ScalarFields.of(Vec2DSpace) { v -> v.x + v.y }
+            checkAll(arbVec2R()) { point ->
+                val f = ScalarFields.of(Vec2RSpace) { v -> v.x + v.y }
                 val g: (Double) -> Double = { it * it }
                 val composed = g compose f
 
@@ -412,7 +412,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, point ->
                 val left = f * (g + h)
                 val right = (f * g) + (f * h)
@@ -425,7 +425,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, point ->
                 val left = (f + g) * h
                 val right = (f * h) + (g * h)
@@ -446,7 +446,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, k, point ->
                 val result = (f + g) * (h + (-k))
 
@@ -465,9 +465,9 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbScalarField(),
                 arbScalarField(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { f, g, h, point ->
-                val one = ScalarFields.one(Vec2DSpace)
+                val one = ScalarFields.one(Vec2RSpace)
                 val numerator = f + g
                 val denominator = h + one
                 val result = numerator / denominator
@@ -482,7 +482,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbFieldDouble(),
                 arbFieldDouble(),
                 arbScalarField(),
-                arbVec2D()
+                arbVec2R()
             ) { c, d, f, point ->
                 val result = (c * f).map { it + d }
                 val expected = c * f(point) + d
@@ -498,9 +498,9 @@ class ScalarFieldPropertyTest : FunSpec({
     context("Edge cases") {
 
         test("operations on constant fields") {
-            checkAll(arbFieldDouble(), arbFieldDouble(), arbVec2D()) { a, b, point ->
-                val fieldA = ScalarFields.constant(Vec2DSpace, a)
-                val fieldB = ScalarFields.constant(Vec2DSpace, b)
+            checkAll(arbFieldDouble(), arbFieldDouble(), arbVec2R()) { a, b, point ->
+                val fieldA = ScalarFields.constant(Vec2RSpace, a)
+                val fieldB = ScalarFields.constant(Vec2RSpace, b)
 
                 (fieldA + fieldB)(point) shouldBeApproximately  (a + b)
                 (fieldA * fieldB)(point) shouldBeApproximately  (a * b)
@@ -508,14 +508,14 @@ class ScalarFieldPropertyTest : FunSpec({
         }
 
         test("scalar multiplication by zero") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val zero = 0.0 * f
                 zero(point).shouldBeZero()
             }
         }
 
         test("addition of field with its negation") {
-            checkAll(arbScalarField(), arbVec2D()) { f, point ->
+            checkAll(arbScalarField(), arbVec2R()) { f, point ->
                 val sum = f + (-f)
                 sum(point).shouldBeZero()
             }

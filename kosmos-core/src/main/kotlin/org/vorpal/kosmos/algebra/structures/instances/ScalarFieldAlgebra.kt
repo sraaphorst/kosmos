@@ -21,7 +21,7 @@ object ScalarFieldAlgebra {
      * Given a [VectorSpace] V over a [Field] 𝔽, this defines the additive abelian group
      * of [ScalarField]s (𝔽^V, +) under pointwise addition.
      */
-    fun <F, V> additiveAbelianGroup(
+    fun <F: Any, V: Any> additiveAbelianGroup(
         space: VectorSpace<F, V>
     ): AbelianGroup<ScalarField<F, V>> =
         object : AbelianGroup<ScalarField<F, V>> {
@@ -44,7 +44,7 @@ object ScalarFieldAlgebra {
      * Given a [VectorSpace] V over a [Field] 𝔽, this defines the multiplicative
      * [Monoid] of [ScalarField]s ((𝔽^*)^V, ·) under pointwise multiplication.
      */
-    fun <F, V> multiplicativeMonoid(
+    fun <F: Any, V: Any> multiplicativeMonoid(
         space: VectorSpace<F, V>
     ): Monoid<ScalarField<F, V>> =
         Monoid.of(ScalarFields.one(space)) { sf1, sf2 -> sf1 * sf2 }
@@ -54,7 +54,7 @@ object ScalarFieldAlgebra {
      * [ScalarField]s (𝔽^V, +, ·), i.e. the internal Hom(V, 𝔽) under
      * pointwise operations.
      */
-    fun <F, V> commutativeRing(
+    fun <F: Any, V: Any> commutativeRing(
         space: VectorSpace<F, V>
     ): CommutativeRing<ScalarField<F, V>> =
         CommutativeRing.of(
