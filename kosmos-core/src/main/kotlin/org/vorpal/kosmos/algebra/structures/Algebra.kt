@@ -24,6 +24,6 @@ package org.vorpal.kosmos.algebra.structures
  *
  *  Another simple example: C is an algebra over R.
  */
-interface Algebra<R, A> : RModule<R, A>, Ring<A> {
+interface Algebra<R: Any, A: Any> : RModule<R, A>, Ring<A> {
     override val ring: CommutativeRing<R>  // scalar ring must be commutative
 }

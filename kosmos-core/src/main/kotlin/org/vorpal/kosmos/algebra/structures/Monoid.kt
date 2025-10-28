@@ -6,13 +6,13 @@ import org.vorpal.kosmos.core.ops.BinOp
 /**
  * A Semigroup with an identity element.
  */
-interface Monoid<A> : Semigroup<A> {
+interface Monoid<A: Any> : Semigroup<A> {
     val identity: A
 
     companion object {
         const val DEFAULT_SYMBOL = Symbols.DIAMOND
 
-        fun <A> of(
+        fun <A: Any> of(
             identity: A,
             symbol: String = DEFAULT_SYMBOL,
             op: (A, A) -> A,

@@ -4,8 +4,8 @@ package org.vorpal.kosmos.algebra.structures
  * A Field is a commutative Ring where the multiplicative operator has inverses for
  * all elements except for the additive identity.
  */
-interface Field<A> : CommutativeRing<A> {
+interface Field<A: Any> : CommutativeRing<A> {
     override val mul: AbelianGroup<A>
 }
 
-val <F> Field<F>.negOne: F get() = add.inverse(mul.identity)
+val <A: Any> Field<A>.negOne: A get() = add.inverse(mul.identity)
