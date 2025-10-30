@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.linear.Vec2R
 
@@ -49,8 +49,9 @@ typealias RealField = DoubleField
 /**
  * 2D vector space over doubles.
  */
-object Vec2RSpace : VectorSpace<Double, Vec2R> {
+object Vec2RSpace : FiniteVectorSpace<Double, Vec2R> {
     override val ring: Field<Double> = DoubleField
+    override val dimension: Int = 2
 
     override val group: AbelianGroup<Vec2R> = AbelianGroup.of(
         op = { a, b -> Vec2R(a.x + b.x, a.y + b.y) },

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.testutils
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
+import org.vorpal.kosmos.algebra.extensions.DualRing
 import org.vorpal.kosmos.linear.Vec2R
 import kotlin.math.abs
 
@@ -42,3 +43,10 @@ fun Vec2R.shouldBeZero() {
     y.shouldBeZero()
 }
 
+/**
+ * Compare two dual numbers with tolerance.
+ */
+infix fun DualRing<Double>.Dual.shouldBeApproximately(other: DualRing<Double>.Dual) {
+    a shouldBeApproximately other.a
+    b shouldBeApproximately other.b
+}

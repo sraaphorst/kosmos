@@ -6,7 +6,7 @@ import org.vorpal.kosmos.algebra.structures.VectorSpace
 /**
  * A [Covector] is a linear functional defined on a [VectorSpace] `V` over a [Field] `𝔽`:
  *
- *    `ω : V → 𝔽`
+ *    ω : V → 𝔽
  *
  * where `𝔽` is the underlying field of scalars for `V`.
  *
