@@ -8,3 +8,9 @@ interface VectorSpace<F: Any, V: Any> : RModule<F, V> {
     val field: Field<F>
         get() = ring
 }
+
+/**
+ * A vector space which has a non-zero, well-defined, finite dimensionality.
+ */
+interface FiniteVectorSpace<F: Any, V: Any> : VectorSpace<F, V>, Dimensionality
+
