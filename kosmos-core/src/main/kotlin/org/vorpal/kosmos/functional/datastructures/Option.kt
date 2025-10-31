@@ -39,3 +39,46 @@ fun <A> Option<A>.filter(predicate: (A) -> Boolean): Option<A> = when (this) {
     is Some -> if (predicate(value)) this else None
     is None -> None
 }
+
+object Options {
+    fun <A, B> lift(f: (A) -> B): (Option<A>) -> Option<B> =
+        { it.map(f) }
+
+    fun <A, B, C> map2(a: Option<A>, b: Option<B>, f: (A, B) -> C): Option<C> =
+        a.flatMap { a -> b.map { b -> f(a, b) } }
+
+    fun <A> sequence(xs: List<Option<A>>): Option<List<A>> {
+        tailrec fun aux(iter: Iterator<Option<A>> = xs.iterator(),
+                        acc: MutableList<A> = mutableListOf()): Option<List<A>> =
+            if (!iter.hasNext()) Some(acc)
+            else when (val result = iter.next()) {
+                is Some -> {
+                    acc.add(result.value)
+                    aux(iter, acc)
+                }
+                is None -> None
+            }
+        return aux()
+    }
+
+    fun <A, B> traverse(xs: List<A>, f: (A) -> Option<B>): Option<List<B>> {
+        tailrec fun aux(iter: Iterator<A> = xs.iterator(),
+                        acc: MutableList<B> = mutableListOf()): Option<List<B>> =
+            if (!iter.hasNext()) Some(acc)
+            else when (val result = f(iter.next())) {
+                is Some -> {
+                    acc.add(result.value)
+                    aux(iter, acc)
+                }
+                is None -> None
+            }
+        return aux()
+    }
+
+    fun <A> catches(a: () -> A): Option<A> =
+        try {
+            Some(a())
+        } catch (e: Throwable) {
+            None
+        }
+}
