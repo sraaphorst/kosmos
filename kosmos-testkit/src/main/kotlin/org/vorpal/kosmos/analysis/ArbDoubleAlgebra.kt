@@ -4,7 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
-import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
 import org.vorpal.kosmos.linear.Vec2R
 import kotlin.math.abs
 import kotlin.math.exp

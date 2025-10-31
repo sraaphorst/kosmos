@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.categories
 
+import org.vorpal.kosmos.functional.typeclasses.Kind
+
 /**
  * A Functor is any context F that can map over its contents.
  *

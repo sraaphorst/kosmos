@@ -2,7 +2,7 @@ package org.vorpal.kosmos.analysis
 
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
 import org.vorpal.kosmos.algebra.structures.instances.VectorFieldAlgebra
 import org.vorpal.kosmos.linear.Vec2R
 import org.vorpal.kosmos.testutils.shouldBeApproximately

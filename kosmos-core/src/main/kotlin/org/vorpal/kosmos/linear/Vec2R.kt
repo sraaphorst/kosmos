@@ -1,30 +1,14 @@
+// ---- Vec2R.kt (replace the old data class) ----
 package org.vorpal.kosmos.linear
 
-import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.VectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.RealField
-import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 
-/**
- * A 2D [Vector] of Real (Double).
- * We have a [VectorSpace] implementation of Vec2R in [Vec2RSpace].
- */
-data class Vec2R(val x: Double, val y: Double): Vector<Double, Vec2R> {
-    override val field: Field<Double> = RealField
-    override fun plus(other: Vec2R): Vec2R = Vec2R(
-        field.add(x, other.x), field.add(y, other.y)
-    )
-    override fun minus(other: Vec2R): Vec2R = Vec2R(
-        field.add(x, field.add.inverse(other.x)), field.add(y, field.add.inverse(other.y))
-    )
-    override fun times(scalar: Double): Vec2R = Vec2R(
-        field.mul(scalar, x), field.mul(scalar, y)
-    )
+// 1) Specialize by aliasing the generic to Double.
+typealias Vec2R = Vec2<Double>
 
-    companion object {
-        val ZERO = Vec2R(0.0, 0.0)
-    }
-}
+// 2) A ctor-like factory so you can still write `Vec2R(…, …)`.
+fun Vec2R(x: Double, y: Double): Vec2R =
+    Vec2(x, y, RealField)
 
-fun Vec2RSpace.vec(x: Double, y: Double): Vec2R =
-    Vec2R(x, y)
+// 3) Zero convenient constant.
+val Vec2R_ZERO: Vec2R = Vec2(0.0, 0.0, RealField)

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.categories.instances
 
 import org.vorpal.kosmos.categories.*
 import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.functional.typeclasses.Kind
 
 /**
  * FiniteSetOf<A> plays the role of F<A> in Kotlin since Kotlin does not have support for
