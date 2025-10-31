@@ -2,7 +2,7 @@ package org.vorpal.kosmos.linear
 
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
 
 /**
  * Represents an abstract vector element with scalars from F.

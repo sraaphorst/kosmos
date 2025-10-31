@@ -3,8 +3,8 @@ package org.vorpal.kosmos.analysis
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.DoubleField
-import org.vorpal.kosmos.algebra.structures.instances.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 
@@ -93,7 +93,7 @@ class ScalarFieldPropertyTest : FunSpec({
         test("pointwise addition matches field addition") {
             checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val sum = f + g
-                val expected = DoubleField.add(f(point), g(point))
+                val expected = RealField.add(f(point), g(point))
                 sum(point) shouldBeApproximately expected
             }
         }
@@ -145,7 +145,7 @@ class ScalarFieldPropertyTest : FunSpec({
         test("pointwise multiplication matches field multiplication") {
             checkAll(arbScalarField(), arbScalarField(), arbVec2R()) { f, g, point ->
                 val product = f * g
-                val expected = DoubleField.mul(f(point), g(point))
+                val expected = RealField.mul(f(point), g(point))
                 product(point) shouldBeApproximately expected
             }
         }
@@ -191,8 +191,8 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbVec2R()
             ) { f, g, point ->
                 val quotient = f / g
-                val gInverse = DoubleField.mul.inverse(g(point))
-                val expected = DoubleField.mul(f(point), gInverse)
+                val gInverse = RealField.mul.inverse(g(point))
+                val expected = RealField.mul(f(point), gInverse)
                 quotient(point) shouldBeApproximately expected
             }
         }

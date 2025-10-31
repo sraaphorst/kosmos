@@ -4,14 +4,14 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.DoubleField
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 
 
 class DualRingPropertyTest : FunSpec({
 
-    val dualRing = DoubleField.dual()
+    val dualRing = RealField.dual()
 
     // Helper to create dual numbers easily in tests
     fun dual(a: Double, b: Double) = dualRing.Dual(a, b)

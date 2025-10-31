@@ -4,7 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
-import org.vorpal.kosmos.algebra.structures.instances.DoubleField
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import kotlin.math.abs
 
 /**
@@ -24,7 +24,7 @@ fun arbNonZeroDualDouble(): Arb<Double> =
  * Arbitrary for dual numbers over Double field.
  */
 fun arbDual(): Arb<DualRing<Double>.Dual> = arbitrary {
-    val ring = DoubleField.dual()
+    val ring = RealField.dual()
     val a = arbDualDouble().bind()
     val b = arbDualDouble().bind()
     ring.Dual(a, b)
@@ -34,7 +34,7 @@ fun arbDual(): Arb<DualRing<Double>.Dual> = arbitrary {
  * Arbitrary for invertible dual numbers (a ≠ 0).
  */
 fun arbInvertibleDual(): Arb<DualRing<Double>.Dual> = arbitrary {
-    val ring = DoubleField.dual()
+    val ring = RealField.dual()
     val a = arbNonZeroDualDouble().bind()
     val b = arbDualDouble().bind()
     ring.Dual(a, b)
@@ -44,7 +44,7 @@ fun arbInvertibleDual(): Arb<DualRing<Double>.Dual> = arbitrary {
  * Arbitrary for non-invertible dual numbers (a = 0).
  */
 fun arbNonInvertibleDual(): Arb<DualRing<Double>.Dual> = arbitrary {
-    val ring = DoubleField.dual()
+    val ring = RealField.dual()
     val b = arbNonZeroDualDouble().bind()
     ring.Dual(0.0, b)
 }

@@ -54,13 +54,6 @@ operator fun <F: Any, V: Any> ScalarField<F, V>.unaryMinus(): ScalarField<F, V> 
 fun <F: Any, V: Any> ScalarField<F, V>.map(f: (F) -> F): ScalarField<F, V> =
     ScalarFields.of(space) { p -> f(this(p)) }
 
-//fun <F: Any, V: Any> ScalarField<F, V>.d(): CovectorField<F, V> =
-//    CovectorFields.of(space) { p ->
-//        Covectors.of(space) { v ->
-//            derivativeAt(p, v)
-//        }
-//    }
-
 fun <V : Any> ScalarField<Double, V>.dReal(
     h: Double = 1e-6
 ): CovectorField<Double, V> =

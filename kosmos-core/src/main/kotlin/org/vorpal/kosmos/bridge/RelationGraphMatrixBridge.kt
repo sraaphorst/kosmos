@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.bridge
 
-import org.vorpal.kosmos.algebra.structures.instances.F2
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras.F2
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toOrderedFiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
