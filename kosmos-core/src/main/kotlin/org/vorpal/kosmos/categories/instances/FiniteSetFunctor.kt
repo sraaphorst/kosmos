@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.categories.instances
 
-import org.vorpal.kosmos.categories.*
 import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.functional.typeclasses.Functor
 import org.vorpal.kosmos.functional.typeclasses.Kind
 
 /**
@@ -41,7 +41,7 @@ operator fun <A> FiniteSetOf<A>.iterator(): Iterator<A> = fix().iterator()
  * FiniteSetKind(...) -> rewrap the result as a Kind<ForFiniteSet, B>.
  */
 object FiniteSetFunctor : Functor<ForFiniteSet> {
-    override fun <A, B> FiniteSetOf<A>.map(f: (A) -> B): FiniteSetOf<B> =
+    override fun <A, B> FiniteSetOf<A>.maps(f: (A) -> B): FiniteSetOf<B> =
         FiniteSetKind(fix().map(f))
 }
 
@@ -53,7 +53,7 @@ fun <A> List<A>.toKind(): ListOf<A> = ListKind(this)
 fun <A> ListOf<A>.fix(): List<A> =
     (this as ListKind<A>).value
 object ListFunctor : Functor<ForList> {
-    override fun <A, B> ListOf<A>.map(f: (A) -> B): ListOf<B> =
+    override fun <A, B> ListOf<A>.maps(f: (A) -> B): ListOf<B> =
         ListKind(fix().map(f))
 }
 
@@ -71,7 +71,7 @@ fun <F, A, B> liftFunctor(
     F: Functor<F>,
     f: (A) -> B
 ): (Kind<F, A>) -> Kind<F, B> =
-    { fa -> F.run { fa.map(f) } }
+    { fa -> F.run { fa.maps(f) } }
 
 // Now we can write:
 // val xs: FiniteSet<Int> = FiniteSet.of(1, 2, 3)
@@ -87,10 +87,10 @@ fun <F, G> composedFunctor(
     GF: Functor<G>
 ): Functor<Composed<F, G>> =
     object : Functor<Composed<F, G>> {
-        override fun <A, B> Kind<Composed<F, G>, A>.map(f: (A) -> B): Kind<Composed<F, G>, B> {
+        override fun <A, B> Kind<Composed<F, G>, A>.maps(f: (A) -> B): Kind<Composed<F, G>, B> {
             val outer: Kind<F, Kind<G, A>> = (this as ComposedKind<F, G, A>).fix()
             val mappedOuter: Kind<F, Kind<G, B>> = FF.run {
-                outer.map { inner -> GF.run { inner.map(f) } }
+                outer.maps { inner -> GF.run { inner.maps(f) } }
             }
             return ComposedKind(mappedOuter)
         }
@@ -101,7 +101,7 @@ val ListListFunctor = composedFunctor(ListFunctor, ListFunctor)
 
 fun main() {
     val xs: FiniteSet<Int> = FiniteSet.of(1, 2, 3)
-    val ys: FiniteSet<Int> = with(FiniteSetFunctor) { xs.toKind().map { it * 2 }.fix() }
+    val ys: FiniteSet<Int> = with(FiniteSetFunctor) { xs.toKind().maps { it * 2 }.fix() }
     println(ys)
 
     // List the String::length functor to List<String>.

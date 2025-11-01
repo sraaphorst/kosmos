@@ -47,8 +47,8 @@ private object Padovan1Recurrence : CachedLinearRecurrenceImplementation<BigInte
     initialValues = listOf(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE),
     selectors = listOf(-2, -3),
     coefficients = listOf(1, 1),
-    zero = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    constantTerm = BigInteger.ZERO,
+    multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 
@@ -70,7 +70,7 @@ private object Padovan2Recurrence : CachedLinearRecurrenceImplementation<BigInte
     initialValues = listOf(BigInteger.ONE, BigInteger.ONE, BigInteger.ONE, BigInteger.TWO, BigInteger.TWO),
     selectors = listOf(-1, -5),
     coefficients = listOf(1, 1),
-    zero = BigInteger.ZERO,
+    constantTerm = BigInteger.ZERO,
     multiply = Action({ s, t -> s.toBigInteger() * t }),
     add = BinOp(BigInteger::add)
 )

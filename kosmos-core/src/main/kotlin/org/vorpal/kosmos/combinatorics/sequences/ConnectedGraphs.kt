@@ -34,10 +34,10 @@ private object ConnectedGraphsRecurrence : CachedRecurrenceImplementation<BigInt
         0 -> BigInteger.ZERO
         1 -> BigInteger.ONE
         else -> {
-            val total = BigInteger.TWO.pow(n * (n - 1) / 2)
+            val total = BigInteger.ONE.shl(n * (n - 1) / 2)
             val subtract = (1 until n).fold(BigInteger.ZERO) { acc, k ->
                 val term = Binomial(n - 1, k - 1) *
-                        BigInteger.TWO.pow((n - k) * (n - k - 1) / 2) *
+                        BigInteger.ONE.shl((n - k) * (n - k - 1) / 2) *
                         this(k)
                 acc + term
             }

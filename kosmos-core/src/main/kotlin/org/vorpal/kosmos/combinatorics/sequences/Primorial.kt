@@ -2,9 +2,9 @@ package org.vorpal.kosmos.combinatorics.sequences
 
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
+import org.vorpal.kosmos.numbertheory.primes.PrimeSequence
 import java.math.BigInteger
 import java.math.BigInteger.ONE
-import java.math.BigInteger.valueOf
 
 /**
  * **Primorial numbers** — product of the first n primes.
@@ -28,10 +28,8 @@ object Primorial :
     CachedRecurrence<BigInteger> by PrimorialRecurrence
 
 private object PrimorialRecurrence : CachedRecurrenceImplementation<BigInteger>() {
-    private val primes = sequenceOf(2, 3, 5, 7, 11, 13, 17, 19, 23, 29)
-
     override fun recursiveCalculator(n: Int): BigInteger = when {
         n == 0 -> ONE
-        else -> this(n - 1) * valueOf(primes.elementAt(n - 1).toLong())
+        else -> this(n - 1) * PrimeSequence(n - 1)
     }
 }

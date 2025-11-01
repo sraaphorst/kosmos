@@ -30,8 +30,5 @@ object Hypergraphs :
 
 private object HypergraphsClosedForm : CachedClosedFormImplementation<BigInteger>() {
     override fun closedFormCalculator(n: Int): BigInteger =
-        when (n) {
-            0 -> BigInteger.ONE
-            else -> BigInteger.TWO.pow((1 shl n) - n - 1)
-        }
+        BigInteger.ONE.shl((1 shl n) - n - 1)
 }

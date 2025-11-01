@@ -38,7 +38,7 @@ private object RootedTreesRecurrence : CachedRecurrenceImplementation<BigInteger
                     .fold(BigInteger.ZERO) { acc, d -> acc + BigInteger.valueOf(d.toLong()) * this(d) }
                 sum += inner * this(n - k)
             }
-            sum / BigInteger.valueOf((n - 1).toLong())
+            sum / (n - 1).toBigInteger()
         }
     }
 }
