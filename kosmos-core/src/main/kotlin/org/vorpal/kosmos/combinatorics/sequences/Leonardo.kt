@@ -12,31 +12,34 @@ import java.math.MathContext
 import java.math.RoundingMode
 
 /**
- * **Fibonacci numbers** Fₙ:
- * F₀ = 0, F₁ = 1, Fₙ = Fₙ₋₁ + Fₙ₋₂
+ * **Leonardo numbers** Lₙ:
+ * L₀ = 1, L₁ = 1, Lₙ = Lₙ₋₁ + Lₙ₋₂ + 1
  *
- * Closed form (Binet’s formula):
+ * Closed form:
  * ```
- * Fₙ = (φⁿ − ψⁿ) / √5
+ * Lₙ₊₁ = 2 * (φⁿ⁺¹ − ψⁿ⁺¹) / √5 - 1
  * φ = (1 + √5)/2, ψ = (1 − √5)/2
  * ```
  *
- * OEIS A000045
+ * The Leonardo numbers are an integral component of Dijkstra's smoothsort algorithm:
+ * https://en.wikipedia.org/wiki/Smoothsort
+ *
+ * OEIS A001595
  */
-object Fibonacci :
-    CachedRecurrence<BigInteger> by FibonacciRecurrence,
-    CachedClosedForm<BigInteger> by FibonacciClosedForm
+object Leonardo :
+    CachedRecurrence<BigInteger> by LeonardoRecurrence,
+    CachedClosedForm<BigInteger> by LeonardoClosedForm
 
-private object FibonacciRecurrence : CachedLinearRecurrenceImplementation<BigInteger, Int>(
-    initialValues = listOf(BigInteger.ZERO, BigInteger.ONE),
+private object LeonardoRecurrence : CachedLinearRecurrenceImplementation<BigInteger, Int>(
+    initialValues = listOf(BigInteger.ONE, BigInteger.ONE),
     selectors = listOf(-1, -2),
     coefficients = listOf(1, 1),
-    constantTerm = BigInteger.ZERO,
+    constantTerm = BigInteger.ONE,
     multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 
-private object FibonacciClosedForm : CachedClosedFormImplementation<BigInteger>() {
+private object LeonardoClosedForm : CachedClosedFormImplementation<BigInteger>() {
     private val mc = MathContext(50, RoundingMode.HALF_EVEN)
     private val sqrt5 = BigDecimal(5).sqrt(mc)
     private val phi = (BigDecimal.ONE + sqrt5).divide(BigDecimal.TWO, mc)
@@ -44,9 +47,9 @@ private object FibonacciClosedForm : CachedClosedFormImplementation<BigInteger>(
 
     /** Binet’s closed form for Fₙ. */
     override fun closedFormCalculator(n: Int): BigInteger = when {
-        n < 0 -> error("Cannot calculate Fibonacci($n).")
-        n == 0 -> BigInteger.ZERO
-        else -> (phi.pow(n, mc) - psi.pow(n, mc)).divide(sqrt5, mc)
+        n < 0 -> error("Cannot calculate Leonardo($n).")
+        n == 0 -> BigInteger.ONE
+        else -> ((BigDecimal.TWO * (phi.pow(n + 1, mc) - psi.pow(n + 1, mc))).divide(sqrt5, mc) - BigDecimal.ONE)
             .setScale(0, RoundingMode.HALF_UP)
             .toBigInteger()
     }

@@ -38,8 +38,8 @@ private object JacobsthalRecurrence : CachedLinearRecurrenceImplementation<BigIn
     initialValues = listOf(BigInteger.ZERO, BigInteger.ONE),
     selectors = listOf(-1, -2),
     coefficients = listOf(1, 2),
-    zero = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    constantTerm = BigInteger.ZERO,
+    multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 
