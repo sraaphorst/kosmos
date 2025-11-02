@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.functional.datastructures
 
+import org.vorpal.kosmos.core.Identity
+import org.vorpal.kosmos.functional.optics.Prism
+
 sealed class Either<out L, out R> {
     data class Left<out L>(val value: L) : Either<L, Nothing>()
     data class Right<out R>(val value: R) : Either<Nothing, R>()
@@ -48,6 +51,11 @@ fun <R> Either<*, R>.getOrElse(default: () -> R): R = when (this) {
 fun <R> Either<*, R>.getOrNull(): R? = when (this) {
     is Either.Left -> null
     is Either.Right -> value
+}
+
+fun <L> Either<L, *>.getLeftOrNull(): L? = when (this) {
+    is Either.Left -> value
+    is Either.Right -> null
 }
 
 fun <R> Either<Throwable, R>.getOrThrow(): R = when (this) {
@@ -233,4 +241,18 @@ object Eithers {
 
     fun <L, R> cond(test: Boolean, right: () -> R, left: () -> L): Either<L, R> =
         if (test) Either.Right(right()) else Either.Left(left())
+}
+
+object EitherOptics {
+    fun <L> left(): Prism<Either<L, *>, L> = Prism(
+        getterOrNull =  { it.getLeftOrNull() },
+        reverseGetter = { Either.Left(it) },
+        identityT = Identity()
+    )
+
+    fun <R> right(): Prism<Either<*, R>, R> = Prism(
+        getterOrNull = { it.getOrNull() },
+        reverseGetter = { Either.Right(it) },
+        identityT = Identity()
+    )
 }
