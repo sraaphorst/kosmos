@@ -2,7 +2,6 @@ package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Identity
-import org.vorpal.kosmos.functional.optics.Lenses.first
 import org.vorpal.kosmos.functional.optics.Prism
 
 sealed class Ior<out A, out B> {
@@ -328,6 +327,7 @@ object Iors {
         tailrec fun aux(iter: Iterator<A> = xs.iterator(),
                         b: B? = null,
                         cs: MutableList<C> = mutableListOf()): Ior<B, List<C>> {
+            // We call toList on the lists to make them immutable.
             if (!iter.hasNext()) return when {
                 b == null -> Ior.Right(cs.toList())
                 cs.isEmpty() -> Ior.Left(b)
