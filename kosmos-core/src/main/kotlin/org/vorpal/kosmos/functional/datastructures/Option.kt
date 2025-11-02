@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.functional.datastructures
 
+import org.vorpal.kosmos.core.Identity
+import org.vorpal.kosmos.functional.optics.Prism
+
 sealed class Option<out A> {
     data class Some<out A>(val value: A) : Option<A>()
     object None : Option<Nothing>()
@@ -27,6 +30,11 @@ fun <A> Option<Option<A>>.flatten(): Option<A> = when (this) {
 fun <A> Option<A>.getOrElse(default: () -> A): A = when (this) {
     is Option.Some -> value
     is Option.None -> default()
+}
+
+fun <A> Option<A>.getOrNull(): A? = when (this) {
+    is Option.Some -> value
+    is Option.None -> null
 }
 
 fun <A> Option<A>.orElse(other: Option<A>): Option<A> = when (this) {
@@ -98,4 +106,18 @@ object Options {
         } catch (_: Throwable) {
             Option.None
         }
+}
+
+object OptionOptics {
+    fun <A> some(): Prism<Option<A>, A> = Prism(
+        getterOrNull = { it.getOrNull() },
+        reverseGetter = { Option.Some(it) },
+        identityT = Identity()
+    )
+
+    fun none(): Prism<Option<Nothing>, Nothing> = Prism(
+        getterOrNull = { null },
+        reverseGetter = { Option.None },
+        identityT = Identity()
+    )
 }
