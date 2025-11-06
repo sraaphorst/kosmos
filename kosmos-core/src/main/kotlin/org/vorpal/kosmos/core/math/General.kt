@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.core.math
 
+import java.math.BigInteger
+import kotlin.math.PI
+
 /**
  * Unclamped linear interpolation where t = 0 gives a and t = 1 gives b.
  */
@@ -61,3 +64,15 @@ fun remap(x: Double, a0: Double, b0: Double, a1: Double, b1: Double): Double =
 
 fun remap(x: Float, a0: Float, b0: Float, a1: Float, b1: Float): Float =
     lerp(a1, b1, invLerp(a0, b0, x))
+
+infix fun Int.modPositive(mod: Int): Int =
+    ((this % mod) + mod) % mod
+
+infix fun Long.modPositive(mod: Long): Long =
+    ((this % mod) + mod) % mod
+
+infix fun BigInteger.modPositive(mod: BigInteger): BigInteger =
+    ((this % mod) + mod) % mod
+
+fun Double.degToRad(): Double = this / 180.0 * PI
+fun Double.radToDeg(): Double = this * 180.0 / PI
