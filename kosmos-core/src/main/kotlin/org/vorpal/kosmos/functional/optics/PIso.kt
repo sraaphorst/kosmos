@@ -82,6 +82,15 @@ data class PIso<S, T, A, B>(
     override fun reverseGet(b: B): T = reverseGetter(b)
 
     /**
+     * A PIso is reversible: we can completely reverse the parameters to create another PIso in the
+     * other direction by swapping the behaviors of get and reverseGet.
+     */
+    fun inverse(): PIso<B, A, T, S> = PIso(
+        getter = reverseGetter,
+        reverseGetter = getter
+    )
+
+    /**
      * Compose two Isos sequentially.
      *
      * Creates a new Iso that applies this Iso, then the other.

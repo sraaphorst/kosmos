@@ -196,7 +196,7 @@ object Eithers {
     fun <L, R> sequence(xs: Collection<Either<L, R>>): Either<L, List<R>> {
         tailrec fun aux(iter: Iterator<Either<L, R>> = xs.iterator(),
                         rights: MutableList<R> = mutableListOf()): Either<L, List<R>> {
-            if (!iter.hasNext()) return Either.Right(rights)
+            if (!iter.hasNext()) return Either.Right(rights.toList())
             val head = iter.next()
             return when (head) {
                 is Either.Left -> Either.Left(head.value)
@@ -219,7 +219,7 @@ object Eithers {
     fun <A, L, R> traverse(xs: Collection<A>, f: (A) -> Either<L, R>): Either<L, List<R>> {
         tailrec fun aux(iter: Iterator<A> = xs.iterator(),
                         rights: MutableList<R> = mutableListOf()): Either<L, List<R>> {
-            if (!iter.hasNext()) return Either.Right(rights)
+            if (!iter.hasNext()) return Either.Right(rights.toList())
             val head = iter.next()
             return when (val result = f(head)) {
                 is Either.Left -> Either.Left(result.value)

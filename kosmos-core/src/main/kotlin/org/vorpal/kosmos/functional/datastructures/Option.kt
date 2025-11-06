@@ -73,7 +73,7 @@ object Options {
     fun <A> sequence(xs: Collection<Option<A>>): Option<List<A>> {
         tailrec fun aux(iter: Iterator<Option<A>> = xs.iterator(),
                         acc: MutableList<A> = mutableListOf()): Option<List<A>> =
-            if (!iter.hasNext()) Option.Some(acc)
+            if (!iter.hasNext()) Option.Some(acc.toList())
             else when (val result = iter.next()) {
                 is Option.Some -> {
                     acc.add(result.value)
@@ -87,7 +87,7 @@ object Options {
     fun <A, B> traverse(xs: Collection<A>, f: (A) -> Option<B>): Option<List<B>> {
         tailrec fun aux(iter: Iterator<A> = xs.iterator(),
                         opts: MutableList<B> = mutableListOf()): Option<List<B>> {
-            if (!iter.hasNext()) return Option.Some(opts)
+            if (!iter.hasNext()) return Option.Some(opts.toList())
             val head = iter.next()
             return when (val result = f(head)) {
                 is Option.None -> Option.None

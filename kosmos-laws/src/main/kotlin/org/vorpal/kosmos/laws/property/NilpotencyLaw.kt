@@ -135,7 +135,7 @@ class NilpotentLaw<A>(
                 val v = if (checkAllBracketings) {
                     allParenthesizations(xs, op).any { !eq.eqv(it, zero) }
                 } else {
-                    xs.reduce(op::combine).let { !eq.eqv(it, zero) }
+                    xs.reduce(op::invoke).let { !eq.eqv(it, zero) }
                 }
                 v
             }
@@ -153,7 +153,7 @@ class NilpotentLaw<A>(
                     check(prods.all { eq.eqv(it, zero) })
                 }
             } else {
-                val prod = xs.reduce(op::combine)
+                val prod = xs.reduce(op::invoke)
                 withClue(zeroFailureMsg(xs, prod)) {
                     check(eq.eqv(prod, zero))
                 }
