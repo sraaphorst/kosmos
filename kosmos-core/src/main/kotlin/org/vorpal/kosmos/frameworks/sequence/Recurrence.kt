@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentHashMap
  * closed form definition. When treated as sequences, they will rely on the recursive
  * definition.
  */
-interface Recurrence<T> : Sequence<T> {
+interface Recurrence<T: Any> : Sequence<T> {
     /**
      * Convenience method to access the nth term of the recurrence.
      */
@@ -28,7 +28,7 @@ interface Recurrence<T> : Sequence<T> {
  * Automatically inherits need to implement recursiveTerm.
  * Has ability to clear cache.
  */
-interface CachedRecurrence<T> : Recurrence<T> {
+interface CachedRecurrence<T: Any> : Recurrence<T> {
     fun clearRecurrenceCache()
 }
 
@@ -37,7 +37,7 @@ interface CachedRecurrence<T> : Recurrence<T> {
  * If this class is subclassed or implemented, recursiveCalculator must dictate how to calculate
  * any term in this sequence.
  */
-abstract class CachedRecurrenceImplementation<T> : CachedRecurrence<T> {
+abstract class CachedRecurrenceImplementation<T: Any> : CachedRecurrence<T> {
     private val recurrenceCache = ConcurrentHashMap<Int, T>()
 
     /**
@@ -81,7 +81,7 @@ abstract class CachedRecurrenceImplementation<T> : CachedRecurrence<T> {
  *                 Most typically, this would be mapping the coefficient to the type of `T` and multiplying.
  * @param add An action that adds two objects of type `T` together, to combine the terms of the linear relation.
  */
-abstract class CachedLinearRecurrenceImplementation<T, S>(
+abstract class CachedLinearRecurrenceImplementation<T: Any, S: Any>(
     val initialValues: List<T>,
     val selectors: List<Int>,
     val coefficients: List<S>,
