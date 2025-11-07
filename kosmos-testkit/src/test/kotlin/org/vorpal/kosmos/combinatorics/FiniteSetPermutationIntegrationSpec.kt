@@ -65,16 +65,16 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
             ) { (base1, p1), (base2, p2) ->
                 if (base1.backing == base2.backing) {
                     // Closure
-                    val composed = p1 then p2
+                    val composed = p1 andThen p2
                     composed.domain.backing shouldBe base1.backing
 
                     // Identity exists
                     val id = Permutation.identity(base1)
-                    (p1 then id) shouldBe p1
+                    (p1 andThen id) shouldBe p1
 
                     // Inverse exists
                     val inv = p1.inverse()
-                    val shouldBeId = p1 then inv
+                    val shouldBeId = p1 andThen inv
                     base1.all { x -> shouldBeId.apply(x) == x } shouldBe true
                 }
             }
@@ -116,7 +116,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
 
         "long composition chain" {
             checkAll(PermutationTestingCombinations.arbBaseWithPermutations(Arb.int(), 4, 5)) { (base, perms) ->
-                val composed = perms.reduce { acc, perm -> acc then perm }
+                val composed = perms.reduce { acc, perm -> acc andThen perm }
 
                 // Result should still be a valid permutation
                 base.all { x -> composed.apply(x) in base } shouldBe true
@@ -129,9 +129,9 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
 
         "inverse of composition chain" {
             checkAll(PermutationTestingCombinations.arbBaseWithPermutations(Arb.int(), 4, 3)) { (base, perms) ->
-                val composed = perms.reduce { acc, perm -> acc then perm }
+                val composed = perms.reduce { acc, perm -> acc andThen perm }
                 val inv = composed.inverse()
-                val shouldBeId = composed then inv
+                val shouldBeId = composed andThen inv
 
                 base.all { x -> shouldBeId.apply(x) == x } shouldBe true
             }
@@ -165,7 +165,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
 
         "conjugate permutations have same cycle type" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
-                val conjugate = q then p then q.inverse()
+                val conjugate = q andThen p andThen q.inverse()
 
                 val pCycles = p.cycles().map { it.size }.sorted()
                 val conjCycles = conjugate.cycles().map { it.size }.sorted()
@@ -176,7 +176,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
 
         "self-conjugation is identity operation" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
-                val selfConjugate = perm then perm then perm.inverse()
+                val selfConjugate = perm andThen perm andThen perm.inverse()
                 base.all { x -> selfConjugate.apply(x) == perm.apply(x) } shouldBe true
             }
         }
@@ -238,7 +238,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
             val perm2 = base2.identityPermutation()
 
             shouldThrow<IllegalArgumentException> {
-                perm1 then perm2
+                perm1 andThen perm2
             }
         }
 
@@ -374,7 +374,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
                 val perm = base.shiftPermutation(1)
 
                 // [id, p] = id p id^-1 p^-1 = p p^-1 = id
-                val commutator = id then perm then id.inverse() then perm.inverse()
+                val commutator = id andThen perm andThen id.inverse() andThen perm.inverse()
                 base.all { x -> commutator.apply(x) == x } shouldBe true
             }
         }

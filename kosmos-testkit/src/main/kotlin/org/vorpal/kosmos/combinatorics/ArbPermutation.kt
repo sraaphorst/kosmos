@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
  * Generate an arbitrary permutation on a finite ordered set.
  * Uses Fisher-Yates shuffle for uniform distribution.
  */
-fun <A> generateArbPermutation(
+fun <A: Any> generateArbPermutation(
     arb: Arb<A>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -31,7 +31,7 @@ fun <A> generateArbPermutation(
 /**
  * Generate an arbitrary permutation of exact size.
  */
-fun <A> generateArbPermutationOfSize(
+fun <A: Any> generateArbPermutationOfSize(
     arb: Arb<A>,
     exactSize: Int
 ): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> {
@@ -48,7 +48,7 @@ fun <A> generateArbPermutationOfSize(
 /**
  * Generate the identity permutation on a finite ordered set.
  */
-fun <A> generateArbIdentityPermutation(
+fun <A: Any> generateArbIdentityPermutation(
     arb: Arb<A>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -63,7 +63,7 @@ fun <A> generateArbIdentityPermutation(
  * Generate a permutation with a specific cycle structure.
  * The cycle lengths are randomly distributed but sum to the base size.
  */
-fun <A> generateArbCyclicPermutation(
+fun <A: Any> generateArbCyclicPermutation(
     arb: Arb<A>,
     minCycleLength: Int = 2,
     maxCycleLength: Int = 8
@@ -88,7 +88,7 @@ fun <A> generateArbCyclicPermutation(
  * Generate a pair of permutations on the same base.
  * Useful for testing composition and other binary operations.
  */
-fun <A> generateArbPermutationPair(
+fun <A: Any> generateArbPermutationPair(
     arb: Arb<A>,
     size: Int = 5
 ): Arb<Triple<FiniteSet.Ordered<A>, Permutation<A>, Permutation<A>>> {
@@ -135,13 +135,13 @@ object PermutationArbs {
 /**
  * Extension functions for easier usage.
  */
-fun <A> Arb<A>.toPermutationArb(
+fun <A: Any> Arb<A>.toPermutationArb(
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
 ): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> =
     generateArbPermutation(this, lowerBound, upperBoundInclusive)
 
-fun <A> Arb<A>.toPermutationOfSize(exactSize: Int): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> =
+fun <A: Any> Arb<A>.toPermutationOfSize(exactSize: Int): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> =
     generateArbPermutationOfSize(this, exactSize)
 
 /**
@@ -152,7 +152,7 @@ object PermutationTestingCombinations {
     /**
      * Generate a base and a permutation for testing algorithms that need both.
      */
-    fun <A> arbBaseAndPermutation(
+    fun <A: Any> arbBaseAndPermutation(
         arb: Arb<A>,
         size: Int = 5
     ): Arb<Pair<FiniteSet.Ordered<A>, Permutation<A>>> =
@@ -161,7 +161,7 @@ object PermutationTestingCombinations {
     /**
      * Generate a base with multiple permutations for testing sequences.
      */
-    fun <A> arbBaseWithPermutations(
+    fun <A: Any> arbBaseWithPermutations(
         arb: Arb<A>,
         size: Int = 5,
         count: Int = 3

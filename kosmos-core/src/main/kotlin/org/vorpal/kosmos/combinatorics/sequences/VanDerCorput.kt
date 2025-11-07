@@ -134,7 +134,7 @@ import org.vorpal.kosmos.std.toRational
  */
 class VanDerCorput(val base: Int)
     : CachedRecurrence<Rational> by VanDerCorputRecurrence(base),
-      CachedClosedForm<Rational> by VanDerCorputClosedForm(base) {
+    CachedClosedForm<Rational> by VanDerCorputClosedForm(base) {
     init {
         require(base >= 2) { "Base must be at least 2, but was $base." }
     }
@@ -144,13 +144,14 @@ private class VanDerCorputRecurrence(
     private val base: Int
 ) : CachedRecurrenceImplementation<Rational>() {
     private val baseRational = base.toRational()
+
     override fun recursiveCalculator(n: Int): Rational {
         require(n >= 0) { "Index n must be non-negative, but was $n." }
-        return when(n) {
+        return when (n) {
             0 -> Rational.ZERO
             else -> {
-                val a = n % base // lsb
-                val q = n / base // remaining prefix
+                val a = n % base
+                val q = n / base
                 (a.toRational() + this(q)) / baseRational
             }
         }
@@ -164,9 +165,19 @@ private class VanDerCorputClosedForm(
 
     override fun closedFormCalculator(n: Int): Rational {
         require(n >= 0) { "Index n must be non-negative, but was $n." }
-        tailrec fun aux(x: Rational = Rational.ZERO, denom: Rational = baseRational, k: Int = n): Rational = when (k) {
+
+        tailrec fun aux(
+            x: Rational = Rational.ZERO,
+            denom: Rational = baseRational,
+            k: Int = n
+        ): Rational = when (k) {
             0 -> x
-            else -> aux(x + (k % base).toRational() / denom, denom * baseRational, k / base)
+            else ->
+                aux(
+                    x + (k % base).toRational() / denom,
+                    denom * baseRational,
+                    k / base
+                )
         }
         return aux()
     }

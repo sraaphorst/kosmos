@@ -11,7 +11,7 @@ import org.vorpal.kosmos.relations.Relation
 
 /** Exactly one of aRb, bRa, or a = b
  * Note that this expects a strict (i.e. irreflexive, transitive) order, e.g. <. */
-class TrichotomyLaw<A>(
+class TrichotomyLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -33,8 +33,8 @@ class TrichotomyLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
-            val ab = rel.rel(a, b)
-            val ba = rel.rel(b, a)
+            val ab = rel(a, b)
+            val ba = rel(b, a)
             val aeb = eq.eqv(a, b)
 
             withClue(failureMessage(a, b, ab, ba, aeb)) {

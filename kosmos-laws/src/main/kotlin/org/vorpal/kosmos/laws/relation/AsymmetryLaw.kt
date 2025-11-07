@@ -10,7 +10,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
 /** Asymmetry: x R y ⇒ y ¬R x */
-class AsymmetryLaw<A>(
+class AsymmetryLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val pr: Printable<A> = Printable.default(),
@@ -30,9 +30,9 @@ class AsymmetryLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
-            if (rel.rel(a, b)) {
+            if (rel(a, b)) {
                 withClue(failureMessage(a, b)) {
-                    check(!rel.rel(b, a))
+                    check(!rel(b, a))
                 }
             }
         }

@@ -12,7 +12,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 /**
  * Test an annihilator (zero) for left and / or right annihilation of elements
  * of a given type under a binary operation. */
-class AnnihilatorLaw<A>(
+class AnnihilatorLaw<A: Any>(
     private val op: BinOp<A>,
     private val zero: A,
     private val arb: Arb<A>,
@@ -24,7 +24,7 @@ class AnnihilatorLaw<A>(
 
     private suspend fun leftAnnihilationCheck() {
         checkAll(arb) { a ->
-            val value = op.combine(zero, a)
+            val value = op(zero, a)
             withClue(leftFailureMessage(a, value)) {
                 check(eq.eqv(zero, value))
             }
@@ -49,7 +49,7 @@ class AnnihilatorLaw<A>(
 
     private suspend fun rightAnnihilationCheck() {
         checkAll(arb) { a ->
-            val value = op.combine(a, zero)
+            val value = op(a, zero)
             withClue(rightFailureMessage(a, value)) {
                 check(eq.eqv(zero, value))
             }

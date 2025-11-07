@@ -12,7 +12,7 @@ import org.vorpal.kosmos.relations.Relation
 /** StrongConnexity: R(a,b) ∨ R(b,a)
  *
  * Note that we allow a = b so reflexivity is implied. */
-class StrongConnexity<A>(
+class StrongConnexity<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val pr: Printable<A> = Printable.default(),
@@ -33,7 +33,7 @@ class StrongConnexity<A>(
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
             withClue(failureMessage(a, b)) {
-                check(rel.rel(a, b) || rel.rel(b, a))
+                check(rel(a, b) || rel(b, a))
             }
         }
     }

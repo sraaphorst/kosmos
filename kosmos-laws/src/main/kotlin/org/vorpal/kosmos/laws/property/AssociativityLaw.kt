@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 /** Associativity Law
  * Note that we allow a Triple producing Arb so that we can impose constraints if necessary on the values produced,
  * e.g. that they all be distinct, or to avoid NaN / overflow for floating point types. */
-class AssociativityLaw<A>(
+class AssociativityLaw<A: Any>(
     private val op: BinOp<A>,
     private val tripleArb: Arb<Triple<A, A, A>>,
     private val eq: Eq<A>,
@@ -34,11 +34,11 @@ class AssociativityLaw<A>(
 
     override suspend fun test() {
         checkAll(tripleArb) { (a, b, c) ->
-            val bc = op.combine(b, c)
-            val left  = op.combine(a, bc)
+            val bc = op(b, c)
+            val left  = op(a, bc)
 
-            val ab = op.combine(a, b)
-            val right = op.combine(ab, c)
+            val ab = op(a, b)
+            val right = op(ab, c)
 
             withClue(failureMessage(a, b, c, ab, bc, left, right)) {
                 check(eq.eqv(left, right))

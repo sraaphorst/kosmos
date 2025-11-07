@@ -16,7 +16,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 * The following condition must be met: for all x, y in the algebra:
 *  * x(yx) = (xy)x
 */
-class FlexibilityLaw<A>(
+class FlexibilityLaw<A: Any>(
     private val op: BinOp<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -38,12 +38,12 @@ class FlexibilityLaw<A>(
     override suspend fun test() {
         checkAll(pairArb) { (x, y) ->
             // x (y x)
-            val yx = op.combine(y, x)
-            val left = op.combine(x, yx)
+            val yx = op(y, x)
+            val left = op(x, yx)
 
             // (x y) x
-            val xy = op.combine(x, y)
-            val right = op.combine(xy, x)
+            val xy = op(x, y)
+            val right = op(xy, x)
 
             withClue(failureMessage(x, y, yx, xy, left, right)) {
                 check(eq.eqv(left, right))

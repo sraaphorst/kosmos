@@ -3,6 +3,8 @@ package org.vorpal.kosmos.numerical.quasirandom
 import org.vorpal.kosmos.combinatorics.sequences.VanDerCorput
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
+import org.vorpal.kosmos.numbertheory.primes.PrimeSequence
+import java.math.BigInteger
 
 /**
  * **Halton sequence** in arbitrary dimension, built from Van der Corput components.
@@ -23,7 +25,7 @@ import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
  * * uses [VanDerCorput] from the combinatorics layer as an exact, rational
  *   primitive,
  * * converts each coordinate to `Double` via `Rational.toDouble()`,
- * * returns each point as a [DoubleArray] of length `dimension`.
+ * * returns each point as a `List<Double>` of length `dimension`.
  *
  * The resulting sequence lives in `[0,1]^dimension` and is well–suited for
  * quasi–Monte Carlo and stratified sampling tasks.
@@ -38,7 +40,11 @@ import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
  *
  * It is **recommended (but not enforced)** that the bases be pairwise coprime,
  * and in practice one usually chooses the first `d` prime numbers to reduce
- * correlations between coordinates.
+ * correlations between coordinates. This can be done by:
+ *
+ * ```kotlin
+ * val haltonN = HaltonSequence(PrimeSequence.take(n))
+ * ```
  *
  * ### Example
  *
@@ -105,28 +111,28 @@ import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
  * used to construct each coordinate.
  */
 class HaltonSequence(
-    bases: IntArray
-) : CachedClosedFormImplementation<DoubleArray>() {
+    bases: List<BigInteger>
+) : CachedClosedFormImplementation<List<Double>>() {
 
-    private val components = bases.map { VanDerCorput(it) }.toTypedArray()
+    // Defensive copy and conversion.
+    val bases: List<BigInteger> = bases.toList()
+
+    private val baseInts: IntArray = bases.map { b ->
+        require(b >= BigInteger.TWO) { "Base must be at least 2, but was $b." }
+        require(b <= BigInteger.valueOf(Int.MAX_VALUE.toLong())) {
+            "Base $b is too large to fit into an Int."
+        }
+        b.toInt()
+    }.toIntArray()
+
+    private val components = baseInts.map { VanDerCorput(it) }
 
     init {
         require(bases.isNotEmpty()) { "At least one base is required for a Halton sequence." }
     }
 
-    override fun closedFormCalculator(n: Int): DoubleArray {
+    override fun closedFormCalculator(n: Int): List<Double> {
         require(n >= 0) { "Index n must be non-negative, but was $n." }
-
-        return DoubleArray(components.size) { i ->
-            components[i].closedForm(n).toDouble()
-        }
-    }
-}
-
-
-fun main() {
-    val a = HaltonSequence(intArrayOf(2, 3, 4, 5, 6))
-    for (i in 0 until 10) {
-        println(a.closedForm(i).toList())
+        return components.map { it.closedForm(n).toDouble() }
     }
 }

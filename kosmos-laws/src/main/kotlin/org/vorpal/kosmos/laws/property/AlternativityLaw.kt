@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface AlternativityCore<A> {
+private sealed interface AlternativityCore<A: Any> {
     val op: BinOp<A>
     val pairArb: Arb<Pair<A, A>>
     val eq: Eq<A>
@@ -20,11 +20,11 @@ private sealed interface AlternativityCore<A> {
 
     suspend fun leftAlternativityCheck() {
         checkAll(pairArb) { (x, y) ->
-            val xy = op.combine(x, y)
-            val left = op.combine(x, xy)
+            val xy = op(x, y)
+            val left = op(x, xy)
 
-            val xx = op.combine(x, x)
-            val right = op.combine(xx, y)
+            val xx = op(x, x)
+            val right = op(xx, y)
 
             withClue(leftFailureMessage(x, y, xy, left, xx, right)) {
                 check(eq.eqv(left, right))
@@ -69,11 +69,11 @@ private sealed interface AlternativityCore<A> {
     suspend fun rightAlternativityCheck() {
         checkAll(pairArb) { (x, y) ->
             // (yx)x = y(xx)
-            val yx = op.combine(y, x)
-            val left = op.combine(yx, x)
+            val yx = op(y, x)
+            val left = op(yx, x)
 
-            val xx = op.combine(x, x)
-            val right = op.combine(y, xx)
+            val xx = op(x, x)
+            val right = op(y, xx)
 
             withClue(rightFailureMessage(x, y, yx, left, xx, right)) {
                 check(eq.eqv(left, right))
@@ -116,7 +116,7 @@ private sealed interface AlternativityCore<A> {
     }
 }
 
-class LeftAlternativityLaw<A>(
+class LeftAlternativityLaw<A: Any>(
     override val op: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val eq: Eq<A>,
@@ -136,7 +136,7 @@ class LeftAlternativityLaw<A>(
     override suspend fun test() = leftAlternativityCheck()
 }
 
-class RightAlternativityLaw<A>(
+class RightAlternativityLaw<A: Any>(
     override val op: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val eq: Eq<A>,
@@ -170,7 +170,7 @@ class RightAlternativityLaw<A>(
  * Alternativity is quite strong: it forces any two elements to generate an associative subalgebra
  * (see Artin's theorem).
  */
-class AlternativityLaw<A>(
+class AlternativityLaw<A: Any>(
     override val op: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val eq: Eq<A>,
