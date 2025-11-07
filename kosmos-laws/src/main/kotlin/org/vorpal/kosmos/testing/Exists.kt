@@ -4,7 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.take
 
 /** Try up to `attempts` random samples to find a witness for `pred`. */
-fun <A> existsSample(
+fun <A: Any> existsSample(
     arb: Arb<A>,
     attempts: Int,
     pred: (A) -> Boolean

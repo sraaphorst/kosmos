@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-class IdentityLaw<A>(
+class IdentityLaw<A: Any>(
     private val op: BinOp<A>,
     private val identity: A,
     private val arb: Arb<A>,
@@ -21,7 +21,7 @@ class IdentityLaw<A>(
 
     private suspend fun leftIdentityCheck() {
         checkAll(arb) { a ->
-            val value = op.combine(identity, a)
+            val value = op(identity, a)
             withClue(leftFailureMessage(a, value)) {
                 check(eq.eqv(a, value))
             }
@@ -46,7 +46,7 @@ class IdentityLaw<A>(
 
     private suspend fun rightIdentityCheck() {
         checkAll(arb) { a ->
-            val value = op.combine(a, identity)
+            val value = op(a, identity)
             withClue(rightFailureMessage(a, value)) {
                 check(eq.eqv(a, value))
             }

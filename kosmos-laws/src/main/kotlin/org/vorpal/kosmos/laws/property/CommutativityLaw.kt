@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 /** Commutativity Law
  * Note that we allow a Double producing Arb so that we can impose constraints if necessary on the values produced,
  * e.g. that they all be distinct, or to avoid NaN / overflow for floating point types. */
-class CommutativityLaw<A>(
+class CommutativityLaw<A: Any>(
     private val op: BinOp<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -34,8 +34,8 @@ class CommutativityLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
-            val left  = op.combine(a, b)
-            val right = op.combine(b, a)
+            val left  = op(a, b)
+            val right = op(b, a)
 
             withClue(failureMessage(a, b, left, right)) {
                 check(eq.eqv(left, right))

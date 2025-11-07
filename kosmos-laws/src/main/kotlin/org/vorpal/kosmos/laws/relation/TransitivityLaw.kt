@@ -10,7 +10,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
 /** Transitivity: (a R b ∧ b R c) ⇒ a R c */
-class TransitivityLaw<A>(
+class TransitivityLaw<A: Any>(
     private val rel: Relation<A>,
     private val tripleArb: Arb<Triple<A, A, A>>,
     private val pr: Printable<A> = Printable.default(),
@@ -30,9 +30,9 @@ class TransitivityLaw<A>(
 
     override suspend fun test() {
         checkAll(tripleArb) { (a, b, c) ->
-            if (rel.rel(a, b) && rel.rel(b, c)) {
+            if (rel(a, b) && rel(b, c)) {
                 withClue(failureMessage(a, b, c)) {
-                    check(rel.rel(a, c))
+                    check(rel(a, c))
                 }
             }
         }

@@ -11,7 +11,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
 /** Antisymmetry: (a R b ∧ b R a) ⇒ a = b */
-class AntisymmetryLaw<A>(
+class AntisymmetryLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -33,8 +33,8 @@ class AntisymmetryLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
-            val ab = rel.rel(a, b)
-            val ba = rel.rel(b, a)
+            val ab = rel(a, b)
+            val ba = rel(b, a)
 
             // Only constrained when both directions hold.
             if (ab && ba) {

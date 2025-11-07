@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
 /** Idempotency Law. */
-class IdempotencyLaw<A>(
+class IdempotencyLaw<A: Any>(
     private val op: BinOp<A>,
     private val arb: Arb<A>,
     private val eq: Eq<A>,
@@ -21,7 +21,7 @@ class IdempotencyLaw<A>(
 
     override suspend fun test() {
         checkAll(arb) { a ->
-            val value = op.combine(a, a)
+            val value = op(a, a)
             withClue(failMessage(a, value)) {
                 check(eq.eqv(a, value))
             }
