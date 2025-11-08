@@ -27,7 +27,7 @@ private object PellLucasRecurrence : CachedLinearRecurrenceImplementation<BigInt
     initialValues = listOf(BigInteger.ONE, BigInteger.ONE),
     selectors = listOf(-1, -2),
     coefficients = listOf(2, 1),
-    zero = BigInteger.ZERO,
+    constantTerm = BigInteger.ZERO,
     multiply = Action({ s, t -> s.toBigInteger() * t }),
     add = BinOp(BigInteger::add)
 )

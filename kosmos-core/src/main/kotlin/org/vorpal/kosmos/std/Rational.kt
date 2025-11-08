@@ -36,6 +36,19 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     operator fun times (o: Rational): Rational = of(n * o.n, d * o.d)
     operator fun div   (o: Rational): Rational = this * o.reciprocal()
 
+    /**
+     * Remainder of this rational modulo [modulus] where [modulus] is positive is defined as:
+     *
+     * `this - modulus * floor(this / modulus)`.
+     *
+     * The result lies in `[0, modulus)`.
+     */
+    operator fun rem   (modulus: Rational): Rational {
+        require(modulus.isPositive) { "Rational modulus must be positive, was: $modulus" }
+        val q = (this / modulus).floor()
+        return this - modulus * q.toRational()
+    }
+
     fun reciprocal(): Rational {
         require(n != BigInteger.ZERO) { "0 has no multiplicative inverse in a field" }
         return of(d, n)
@@ -89,6 +102,11 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
         val (q, r) = n.divideAndRemainder(d)
         return if (r.signum() == 0 || n.signum() <= 0) q else q + BigInteger.ONE
     }
+
+    /**
+     * Provides the fractional part of this [Rational], i.e. the part in `[0, 1)`.
+     */
+    fun frac(): Rational = this % ONE
 
     /** Arithmetic operations with integers (avoiding conversion) */
     operator fun plus(other: Int): Rational = this + other.toRational()

@@ -66,7 +66,7 @@ class PermutationSpec : FreeSpec({
 
         "composition preserves domain" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (base, p1, p2) ->
-                val composed = p1 then p2
+                val composed = p1 andThen p2
                 composed.domain shouldBe base
             }
         }
@@ -74,8 +74,8 @@ class PermutationSpec : FreeSpec({
         "composition is associative" {
             checkAll(PermutationTestingCombinations.arbBaseWithPermutations(Arb.int(), 5, 3)) { (base, perms) ->
                 val (p1, p2, p3) = perms
-                val left = (p1 then p2) then p3
-                val right = p1 then (p2 then p3)
+                val left = (p1 andThen p2) andThen p3
+                val right = p1 andThen (p2 andThen p3)
 
                 base.all { x -> left.apply(x) == right.apply(x) } shouldBe true
             }
@@ -84,7 +84,7 @@ class PermutationSpec : FreeSpec({
         "identity is left identity for composition" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
                 val id = Permutation.identity(base)
-                val composed = id then perm
+                val composed = id andThen perm
                 base.all { x -> composed.apply(x) == perm.apply(x) } shouldBe true
             }
         }
@@ -92,21 +92,21 @@ class PermutationSpec : FreeSpec({
         "identity is right identity for composition" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
                 val id = Permutation.identity(base)
-                val composed = perm then id
+                val composed = perm andThen id
                 base.all { x -> composed.apply(x) == perm.apply(x) } shouldBe true
             }
         }
 
         "composition with inverse gives identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
-                val composed = perm then perm.inverse()
+                val composed = perm andThen perm.inverse()
                 base.all { x -> composed.apply(x) == x } shouldBe true
             }
         }
 
         "inverse then original gives identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
-                val composed = perm.inverse() then perm
+                val composed = perm.inverse() andThen perm
                 base.all { x -> composed.apply(x) == x } shouldBe true
             }
         }
@@ -146,9 +146,9 @@ class PermutationSpec : FreeSpec({
 
         "composition inverse formula: (fg)^-1 = g^-1 f^-1" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (base, p1, p2) ->
-                val composed = p1 then p2
+                val composed = p1 andThen p2
                 val invComposed = composed.inverse()
-                val invFormula = p2.inverse() then p1.inverse()
+                val invFormula = p2.inverse() andThen p1.inverse()
 
                 base.all { x -> invComposed.apply(x) == invFormula.apply(x) } shouldBe true
             }
@@ -265,7 +265,7 @@ class PermutationSpec : FreeSpec({
         "power 2 is composition with self" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
                 val power2 = perm.exp(2)
-                val composed = perm then perm
+                val composed = perm andThen perm
                 base.all { x -> power2.apply(x) == composed.apply(x) } shouldBe true
             }
         }
@@ -275,7 +275,7 @@ class PermutationSpec : FreeSpec({
                 val m = 2
                 val n = 3
                 val powerSum = perm.exp(m + n)
-                val powerProduct = perm.exp(m) then perm.exp(n)
+                val powerProduct = perm.exp(m) andThen perm.exp(n)
                 base.all { x -> powerSum.apply(x) == powerProduct.apply(x) } shouldBe true
             }
         }
@@ -339,7 +339,7 @@ class PermutationSpec : FreeSpec({
 
         "closure: composition of two permutations is a permutation" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (base, p1, p2) ->
-                val composed = p1 then p2
+                val composed = p1 andThen p2
                 base.all { x -> composed.apply(x) in base } shouldBe true
             }
         }
@@ -347,21 +347,21 @@ class PermutationSpec : FreeSpec({
         "every permutation has an inverse" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
                 val inv = perm.inverse()
-                val composed = perm then inv
+                val composed = perm andThen inv
                 base.all { x -> composed.apply(x) == x } shouldBe true
             }
         }
 
         "conjugation preserves order" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
-                val conjugate = q then p then q.inverse()
+                val conjugate = q andThen p andThen q.inverse()
                 conjugate.order() shouldBe p.order()
             }
         }
 
         "conjugation preserves cycle type" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p, q) ->
-                val conjugate = q then p then q.inverse()
+                val conjugate = q andThen p andThen q.inverse()
 
                 val pCycles = p.cycles().map { it.size }.sorted()
                 val conjCycles = conjugate.cycles().map { it.size }.sorted()
@@ -373,14 +373,14 @@ class PermutationSpec : FreeSpec({
         "commutator of identity is identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
                 val id = Permutation.identity(base)
-                val commutator = perm then id then perm.inverse() then id.inverse()
+                val commutator = perm andThen id andThen perm.inverse() andThen id.inverse()
                 base.all { x -> commutator.apply(x) == x } shouldBe true
             }
         }
 
         "commutator with self is identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 8)) { (base, perm) ->
-                val commutator = perm then perm then perm.inverse() then perm.inverse()
+                val commutator = perm andThen perm andThen perm.inverse() andThen perm.inverse()
                 base.all { x -> commutator.apply(x) == x } shouldBe true
             }
         }
@@ -408,7 +408,7 @@ class PermutationSpec : FreeSpec({
 
         "sign is multiplicative: sign(p1 * p2) = sign(p1) * sign(p2)" {
             checkAll(generateArbPermutationPair(Arb.int(), 5)) { (_, p1, p2) ->
-                val composed = p1 then p2
+                val composed = p1 andThen p2
                 composed.sign() shouldBe (p1.sign() * p2.sign())
             }
         }

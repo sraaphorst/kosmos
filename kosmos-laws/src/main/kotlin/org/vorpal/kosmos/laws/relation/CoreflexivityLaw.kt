@@ -11,7 +11,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
 /** Coreflexivity: x R y ⇒ x = y */
-class CoreflexivityLaw<A>(
+class CoreflexivityLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -33,7 +33,7 @@ class CoreflexivityLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (a, b) ->
-            if (rel.rel(a, b)) {
+            if (rel(a, b)) {
                 withClue(failureMessage(a, b)) {
                     check(eq.eqv(a, b))
                 }

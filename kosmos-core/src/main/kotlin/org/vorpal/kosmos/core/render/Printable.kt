@@ -3,7 +3,9 @@ package org.vorpal.kosmos.core.render
 import java.math.BigDecimal
 import java.math.BigInteger
 
-/** A render for values of A. */
+/**
+ * A renderer for values of A.
+ */
 fun interface Printable<in A> {
     fun render(a: A): String
 

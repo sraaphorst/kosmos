@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface BolIdentityCore<A> {
+private sealed interface BolIdentityCore<A: Any> {
     val op: BinOp<A>
     val tripleArb: Arb<Triple<A, A, A>>
     val eq: Eq<A>
@@ -22,15 +22,15 @@ private sealed interface BolIdentityCore<A> {
     // a(b(ac)) = (a(ba))c
     suspend fun leftBolIdentityCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val ac = op.combine(a, c)
-            val b_ac = op.combine(b, ac)
-            val left = op.combine(a, b_ac)
+            val ac = op(a, c)
+            val bAC = op(b, ac)
+            val left = op(a, bAC)
 
-            val ba = op.combine(b, a)
-            val a_ba = op.combine(a, ba)
-            val right = op.combine(a_ba, c)
+            val ba = op(b, a)
+            val aBA = op(a, ba)
+            val right = op(aBA, c)
 
-            withClue(leftFailureMessage(a, b, c, ac, b_ac, left, ba, a_ba, right)) {
+            withClue(leftFailureMessage(a, b, c, ac, bAC, left, ba, aBA, right)) {
                 check(eq.eqv(left, right))
             }
         }
@@ -80,13 +80,13 @@ private sealed interface BolIdentityCore<A> {
     // ((ca)b)a = c((ab)a)
     suspend fun rightBolIdentityCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val ca = op.combine(c, a)
-            val ca_b = op.combine(ca, b)
-            val left = op.combine(ca_b, a)
+            val ca = op(c, a)
+            val ca_b = op(ca, b)
+            val left = op(ca_b, a)
 
-            val ab = op.combine(a, b)
-            val ab_a = op.combine(ab, a)
-            val right = op.combine(c, ab_a)
+            val ab = op(a, b)
+            val ab_a = op(ab, a)
+            val right = op(c, ab_a)
 
             withClue(rightFailureMessage(a, b, c, ca, ca_b, left, ab, ab_a, right)) {
                 check(eq.eqv(left, right))
@@ -137,7 +137,7 @@ private sealed interface BolIdentityCore<A> {
     }
 }
 
-class LeftBolIdentityLaw<A>(
+class LeftBolIdentityLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -157,7 +157,7 @@ class LeftBolIdentityLaw<A>(
     override suspend fun test() = leftBolIdentityCheck()
 }
 
-class RightBolIdentityLaw<A>(
+class RightBolIdentityLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -193,7 +193,7 @@ class RightBolIdentityLaw<A>(
  * Alternatively, a right or left Bol loop is Moufang iff it satisfies
  * the flexibility law.
  */
-class BolIdentityLaw<A>(
+class BolIdentityLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,

@@ -14,7 +14,7 @@ import org.vorpal.kosmos.laws.TestingLaw
  *  absorb absorbs over:  a ⊗ (a ⊕ b) = a
  *  over   absorbs absorb: a ⊕ (a ⊗ b) = a
  */
-private sealed interface AbsorptionCore<A> {
+private sealed interface AbsorptionCore<A: Any> {
     val absorb: BinOp<A>   // e.g. meet ∧
     val over: BinOp<A>     // e.g. join ∨
     val pairArb: Arb<Pair<A, A>> // (a, b)
@@ -29,8 +29,8 @@ private sealed interface AbsorptionCore<A> {
     /** a absorb (a over b) = a */
     suspend fun absorbOverCheck() {
         checkAll(pairArb) { (a, b) ->
-            val aOverB = over.combine(a, b)
-            val left   = absorb.combine(a, aOverB)  // a ⊗ (a ⊕ b)
+            val aOverB = over(a, b)
+            val left   = absorb(a, aOverB)  // a ⊗ (a ⊕ b)
             withClue(absorbOverFailure(a, b, aOverB, left)) {
                 check(eq.eqv(left, a))
             }
@@ -40,8 +40,8 @@ private sealed interface AbsorptionCore<A> {
     /** a over (a absorb b) = a */
     suspend fun overAbsorbCheck() {
         checkAll(pairArb) { (a, b) ->
-            val aAbsorbB = absorb.combine(a, b)
-            val left     = over.combine(a, aAbsorbB) // a ⊕ (a ⊗ b)
+            val aAbsorbB = absorb(a, b)
+            val left     = over(a, aAbsorbB) // a ⊕ (a ⊗ b)
             withClue(overAbsorbFailure(a, b, aAbsorbB, left)) {
                 check(eq.eqv(left, a))
             }
@@ -88,7 +88,7 @@ private sealed interface AbsorptionCore<A> {
 }
 
 /** Only a ⊗ (a ⊕ b) = a */
-class AbsorbOverLaw<A>(
+class AbsorbOverLaw<A: Any>(
     override val absorb: BinOp<A>,
     override val over: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,
@@ -113,7 +113,7 @@ class AbsorbOverLaw<A>(
 }
 
 /** Only a ⊕ (a ⊗ b) = a */
-class OverAbsorbLaw<A>(
+class OverAbsorbLaw<A: Any>(
     override val absorb: BinOp<A>,
     override val over: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,
@@ -138,7 +138,7 @@ class OverAbsorbLaw<A>(
 }
 
 /** Both absorption directions (lattice-style). */
-class AbsorptionLaw<A>(
+class AbsorptionLaw<A: Any>(
     override val absorb: BinOp<A>,
     override val over: BinOp<A>,
     override val pairArb: Arb<Pair<A, A>>,

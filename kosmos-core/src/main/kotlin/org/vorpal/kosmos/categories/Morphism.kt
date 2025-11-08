@@ -160,7 +160,7 @@ fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> 
 val intAutoGroup: Group<Automorphism<Int>> = Group.of(
     op = Automorphism<Int>::then,
     identity = Automorphism.id(),
-    inv = Automorphism<Int>::inverse
+    inverse = Automorphism<Int>::inverse
 )
 
 object CategoryOfMorphisms {

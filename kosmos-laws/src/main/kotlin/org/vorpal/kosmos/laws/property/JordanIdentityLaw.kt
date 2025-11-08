@@ -14,7 +14,7 @@ import org.vorpal.kosmos.laws.TestingLaw
  *
  * This in combination with the CommutativityLaw gives a Jordan algebra,
  * which also implies that the PowerAssociativityLaw holds. */
-class JordanIdentityLaw<A>(
+class JordanIdentityLaw<A: Any>(
     private val op: BinOp<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -34,9 +34,9 @@ class JordanIdentityLaw<A>(
 
     override suspend fun test() {
         checkAll(pairArb) { (x, y) ->
-            val x2 = op.combine(x, x)
-            val left = op.combine(x, op.combine(y, x2))
-            val right = op.combine(op.combine(x, y), x2)
+            val x2 = op(x, x)
+            val left = op(x, op(y, x2))
+            val right = op(op(x, y), x2)
 
             withClue(failureMessage(x, y, x2, left, right)) {
                 check(eq.eqv(left, right))

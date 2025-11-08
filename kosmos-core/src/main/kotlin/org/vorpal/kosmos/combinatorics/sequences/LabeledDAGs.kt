@@ -3,6 +3,7 @@ package org.vorpal.kosmos.combinatorics.sequences
 import org.vorpal.kosmos.combinatorics.Binomial
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
+import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
 /**
@@ -30,14 +31,10 @@ object LabeledDAGs :
 private object LabeledDAGsRecurrence : CachedRecurrenceImplementation<BigInteger>() {
     override fun recursiveCalculator(n: Int): BigInteger = when (n) {
         0 -> BigInteger.ONE
-        else -> {
-            var sum = BigInteger.ZERO
-            for (k in 1..n) {
-                val sign = if (k % 2 == 1) BigInteger.ONE else BigInteger.valueOf(-1L)
-                val term = Binomial(n, k) * BigInteger.TWO.pow(k * (n - k)) * this(n - k)
-                sum += sign * term
-            }
-            sum
+        else ->
+            (1..n).fold(BigInteger.ZERO) { acc, k ->
+                val term = Binomial(n, k) * BigInteger.ONE.shl(k * (n - k)) * this(n - k)
+                acc + bigIntSgn(k - 1) * term
         }
     }
 }

@@ -48,8 +48,8 @@ private object LucasRecurrence : CachedLinearRecurrenceImplementation<BigInteger
     initialValues = listOf(BigInteger.TWO, BigInteger.ONE),
     selectors = listOf(-1, -2),
     coefficients = listOf(1, 1),
-    zero = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    constantTerm = BigInteger.ZERO,
+    multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 

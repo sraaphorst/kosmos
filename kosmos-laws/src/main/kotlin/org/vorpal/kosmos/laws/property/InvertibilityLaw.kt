@@ -21,7 +21,7 @@ typealias InverseLaw<A> = InvertibilityLaw<A>
  * * A partial invertibility (some elements may not have an inverse)
  * There are constructors to create either type for a given operation.
  */
-class InvertibilityLaw<A> private constructor(
+class InvertibilityLaw<A: Any> private constructor(
     private val op: BinOp<A>,
     private val identity: A,
     private val arb: Arb<A>,
@@ -129,8 +129,8 @@ class InvertibilityLaw<A> private constructor(
             val inv = inverseOrNull(a)
                 ?: error("No inverse for ${pr.render(a)} (generator produced a non-invertible value)")
 
-            val left = op.combine(inv, a)
-            val right  = op.combine(a, inv)
+            val left = op(inv, a)
+            val right  = op(a, inv)
 
             withClue(leftFailureMessage(a, inv, left)) {
                 check(eq.eqv(left, identity))

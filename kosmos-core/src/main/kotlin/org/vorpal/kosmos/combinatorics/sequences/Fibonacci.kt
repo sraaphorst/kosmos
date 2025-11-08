@@ -31,16 +31,16 @@ private object FibonacciRecurrence : CachedLinearRecurrenceImplementation<BigInt
     initialValues = listOf(BigInteger.ZERO, BigInteger.ONE),
     selectors = listOf(-1, -2),
     coefficients = listOf(1, 1),
-    zero = BigInteger.ZERO,
-    multiply = Action({s, t -> s.toBigInteger() * t }),
+    constantTerm = BigInteger.ZERO,
+    multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 
 private object FibonacciClosedForm : CachedClosedFormImplementation<BigInteger>() {
     private val mc = MathContext(50, RoundingMode.HALF_EVEN)
     private val sqrt5 = BigDecimal(5).sqrt(mc)
-    private val phi = (BigDecimal.ONE + sqrt5).divide(BigDecimal(2), mc)
-    private val psi = (BigDecimal.ONE - sqrt5).divide(BigDecimal(2), mc)
+    private val phi = (BigDecimal.ONE + sqrt5).divide(BigDecimal.TWO, mc)
+    private val psi = (BigDecimal.ONE - sqrt5).divide(BigDecimal.TWO, mc)
 
     /** Binet’s closed form for Fₙ. */
     override fun closedFormCalculator(n: Int): BigInteger = when {

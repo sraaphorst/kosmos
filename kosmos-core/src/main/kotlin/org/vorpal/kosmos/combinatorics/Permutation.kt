@@ -5,6 +5,9 @@ import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.gcd
 import org.vorpal.kosmos.core.lcm
+import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.random.shuffledFunctional
+import kotlin.random.Random
 
 /**
  * A permutation is a bijection from a finite set to itself.
@@ -13,7 +16,7 @@ import org.vorpal.kosmos.core.lcm
  * The internal representation is the forward mapping (domain → codomain),
  * from which the inverse mapping is derived lazily.
  */
-data class Permutation<A>(
+data class Permutation<A: Any>(
     override val domain: FiniteSet<A>,
     private val mapping: Map<A, A>
 ) : Bijection<A, A> {
@@ -55,12 +58,20 @@ data class Permutation<A>(
     operator fun get(a: A): A =
         forward.apply(a)
 
-    /** Composition (function composition). */
-    infix fun then(other: Permutation<A>): Permutation<A> {
+    /**
+     * Composition: (f andThen g)(x) means g(f(x)).
+     */
+    infix fun andThen(other: Permutation<A>): Permutation<A> {
         require(domain == other.domain) { "Permutation domains differ." }
-        val composed = domain.associateWith { a -> this.apply(other.apply(a)) }
+        val composed = domain.associateWith { a -> other.apply(apply(a)) }
         return Permutation(domain, composed)
     }
+
+    /**
+     * Composition: (f compose g)(x) means f(g(x)).
+     */
+    infix fun compose(other: Permutation<A>): Permutation<A> =
+        other andThen this
 
     /** Inverse permutation. */
     override fun inverse(): Permutation<A> = Permutation(domain, inverseMapping)
@@ -107,7 +118,7 @@ data class Permutation<A>(
     /** Exponentiation (repeated composition). */
     fun exp(power: Int): Permutation<A> {
         require(power >= 0) { "Power must be non-negative." }
-        return (1..power).fold(identity(domain)) { acc, _ -> acc then this }
+        return (1..power).fold(identity(domain)) { acc, _ -> acc andThen this }
     }
 
     override fun toString(): String = mapping.entries.joinToString(
@@ -115,13 +126,30 @@ data class Permutation<A>(
         postfix = ")"
     ) { "${it.key}↦${it.value}" }
 
+    /**
+     * Convenience function to invoke a Permutation on a single element.
+     */
+    operator fun invoke(x: A): A = apply(x)
+
+    /**
+     * Convenience function to invoke a Permutation on a finite set.
+     */
+    operator fun invoke(set: FiniteSet<A>): FiniteSet<A> =
+        set.map(this::apply)
+
+    /**
+     * Convert to a UnaryOp<A>.
+     */
+    fun asUnaryOp(): UnaryOp<A, A> =
+        UnaryOp { a -> apply(a) }
+
     companion object {
         /** Construct from a total bijective map. */
-        fun <A> of(domain: FiniteSet<A>, mapping: Map<A, A>): Permutation<A> =
+        fun <A: Any> of(domain: FiniteSet<A>, mapping: Map<A, A>): Permutation<A> =
             Permutation(domain, mapping)
 
         /** Identity permutation on a finite set. */
-        fun <A> identity(domain: FiniteSet<A>): Permutation<A> =
+        fun <A: Any> identity(domain: FiniteSet<A>): Permutation<A> =
             Permutation(domain, domain.associateWith { it })
     }
 }
@@ -131,7 +159,7 @@ data class Permutation<A>(
  * --------------------------------------------------------------------- */
 
 /** Identity permutation on this finite set. */
-fun <A> FiniteSet<A>.identityPermutation(): Permutation<A> =
+fun <A: Any> FiniteSet<A>.identityPermutation(): Permutation<A> =
     Permutation.identity(this)
 
 /**
@@ -140,7 +168,7 @@ fun <A> FiniteSet<A>.identityPermutation(): Permutation<A> =
  * 1. shift = 0, in which case, the identity permutation is returned;
  * 2. gcd(shift, n) = 1, which is necessary for the creation of a cyclic permutation.
  * */
-fun <A> FiniteSet<A>.cyclicPermutation(shift: Int = 1): Permutation<A> {
+fun <A: Any> FiniteSet<A>.cyclicPermutation(shift: Int = 1): Permutation<A> {
     if (shift == 0) return Permutation.identity(this)
 
     val elements = toList()
@@ -153,8 +181,19 @@ fun <A> FiniteSet<A>.cyclicPermutation(shift: Int = 1): Permutation<A> {
 }
 
 /** Shift permutation (wrap-around). */
-fun <A> FiniteSet<A>.shiftPermutation(shift: Int): Permutation<A> {
+fun <A: Any> FiniteSet<A>.shiftPermutation(shift: Int): Permutation<A> {
     val elems = toList()
     val mapping = elems.mapIndexed { i, e -> e to elems[(i + shift).mod(size)] }.toMap()
+    return Permutation.of(this, mapping)
+}
+
+/**
+ * Generate a random permutation on a [FiniteSet] using the Fisher-Yates algorithm.
+ * A [Random] can be supplied: otherwise [Random.Default] is used.
+ */
+fun <A: Any> FiniteSet<A>.fisherYates(random: Random = Random.Default): Permutation<A> {
+    val elems = toList()
+    val shuffled = elems.shuffledFunctional(random)
+    val mapping = elems.zip(shuffled).toMap()
     return Permutation.of(this, mapping)
 }

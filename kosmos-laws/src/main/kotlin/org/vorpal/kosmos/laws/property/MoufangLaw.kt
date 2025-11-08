@@ -11,7 +11,7 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
 /** Shared helpers for Moufang variants. */
-private sealed interface MoufangCore<A> {
+private sealed interface MoufangCore<A: Any> {
     val op: BinOp<A>
     val tripleArb: Arb<Triple<A, A, A>>
     val eq: Eq<A>
@@ -23,8 +23,11 @@ private sealed interface MoufangCore<A> {
         x: A, y: A, z: A,
         left: A, right: A
     ): () -> String = {
-        val sx = pr.render(x); val sy = pr.render(y); val sz = pr.render(z)
-        val sl = pr.render(left); val sr = pr.render(right)
+        val sx = pr.render(x)
+        val sy = pr.render(y)
+        val sz = pr.render(z)
+        val sl = pr.render(left)
+        val sr = pr.render(right)
         buildString {
             appendLine("Moufang ($which) failed:")
             appendLine("x = $sx, y = $sy, z = $sz")
@@ -36,7 +39,7 @@ private sealed interface MoufangCore<A> {
 }
 
 /** Left Moufang:  x ⋆ (y ⋆ (x ⋆ z)) = ((x ⋆ y) ⋆ x) ⋆ z */
-class LeftMoufangLaw<A>(
+class LeftMoufangLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -56,13 +59,10 @@ class LeftMoufangLaw<A>(
 
     override suspend fun test() {
         checkAll(tripleArb) { (x, y, z) ->
-            val xz   = op.combine(x, z)
-            val y_xz = op.combine(y, xz)
-            val lhs  = op.combine(x, y_xz)              // x (y (x z))
-
-            val xy   = op.combine(x, y)
-            val xy_x = op.combine(xy, x)
-            val rhs  = op.combine(xy_x, z)              // ((x y) x) z
+            val xz  = op(x, z)
+            val lhs = op(x, op(y, xz))
+            val xy  = op(x, y)
+            val rhs = op(op(xy, x), z)
 
             withClue(failMsg("left", x, y, z, lhs, rhs)) {
                 check(eq.eqv(lhs, rhs))
@@ -72,7 +72,7 @@ class LeftMoufangLaw<A>(
 }
 
 /** Right Moufang:  ((z ⋆ x) ⋆ y) ⋆ x = z ⋆ (x ⋆ (y ⋆ x)) */
-class RightMoufangLaw<A>(
+class RightMoufangLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -92,14 +92,8 @@ class RightMoufangLaw<A>(
 
     override suspend fun test() {
         checkAll(tripleArb) { (x, y, z) ->
-            val zx   = op.combine(z, x)
-            val zx_y = op.combine(zx, y)
-            val lhs  = op.combine(zx_y, x)
-
-            val yx   = op.combine(y, x)
-            val x_yx = op.combine(x, yx)
-            val rhs  = op.combine(z, x_yx)
-
+            val lhs = op(op(op(z, x), y), x)
+            val rhs = op(z, op(x, op(y, x)))
             withClue(failMsg("right", x, y, z, lhs, rhs)) {
                 check(eq.eqv(lhs, rhs))
             }
@@ -108,7 +102,7 @@ class RightMoufangLaw<A>(
 }
 
 /** Middle Moufang:  (x ⋆ y) ⋆ (z ⋆ x) = x ⋆ (y ⋆ (z ⋆ x)) */
-class MiddleMoufangLaw<A>(
+class MiddleMoufangLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -128,12 +122,9 @@ class MiddleMoufangLaw<A>(
 
     override suspend fun test() {
         checkAll(tripleArb) { (x, y, z) ->
-            val xy   = op.combine(x, y)
-            val zx   = op.combine(z, x)
-            val lhs  = op.combine(xy, zx)
-
-            val y_zx = op.combine(y, zx)
-            val rhs  = op.combine(x, y_zx)
+            val zx = op(z, x)
+            val lhs = op(op(x, y), zx)
+            val rhs = op(x, op(y, zx))
 
             withClue(failMsg("middle", x, y, z, lhs, rhs)) {
                 check(eq.eqv(lhs, rhs))
@@ -150,7 +141,7 @@ class MiddleMoufangLaw<A>(
  *
  * Note that Moufang loops have an associated algebra, the Malcev algebra.
  */
-class MoufangLaw<A>(
+class MoufangLaw<A: Any>(
     op: BinOp<A>,
     arb: Arb<A>,
     eq: Eq<A>,

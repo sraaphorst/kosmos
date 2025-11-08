@@ -2,6 +2,7 @@ package org.vorpal.kosmos.relations
 
 fun interface Relation<A> {
     fun rel(a: A, b: A): Boolean
+    operator fun invoke(a: A, b: A) = rel(a, b)
 }
 
 // Property markers (purely declarative: laws will test)

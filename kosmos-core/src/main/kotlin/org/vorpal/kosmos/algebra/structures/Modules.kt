@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Action
 
 /**
@@ -11,7 +12,7 @@ import org.vorpal.kosmos.core.ops.Action
  *  - (r · s) ⊳ x = r ⊳ (s ⊳ x)
  *  - 1 ⊳ x = x
  */
-interface LeftRModule<R, M> {
+interface LeftRModule<R: Any, M: Any> {
     val leftRing: Ring<R>
     val group: AbelianGroup<M>
     val leftAction: Action<R, M>
@@ -26,7 +27,7 @@ interface LeftRModule<R, M> {
  *  - x ⊲ (r · s) = (x ⊲ r) ⊲ s
  *  - x ⊲ 1 = x
  */
-interface RightRModule<R, M> {
+interface RightRModule<R: Any, M: Any> {
     val rightRing: Ring<R>
     val group: AbelianGroup<M>
     val rightAction: Action<R, M>
@@ -37,13 +38,13 @@ interface RightRModule<R, M> {
  * and a right S-Module, with the compatibility condition:
  *    (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)
  */
-interface RSBiModule<R, S, M> : LeftRModule<R, M>, RightRModule<S, M>
+interface RSBiModule<R: Any, S: Any, M: Any> : LeftRModule<R, M>, RightRModule<S, M>
 
 /**
  * A ModuleCore captures the commutative case: a single scalar action suffices
  * to define both left and right module structures.
  */
-interface ModuleCore<R, M> {
+interface ModuleCore<R: Any, M: Any> {
     val ring: CommutativeRing<R>
     val group: AbelianGroup<M>
     val action: Action<R, M>
@@ -53,7 +54,7 @@ interface ModuleCore<R, M> {
  * An R-Module is a module over a commutative ring R.
  * It is both a LeftRModule and RightRModule, with the actions coinciding.
  */
-interface RModule<R, M> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M> {
+interface RModule<R: Any, M: Any> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M> {
     override val ring: CommutativeRing<R>
 
     override val leftRing: Ring<R>
@@ -67,4 +68,19 @@ interface RModule<R, M> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M
 
     override val rightAction: Action<R, M>
         get() = action
+
+    companion object {
+        private const val DEFAULT_SYMBOL = Symbols.TRIANGLE_RIGHT
+
+        fun <R: Any, M: Any> of(
+            ring: CommutativeRing<R>,
+            group: AbelianGroup<M>,
+            symbol: String = DEFAULT_SYMBOL,
+            action: (R, M) -> M,
+        ): RModule<R, M> = object : RModule<R, M> {
+            override val ring: CommutativeRing<R> = ring
+            override val group: AbelianGroup<M> = group
+            override val action: Action<R, M> = Action(symbol, action)
+        }
+    }
 }
