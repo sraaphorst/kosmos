@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface DistributivityCore<A> {
+private sealed interface DistributivityCore<A: Any> {
     val mul: BinOp<A>
     val add: BinOp<A>
     val tripleArb: Arb<Triple<A, A, A>>
@@ -24,12 +24,12 @@ private sealed interface DistributivityCore<A> {
 
     suspend fun leftDistributivityCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val bcAdd = add.combine(b, c)
-            val left = mul.combine(a, bcAdd)
+            val bcAdd = add(b, c)
+            val left = mul(a, bcAdd)
 
-            val abMul = mul.combine(a, b)
-            val acMul = mul.combine(a, c)
-            val right = add.combine(abMul, acMul)
+            val abMul = mul(a, b)
+            val acMul = mul(a, c)
+            val right = add(abMul, acMul)
 
             withClue(leftFailureMessage(a, b, c, bcAdd, abMul, acMul, left, right)) {
                 check(eq.eqv(left, right))
@@ -77,12 +77,12 @@ private sealed interface DistributivityCore<A> {
 
     suspend fun rightDistributivityCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val abAdd = add.combine(a, b)
-            val left = mul.combine(abAdd, c)
+            val abAdd = add(a, b)
+            val left = mul(abAdd, c)
 
-            val acMul = mul.combine(a, c)
-            val bcMul = mul.combine(b, c)
-            val right = add.combine(acMul, bcMul)
+            val acMul = mul(a, c)
+            val bcMul = mul(b, c)
+            val right = add(acMul, bcMul)
             withClue(rightFailureMessage(a, b, c, abAdd, acMul, bcMul, left, right)) {
                 check(eq.eqv(left, right))
             }
@@ -128,7 +128,7 @@ private sealed interface DistributivityCore<A> {
     }
 }
 
-class LeftDistributivityLaw<A>(
+class LeftDistributivityLaw<A: Any>(
     override val mul: BinOp<A>,
     override val add: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
@@ -152,7 +152,7 @@ class LeftDistributivityLaw<A>(
     override suspend fun test() = leftDistributivityCheck()
 }
 
-class RightDistributivityLaw<A>(
+class RightDistributivityLaw<A: Any>(
     override val mul: BinOp<A>,
     override val add: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
@@ -181,7 +181,7 @@ class RightDistributivityLaw<A>(
  * Note that we allow a Triple producing Arb so that we can impose constraints if necessary on the values produced,
  * e.g. that they all be distinct, or to avoid NaN / overflow for floating point types.
  * The checks are in an interface so that they can be reused across the three distributivity check variants. */
-class DistributivityLaw<A>(
+class DistributivityLaw<A: Any>(
     override val mul: BinOp<A>,
     override val add: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,

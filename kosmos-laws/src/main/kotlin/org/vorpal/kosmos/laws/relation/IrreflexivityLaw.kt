@@ -9,7 +9,7 @@ import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
 /** Irreflexivity: x ¬R x */
-class IrreflexivityLaw<A>(
+class IrreflexivityLaw<A: Any>(
     private val rel: Relation<A>,
     private val arb: Arb<A>,
     private val pr: Printable<A> = Printable.default(),
@@ -22,7 +22,7 @@ class IrreflexivityLaw<A>(
     override suspend fun test() {
         checkAll(arb) { a ->
             withClue(failureMessage(a)) {
-                check(!rel.rel(a, a))
+                check(!rel(a, a))
             }
         }
     }

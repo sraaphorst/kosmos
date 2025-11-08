@@ -6,7 +6,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-class PowerAssociativityLaw<A>(
+class PowerAssociativityLaw<A: Any>(
     private val op: BinOp<A>,
     private val arb: Arb<A>,
     private val eq: Eq<A>,
@@ -22,18 +22,18 @@ class PowerAssociativityLaw<A>(
         checkAll(arb) { x ->
             // Degree-3 witness
             // (xx)x == x(xx)
-            val xx = op.combine(x, x)
-            val l3 = op.combine(xx, x)
-            val r3 = op.combine(x, xx)
+            val xx = op(x, x)
+            val l3 = op(xx, x)
+            val r3 = op(x, xx)
             withClue(paFail("degree-3", x, l3, r3)) {
                 check(eq.eqv(l3, r3))
             }
 
             // Degree-4 witness
             // ((xx)x)x
-            val l4 = op.combine(l3, x)
+            val l4 = op(l3, x)
             // x(x(xx))
-            val r4 = op.combine(x, r3)
+            val r4 = op(x, r3)
             withClue(paFail("degree-4", x, l4, r4)) {
                 check(eq.eqv(l4, r4))
             }
@@ -45,7 +45,7 @@ class PowerAssociativityLaw<A>(
             for (m in exps) for (n in exps) {
                 val xm   = powLeft(op, x, m)
                 val xn   = powLeft(op, x, n)
-                val prod = op.combine(xm, xn)
+                val prod = op(xm, xn)
                 val xmn  = powLeft(op, x, m + n)
                 withClue(paExpFail(x, m, n, prod, xmn)) {
                     check(eq.eqv(prod, xmn))
@@ -57,7 +57,7 @@ class PowerAssociativityLaw<A>(
     private fun <A> powLeft(op: BinOp<A>, x: A, n: Int): A =
         when {
             n < 1  -> error("powLeft expects n ≥ 1 (got $n)")
-            else   -> (2..n).fold(x) { acc, _ -> op.combine(acc, x) }
+            else   -> (2..n).fold(x) { acc, _ -> op(acc, x) }
         }
 
     private fun paFail(tag: String, x: A, left: A, right: A): () -> String = {

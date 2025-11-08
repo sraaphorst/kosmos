@@ -14,7 +14,7 @@ import org.vorpal.kosmos.laws.TestingLaw
  *  Right: if a⋆c = b⋆c, then a = b
  *  Left : if c⋆a = c⋆b, then a = b
  */
-private sealed interface CancellativeCore<A> {
+private sealed interface CancellativeCore<A: Any> {
     val op: BinOp<A>
     val tripleArb: Arb<Triple<A, A, A>>
     val eq: Eq<A>
@@ -25,8 +25,8 @@ private sealed interface CancellativeCore<A> {
 
     suspend fun rightCancelCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val ac = op.combine(a, c)
-            val bc = op.combine(b, c)
+            val ac = op(a, c)
+            val bc = op(b, c)
             if (eq.eqv(ac, bc)) {
                 withClue(rightFailureMessage(a, b, c, ac, bc)) {
                     check(eq.eqv(a, b))
@@ -39,10 +39,10 @@ private sealed interface CancellativeCore<A> {
         a: A, b: A, c: A,
         ac: A, bc: A
     ): () -> String = {
-        val sa = pr.render(a);
-        val sb = pr.render(b);
+        val sa = pr.render(a)
+        val sb = pr.render(b)
         val sc = pr.render(c)
-        val sac = pr.render(ac);
+        val sac = pr.render(ac)
         val sbc = pr.render(bc)
         buildString {
             appendLine("Right cancellation failed:")
@@ -64,8 +64,8 @@ private sealed interface CancellativeCore<A> {
 
     suspend fun leftCancelCheck() {
         checkAll(tripleArb) { (a, b, c) ->
-            val ca = op.combine(c, a)
-            val cb = op.combine(c, b)
+            val ca = op(c, a)
+            val cb = op(c, b)
             if (eq.eqv(ca, cb)) {
                 withClue(leftFailureMessage(a, b, c, ca, cb)) {
                     check(eq.eqv(a, b))
@@ -104,7 +104,7 @@ private sealed interface CancellativeCore<A> {
 }
 
 /** Only right-cancellative: if a⋆c = b⋆c then a = b. */
-class RightCancellativeLaw<A>(
+class RightCancellativeLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -125,7 +125,7 @@ class RightCancellativeLaw<A>(
 }
 
 /** Only left-cancellative: if c⋆a = c⋆b then a = b */
-class LeftCancellativeLaw<A>(
+class LeftCancellativeLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,
@@ -146,7 +146,7 @@ class LeftCancellativeLaw<A>(
 }
 
 /** Both directions (cancellative) */
-class CancellativeLaw<A>(
+class CancellativeLaw<A: Any>(
     override val op: BinOp<A>,
     override val tripleArb: Arb<Triple<A, A, A>>,
     override val eq: Eq<A>,

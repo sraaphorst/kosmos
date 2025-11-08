@@ -30,7 +30,7 @@ typealias BisymmetricLaw<A> = MedialLaw<A>
  *     xy = (x) + (y)
  * where + is addition in an abelian group and
  */
-class MedialLaw<A>(
+class MedialLaw<A: Any>(
     private val op: BinOp<A>,
     private val arb: Arb<Pair<Pair<A, A>, Pair<A, A>>>,
     private val eq: Eq<A>,
@@ -54,13 +54,13 @@ class MedialLaw<A>(
             val (a, b) = abPair
             val (c, d) = cdPair
 
-            val ab = op.combine(a, b)
-            val cd = op.combine(c, d)
-            val left = op.combine(ab, cd)
+            val ab = op(a, b)
+            val cd = op(c, d)
+            val left = op(ab, cd)
 
-            val ac = op.combine(a, c)
-            val bd = op.combine(b, d)
-            val right = op.combine(ac, bd)
+            val ac = op(a, c)
+            val bd = op(b, d)
+            val right = op(ac, bd)
 
             withClue(failureMessage(a, b, c, d, ab, cd, ac, bd, left, right)) {
                 check(eq.eqv(left, right))

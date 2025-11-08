@@ -12,7 +12,7 @@ import org.vorpal.kosmos.relations.Relation
 import org.vorpal.kosmos.testing.distinct
 
 /** Connexity (Totality): a≠b ⇒ R(a,b) ∨ R(b,a) */
-class ConnexityLaw<A>(
+class ConnexityLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
     private val eq: Eq<A>,
@@ -35,7 +35,7 @@ class ConnexityLaw<A>(
     override suspend fun test() {
         checkAll(pairArb.distinct(eq)) { (a, b) ->
             withClue(failureMessage(a, b)) {
-                check(rel.rel(a, b) || rel.rel(b, a))
+                check(rel(a, b) || rel(b, a))
             }
         }
     }

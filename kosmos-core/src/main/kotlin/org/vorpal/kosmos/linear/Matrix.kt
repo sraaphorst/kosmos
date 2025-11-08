@@ -5,7 +5,7 @@ import org.vorpal.kosmos.algebra.structures.Field
 /**
  * A standard matrix over a given field F.
  */
-class Matrix<F>(
+class Matrix<F: Any>(
     rows: Int,
     cols: Int,
     val field: Field<F>,

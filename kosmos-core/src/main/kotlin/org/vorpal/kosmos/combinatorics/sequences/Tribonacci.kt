@@ -26,7 +26,7 @@ private object TribonacciRecurrence: CachedLinearRecurrenceImplementation<BigInt
     initialValues = listOf(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE),
     selectors = listOf(-1, -2, -3),
     coefficients = listOf(1, 1, 1),
-    zero = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    constantTerm = BigInteger.ZERO,
+    multiply = Action { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )

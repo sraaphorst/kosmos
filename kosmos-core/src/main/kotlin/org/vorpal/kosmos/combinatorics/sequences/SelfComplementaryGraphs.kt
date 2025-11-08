@@ -29,7 +29,7 @@ object SelfComplementaryGraphs :
 
 private object SelfComplementaryClosedForm : CachedClosedFormImplementation<BigInteger>() {
     override fun closedFormCalculator(n: Int): BigInteger = when {
-        n % 4 == 0 || n % 4 == 1 -> BigInteger.TWO.pow(n * (n - 1) / 4)
+        n % 4 == 0 || n % 4 == 1 -> BigInteger.ONE.shl(n * (n - 1) / 4)
         else -> BigInteger.ZERO
     }
 }

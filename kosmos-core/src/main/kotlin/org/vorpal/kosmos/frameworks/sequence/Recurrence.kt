@@ -3,14 +3,13 @@ package org.vorpal.kosmos.frameworks.sequence
 import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.core.ops.BinOp
 import java.util.concurrent.ConcurrentHashMap
-import kotlin.math.absoluteValue
 
 /**
  * Recurrences are sequences that have a recursive definition, and possibly a
  * closed form definition. When treated as sequences, they will rely on the recursive
  * definition.
  */
-interface Recurrence<T> : Sequence<T> {
+interface Recurrence<T: Any> : Sequence<T> {
     /**
      * Convenience method to access the nth term of the recurrence.
      */
@@ -29,7 +28,7 @@ interface Recurrence<T> : Sequence<T> {
  * Automatically inherits need to implement recursiveTerm.
  * Has ability to clear cache.
  */
-interface CachedRecurrence<T> : Recurrence<T> {
+interface CachedRecurrence<T: Any> : Recurrence<T> {
     fun clearRecurrenceCache()
 }
 
@@ -38,7 +37,7 @@ interface CachedRecurrence<T> : Recurrence<T> {
  * If this class is subclassed or implemented, recursiveCalculator must dictate how to calculate
  * any term in this sequence.
  */
-abstract class CachedRecurrenceImplementation<T> : CachedRecurrence<T> {
+abstract class CachedRecurrenceImplementation<T: Any> : CachedRecurrence<T> {
     private val recurrenceCache = ConcurrentHashMap<Int, T>()
 
     /**
@@ -67,31 +66,35 @@ abstract class CachedRecurrenceImplementation<T> : CachedRecurrence<T> {
 
 
 /**
- * A convenience cached linear recurrence where the previous k values are used to calculate the nth value.
+ * A convenience cached linear recurrence where the previous k values and a scalar term
+ * are used to calculate the nth value. Let `S` be the sequence.
+ *
  * We must supply:
- * - At minimum k initial values
- * - A list of selectors (must all be negative) of the indices of the previous values to use in the recurrence.
- *   Note that the maximum absolute value must be at most the size of the initialValues.
- * - A list of k coefficients of some type S to serve as the linear multipliers of the previous k terms
- * - The equivalent of a zero in the values of the sequence.
- * - An action of a coefficient S by a sequence value T.
- * - A binary operation to combine two values of the sequence.
- * In this way, a sequence can be seen as an R-Module T being acted on by S.
+ * @param initialValues The initial values of the sequence, i.e. `S[i] = initialValues[i]` for `i ∈ initialValues.size`.
+ * @param selectors The offset of the selectors to calculate the `n`th term, e.g. `(-1, -2)` indicates that
+ *                  `S[n]` is a linear function of `S[n-1]` and `S[n-2]`.
+ *                  Note that the values must all be negative,
+ *                  and `max(-selectors)` must be at most `initialValues.size`.
+ * @param coefficients The coefficients for the terms chosen by the `selectors`.
+ * @param constantTerm A constant term used in the linear recurrence, typically 0.
+ * @param multiply An action taking a coefficient and applying it to a sequence term.
+ *                 Most typically, this would be mapping the coefficient to the type of `T` and multiplying.
+ * @param add An action that adds two objects of type `T` together, to combine the terms of the linear relation.
  */
-abstract class CachedLinearRecurrenceImplementation<T, S>(
+abstract class CachedLinearRecurrenceImplementation<T: Any, S: Any>(
     val initialValues: List<T>,
     val selectors: List<Int>,
     val coefficients: List<S>,
-    val zero: T,
+    val constantTerm: T,
     val multiply: Action<S, T>, // defines an apply(S, T) -> T
-    val add: BinOp<T>           // defines a combine(T, T) -> T
+    val add: BinOp<T> // defines a combine(T, T) -> T
 ) : CachedRecurrenceImplementation<T>() {
     protected val windowSize: Int = initialValues.size
 
     init {
         require(selectors.isNotEmpty()) { "Linear recurrence requires recurrence selectors." }
-        val maxLookback = selectors.maxOf { it.absoluteValue }
         require(selectors.all { it < 0 }) { "All selectors must be negative." }
+        val maxLookback = selectors.maxOf { -it }
         require(maxLookback <= windowSize)
         { "Linear recurrence requires at least $maxLookback initial values, but only $windowSize provided." }
         require(coefficients.size == selectors.size)
@@ -100,11 +103,11 @@ abstract class CachedLinearRecurrenceImplementation<T, S>(
 
     override fun recursiveCalculator(n: Int): T = when {
         n < windowSize -> initialValues[n]
-        else -> selectors.indices.fold(zero) { acc, i ->
+        else -> selectors.indices.fold(constantTerm) { acc, i ->
             val coefficient = coefficients[i]
             val termIdx = n + selectors[i]
             val prevTerm = this(termIdx)
-            add.combine(acc, multiply.apply(coefficient, prevTerm))
+            add(acc, multiply(coefficient, prevTerm))
         }
     }
 }

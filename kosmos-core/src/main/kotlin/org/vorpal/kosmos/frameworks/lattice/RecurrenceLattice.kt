@@ -8,7 +8,7 @@ import java.math.BigInteger
  * Provides `index(n)`, `iterate()`, `row(k)`, `column(k)`, etc.
  * The sequence should be infinite and 1-based (i.e., element at index 0 is ignored).
  */
-class RecurrenceLattice<T> private constructor(
+class RecurrenceLattice<T: Any> private constructor(
     val name: String,
     val recurrence: Recurrence<T>,
     val indexConverter: (Int) -> Int = { it },

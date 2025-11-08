@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.relations.Relation
 
-private sealed interface QuasiReflexivityCore<A> {
+private sealed interface QuasiReflexivityCore<A: Any> {
     val rel: Relation<A>
     val pairArb: Arb<Pair<A, A>>
     val pr: Printable<A>
@@ -18,9 +18,9 @@ private sealed interface QuasiReflexivityCore<A> {
 
     suspend fun leftQuasiReflexivityCheck() {
         checkAll(pairArb) { (a, b) ->
-            if (rel.rel(a, b)) {
+            if (rel(a, b)) {
                 withClue(leftFailureMessage(a, b)) {
-                    check(rel.rel(a, a))
+                    check(rel(a, a))
                 }
             }
         }
@@ -34,9 +34,9 @@ private sealed interface QuasiReflexivityCore<A> {
 
     suspend fun rightQuasiReflexivityCheck() {
         checkAll(pairArb) { (a, b) ->
-            if (rel.rel(a, b)) {
+            if (rel(a, b)) {
                 withClue(rightFailureMessage(a, b)) {
-                    check(rel.rel(b, b))
+                    check(rel(b, b))
                 }
             }
         }
@@ -50,7 +50,7 @@ private sealed interface QuasiReflexivityCore<A> {
 }
 
 /** Left quasi-reflexivity: a R b ⇒ a R a */
-class LeftQuasiReflexivityLaw<A>(
+class LeftQuasiReflexivityLaw<A: Any>(
     override val rel: Relation<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val pr: Printable<A> = Printable.default(),
@@ -71,7 +71,7 @@ class LeftQuasiReflexivityLaw<A>(
 }
 
 /** Right quasi-reflexivity: a R b ⇒ b R b */
-class RightQuasiReflexivityLaw<A>(
+class RightQuasiReflexivityLaw<A: Any>(
     override val rel: Relation<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val pr: Printable<A> = Printable.default(),
@@ -95,7 +95,7 @@ class RightQuasiReflexivityLaw<A>(
  * * a R b ⇒ a R a
  * * a R b ⇒ b R b
  */
-class QuasiReflexivityLaw<A>(
+class QuasiReflexivityLaw<A: Any>(
     override val rel: Relation<A>,
     override val pairArb: Arb<Pair<A, A>>,
     override val pr: Printable<A> = Printable.default(),
