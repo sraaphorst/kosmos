@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.core
 
+import kotlin.collections.emptyList
+
 /**
  * FiniteSets must be created through their companion object builders.
  * They are primarily used for their algebraic and combinatorics role,
@@ -322,7 +324,7 @@ sealed interface FiniteSet<A>: Iterable<A> {
     companion object {
         fun <A> ordered(elements: Iterable<A>): Ordered<A> {
             val distinctElements = elements.distinct()
-            return Ordered(distinctElements.toSet(), distinctElements)
+            return Ordered(distinctElements.toSet(), distinctElements.distinct())
         }
 
         fun <A> ordered(vararg elements: A): Ordered<A> =
@@ -344,7 +346,10 @@ sealed interface FiniteSet<A>: Iterable<A> {
         fun <A> unordered(vararg elements: A): Unordered<A> =
             unordered(elements.asIterable())
 
-        fun <A> empty(): Ordered<A> = ordered(emptyList())
+        //
+        fun <A> empty(): Ordered<A> = emptyOrdered()
+        fun <A> emptyUnordered(): Unordered<A> = unordered(emptyList())
+        fun <A> emptyOrdered(): Ordered<A> = ordered(emptyList())
 
         fun <A> singleton(a: A): FiniteSet<A> = ordered(listOf(a))
 
@@ -387,7 +392,6 @@ sealed interface FiniteSet<A>: Iterable<A> {
     }
 }
 
-// Extension functions for better interoperability.
 // Extension functions for better interoperability
 fun <A> Iterable<A>.toUnorderedFiniteSet(): FiniteSet.Unordered<A> = FiniteSet.unordered(this)
 fun <A> Iterable<A>.toOrderedFiniteSet(): FiniteSet.Ordered<A> = FiniteSet.ordered(this)
@@ -402,12 +406,9 @@ operator fun <A> FiniteSet<A>.minus(element: A): FiniteSet<A> = this - FiniteSet
 
 // Functional combinators
 fun <A, B> FiniteSet<A>.flatMap(transform: (A) -> FiniteSet<B>): FiniteSet<B> = when (this) {
-    is FiniteSet.Ordered -> {
-        val result = order.flatMap { transform(it).order }
-        FiniteSet.ordered(result)
-    }
-    is FiniteSet.Unordered -> {
-        val result = backing.flatMap { transform(it).backing }
-        FiniteSet.unordered(result)
-    }
+    is FiniteSet.Ordered ->
+        FiniteSet.ordered(order.flatMap { transform(it).order })
+    is FiniteSet.Unordered ->
+        FiniteSet.unordered( backing.flatMap { transform(it).backing })
 }
+
