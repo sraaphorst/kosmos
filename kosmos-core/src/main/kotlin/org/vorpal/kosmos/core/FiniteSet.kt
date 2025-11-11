@@ -404,11 +404,11 @@ fun <A> Sequence<A>.toOrderedFiniteSet(): FiniteSet.Ordered<A> = FiniteSet.order
 operator fun <A> FiniteSet<A>.plus(element: A): FiniteSet<A> = this + listOf(element)
 operator fun <A> FiniteSet<A>.minus(element: A): FiniteSet<A> = this - FiniteSet.singleton(element)
 
-// Functional combinators
-fun <A, B> FiniteSet<A>.flatMap(transform: (A) -> FiniteSet<B>): FiniteSet<B> = when (this) {
+// Functional combinators: this is, in essence, flatMap, but it collides with Kotlin's flatMap on
+// iterators, and wreaks havoc when imported. Most of the time, it should not even be necessary.
+inline fun <A, B> FiniteSet<A>.bind(transform: (A) -> FiniteSet<B>): FiniteSet<B> = when (this) {
     is FiniteSet.Ordered ->
         FiniteSet.ordered(order.flatMap { transform(it).order })
     is FiniteSet.Unordered ->
         FiniteSet.unordered( backing.flatMap { transform(it).backing })
 }
-

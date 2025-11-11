@@ -2,6 +2,7 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.functional.datastructures.Either
 
 class AdjacencySetUndirectedGraph<V: Any> private constructor(
     override val vertices: FiniteSet.Unordered<V>,
@@ -58,8 +59,10 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
      * 2. e is not in this graph.
      */
     override fun toComplementGraph(): AdjacencySetUndirectedGraph<V> {
-        val complementAdjacencies = vertices.associateWith { v -> (vertices - adjacency.getValue(v)) - v }
-        val edges = complementAdjacencies.entries.flatMap { (v, adjList) -> adjList.map { u -> UndirectedEdge(v, u) } }
+        val complementAdjacencies = vertices.associateWith { v ->
+            (vertices - adjacency.getValue(v)) - v }
+        val edges = complementAdjacencies.entries.flatMap { (v, adjList) ->
+            adjList.map { u -> UndirectedEdge(v, u) } }
             .toUnorderedFiniteSet()
         return of(vertices, edges)
     }
@@ -91,6 +94,37 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
         return of(vSet, (eSet1 + eSet2).toUnorderedFiniteSet())
     }
 
+    override infix fun <W: Any> disjointUnion(other: UndirectedGraph<W>): AdjacencySetUndirectedGraph<Either<V, W>> {
+        val vSet = (vertices.map { v -> Either.leftAs<V, W>(v) } +
+                other.vertices.map { v -> Either.rightAs<V, W>(v) })
+            .toUnorderedFiniteSet()
+
+        val thisEdges = edges.map { (u, v) ->
+            UndirectedEdge(Either.leftAs<V, W>(u), Either.leftAs<V, W>(v)) }
+        val otherEdges = other.edges.map { (u, v) ->
+            UndirectedEdge(Either.rightAs<V, W>(u), Either.rightAs<V, W>(v)) }
+        val allEdges = (thisEdges + otherEdges).toUnorderedFiniteSet()
+        return of(vSet, allEdges)
+    }
+
+    override infix fun <W: Any> join(other: UndirectedGraph<W>): AdjacencySetUndirectedGraph<Either<V, W>> {
+        val duGraph = this disjointUnion other
+
+        // Add all the edges between the two graphs.
+        val newEdges = this.vertices.flatMap { v ->
+            other.vertices.map { u ->
+                UndirectedEdge(Either.left(v), Either.right(u)) } }
+            .toUnorderedFiniteSet()
+
+        return of(duGraph.vertices, (duGraph.edges + newEdges).toUnorderedFiniteSet())
+    }
+
+    override infix fun overlay(other: UndirectedGraph<V>): AdjacencySetUndirectedGraph<V> {
+        val vSet = (vertices + other.vertices).toUnorderedFiniteSet()
+        val allEdges = (edges + other.edges).toUnorderedFiniteSet()
+        return of(vSet, allEdges)
+    }
+
     override fun <W : Any> mapVertices(
         f: (V) -> W
     ): AdjacencySetUndirectedGraph<W> {
@@ -103,14 +137,9 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
 
     override fun canonicalizeVertices(): Pair<AdjacencySetUndirectedGraph<Int>, Map<Int, V>> {
         val ordered = vertices.toOrdered()
-        val vToIndex: Map<V, Int> =
-            ordered.order.withIndex().associate { (i, v) -> v to i }
-
+        val vToIndex = ordered.order.withIndex().associate { (i, v) -> v to i }
         val g2 = mapVertices { v: V -> vToIndex.getValue(v) }
-
-        val indexToV: Map<Int, V> =
-            vToIndex.entries.associate { (v, i) -> i to v }
-
+        val indexToV = vToIndex.entries.associate { (v, i) -> i to v }
         return g2 to indexToV
     }
 
@@ -121,7 +150,7 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
         ): AdjacencySetUndirectedGraph<V> {
 
             // Build list of (vertex, neighbor) pairs.
-            val incidentPairs: List<Pair<V, V>> =
+            val incidentPairs =
                 edges.flatMap { e ->
                     val (u, v) = e
                     require(u in vertices) { "Edge $e uses vertex $u, which is not in this graph's vertex set." }
@@ -130,11 +159,28 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
                 }
 
             // Group neighbors by vertex: Map<V, List<V>>.
-            val incidentMap: Map<V, List<V>> = incidentPairs.groupBy({ it.first }, { it.second })
-            val adjacencies: Map<V, FiniteSet.Unordered<V>> = vertices
+            val incidentMap = incidentPairs.groupBy({ it.first }, { it.second })
+            val adjacencies = vertices
                 .associateWith { v -> FiniteSet.unordered(incidentMap[v] ?: emptyList()) }
 
             return AdjacencySetUndirectedGraph(vertices.toUnordered(), adjacencies)
         }
+
+        fun <V: Any> empty() = of(FiniteSet.empty(), FiniteSet.empty<UndirectedEdge<V>>())
+
+        fun <V: Any> edgeless(vertices: FiniteSet<V>): AdjacencySetUndirectedGraph<V> =
+            of(vertices.toUnordered(), FiniteSet.empty())
+
+        fun <V: Any> complete(vertices: FiniteSet<V>): AdjacencySetUndirectedGraph<V> {
+            val edges = vertices.flatMap { v ->
+                vertices.mapNotNull { u -> if (v == u) null else UndirectedEdge(u, v) } }
+            return of(vertices.toUnordered(), edges.toUnorderedFiniteSet())
+        }
+
+        fun complete(n: Int): AdjacencySetUndirectedGraph<Int> =
+            complete((0 until n).toUnorderedFiniteSet())
+
+        fun <V: Any> k1(v: V): AdjacencySetUndirectedGraph<V> =
+            complete(FiniteSet.unordered(v))
     }
 }

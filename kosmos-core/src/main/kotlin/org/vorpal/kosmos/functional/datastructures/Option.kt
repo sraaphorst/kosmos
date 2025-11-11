@@ -53,8 +53,8 @@ fun <A> Option<A>.filter(predicate: (A) -> Boolean): Option<A> = when (this) {
 }
 
 fun <L, A> Option<A>.toEither(onNone: () -> L): Either<L, A> = when (this) {
-    is Option.None -> Either.left(onNone())
-    is Option.Some -> Either.right(value)
+    is Option.None -> Either.Left(onNone())
+    is Option.Some -> Either.Right(value)
 }
 
 fun <A, B> ((A) -> B).liftOption(): (Option<A>) -> Option<B> =
