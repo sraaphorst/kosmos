@@ -1,8 +1,12 @@
 package org.vorpal.kosmos.graphs
-// EMPTY GRAPH
+
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
 
+/**
+ * Vertex types for the corona product of two graphs.
+ * Note that this is equivalent: CoronaVertex<V, W> ≅ Either<V, Pair<V, W>>.
+ */
 sealed interface CoronaVertex<V, W> {
     data class Center<V, W>(val v: V) : CoronaVertex<V, W>
     data class Satellite<V, W>(val center: V, val w: W) : CoronaVertex<V, W>
@@ -162,7 +166,7 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductBidirectional(
  *
  *  There is a lot of casting in here, but that is because there is an issue with
  */
-private fun <V : Any, W : Any, EV: Edge<V>, EW: Edge<W>, E : Edge<CoronaVertex<V, W>>, G> coronaProductImpl(
+private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex<V, W>>, G> coronaProductImpl(
     vertices: FiniteSet<V>,
     edges: FiniteSet<EV>,
     otherVertices: FiniteSet<W>,
@@ -173,19 +177,19 @@ private fun <V : Any, W : Any, EV: Edge<V>, EW: Edge<W>, E : Edge<CoronaVertex<V
     satelliteIn: Boolean,
     satelliteOut: Boolean
 ): G {
-    val centerVertices =
-        vertices.map { v -> CoronaVertex.Center<V, W>(v) as CoronaVertex<V, W> }
+    val centerVertices: FiniteSet<CoronaVertex<V, W>> =
+        vertices.map { v -> CoronaVertex.Center(v) }
 
-    val satelliteVertices =
+    val satelliteVertices: FiniteSet<CoronaVertex<V, W>> =
         vertices.flatMap { v ->
-            otherVertices.map { w -> CoronaVertex.Satellite<V, W>(v, w) as CoronaVertex<V, W> }
-        }
+            otherVertices.map { w -> CoronaVertex.Satellite(v, w) }
+        }.toUnorderedFiniteSet()
 
     val centerEdges: List<E> =
         edges.toList().map { (u, v) ->
             createEdge(
-                CoronaVertex.Center<V, W>(u) as CoronaVertex<V, W>,
-                CoronaVertex.Center<V, W>(v) as CoronaVertex<V, W>
+                CoronaVertex.Center(u),
+                CoronaVertex.Center(v)
             )
         }
 
@@ -193,8 +197,8 @@ private fun <V : Any, W : Any, EV: Edge<V>, EW: Edge<W>, E : Edge<CoronaVertex<V
         vertices.toList().flatMap { v ->
             otherEdges.toList().map { (w1, w2) ->
                 createEdge(
-                    CoronaVertex.Satellite<V, W>(v, w1) as CoronaVertex<V, W>,
-                    CoronaVertex.Satellite<V, W>(v, w2) as CoronaVertex<V, W>
+                    CoronaVertex.Satellite(v, w1),
+                    CoronaVertex.Satellite(v, w2)
                 )
             }
         }
@@ -204,39 +208,33 @@ private fun <V : Any, W : Any, EV: Edge<V>, EW: Edge<W>, E : Edge<CoronaVertex<V
             vertices.toList().flatMap { v ->
                 otherVertices.toList().map { w ->
                     createEdge(
-                        CoronaVertex.Center<V, W>(v) as CoronaVertex<V, W>,
-                        CoronaVertex.Satellite<V, W>(v, w) as CoronaVertex<V, W>
+                        CoronaVertex.Center(v),
+                        CoronaVertex.Satellite(v, w)
                     )
                 }
             }
         } else emptyList()
 
-    val satelliteOutEdges: List<E> =
+    val satelliteOutEdges =
         if (isDirected && satelliteOut) {
             vertices.toList().flatMap { v ->
                 otherVertices.toList().map { w ->
                     createEdge(
-                        CoronaVertex.Satellite<V, W>(v, w) as CoronaVertex<V, W>,
-                        CoronaVertex.Center<V, W>(v) as CoronaVertex<V, W>
+                        CoronaVertex.Satellite(v, w),
+                        CoronaVertex.Center(v)
                     )
                 }
             }
         } else emptyList()
 
-    val allVertices =
-        (centerVertices + satelliteVertices).toUnorderedFiniteSet()
-
-    // Avoid the FiniteSet `+` chain, just collect and wrap once.
-    val allEdgesList: List<E> = buildList<E> {
+    val allVertices = (centerVertices + satelliteVertices).toUnorderedFiniteSet()
+    val allEdges = buildList {
         addAll(centerEdges)
         addAll(satelliteEdges)
         addAll(satelliteInEdges)
         addAll(satelliteOutEdges)
-    }
-    val allEdges: FiniteSet.Unordered<E> =
-        allEdgesList.toUnorderedFiniteSet()
+    }.toUnorderedFiniteSet()
 
-    // Build the generic graph.
     return buildGraph(allVertices, allEdges)
 }
 

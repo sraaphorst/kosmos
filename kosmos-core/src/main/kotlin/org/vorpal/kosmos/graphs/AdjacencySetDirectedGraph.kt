@@ -126,7 +126,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
     override fun toUndirectedGraph(): AdjacencySetUndirectedGraph<V> =
         AdjacencySetUndirectedGraph.of(vertices, edges.map(DirectedEdge<V>::toUndirectedEdge))
 
-    override fun <W: Any> cartesianProduct(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Pair<V, W>> {
+    override infix fun <W: Any> cartesianProduct(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Pair<V, W>> {
         val vSet = vertices.cartesianProduct(other.vertices).toUnordered()
 
         // Add edges from this graph, i.e. for each edge (u1, u2) in this graph, ((u1, v), (u2, v)) is

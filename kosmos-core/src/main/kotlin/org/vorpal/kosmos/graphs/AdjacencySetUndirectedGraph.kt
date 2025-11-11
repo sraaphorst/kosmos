@@ -74,7 +74,7 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
             edges.flatMap { it.toDirectedEdges().toList() }.toUnorderedFiniteSet()
         )
 
-    override fun <W: Any> cartesianProduct(other: UndirectedGraph<W>): AdjacencySetUndirectedGraph<Pair<V, W>> {
+    override infix fun <W: Any> cartesianProduct(other: UndirectedGraph<W>): AdjacencySetUndirectedGraph<Pair<V, W>> {
         val vSet = vertices.cartesianProduct(other.vertices).toUnorderedFiniteSet()
 
         // Add edges from this graph, i.e. for each edge {u1, u2} in this graph, {(u1, v), (u2, v)} is
@@ -137,22 +137,4 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
             return AdjacencySetUndirectedGraph(vertices.toUnordered(), adjacencies)
         }
     }
-}
-
-//fun main() {
-//    val vertices = (0 until 18).toUnorderedFiniteSet()
-//    val edges = (0 until 10 step 2).flatMap { u -> (0 until 10 step 3).map { v -> UndirectedEdge(u, v) } }.toUnorderedFiniteSet()
-//    val graph = AdjacencySetUndirectedGraph.of(vertices, edges)
-//    val line_line_graph = graph.toLineGraph().toLineGraph()
-//    val edgeSet: FiniteSet<UndirectedEdge<UndirectedEdge<UndirectedEdge<Int>>>> = line_line_graph.edges
-//}
-
-fun main() {
-    val vertices = FiniteSet.unordered(0, 1)
-    val edges = FiniteSet.unordered(UndirectedEdge(0, 1))
-    val k2 = AdjacencySetUndirectedGraph.of(vertices, edges)
-    val c4 = k2.cartesianProduct(k2)
-    println(c4.edges.backing)
-    val c3norm = c4.mapVertices { (u, v) -> u + 2 * v }
-    println(c3norm.edges.backing)
 }

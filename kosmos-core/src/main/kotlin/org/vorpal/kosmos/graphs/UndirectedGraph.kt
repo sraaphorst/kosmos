@@ -37,7 +37,8 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     fun toDirectedGraph(): DirectedGraph<V>
 
     /**
-     * Constructs `G × H`, the Cartesian product of this graph `G` and another graph `H`.
+     * Constructs `G × H` (alternatively written `G □ H`),
+     * the Cartesian product of this graph `G` and another graph `H`.
      *
      * The vertex set is the Cartesian product of the vertex sets:
      * `V(G × H) = V(G) × V(H)`.
@@ -46,7 +47,7 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      *  1. `u1 = u2` and `{v1, v2} ∈ E(H)`, or
      *  2. `{u1, u2} ∈ E(G)` and `v1 = v2`.
      */
-    fun <W: Any> cartesianProduct(other: UndirectedGraph<W>): UndirectedGraph<Pair<V, W>>
+    infix fun <W: Any> cartesianProduct(other: UndirectedGraph<W>): UndirectedGraph<Pair<V, W>>
 
     /**
      * Functorial map on the vertex type of this undirected graph.
