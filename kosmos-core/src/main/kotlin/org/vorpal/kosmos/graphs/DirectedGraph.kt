@@ -2,6 +2,7 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.neighborhood.Neighborhood
+import org.vorpal.kosmos.functional.datastructures.Either
 
 
 sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
@@ -53,6 +54,148 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      * Turn this directed graph into an undirected graph by replacing each edge with an undirected edge.
      */
     fun toUndirectedGraph(): UndirectedGraph<V>
+
+    /**
+     * Disjoint union `G ⊔ H` of this directed graph `G` with another directed graph `H`.
+     *
+     * Vertices:
+     *  - every vertex `v ∈ V(G)` becomes `Either.Left(v)`,
+     *  - every vertex `w ∈ V(H)` becomes `Either.Right(w)`.
+     *
+     * Formally:
+     *   `V(G ⊔ H) = { Left(v) : v ∈ V(G) } ∪ { Right(w) : w ∈ V(H) }`.
+     *
+     * Edges:
+     *  - every arc `(u, v) ∈ E(G)` becomes `(Left(u), Left(v))`,
+     *  - every arc `(x, y) ∈ E(H)` becomes `(Right(x), Right(y))`,
+     *  - no edges between the `Left` and `Right` parts are added.
+     *
+     * This is the categorical coproduct of `G` and `H` in the category of directed graphs,
+     * made explicit in the type via `Either<V, W>`.
+     */
+    infix fun <W: Any> disjointUnion(other: DirectedGraph<W>): DirectedGraph<Either<V, W>>
+
+    /**
+     * Join `G + H` (also written `G ∇ H`, `G ⋈ H`) of this directed graph `G` with another directed graph `H`,
+     * on a disjoint vertex universe.
+     *
+     * It is defined as the disjoint union `G ⊔ H` (using `Either<V, W>` to tag vertices),
+     * plus additional "cross edges" between the two parts.
+     *
+     * Vertex set:
+     *   - `V(G ⋈ H) = V(G ⊔ H) = { Left(v) : v ∈ V(G) } ∪ { Right(w) : w ∈ V(H) }`.
+     *
+     * Edges:
+     *   - all edges of `G`, relabelled into the `Left` part:
+     *       `(u, v) ∈ E(G)  ↦  (Left(u), Left(v))`,
+     *   - all edges of `H`, relabelled into the `Right` part:
+     *       `(x, y) ∈ E(H)  ↦  (Right(x), Right(y))`,
+     *   - plus, for each pair `(v, w)` with `v ∈ V(G)`, `w ∈ V(H)`,
+     *     cross edges as follows:
+     *
+     *       joinIn (this function):
+     *         adds all arcs `Left(v) → Right(w)`
+     *
+     *       joinOut:
+     *         adds all arcs `Right(w) → Left(v)`
+     *
+     *       join:
+     *         adds arcs in both directions:
+     *           `Left(v) → Right(w)` and `Right(w) → Left(v)`.
+     *
+     * This matches the usual graph-theoretic "join of disjoint graphs", but made
+     * type-safe by tagging vertices with `Either<V, W>`. Vertices from `G` and `H`
+     * are always treated as distinct, even if the underlying values are equal.
+     */
+    infix fun <W: Any> joinIn(other: DirectedGraph<W>): DirectedGraph<Either<V, W>>
+
+    /**
+     * Join `G + H` (also written `G ∇ H`, `G ⋈ H`) of this directed graph `G` with another directed graph `H`,
+     * on a disjoint vertex universe.
+     *
+     * It is defined as the disjoint union `G ⊔ H` (using `Either<V, W>` to tag vertices),
+     * plus additional "cross edges" between the two parts.
+     *
+     * Vertex set:
+     *   - `V(G ⋈ H) = V(G ⊔ H) = { Left(v) : v ∈ V(G) } ∪ { Right(w) : w ∈ V(H) }`.
+     *
+     * Edges:
+     *   - all edges of `G`, relabelled into the `Left` part:
+     *       `(u, v) ∈ E(G)  ↦  (Left(u), Left(v))`,
+     *   - all edges of `H`, relabelled into the `Right` part:
+     *       `(x, y) ∈ E(H)  ↦  (Right(x), Right(y))`,
+     *   - plus, for each pair `(v, w)` with `v ∈ V(G)`, `w ∈ V(H)`,
+     *     cross edges as follows:
+     *
+     *       joinIn:
+     *         adds all arcs `Left(v) → Right(w)`
+     *
+     *       joinOut (this function):
+     *         adds all arcs `Right(w) → Left(v)`
+     *
+     *       join:
+     *         adds arcs in both directions:
+     *           `Left(v) → Right(w)` and `Right(w) → Left(v)`.
+     *
+     * This matches the usual graph-theoretic "join of disjoint graphs", but made
+     * type-safe by tagging vertices with `Either<V, W>`. Vertices from `G` and `H`
+     * are always treated as distinct, even if the underlying values are equal.
+     */
+    infix fun <W: Any> joinOut(other: DirectedGraph<W>): DirectedGraph<Either<V, W>>
+
+    /**
+     * Join `G + H` (also written `G ∇ H`, `G ⋈ H`) of this directed graph `G` with another directed graph `H`,
+     * on a disjoint vertex universe.
+     *
+     * It is defined as the disjoint union `G ⊔ H` (using `Either<V, W>` to tag vertices),
+     * plus additional "cross edges" between the two parts.
+     *
+     * Vertex set:
+     *   - `V(G ⋈ H) = V(G ⊔ H) = { Left(v) : v ∈ V(G) } ∪ { Right(w) : w ∈ V(H) }`.
+     *
+     * Edges:
+     *   - all edges of `G`, relabelled into the `Left` part:
+     *       `(u, v) ∈ E(G)  ↦  (Left(u), Left(v))`,
+     *   - all edges of `H`, relabelled into the `Right` part:
+     *       `(x, y) ∈ E(H)  ↦  (Right(x), Right(y))`,
+     *   - plus, for each pair `(v, w)` with `v ∈ V(G)`, `w ∈ V(H)`,
+     *     cross edges as follows:
+     *
+     *       joinIn:
+     *         adds all arcs `Left(v) → Right(w)`
+     *
+     *       joinOut:
+     *         adds all arcs `Right(w) → Left(v)`
+     *
+     *       join (this function):
+     *         adds arcs in both directions:
+     *           `Left(v) → Right(w)` and `Right(w) → Left(v)`.
+     *
+     * This matches the usual graph-theoretic "join of disjoint graphs", but made
+     * type-safe by tagging vertices with `Either<V, W>`. Vertices from `G` and `H`
+     * are always treated as distinct, even if the underlying values are equal.
+     */
+    infix fun <W: Any> join(other: DirectedGraph<W>): DirectedGraph<Either<V, W>>
+
+    /**
+     * Returns the overlay (edgewise union) of this graph and [other].
+     *
+     * Vertices:
+     *  - The vertex set of the result is the union of the vertex sets:
+     *    `V = V(this) ∪ V(other)`.
+     *
+     * Edges:
+     *  - The edge set of the result is the union of the edge sets:
+     *    `E = E(this) ∪ E(other)`.
+     *  - If an edge appears in both graphs, it appears only once in the result.
+     *
+     * Intuitively, this "stacks" the two graphs on top of each other over the same
+     * vertex universe.
+     *
+     * If the vertex sets are disjoint, this is isomorphic to the
+     * disjoint union of the two graphs with the same vertex labels.
+     */
+    infix fun overlay(other: DirectedGraph<V>): DirectedGraph<V>
 
     /**
      * Constructs `G × H` (alternatively written `G □ H`),

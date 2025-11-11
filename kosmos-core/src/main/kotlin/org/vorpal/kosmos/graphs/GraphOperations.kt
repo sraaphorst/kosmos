@@ -3,6 +3,7 @@ package org.vorpal.kosmos.graphs
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
+import org.vorpal.kosmos.functional.datastructures.swap
 
 /**
  * Vertex types for the corona product of two graphs.
@@ -39,9 +40,9 @@ fun <V: Any, W: Any> AdjacencySetUndirectedGraph<V>.coronaProduct(
         other.edges,
         { u, v -> UndirectedEdge(u, v) },
         { vertices, edges -> AdjacencySetUndirectedGraph.of(vertices, edges) },
-        false,
-        true,
-        true
+        isDirected = false,
+        satelliteIn = true,
+        satelliteOut = true
     )
 
 /**
@@ -72,9 +73,9 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductIn(
         other.edges,
         { u, v -> DirectedEdge(u, v) },
         { vertices, edges -> AdjacencySetDirectedGraph.of(vertices, edges) },
-        true,
-        true,
-        false
+        isDirected = true,
+        satelliteIn = true,
+        satelliteOut = false
     )
 
 /**
@@ -105,9 +106,9 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductOut(
         other.edges,
         { u, v -> DirectedEdge(u, v) },
         { vertices, edges -> AdjacencySetDirectedGraph.of(vertices, edges) },
-        true,
-        false,
-        true
+        isDirected = true,
+        satelliteIn = false,
+        satelliteOut = true
     )
 
 /**
@@ -138,9 +139,9 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductBidirectional(
         other.edges,
         { u, v -> DirectedEdge(u, v) },
         { vertices, edges -> AdjacencySetDirectedGraph.of(vertices, edges) },
-        true,
-        true,
-        true
+        isDirected = true,
+        satelliteIn = true,
+        satelliteOut = true
     )
 
 
@@ -236,3 +237,47 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
 
     return buildGraph(allVertices, allEdges)
 }
+
+/**
+ * Swap the "sides" of a bipartite-style directed graph whose vertices are tagged with [Either].
+ *
+ * This treats vertices of the form `Either.Left(v)` and `Either.Right(w)` as living on two
+ * different "sides" (or parts) of the graph, and then flips those sides by applying [Either.swap]
+ * to every vertex:
+ *
+ *  * `Left(v)` becomes `Right(v)`
+ *  * `Right(w)` becomes `Left(w)`
+ *
+ * The edge structure is preserved up to renaming of vertices: if there is an arc
+ * `Left(a) → Right(b)` in the original graph, the resulting graph will contain the arc
+ * `Right(a) → Left(b)`, and similarly for all other vertices.
+ *
+ * Algebraically, this is a graph isomorphism induced by the involution `Either<V, W> ↔ Either<W, V>`.
+ *
+ * @receiver A directed graph whose vertices are of type [Either] and naturally split into two parts.
+ * @return A new directed graph where the left and right components of each vertex have been swapped.
+ */
+fun <V : Any, W : Any> AdjacencySetDirectedGraph<Either<V, W>>.swapSides(): AdjacencySetDirectedGraph<Either<W, V>> =
+    mapVertices { eitherVertex -> eitherVertex.swap() }
+
+/**
+ * Swap the "sides" of a bipartite-style undirected graph whose vertices are tagged with [Either].
+ *
+ * This treats vertices of the form `Either.Left(v)` and `Either.Right(w)` as living on two
+ * different "sides" (or parts) of the graph, and then flips those sides by applying [Either.swap]
+ * to every vertex:
+ *
+ *  * `Left(v)` becomes `Right(v)`
+ *  * `Right(w)` becomes `Left(w)`
+ *
+ * The edge structure is preserved up to renaming of vertices: if there is an edge
+ * `{Left(a), Right(b)}` in the original graph, the resulting graph will contain the edge
+ * `{Right(a), Left(b)}`, and similarly for all other vertices.
+ *
+ * Algebraically, this is a graph isomorphism induced by the involution `Either<V, W> ↔ Either<W, V>`.
+ *
+ * @receiver A directed graph whose vertices are of type [Either] and naturally split into two parts.
+ * @return A new directed graph where the left and right components of each vertex have been swapped.
+ */
+fun <V: Any, W: Any> AdjacencySetUndirectedGraph<Either<V, W>>.swapSides(): AdjacencySetUndirectedGraph<Either<W, V>> =
+    mapVertices { eitherVertex -> eitherVertex.swap() }

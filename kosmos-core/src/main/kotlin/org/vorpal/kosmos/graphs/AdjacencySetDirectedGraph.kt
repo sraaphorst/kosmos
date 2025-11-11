@@ -2,6 +2,7 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.functional.datastructures.Either
 
 class AdjacencySetDirectedGraph<V: Any> private constructor(
     override val vertices: FiniteSet.Unordered<V>,
@@ -87,7 +88,8 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
 
     override fun inducedSubgraph(subvertices: FiniteSet<V>): DirectedGraph<V> {
         subvertices.forEach(::requireVertex)
-        val subEdges = edges.filter { edge -> edge.from in subvertices && edge.to in subvertices }.toUnordered()
+        val subEdges = edges.filter { edge ->
+            edge.from in subvertices && edge.to in subvertices }.toUnordered()
         return of(subvertices.toUnordered(), subEdges)
     }
 
@@ -108,8 +110,10 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
      * is not in this graph, then (u, v) is in the complement graph.
      */
     override fun toComplementGraph(): AdjacencySetDirectedGraph<V> {
-        val complementAdjacencies = vertices.associateWith { v -> (vertices - outAdjacency.getValue(v)) - v }
-        val edges = complementAdjacencies.entries.flatMap { (v, adjList) -> adjList.map { u -> DirectedEdge(v, u) } }
+        val complementAdjacencies = vertices
+            .associateWith { v -> (vertices - outAdjacency.getValue(v)) - v }
+        val edges = complementAdjacencies.entries
+            .flatMap { (v, adjList) -> adjList.map { u -> DirectedEdge(v, u) } }
             .toUnorderedFiniteSet()
         return of(vertices, edges)
     }
@@ -125,6 +129,60 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
      */
     override fun toUndirectedGraph(): AdjacencySetUndirectedGraph<V> =
         AdjacencySetUndirectedGraph.of(vertices, edges.map(DirectedEdge<V>::toUndirectedEdge))
+
+    override infix fun <W: Any> disjointUnion(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Either<V, W>> {
+        val vSet = (vertices.map { v -> Either.leftAs<V, W>(v) } +
+                other.vertices.map { v -> Either.rightAs<V, W>(v) })
+            .toUnorderedFiniteSet()
+
+        val thisEdges = edges.map { (u, v) ->
+            DirectedEdge(Either.leftAs<V, W>(u), Either.leftAs<V, W>(v)) }
+        val otherEdges = other.edges.map { (u, v) ->
+            DirectedEdge(Either.rightAs<V, W>(u), Either.rightAs<V, W>(v)) }
+        val allEdges = (thisEdges + otherEdges).toUnorderedFiniteSet()
+        return of(vSet, allEdges)
+    }
+
+    override infix fun <W: Any> joinIn(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Either<V, W>> =
+        joinImpl(other, leftToRight = true, rightToLeft = false)
+
+    override infix fun <W: Any> joinOut(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Either<V, W>> =
+        joinImpl(other, leftToRight = false, rightToLeft = true)
+
+    override infix fun <W: Any> join(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Either<V, W>> =
+        joinImpl(other, leftToRight = true, rightToLeft = true)
+
+    private fun <W: Any> joinImpl(other: DirectedGraph<W>,
+                                  leftToRight: Boolean,
+                                  rightToLeft: Boolean): AdjacencySetDirectedGraph<Either<V, W>> {
+        val duGraph = this disjointUnion other
+
+        val inEdgeList = if (leftToRight)
+            vertices.flatMap { v ->
+                other.vertices.map { u ->
+                    DirectedEdge(Either.left(v), Either.right(u))
+                }
+            }
+        else emptyList()
+
+        val outEdgeList = if (rightToLeft)
+            vertices.flatMap { v ->
+                other.vertices.map { u ->
+                    DirectedEdge(Either.right(u), Either.left(v))
+                }
+            }
+        else emptyList()
+
+        val allEdges = (inEdgeList + outEdgeList + duGraph.edges).toUnorderedFiniteSet()
+        return of(duGraph.vertices, allEdges)
+
+    }
+
+    override infix fun overlay(other: DirectedGraph<V>): AdjacencySetDirectedGraph<V> {
+        val vSet = (vertices + other.vertices).toUnorderedFiniteSet()
+        val allEdges = (edges + other.edges).toUnorderedFiniteSet()
+        return of(vSet, allEdges)
+    }
 
     override infix fun <W: Any> cartesianProduct(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Pair<V, W>> {
         val vSet = vertices.cartesianProduct(other.vertices).toUnordered()
@@ -165,7 +223,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
         ): AdjacencySetDirectedGraph<V> {
             val vSet = vertices.toUnordered()
 
-            val outInPairs: List<Pair<V, V>> =
+            val outInPairs =
                 edges.flatMap { e ->
                     val (from, to) = e
                     require(from in vSet) { "Arc $e originates from vertex $from, which is not in this graph's vertex set." }
@@ -175,11 +233,32 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
             val outInIncidenceMap = outInPairs.groupBy({ it.first }, { it.second })
             val outAdjacency = vSet.associateWith { v -> FiniteSet.unordered(outInIncidenceMap[v] ?: emptyList()) }
 
-            val inOutPairs: List<Pair<V, V>> = outInPairs.map { (a, b) -> b to a}
+            val inOutPairs= outInPairs.map { (a, b) -> b to a}
             val inOutIncidenceMap = inOutPairs.groupBy({ it.first }, { it.second })
-            val inAdjacency = vSet.associateWith { v -> FiniteSet.unordered(inOutIncidenceMap[v] ?: emptyList()) }
+            val inAdjacency = vSet.associateWith { v ->
+                FiniteSet.unordered(inOutIncidenceMap[v] ?: emptyList()) }
 
             return AdjacencySetDirectedGraph(vSet, outAdjacency, inAdjacency)
         }
+
+        fun <V: Any> empty() =
+            of(FiniteSet.empty(), FiniteSet.empty<DirectedEdge<V>>())
+
+        fun <V: Any> edgeless(vertices: FiniteSet<V>): AdjacencySetDirectedGraph<V> =
+            of(vertices.toUnordered(), FiniteSet.empty())
+
+        fun <V: Any> complete(vertices: FiniteSet<V>): AdjacencySetDirectedGraph<V> {
+            val edges = vertices.flatMap { v ->
+                vertices.mapNotNull { u -> if (v == u) null else DirectedEdge(u, v) } }
+            return of(vertices.toUnordered(), edges.toUnorderedFiniteSet())
+        }
+
+        fun complete(n: Int): AdjacencySetDirectedGraph<Int> =
+            complete((0 until n).toUnorderedFiniteSet())
+
+        fun <V: Any> k1(v: V): AdjacencySetDirectedGraph<V> =
+            complete(FiniteSet.unordered(v))
+
+        val k1: AdjacencySetDirectedGraph<Int> = k1(0)
     }
 }
