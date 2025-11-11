@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.toUnorderedFiniteSet
 
 class AdjacencySetDirectedGraph<V: Any> private constructor(
     override val vertices: FiniteSet.Unordered<V>,
@@ -82,6 +83,79 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
             succs.map { to -> DirectedEdge(from, to) }
         }
         FiniteSet.unordered(allEdges)
+    }
+
+    override fun inducedSubgraph(subvertices: FiniteSet<V>): DirectedGraph<V> {
+        subvertices.forEach(::requireVertex)
+        val subEdges = edges.filter { edge -> edge.from in subvertices && edge.to in subvertices }.toUnordered()
+        return of(subvertices.toUnordered(), subEdges)
+    }
+
+    /**
+     * Create the line graph of this directed graph.
+     */
+    override fun toLineGraph(): AdjacencySetDirectedGraph<DirectedEdge<V>> {
+        val vertices = edges
+        val lineEdges = edges
+            .flatMap { e1 -> edges.filter { e1 canAndThen it }
+                .map { e2 -> DirectedEdge(e1, e2) } }
+            .toUnorderedFiniteSet()
+        return of(vertices, lineEdges)
+    }
+
+    /**
+     * Create the complement of this directed graph, i.e. for every (u, v) in V x V with u ≠ v, if (u, v)
+     * is not in this graph, then (u, v) is in the complement graph.
+     */
+    override fun toComplementGraph(): AdjacencySetDirectedGraph<V> {
+        val complementAdjacencies = vertices.associateWith { v -> (vertices - outAdjacency.getValue(v)) - v }
+        val edges = complementAdjacencies.entries.flatMap { (v, adjList) -> adjList.map { u -> DirectedEdge(v, u) } }
+            .toUnorderedFiniteSet()
+        return of(vertices, edges)
+    }
+
+    /**
+     * Transpose this graph, i.e. turn all the edges around.
+     */
+    override fun toTransposeGraph(): AdjacencySetDirectedGraph<V> =
+        of(vertices, edges.map(DirectedEdge<V>::reverse))
+
+    /**
+     * Turn this directed graph into an undirected graph by replacing each edge with an undirected edge.
+     */
+    override fun toUndirectedGraph(): AdjacencySetUndirectedGraph<V> =
+        AdjacencySetUndirectedGraph.of(vertices, edges.map(DirectedEdge<V>::toUndirectedEdge))
+
+    override fun <W: Any> cartesianProduct(other: DirectedGraph<W>): AdjacencySetDirectedGraph<Pair<V, W>> {
+        val vSet = vertices.cartesianProduct(other.vertices).toUnordered()
+
+        // Add edges from this graph, i.e. for each edge (u1, u2) in this graph, ((u1, v), (u2, v)) is
+        // an edge of the new graph for all v in other.
+        val eSet1 = edges.flatMap { (u1, u2) ->
+            other.vertices.map { v -> DirectedEdge(u1 to v, u2 to v) } }
+
+        // Add edges from the other graph, i.e. for each edge (v1, v2) in other, ((u, v1), (u, v2)) is
+        // an edge of the new graph for all v in this.
+        val eSet2 = other.edges.flatMap { (v1, v2) ->
+            vertices.map { u -> DirectedEdge(u to v1, u to v2)}}
+
+        return of(vSet, (eSet1 + eSet2).toUnorderedFiniteSet())
+    }
+
+    override fun <W : Any> mapVertices(f: (V) -> W): AdjacencySetDirectedGraph<W> {
+        val newVertices = vertices.map(f).toUnorderedFiniteSet()
+        val newEdges = edges
+            .map { e -> DirectedEdge(f(e.from), f(e.to)) }
+            .toUnorderedFiniteSet()
+        return of(newVertices, newEdges)
+    }
+
+    override fun canonicalizeVertices(): Pair<AdjacencySetDirectedGraph<Int>, Map<Int, V>> {
+        val ordered = vertices.toOrdered()
+        val vToIndex = ordered.order.withIndex().associate { (i, v) -> v to i }
+        val g2 = mapVertices { v: V -> vToIndex.getValue(v) }
+        val indexToV = vToIndex.entries.associate { (v, i) -> i to v }
+        return g2 to indexToV
     }
 
     companion object {
