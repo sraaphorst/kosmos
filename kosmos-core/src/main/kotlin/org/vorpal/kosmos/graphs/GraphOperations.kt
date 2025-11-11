@@ -2,15 +2,14 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.functional.datastructures.Either
 
 /**
  * Vertex types for the corona product of two graphs.
- * Note that this is equivalent: CoronaVertex<V, W> ≅ Either<V, Pair<V, W>>.
+ * A vertex is either from the graph on the left,
+ * or from its copy of the graph on the right.
  */
-sealed interface CoronaVertex<V, W> {
-    data class Center<V, W>(val v: V) : CoronaVertex<V, W>
-    data class Satellite<V, W>(val center: V, val w: W) : CoronaVertex<V, W>
-}
+typealias CoronaVertex<V, W> = Either<V, Pair<V, W>>
 
 /**
  * Constructs the corona product `G ⊙ H` of this undirected graph `G` with another
@@ -178,18 +177,18 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
     satelliteOut: Boolean
 ): G {
     val centerVertices: FiniteSet<CoronaVertex<V, W>> =
-        vertices.map { v -> CoronaVertex.Center(v) }
+        vertices.map { v -> CoronaVertex.left(v) }.toUnorderedFiniteSet()
 
     val satelliteVertices: FiniteSet<CoronaVertex<V, W>> =
         vertices.flatMap { v ->
-            otherVertices.map { w -> CoronaVertex.Satellite(v, w) }
+            otherVertices.map { w -> CoronaVertex.right(v to w) }
         }.toUnorderedFiniteSet()
 
     val centerEdges: List<E> =
         edges.toList().map { (u, v) ->
             createEdge(
-                CoronaVertex.Center(u),
-                CoronaVertex.Center(v)
+                CoronaVertex.left(u),
+                CoronaVertex.left(v)
             )
         }
 
@@ -197,8 +196,8 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
         vertices.toList().flatMap { v ->
             otherEdges.toList().map { (w1, w2) ->
                 createEdge(
-                    CoronaVertex.Satellite(v, w1),
-                    CoronaVertex.Satellite(v, w2)
+                    CoronaVertex.right(v to w1),
+                    CoronaVertex.right(v to w2)
                 )
             }
         }
@@ -208,8 +207,8 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
             vertices.toList().flatMap { v ->
                 otherVertices.toList().map { w ->
                     createEdge(
-                        CoronaVertex.Center(v),
-                        CoronaVertex.Satellite(v, w)
+                        CoronaVertex.left(v),
+                        CoronaVertex.right(v to w)
                     )
                 }
             }
@@ -220,8 +219,8 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
             vertices.toList().flatMap { v ->
                 otherVertices.toList().map { w ->
                     createEdge(
-                        CoronaVertex.Satellite(v, w),
-                        CoronaVertex.Center(v)
+                        CoronaVertex.right(v to w),
+                        CoronaVertex.left(v)
                     )
                 }
             }
@@ -236,21 +235,4 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
     }.toUnorderedFiniteSet()
 
     return buildGraph(allVertices, allEdges)
-}
-
-fun main() {
-    val vertices = (0..5).toUnorderedFiniteSet()
-    val edges = vertices.flatMap { v -> vertices.mapNotNull { w -> if (v == w) null else UndirectedEdge(v, w) } }
-        .toUnorderedFiniteSet()
-    val graph = AdjacencySetUndirectedGraph.of(vertices, edges)
-    val coronaGraph = graph.coronaProduct(graph)
-    println("Original vertices: ${graph.vertices.size}, edges: ${graph.edges.size}")
-    println("Corona vertices: ${coronaGraph.vertices.size}, edges: ${coronaGraph.edges.size}")
-    println(coronaGraph.vertices.backing)
-    println(coronaGraph.edges.backing)
-
-    // Really be an asshole now.
-    val wtfGraph = coronaGraph.toLineGraph().toComplementGraph().coronaProduct(graph)
-    val (someSanityGraph, _) = wtfGraph.canonicalizeVertices()
-    println("Sanity graph vertices: ${someSanityGraph.vertices.size}, edges: ${someSanityGraph.edges.size}")
 }
