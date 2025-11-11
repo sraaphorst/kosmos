@@ -233,7 +233,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
             val outInIncidenceMap = outInPairs.groupBy({ it.first }, { it.second })
             val outAdjacency = vSet.associateWith { v -> FiniteSet.unordered(outInIncidenceMap[v] ?: emptyList()) }
 
-            val inOutPairs= outInPairs.map { (a, b) -> b to a}
+            val inOutPairs = outInPairs.map { (a, b) -> b to a}
             val inOutIncidenceMap = inOutPairs.groupBy({ it.first }, { it.second })
             val inAdjacency = vSet.associateWith { v ->
                 FiniteSet.unordered(inOutIncidenceMap[v] ?: emptyList()) }
