@@ -36,11 +36,43 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
         FiniteSet.unordered(allEdges)
     }
 
-    override fun inducedSubgraph(subvertices: FiniteSet<V>): UndirectedGraph<V> {
+    override fun inducedSubgraph(subvertices: FiniteSet<V>): AdjacencySetUndirectedGraph<V> {
         subvertices.forEach(::requireVertex)
         val subEdges = edges.filter { edge -> edge.u in subvertices && edge.v in subvertices }.toUnordered()
         return of(subvertices.toUnordered(), subEdges)
     }
+
+    private val componentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
+        componentsVerticesImpl { start -> bfs(start)}
+    }
+
+    private val componentsCache: FiniteSet<UndirectedGraph<V>> by lazy {
+        componentsVertexSetsCache.map(::inducedSubgraph)
+    }
+
+    override fun connectedComponentsVertexSets(): FiniteSet<FiniteSet<V>> =
+        componentsVertexSetsCache
+
+    /**
+     * Decompose this undirected graph into its (weakly) connected components.
+     *
+     * Two vertices u and v lie in the same component iff there is an undirected
+     * path between them.
+     * The result is a finite set of induced subgraphs, one for
+     * each equivalence class of vertices under this relation.
+     *
+     * Implementation:
+     *  - Repeatedly pick an unvisited vertex, run [bfs] from it, and form the
+     *    induced subgraph on the discovered vertex set.
+     *  - The results are calculated once and cached, so repeated calls to
+     *    connectedComponents do not require any additional computation.
+     *
+     * Complexity:
+     *  - Time: O(|V| + |E|) overall.
+     *  - Space: O(|V|) for bookkeeping plus the resulting component graphs.
+     */
+    override fun connectedComponents(): FiniteSet<UndirectedGraph<V>> =
+        componentsCache
 
     /**
      * Create the line graph of an undirected graph.

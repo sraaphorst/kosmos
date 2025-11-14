@@ -2,9 +2,35 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.neighborhood.Neighborhood
+import org.vorpal.kosmos.core.toUnorderedFiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
 
 
+/**
+ * A simple finite directed graph (digraph) with vertex type [V].
+ *
+ * Semantics:
+ *  - The vertex set is [vertices] (finite, no duplicates).
+ *  - The edge set [edges] is a finite set of directed edges (u → v).
+ *  - No loops: edges (v → v) are forbidden.
+ *  - No parallel arcs: at most one edge (u → v) for a given ordered pair.
+ *
+ * Provided views:
+ *  - [outNeighbors] / [outEdges]: vertices/edges reachable by one outgoing arc.
+ *  - [inNeighbors] / [inEdges]: vertices/edges that have an arc into a vertex.
+ *  - [neighbors] (from [Neighborhood]) is defined as [outNeighbors], so plain
+ *    BFS/DFS follow the direction of edges.
+ *  - [allNeighbors] unions in- and out-neighbors, giving the "underlying"
+ *    undirected adjacency used for weak connectivity.
+ *
+ * Algebraic flavor:
+ *  - Together with [overlay] and [edgeless], digraphs on a fixed vertex set
+ *    form a commutative monoid under overlay.
+ *  - Together with [disjointUnion] and [empty], all finite digraphs up to
+ *    relabelling form a commutative monoid under disjoint union.
+ *  - [cartesianProduct] gives the standard graph-theoretic Cartesian product
+ *    G □ H on digraphs.
+ */
 sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     val edges: FiniteSet.Unordered<DirectedEdge<V>>
 
@@ -16,6 +42,9 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
 
     override fun neighbors(of: V): FiniteSet.Unordered<V> =
         outNeighbors(of)
+
+    fun weakNeighbors(of: V): FiniteSet.Unordered<V> =
+        (outNeighbors(of) + inNeighbors(of)).toUnorderedFiniteSet()
 
     fun outDegree(v: V): Int = outNeighbors(v).size
 
@@ -33,6 +62,11 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
         (outNeighbors(of) + inNeighbors(of)).toUnordered()
 
     fun inducedSubgraph(subvertices: FiniteSet<V>): DirectedGraph<V>
+
+    fun weaklyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>>
+    fun weaklyConnectedComponents(): FiniteSet<DirectedGraph<V>>
+    fun stronglyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>>
+    fun stronglyConnectedComponents(): FiniteSet<DirectedGraph<V>>
 
     /**
      * Create the line graph of this directed graph.
@@ -229,6 +263,17 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
 }
 
 
+/**
+ * A simple directed edge (arc) from [from] to [to] with [from] ≠ [to].
+ *
+ * Invariants:
+ *  - No loops: `(v → v)` is not allowed.
+ *  - Equality and hashing are those of an ordered pair `(from, to)`.
+ *
+ * Algebraic intuition:
+ *  - Composition of edges corresponds to composition of morphisms:
+ *    `(u → v)` can compose with `(v → w)`, but not with `(x → y)` when `v ≠ x`.
+ */
 data class DirectedEdge<V: Any>(val from: V, val to: V): Edge<V> {
     init {
         require(from != to) { "Loops not allowed in this directed graph representation: ($from, $to)" }
@@ -243,10 +288,14 @@ data class DirectedEdge<V: Any>(val from: V, val to: V): Edge<V> {
     infix fun canAndThen(other: DirectedEdge<V>): Boolean =
         this.to == other.from
 
+
     /**
-     * A more “categorical” alias that is synonymous with [canAndThen], i.e. this edge can be followed
-     * immediately by [other] in a directed walk:
-     * (u -> v) composesWith (v -> w)
+     * A more “categorical” alias that is synonymous with [canAndThen].
+     *
+     * In categorical terms, we can compose `(u → v)` with `(v → w)` to get a
+     * composite arrow `(u → w)`.
+     *
+     * Here we only check that the middle vertex matches.
      */
     infix fun composesWith(other: DirectedEdge<V>): Boolean =
         canAndThen(other)
@@ -269,8 +318,10 @@ data class DirectedEdge<V: Any>(val from: V, val to: V): Edge<V> {
     override fun contains(vertex: V): Boolean = from == vertex || to == vertex
 
     /**
-     * Reverse this edge's direction:
-     * If this directed edge is (u -> v), this operation returns the directed edge (v -> u).
+     * Reverse the direction of this edge.
+     *
+     * If this edge is `(u → v)`, this returns `(v → u)`.
+     * This is exactly the edge you see in the transpose graph `Gᵗ`.
      */
     fun reverse(): DirectedEdge<V> =
         DirectedEdge(to, from)

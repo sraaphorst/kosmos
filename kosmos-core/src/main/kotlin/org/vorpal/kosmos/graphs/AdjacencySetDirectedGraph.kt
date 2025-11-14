@@ -93,6 +93,34 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
         return of(subvertices.toUnordered(), subEdges)
     }
 
+    private val weakComponentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
+        toUndirectedGraph().connectedComponentsVertexSets()
+    }
+
+    private val weakComponentsCache: FiniteSet<DirectedGraph<V>> by lazy {
+        weakComponentsVertexSetsCache.map(this::inducedSubgraph)
+    }
+
+    private val strongComponentsVertexSetsCache: FiniteSet<FiniteSet.Unordered<V>> by lazy {
+        stronglyConnectedComponentSets()
+    }
+
+    private val strongComponentsCache: FiniteSet<DirectedGraph<V>> by lazy {
+        strongComponentsVertexSetsCache.map(this::inducedSubgraph)
+    }
+
+    override fun weaklyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>> =
+        weakComponentsVertexSetsCache
+
+    override fun weaklyConnectedComponents(): FiniteSet<DirectedGraph<V>> =
+        weakComponentsCache
+
+    override fun stronglyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>> =
+        strongComponentsVertexSetsCache
+
+    override fun stronglyConnectedComponents(): FiniteSet<DirectedGraph<V>> =
+        strongComponentsCache
+
     /**
      * Create the line graph of this directed graph.
      */

@@ -3,18 +3,35 @@ package org.vorpal.kosmos.graphs
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
 
+/**
+ * Breadth–first search starting from [start] in an undirected graph.
+ *
+ * The returned [Sequence] yields vertices in BFS order within the connected
+ * component of [start], following undirected adjacency [neighbors].
+ *
+ * Complexity:
+ *  - Time: O(|V| + |E|) over the reachable component.
+ *  - Space: O(|V|) for the visited set and queue.
+ *
+ * @throws IllegalArgumentException if [start] is not a vertex of this graph.
+ */
 fun <V: Any> UndirectedGraph<V>.bfs(start: V): Sequence<V> =
     traversalImpl(start, vertices, this::neighbors, ArrayDeque<V>::removeFirst)
 
+/**
+ * Depth–first search starting from [start] in an undirected graph.
+ *
+ * This is implemented using an explicit stack via [traversalImpl] and yields
+ * vertices in a DFS order over the connected component of [start].
+ *
+ * Complexity:
+ *  - Time: O(|V| + |E|) over the reachable component.
+ *  - Space: O(|V|) for the visited set and stack.
+ *
+ * @throws IllegalArgumentException if [start] is not a vertex of this graph.
+ */
 fun <V: Any> UndirectedGraph<V>.dfs(start: V): Sequence<V> =
     traversalImpl(start, vertices, this::neighbors, ArrayDeque<V>::removeLast)
-
-fun <V : Any> UndirectedGraph<V>.connectedComponents(): FiniteSet<UndirectedGraph<V>> =
-    componentsImpl(
-        bfs = { start -> bfs(start) },
-        inducedSubgraph = { vs -> inducedSubgraph(vs) }
-    )
-
 
 fun <V: Any> DirectedGraph<V>.bfs(start: V): Sequence<V> =
     traversalImpl(start, vertices, this::outNeighbors, ArrayDeque<V>::removeFirst)
@@ -43,21 +60,6 @@ fun <V : Any> DirectedGraph<V>.weakDfs(start: V): Sequence<V> =
  * 1. If we start traversing at 1, we discover vertices 1, 2, and 3.
  * 2. If we start traversing at 0, we discover vertices 0, 1, 2, and 3.
  *
- * In a weakly connected graph, if we can get from a vertex u to a vertex v, they are in the same component.
- */
-fun <V : Any> DirectedGraph<V>.weaklyConnectedComponents(): FiniteSet<DirectedGraph<V>> =
-    componentsImpl(
-        bfs = { s -> weakBfs(s) },
-        inducedSubgraph = { vs -> inducedSubgraph(vs) }
-    )
-
-/**
- * In a DirectedGraph, the term "connected component" has two definitions.
- *
- * Imagine the graph with vertices 0123 and arcs 01, 12, 23, 31.
- * 1. If we start traversing at 1, we discover vertices 1, 2, and 3.
- * 2. If we start traversing at 0, we discover vertices 0, 1, 2, and 3.
- *
  * In a strongly connected graph, for two vertices u and v, if we can get:
  * - from u to v; and
  * - from v to u
@@ -67,12 +69,12 @@ fun <V : Any> DirectedGraph<V>.weaklyConnectedComponents(): FiniteSet<DirectedGr
  * The implementation uses Kosaraju's implementation and returns the sets of vertices in each
  * strongly connected component.
  */
-fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): FiniteSet<FiniteSet.Unordered<V>> {
+internal fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): FiniteSet<FiniteSet.Unordered<V>> {
     // 1) First pass: DFS on G to get finishing order List<V>, smallest finish times first.
     val order = finishingOrder()
     val orderDescending = order.asReversed()
 
-    // 2) Transpose of the graph (we’ll assume you have this)
+    // 2) Transpose of the graph.
     val gt: DirectedGraph<V> = this.toTransposeGraph()
 
     // 3) Second pass: DFS on Gᵗ in decreasing finish-time order
@@ -203,7 +205,7 @@ private fun <V : Any> DirectedGraph<V>.finishingOrder(): List<V> {
  * - the function to get the neighbors of a given vertex (which differ between directed and undirected graphs); and
  * - and the way to pick the next vertex from the ArrayQueue, which determines if we are performing BFS or DFS.
  */
-private fun <V : Any> traversalImpl(
+internal fun <V : Any> traversalImpl(
     start: V,
     vertices: FiniteSet.Unordered<V>,
     neighbors: (V) -> FiniteSet.Unordered<V>,
@@ -231,12 +233,28 @@ private fun <V : Any> traversalImpl(
     }
 }
 
+internal fun <V : Any, G : Graph<V>> G.componentsVerticesImpl(
+    bfs: G.(V) -> Sequence<V>,
+): FiniteSet<FiniteSet<V>> {
+    val remaining = vertices.toMutableSet()
+    val compsVertices = mutableListOf<FiniteSet.Unordered<V>>()
+
+    while (remaining.isNotEmpty()) {
+        val start = remaining.first()
+        val subvertices = bfs(start).toUnorderedFiniteSet()
+        remaining.removeAll(subvertices)
+        compsVertices.add(subvertices)
+    }
+
+    return compsVertices.toUnorderedFiniteSet()
+}
+
 /**
  * This is the common logic to extract:
  * - the connected components from an undirected graph
  * - the weakly connected components from a directed graph.
  */
-private fun <V : Any, G : Graph<V>> G.componentsImpl(
+internal fun <V : Any, G : Graph<V>> G.componentsImpl(
     bfs: G.(V) -> Sequence<V>,
     inducedSubgraph: G.(FiniteSet<V>) -> G
 ): FiniteSet<G> {
