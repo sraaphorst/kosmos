@@ -217,14 +217,25 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     fun connectedComponents(): FiniteSet<UndirectedGraph<V>>
 
     /**
-     * Create the line graph of an undirected graph.
+     * Line graph `L(G)` of this undirected graph `G`.
+     *
+     * Vertices of `L(G)` are the edges of `G`.
+     *
+     * There is an edge
+     * `{e1, e2}` in `L(G)` iff `e1` and `e2` share a vertex in `G`
+     * (i.e., the two edges can be followed consecutively).
+     *
+     * Complexity: `O(|E|^2)` in the worst case (dense overlap of endpoints).
      */
     fun toLineGraph(): UndirectedGraph<UndirectedEdge<V>>
 
     /**
-     * Take the complement graph, i.e. the graph that contains edge e in VxV if:
-     * 1. e is not a loop; and
-     * 2. e is not in this graph.
+     * Complement of this simple graph.
+     *
+     * On the same vertex set, includes every edge `{u, v}` with `u ≠ v`
+     * that does *not* appear in this graph.
+     *
+     * Loops remain forbidden.
      */
     fun toComplementGraph(): UndirectedGraph<V>
 

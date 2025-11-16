@@ -100,6 +100,10 @@ fun <A1, A2, B1, B2> Ior<A1, B1>.bimap(
     is Ior.Both -> Ior.Both(f(first), g(second))
 }
 
+context(semigroup: Semigroup<B>)
+fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(f: (A1) -> Ior<A2, B>): Ior<A2, B> =
+    flatMapLeft(semigroup.op.combine, f)
+
 fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
     semigroup: Semigroup<B>,
     f: (A1) -> Ior<A2, B>
@@ -117,6 +121,10 @@ fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
         is Ior.Both -> Ior.Both(result.first, combine(second, result.second))
     }
 }
+
+context(semigroup: Semigroup<A>)
+fun <A: Any, B, C> Ior<A, B>.flatMap(f: (B) -> Ior<A, C>): Ior<A, C> =
+    flatMapRight(semigroup.op.combine, f)
 
 fun <A: Any, B1, B2> Ior<A, B1>.flatMapRight(
     semigroup: Semigroup<A>,

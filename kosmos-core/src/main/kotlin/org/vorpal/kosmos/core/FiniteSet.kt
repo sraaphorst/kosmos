@@ -1,6 +1,29 @@
 package org.vorpal.kosmos.core
 
+import org.vorpal.kosmos.functional.core.Kind
 import kotlin.collections.emptyList
+
+/**
+ * The tag type for [FiniteSet]'s "F".
+ * There is exactly one instance of this type; it is only used at the type level.
+ *
+ * [ForFiniteSet] is the stand-in for `F<_>`, a type constructor (container that takes one argument).
+ *
+ * It is a phantom-type witness.
+ */
+object ForFiniteSet
+typealias FiniteSetOf<A> = Kind<ForFiniteSet, A>
+
+/**
+ * Safe downcast from `Kind<ForFiniteSet, A>` back to `FiniteSet<A>`.
+ *
+ * Remember that `FiniteSetOf<A>` is an alias to `Kind<ForFiniteSet, A>`.
+ *
+ * Use only when you *know* the [Kind] originated from [FiniteSet] (the type system enforces this).
+ */
+@Suppress("UNCHECKED_CAST")
+fun <A> FiniteSetOf<A>.fix(): FiniteSet<A> = this as FiniteSet<A>
+
 
 /**
  * FiniteSets must be created through their companion object builders.
@@ -8,7 +31,7 @@ import kotlin.collections.emptyList
  * as they are more convenient than vanilla Kotlin sets for Kosmos operations
  * and algorithms.
  */
-sealed interface FiniteSet<A>: Iterable<A> {
+sealed interface FiniteSet<A>: FiniteSetOf<A>, Iterable<A> {
     val backing: Set<A>
     val order: List<A>
     val size: Int

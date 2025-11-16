@@ -2,7 +2,6 @@ package org.vorpal.kosmos.graphs
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.neighborhood.Neighborhood
-import org.vorpal.kosmos.core.toUnorderedFiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
 
 
@@ -43,8 +42,14 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     override fun neighbors(of: V): FiniteSet.Unordered<V> =
         outNeighbors(of)
 
-    fun weakNeighbors(of: V): FiniteSet.Unordered<V> =
-        (outNeighbors(of) + inNeighbors(of)).toUnorderedFiniteSet()
+    /**
+     * All neighbors (undirected view):
+     * the union of [outNeighbors] and [inNeighbors] of [of].
+     *
+     * Useful for weak connectivity/traversals that ignore arc direction.
+     */
+    fun allNeighbors(of: V): FiniteSet.Unordered<V> =
+        (outNeighbors(of) union inNeighbors(of)).toUnordered()
 
     fun outDegree(v: V): Int = outNeighbors(v).size
 
@@ -56,26 +61,76 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
 
     fun inDegree(v: V): Int = inNeighbors(v).size
 
-    fun hasArc(from: V, to: V): Boolean = to in outNeighbors(from)
+    fun sources(): FiniteSet<V> =
+        vertices.filter { inNeighbors(it).isEmpty }.toUnordered()
 
-    fun allNeighbors(of: V): FiniteSet.Unordered<V> =
-        (outNeighbors(of) + inNeighbors(of)).toUnordered()
+    fun sinks(): FiniteSet<V> =
+        vertices.filter { outNeighbors(it).isEmpty }.toUnordered()
+
+    fun hasArc(from: V, to: V): Boolean = to in outNeighbors(from)
 
     fun inducedSubgraph(subvertices: FiniteSet<V>): DirectedGraph<V>
 
+    /**
+     * Weakly connected components as vertex sets.
+     *
+     * Two vertices lie in the same weak component iff they are connected in the
+     * underlying undirected graph (i.e., ignoring arc directions).
+     *
+     * Returns a finite set of disjoint vertex sets whose union is `V`.
+     *
+     * Complexity (typical implementation): O(|V| + |E|).
+     */
     fun weaklyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>>
+
+    /**
+     * Weakly connected components as induced subgraphs of this digraph.
+     *
+     * Each component is the subgraph induced by one of the sets returned by
+     * [weaklyConnectedComponentsVertexSets]. Edges keep their original directions.
+     *
+     * Complexity (build-time): O(|V| + |E|) to find components; materializing
+     * induced subgraphs is linear in total size.
+     */
     fun weaklyConnectedComponents(): FiniteSet<DirectedGraph<V>>
+
+    /**
+     * Strongly connected components as vertex sets.
+     *
+     * Two vertices are in the same set iff each is reachable from the other.
+     * (Equivalence classes of the mutual-reachability relation.)
+     *
+     * Typical implementation via Kosaraju/Tarjan/Gabow runs in O(|V| + |E|).
+     */
     fun stronglyConnectedComponentsVertexSets(): FiniteSet<FiniteSet<V>>
+
+    /**
+     * Strongly connected components as induced subgraphs of this digraph.
+     *
+     * Each returned graph is the subgraph induced by one SCC’s vertex set.
+     * The condensation DAG of `G` is formed by contracting each returned subgraph
+     * to a single vertex.
+     */
     fun stronglyConnectedComponents(): FiniteSet<DirectedGraph<V>>
 
     /**
-     * Create the line graph of this directed graph.
+     * Line graph `L(G)` of a directed graph `G`.
+     *
+     * Vertices of `L(G)` are the arcs of `G`. There is an arc
+     * `e1 → e2` in `L(G)` iff `e1.to == e2.from` in `G`
+     * (i.e., the two edges can be followed consecutively).
+     *
+     * Complexity: `O(|E|^2)` in the worst case (dense overlap of endpoints).
      */
     fun toLineGraph(): DirectedGraph<DirectedEdge<V>>
 
     /**
-     * Create the complement of this directed graph, i.e. for every (u, v) in V x V with u ≠ v, if (u, v)
-     * is not in this graph, then (u, v) is in the complement graph.
+     * Directed complement of this simple directed graph.
+     *
+     * On the same vertex set, includes every edge `u → v` with `u ≠ v`
+     * that does *not* appear in this graph.
+     *
+     * Loops remain forbidden.
      */
     fun toComplementGraph(): DirectedGraph<V>
 
@@ -246,18 +301,17 @@ sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     infix fun <W: Any> cartesianProduct(other: DirectedGraph<W>): DirectedGraph<Pair<V, W>>
 
     /**
-     * Functorial map on the vertex type of this undirected graph.
-     * Applies [f] to every vertex, and transports each edge `{u, v}`
-     * to an edge `{f(u), f(v)}`.
+     * Functorial map on the vertex type of this directed graph.
+     * Applies [f] to each vertex and transports each arc `(u, v)` to `(f(u), f(v))`.
+     * Edge multiplicity and simplicity are preserved by the [FiniteSet] representation.
      */
     fun <W : Any> mapVertices(f: (V) -> W): DirectedGraph<W>
 
     /**
-     * Take the vertices of the graph (with no order guaranteed) and remap them
-     * to the set `{0, ..., v-1}`.
+     * Relabel vertices by a dense index set `{0, …, n−1}`.
      *
-     * The function returns the new graph (over [Int]) and the map from the
-     * integers to the original vertices.
+     * Returns the relabelled graph and a dictionary from indices back to original vertices.
+     * The ordering is derived from [FiniteSet.toOrdered] and is deterministic for a given set.
      */
     fun canonicalizeVertices(): Pair<DirectedGraph<Int>, Map<Int, V>>
 }
@@ -288,6 +342,13 @@ data class DirectedEdge<V: Any>(val from: V, val to: V): Edge<V> {
     infix fun canAndThen(other: DirectedEdge<V>): Boolean =
         this.to == other.from
 
+    /**
+     * True iff this edge can be followed immediately by [other] in a directed walk:
+     * (u -> v) leadsTo (v -> w).
+     */
+    infix fun andThen(other: DirectedEdge<V>): DirectedEdge<V> =
+        DirectedEdge(this.from, other.to)
+
 
     /**
      * A more “categorical” alias that is synonymous with [canAndThen].
@@ -298,19 +359,15 @@ data class DirectedEdge<V: Any>(val from: V, val to: V): Edge<V> {
      * Here we only check that the middle vertex matches.
      */
     infix fun composesWith(other: DirectedEdge<V>): Boolean =
-        canAndThen(other)
+        other canAndThen this
 
     /**
-     * True iff this edge can be followed immediately by [other] in a directed walk:
-     * (u -> v) leadsTo (v -> w).
-     */
-    infix fun andThen(other: DirectedEdge<V>): DirectedEdge<V> =
-        DirectedEdge(this.from, other.to)
-
-    /**
-     * A more “categorical” alias that is synonymous with [andThen], i.e. this edge can be followed
-     * immediately by [other] in a directed walk:
-     * (u -> v) composableWith (v -> w)
+     * Categorical composition: this ∘ other.
+     *
+     * Applies [other] first, then this, i.e. requires `other.to == this.from`
+     * and yields the composite `(other.from → this.to)`.
+     *
+     * Equivalent to `other andThen this`.
      */
     infix fun compose(other: DirectedEdge<V>): DirectedEdge<V> =
         other andThen this
