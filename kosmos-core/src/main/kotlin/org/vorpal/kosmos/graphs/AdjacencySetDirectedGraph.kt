@@ -94,14 +94,14 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
     }
 
     private val weakComponentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
-        toUndirectedGraph().connectedComponentsVertexSets()
+        componentsVerticesImpl { start -> weakBfs(start) }
     }
 
     private val weakComponentsCache: FiniteSet<DirectedGraph<V>> by lazy {
         weakComponentsVertexSetsCache.map(this::inducedSubgraph)
     }
 
-    private val strongComponentsVertexSetsCache: FiniteSet<FiniteSet.Unordered<V>> by lazy {
+    private val strongComponentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
         stronglyConnectedComponentSets()
     }
 
@@ -185,7 +185,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
                                   rightToLeft: Boolean): AdjacencySetDirectedGraph<Either<V, W>> {
         val duGraph = this disjointUnion other
 
-        val inEdgeList = if (leftToRight)
+        val leftToRightEdges = if (leftToRight)
             vertices.flatMap { v ->
                 other.vertices.map { u ->
                     DirectedEdge(Either.left(v), Either.right(u))
@@ -193,7 +193,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
             }
         else emptyList()
 
-        val outEdgeList = if (rightToLeft)
+        val rightToLeftEdges = if (rightToLeft)
             vertices.flatMap { v ->
                 other.vertices.map { u ->
                     DirectedEdge(Either.right(u), Either.left(v))
@@ -201,7 +201,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
             }
         else emptyList()
 
-        val allEdges = (inEdgeList + outEdgeList + duGraph.edges).toUnorderedFiniteSet()
+        val allEdges = (leftToRightEdges + rightToLeftEdges + duGraph.edges).toUnorderedFiniteSet()
         return of(duGraph.vertices, allEdges)
 
     }

@@ -33,12 +33,6 @@ fun <V: Any> UndirectedGraph<V>.bfs(start: V): Sequence<V> =
 fun <V: Any> UndirectedGraph<V>.dfs(start: V): Sequence<V> =
     traversalImpl(start, vertices, this::neighbors, ArrayDeque<V>::removeLast)
 
-fun <V: Any> DirectedGraph<V>.bfs(start: V): Sequence<V> =
-    traversalImpl(start, vertices, this::outNeighbors, ArrayDeque<V>::removeFirst)
-
-fun <V: Any> DirectedGraph<V>.dfs(start: V): Sequence<V> =
-    traversalImpl(start, vertices, this::outNeighbors, ArrayDeque<V>::removeLast)
-
 /**
  * BFS on the underlying undirected graph of this digraph: uses all neighbors
  * (in- and out-) instead of just out-neighbors.
@@ -54,22 +48,44 @@ fun <V : Any> DirectedGraph<V>.weakDfs(start: V): Sequence<V> =
     traversalImpl(start, vertices, this::allNeighbors, ArrayDeque<V>::removeLast)
 
 /**
- * In a DirectedGraph, the term "connected component" has two definitions.
+ * Breadth–first search starting from [start] in a directed graph.
  *
- * Imagine the graph with vertices 0123 and arcs 01, 12, 23, 31.
- * 1. If we start traversing at 1, we discover vertices 1, 2, and 3.
- * 2. If we start traversing at 0, we discover vertices 0, 1, 2, and 3.
+ * Yields vertices in BFS order following outgoing edges only.
  *
- * In a strongly connected graph, for two vertices u and v, if we can get:
- * - from u to v; and
- * - from v to u
+ * Complexity:
+ *  - Time: O(|V| + |E|) over the reachable component.
+ *  - Space: O(|V|) for the visited set and queue.
  *
- * then they are in the same component.
- *
- * The implementation uses Kosaraju's implementation and returns the sets of vertices in each
- * strongly connected component.
+ * @throws IllegalArgumentException if [start] is not a vertex of this graph.
  */
-internal fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): FiniteSet<FiniteSet.Unordered<V>> {
+fun <V: Any> DirectedGraph<V>.bfs(start: V): Sequence<V> =
+    traversalImpl(start, vertices, this::outNeighbors, ArrayDeque<V>::removeFirst)
+
+/**
+ * Depth–first search starting from [start] in a directed graph.
+ *
+ * Yields vertices in BFS order following outgoing edges only.
+ *
+ * Complexity:
+ *  - Time: O(|V| + |E|) over the reachable component.
+ *  - Space: O(|V|) for the visited set and stack.
+ *
+ * @throws IllegalArgumentException if [start] is not a vertex of this graph.
+ */
+fun <V: Any> DirectedGraph<V>.dfs(start: V): Sequence<V> =
+    traversalImpl(start, vertices, this::outNeighbors, ArrayDeque<V>::removeLast)
+
+/**
+ * Strongly connected vertex sets (SCCs) via Kosaraju’s algorithm.
+ *
+ * Two vertices lie in the same set iff each is reachable from the other.
+ * Steps:
+ *  1) DFS on G to record vertices in increasing finish time.
+ *  2) DFS on Gᵗ in decreasing finish time to peel off SCCs.
+ *
+ * Complexity: O(|V| + |E|).
+ */
+internal fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): FiniteSet<FiniteSet<V>> {
     // 1) First pass: DFS on G to get finishing order List<V>, smallest finish times first.
     val order = finishingOrder()
     val orderDescending = order.asReversed()
@@ -79,7 +95,7 @@ internal fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): Finite
 
     // 3) Second pass: DFS on Gᵗ in decreasing finish-time order
     val visited = mutableSetOf<V>()
-    val components = mutableListOf<FiniteSet.Unordered<V>>()
+    val components = mutableListOf<FiniteSet<V>>()
 
     for (v in orderDescending) {
         if (visited.contains(v)) continue
@@ -111,31 +127,12 @@ internal fun <V : Any> DirectedGraph<V>.stronglyConnectedComponentSets(): Finite
 }
 
 /**
- * In a DirectedGraph, the term "connected component" has two definitions.
+ * Builds the condensation DAG of this digraph:
+ *  - Vertices are the SCCs.
+ *  - Edge C_i → C_j exists iff ∃(u,v)∈E with u∈C_i, v∈C_j and i≠j.
  *
- * Imagine the graph with vertices 0123 and arcs 01, 12, 23, 31.
- * 1. If we start traversing at 1, we discover vertices 1, 2, and 3.
- * 2. If we start traversing at 0, we discover vertices 0, 1, 2, and 3.
- *
- * In a strongly connected graph, for two vertices u and v, if we can get:
- * - from u to v; and
- * - from v to u
- *
- * then they are in the same component.
- *
- * The implementation uses Kosaraju's implementation and returns the strongly connected components
- * as subgraphs of the original directed graph.
- */
-fun <V : Any> DirectedGraph<V>.stronglyConnectedComponents(): FiniteSet<DirectedGraph<V>> =
-    stronglyConnectedComponentSets().map(::inducedSubgraph)
-
-/**
- * The condensation graph of a directed graph has:
- * - The strongly connected component vertex sets each as a vertex
- * - An edge from SCC1 to SCC2 if there is an edge from SCC1 to SCC2.
- *
- * Note that there will never be parallel edges between two vertices: otherwise, by definition of SCCs, they
- * would have been merged into one SCC.
+ * Multiple original edges between the same SCC pair are collapsed to one edge.
+ * The result is always a DAG.
  *
  * More formally:
  *
@@ -147,14 +144,16 @@ fun <V : Any> DirectedGraph<V>.stronglyConnectedComponents(): FiniteSet<Directed
  *
  * We thus have that `f` is a homomorphism with kernel defined by `~`.
  */
-fun <V: Any> DirectedGraph<V>.condensation(): DirectedGraph<FiniteSet.Unordered<V>> {
+fun <V: Any> DirectedGraph<V>.condensation(): DirectedGraph<FiniteSet<V>> {
     // Compute the SCC vertex sets. These are the vertices of the condensation.
-    val comps: List<FiniteSet.Unordered<V>> = stronglyConnectedComponentSets().toList()
+    val comps: List<FiniteSet<V>> = stronglyConnectedComponentSets().toList()
 
     // Map each vertex to its component index.
-    val compIndex: Map<V, Int> = comps.withIndex().flatMap { (idx, comp) ->
-        comp.map { v -> v to idx }
-    }.toMap()
+    val compIndex = buildMap(capacity = comps.sumOf { it.size }) {
+        comps.forEachIndexed { idx, comp ->
+            comp.forEach { v -> put(v, idx) }
+        }
+    }
 
     // Put into vertex form.
     val condVertices = comps.toUnorderedFiniteSet()
@@ -247,26 +246,4 @@ internal fun <V : Any, G : Graph<V>> G.componentsVerticesImpl(
     }
 
     return compsVertices.toUnorderedFiniteSet()
-}
-
-/**
- * This is the common logic to extract:
- * - the connected components from an undirected graph
- * - the weakly connected components from a directed graph.
- */
-internal fun <V : Any, G : Graph<V>> G.componentsImpl(
-    bfs: G.(V) -> Sequence<V>,
-    inducedSubgraph: G.(FiniteSet<V>) -> G
-): FiniteSet<G> {
-    val remaining = vertices.toMutableSet()
-    val comps = mutableListOf<G>()
-
-    while (remaining.isNotEmpty()) {
-        val start = remaining.first()
-        val subvertices = bfs(start).toUnorderedFiniteSet()
-        remaining.removeAll(subvertices)
-        comps.add(inducedSubgraph(subvertices))
-    }
-
-    return comps.toUnorderedFiniteSet()
 }
