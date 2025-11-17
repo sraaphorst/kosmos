@@ -43,7 +43,7 @@ class AdjacencySetUndirectedGraph<V: Any> private constructor(
     }
 
     private val componentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
-        componentsVerticesImpl { start -> bfs(start)}
+        computeConnectedComponentVertexSets()
     }
 
     private val componentsCache: FiniteSet<UndirectedGraph<V>> by lazy {
