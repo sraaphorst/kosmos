@@ -2,9 +2,16 @@ package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Identity
+import org.vorpal.kosmos.functional.core.Kind2
 import org.vorpal.kosmos.functional.optics.Prism
 
-sealed class Ior<out A, out B> {
+object ForIor
+typealias IorOf<A, B> = Kind2<ForIor, A, B>
+@Suppress("UNCHECKED_CAST")
+val <A, B> IorOf<A, B>.fix: Ior<A, B>
+    get() = this as Ior<A, B>
+
+sealed class Ior<out A, out B>: IorOf<A, B> {
     data class Left<out A>(val value: A) : Ior<A, Nothing>()
     data class Right<out B>(val value: B) : Ior<Nothing, B>()
     data class Both<out A, out B>(val first: A, val second: B) : Ior<A, B>()
