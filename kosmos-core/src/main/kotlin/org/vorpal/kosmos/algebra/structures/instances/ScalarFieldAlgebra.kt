@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.Monoid
@@ -46,8 +47,8 @@ object ScalarFieldAlgebra {
      */
     fun <F: Any, V: Any> multiplicativeMonoid(
         space: VectorSpace<F, V>
-    ): Monoid<ScalarField<F, V>> =
-        Monoid.of(ScalarFields.one(space)) { sf1, sf2 -> sf1 * sf2 }
+    ): CommutativeMonoid<ScalarField<F, V>> =
+        CommutativeMonoid.of(ScalarFields.one(space)) { sf1, sf2 -> sf1 * sf2 }
 
     /**
      * Given a [VectorSpace] V over a [Field] 𝔽, create the [CommutativeRing] of

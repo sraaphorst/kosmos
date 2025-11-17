@@ -37,7 +37,10 @@ object Symbols {
     const val BB_Y = "𝕐"
     const val BB_Z = "ℤ"
     const val BECAUSE = "∵"
+    const val BIG_DOT = "•"
+    const val BOWTIE = "⋈"
     const val BOX = "□"
+    const val BOX_TIMES = "⊠"
     const val COLON_EQUALS = "≔"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
@@ -77,7 +80,7 @@ object Symbols {
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
     const val PLUS = "+"
-    const val PLUSMINUS = "±"
+    const val PLUS_MINUS = "±"
     const val PROD = "∏"
     const val PROVES = "⊢"
     const val PROVES_NOT = "⊬"
@@ -96,6 +99,7 @@ object Symbols {
     const val SET_UNION_DISJOINT = "⊔"
     const val SQRT = "√"
     const val SUM = "∑"
+    const val TENSOR = "⊗"
     const val THEREFORE = "∴"
     const val TIMES = "×"
     const val TRIANGLE_RIGHT = "⊳"
@@ -109,8 +113,10 @@ object Symbols {
     // Aliases
     const val ARROW_RIGHT = IMPLIES
     const val INJECTION = MAPS_INTO
+    const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT
     const val SIGMA = SUM
+    const val SQUARED_TIMES = BOX_TIMES
     const val SURJECTION = MAPS_ONTO
     const val TURNSTYLE_DOUBLE = ENTAILS
     const val TURNSTYLE = PROVES

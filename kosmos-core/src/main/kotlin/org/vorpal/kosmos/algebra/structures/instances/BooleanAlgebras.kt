@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
@@ -15,13 +15,13 @@ object BooleanAlgebras {
         override val inverse: (Boolean) -> Boolean = Identity()
     }
 
-    object BooleanANDMonoid: Monoid<Boolean> {
+    object BooleanANDMonoid: CommutativeMonoid<Boolean> {
         override val identity: Boolean = true
         override val op: BinOp<Boolean> =
             BinOp(symbol = Symbols.WEDGE) { x, y -> x and y }
     }
 
-    object BooleanORMonoid: Monoid<Boolean> {
+    object BooleanORMonoid: CommutativeMonoid<Boolean> {
         override val identity: Boolean = false
         override val op: BinOp<Boolean> =
             BinOp(symbol = Symbols.VEE) { x, y -> x or y }
