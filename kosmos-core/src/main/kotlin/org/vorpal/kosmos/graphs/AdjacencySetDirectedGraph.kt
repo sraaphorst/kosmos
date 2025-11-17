@@ -94,7 +94,7 @@ class AdjacencySetDirectedGraph<V: Any> private constructor(
     }
 
     private val weakComponentsVertexSetsCache: FiniteSet<FiniteSet<V>> by lazy {
-        componentsVerticesImpl { start -> weakBfs(start) }
+        computeWeaklyConnectedComponentVertexSets()
     }
 
     private val weakComponentsCache: FiniteSet<DirectedGraph<V>> by lazy {

@@ -9,9 +9,9 @@ sealed interface FoldStep<out S, out R> {
     data class Stop<R>(val result: R) : FoldStep<Nothing, R>
 }
 
-/* =========================
+/* ====================
  *  BFS — no early stop
- * ========================= */
+ * ====================*/
 
 /** Single‑source BFS fold over an undirected graph (no early stop). */
 fun <V: Any, S> UndirectedGraph<V>.bfsFoldFrom(
@@ -76,9 +76,9 @@ fun <V: Any, S> UndirectedGraph<V>.bfsFoldComponents(
     return s
 }
 
-/* =========================
- *  BFS — early stop variants (renamed to avoid overload ambiguity)
- * ========================= */
+/* ==========================
+ *  BFS — early stop variants
+ * ==========================*/
 
 /** Fold all components with BFS and allow early stop via [FoldStep]. */
 fun <V: Any, S, R> UndirectedGraph<V>.bfsFoldComponentsStop(
@@ -132,9 +132,9 @@ fun <V: Any, S, R> UndirectedGraph<V>.bfsFoldComponentsStop(
     return Either.right(s)
 }
 
-/* =========================
+/* ============================
  *  DFS with finish (iterative)
- * ========================= */
+ * ============================*/
 
 /**
  * Iterative DFS fold over all components with callbacks for root, discover, examine, and finish.
