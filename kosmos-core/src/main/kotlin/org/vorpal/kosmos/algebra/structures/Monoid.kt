@@ -22,3 +22,26 @@ interface Monoid<A: Any> : Semigroup<A> {
         }
     }
 }
+
+/**
+ * A commutative [Monoid].
+ *
+ * These add no properties to monoid, but come up often enough
+ * that we include them as a means of tagging the monoid as commutative.
+ *
+ * [AbelianGroup] implements this.
+ */
+interface CommutativeMonoid<A: Any> : Monoid<A> {
+    companion object {
+        const val DEFAULT_SYMBOL = Symbols.DIAMOND_BIG
+
+        fun <A: Any> of(
+            identity: A,
+            symbol: String = DEFAULT_SYMBOL,
+            op: (A, A) -> A,
+        ) : CommutativeMonoid<A> = object : CommutativeMonoid<A> {
+            override val identity: A get() = identity
+            override val op: BinOp<A> = BinOp(symbol, op)
+        }
+    }
+}

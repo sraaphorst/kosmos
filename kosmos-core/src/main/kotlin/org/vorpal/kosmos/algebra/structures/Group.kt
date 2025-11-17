@@ -35,7 +35,7 @@ interface Group<A: Any> : Monoid<A>, Loop<A> {
  * they are included as an extension of Group even though they add no inherent properties apart from being tagged
  * as being necessarily commutative.
  */
-interface AbelianGroup<A: Any> : Group<A> {
+interface AbelianGroup<A: Any> : Group<A>, CommutativeMonoid<A> {
     companion object {
         const val DEFAULT_SYMBOL = Symbols.PLUS
 
