@@ -13,22 +13,22 @@ import org.vorpal.kosmos.functional.datastructures.swap
 typealias CoronaVertex<V, W> = Either<V, Pair<V, W>>
 
 /**
- * Constructs the corona product `G ⊙ H` of this undirected graph `G` with another
- * undirected graph `H`.
+ * Constructs the corona product G ⊙ H of this undirected graph G with another
+ * undirected graph H.
  *
  * Vertices:
- *  - one "center" vertex for each vertex `v ∈ V(G)`, and
- *  - for each `v ∈ V(G)`, one "satellite" vertex `(v, w)` for every `w ∈ V(H)`.
+ *  - one "center" vertex for each vertex v ∈ V(G), and
+ *  - for each v ∈ V(G), one "satellite" vertex (v, w) for every w ∈ V(H).
  *
  * Formally:
- * ```kotlin
+ * kotlin
  *  V(G ⊙ H) = V(G) ∪ { (v, w) : v ∈ V(G), w ∈ V(H) }.
- *```
+ *
  *
  * Edges:
- *  1. All edges of `G` between center vertices.
- *  2. For each `v ∈ V(G)`, a copy of `H` on the satellites `{ {v, w} : w ∈ V(H) }`.
- *  3. For each `v ∈ V(G)` and `w ∈ V(H)`, an edge between the center `v` and its satellite `{v, w}`.
+ *  1. All edges of G between center vertices.
+ *  2. For each v ∈ V(G), a copy of H on the satellites { {v, w} : w ∈ V(H) }.
+ *  3. For each v ∈ V(G) and w ∈ V(H), an edge between the center v and its satellite {v, w}.
  */
 fun <V: Any, W: Any> AdjacencySetUndirectedGraph<V>.coronaProduct(
     other: UndirectedGraph<W>
@@ -46,22 +46,22 @@ fun <V: Any, W: Any> AdjacencySetUndirectedGraph<V>.coronaProduct(
     )
 
 /**
- * Constructs the corona product `G ⊙ H` of this directed graph `G` with another
- * directed graph `H`.
+ * Constructs the corona product G ⊙ H of this directed graph G with another
+ * directed graph H.
  *
  * Vertices:
- *  - one "center" vertex for each vertex `v ∈ V(G)`, and
- *  - for each `v ∈ V(G)`, one "satellite" vertex `(v, w)` for every `w ∈ V(H)`.
+ *  - one "center" vertex for each vertex v ∈ V(G), and
+ *  - for each v ∈ V(G), one "satellite" vertex (v, w) for every w ∈ V(H).
  *
  * Formally:
- * ```kotlin
+ * kotlin
  *  V(G ⊙ H) = V(G) ∪ { (v, w) : v ∈ V(G), w ∈ V(H) }.
- *```
+ *
  *
  * Edges:
- *  1. All edges of `G` between center vertices.
- *  2. For each `v ∈ V(G)`, a copy of `H` on the satellites `{ (v, w) : w ∈ V(H) }`.
- *  3. For each `v ∈ V(G)` and `w ∈ V(H)`, **an edge to the center from its satellite `(w, v)`.**
+ *  1. All edges of G between center vertices.
+ *  2. For each v ∈ V(G), a copy of H on the satellites { (v, w) : w ∈ V(H) }.
+ *  3. For each v ∈ V(G) and w ∈ V(H), **an edge to the center from its satellite (w, v).**
  */
 fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductIn(
     other: DirectedGraph<W>
@@ -79,22 +79,22 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductIn(
     )
 
 /**
- * Constructs the corona product `G ⊙ H` of this directed graph `G` with another
- * directed graph `H`.
+ * Constructs the corona product G ⊙ H of this directed graph G with another
+ * directed graph H.
  *
  * Vertices:
- *  - one "center" vertex for each vertex `v ∈ V(G)`, and
- *  - for each `v ∈ V(G)`, one "satellite" vertex `(v, w)` for every `w ∈ V(H)`.
+ *  - one "center" vertex for each vertex v ∈ V(G), and
+ *  - for each v ∈ V(G), one "satellite" vertex (v, w) for every w ∈ V(H).
  *
  * Formally:
- * ```kotlin
+ * kotlin
  *  V(G ⊙ H) = V(G) ∪ { (v, w) : v ∈ V(G), w ∈ V(H) }.
- *```
+ *
  *
  * Edges:
- *  1. All edges of `G` between center vertices.
- *  2. For each `v ∈ V(G)`, a copy of `H` on the satellites `{ (v, w) : w ∈ V(H) }`.
- *  3. For each `v ∈ V(G)` and `w ∈ V(H)`, **an edge from the center to its satellite `(v, w)`.**
+ *  1. All edges of G between center vertices.
+ *  2. For each v ∈ V(G), a copy of H on the satellites { (v, w) : w ∈ V(H) }.
+ *  3. For each v ∈ V(G) and w ∈ V(H), **an edge from the center to its satellite (v, w).**
  */
 fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductOut(
     other: DirectedGraph<W>
@@ -112,22 +112,22 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductOut(
     )
 
 /**
- * Constructs the corona product `G ⊙ H` of this directed graph `G` with another
- * directed graph `H`.
+ * Constructs the corona product G ⊙ H of this directed graph G with another
+ * directed graph H.
  *
  * Vertices:
- *  - one "center" vertex for each vertex `v ∈ V(G)`, and
- *  - for each `v ∈ V(G)`, one "satellite" vertex `(v, w)` for every `w ∈ V(H)`.
+ *  - one "center" vertex for each vertex v ∈ V(G), and
+ *  - for each v ∈ V(G), one "satellite" vertex (v, w) for every w ∈ V(H).
  *
  * Formally:
- * ```kotlin
+ * kotlin
  *  V(G ⊙ H) = V(G) ∪ { (v, w) : v ∈ V(G), w ∈ V(H) }.
- *```
+ *
  *
  * Edges:
- *  1. All edges of `G` between center vertices.
- *  2. For each `v ∈ V(G)`, a copy of `H` on the satellites `{ (v, w) : w ∈ V(H) }`.
- *  3. For each `v ∈ V(G)` and `w ∈ V(H)`, **edges between the center and its satellite `(v, w)`, `(w, v)`.**
+ *  1. All edges of G between center vertices.
+ *  2. For each v ∈ V(G), a copy of H on the satellites { (v, w) : w ∈ V(H) }.
+ *  3. For each v ∈ V(G) and w ∈ V(H), **edges between the center and its satellite (v, w), (w, v).**
  */
 fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductBidirectional(
     other: DirectedGraph<W>
@@ -144,25 +144,23 @@ fun <V: Any, W: Any> AdjacencySetDirectedGraph<V>.coronaProductBidirectional(
         satelliteOut = true
     )
 
-
-
 /**
- * Constructs the corona product `G ⊙ H` of this undirected graph `G` with another
- * undirected graph `H`.
+ * Constructs the corona product G ⊙ H of this undirected graph G with another
+ * undirected graph H.
  *
  * Vertices:
- *  - one "center" vertex for each vertex `v ∈ V(G)`, and
- *  - for each `v ∈ V(G)`, one "satellite" vertex `(v, w)` for every `w ∈ V(H)`.
+ *  - one "center" vertex for each vertex v ∈ V(G), and
+ *  - for each v ∈ V(G), one "satellite" vertex (v, w) for every w ∈ V(H).
  *
  * Formally:
- * ```kotlin
+ * kotlin
  *  V(G ⊙ H) = V(G) ∪ { (v, w) : v ∈ V(G), w ∈ V(H) }.
- *```
+ *
  *
  * Edges:
- *  1. All edges of `G` between center vertices.
- *  2. For each `v ∈ V(G)`, a copy of `H` on the satellites `{ (v, w) : w ∈ V(H) }`.
- *  3. For each `v ∈ V(G)` and `w ∈ V(H)`, an edge between the center `v` and its satellite `(v, w)`.
+ *  1. All edges of G between center vertices.
+ *  2. For each v ∈ V(G), a copy of H on the satellites { (v, w) : w ∈ V(H) }.
+ *  3. For each v ∈ V(G) and w ∈ V(H), an edge between the center v and its satellite (v, w).
  *
  *  There is a lot of casting in here, but that is because there is an issue with
  */
@@ -238,46 +236,174 @@ private fun <V : Any, W : Any, EV : Edge<V>, EW : Edge<W>, E : Edge<CoronaVertex
     return buildGraph(allVertices, allEdges)
 }
 
-/**
- * Swap the "sides" of a bipartite-style directed graph whose vertices are tagged with [Either].
- *
- * This treats vertices of the form `Either.Left(v)` and `Either.Right(w)` as living on two
- * different "sides" (or parts) of the graph, and then flips those sides by applying [Either.swap]
- * to every vertex:
- *
- *  * `Left(v)` becomes `Right(v)`
- *  * `Right(w)` becomes `Left(w)`
- *
- * The edge structure is preserved up to renaming of vertices: if there is an arc
- * `Left(a) → Right(b)` in the original graph, the resulting graph will contain the arc
- * `Right(a) → Left(b)`, and similarly for all other vertices.
- *
- * Algebraically, this is a graph isomorphism induced by the involution `Either<V, W> ↔ Either<W, V>`.
- *
- * @receiver A directed graph whose vertices are of type [Either] and naturally split into two parts.
- * @return A new directed graph where the left and right components of each vertex have been swapped.
- */
-fun <V : Any, W : Any> AdjacencySetDirectedGraph<Either<V, W>>.swapSides(): AdjacencySetDirectedGraph<Either<W, V>> =
-    mapVertices { eitherVertex -> eitherVertex.swap() }
+/* =========================================================
+ *  Side swap for Either-vertex graphs (isomorphisms)
+ * ========================================================= */
 
-/**
- * Swap the "sides" of a bipartite-style undirected graph whose vertices are tagged with [Either].
- *
- * This treats vertices of the form `Either.Left(v)` and `Either.Right(w)` as living on two
- * different "sides" (or parts) of the graph, and then flips those sides by applying [Either.swap]
- * to every vertex:
- *
- *  * `Left(v)` becomes `Right(v)`
- *  * `Right(w)` becomes `Left(w)`
- *
- * The edge structure is preserved up to renaming of vertices: if there is an edge
- * `{Left(a), Right(b)}` in the original graph, the resulting graph will contain the edge
- * `{Right(a), Left(b)}`, and similarly for all other vertices.
- *
- * Algebraically, this is a graph isomorphism induced by the involution `Either<V, W> ↔ Either<W, V>`.
- *
- * @receiver A directed graph whose vertices are of type [Either] and naturally split into two parts.
- * @return A new directed graph where the left and right components of each vertex have been swapped.
- */
-fun <V: Any, W: Any> AdjacencySetUndirectedGraph<Either<V, W>>.swapSides(): AdjacencySetUndirectedGraph<Either<W, V>> =
-    mapVertices { eitherVertex -> eitherVertex.swap() }
+fun <V : Any, W : Any> AdjacencySetDirectedGraph<Either<V, W>>.swapSides():
+        AdjacencySetDirectedGraph<Either<W, V>> =
+    mapVertices { it.swap() }
+
+fun <V : Any, W : Any> AdjacencySetUndirectedGraph<Either<V, W>>.swapSides():
+        AdjacencySetUndirectedGraph<Either<W, V>> =
+    mapVertices { it.swap() }
+
+/* =========================================================
+ *  Meet / Subgraph-of / Connect
+ * ========================================================= */
+
+/** Greatest lower bound in subgraph order: V = V₁ ∩ V₂; E = E₁ ∩ E₂ restricted to V. */
+infix fun <V : Any> UndirectedGraph<V>.meet(other: UndirectedGraph<V>): UndirectedGraph<V> {
+    val v = (this.vertices intersect other.vertices).toUnorderedFiniteSet()
+    val e = (this.edges intersect other.edges).filter { e -> e.u in v && e.v in v }.toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(v, e)
+}
+
+/** Directed meet under subgraph order. */
+infix fun <V : Any> DirectedGraph<V>.meet(other: DirectedGraph<V>): DirectedGraph<V> {
+    val v = (this.vertices intersect other.vertices).toUnorderedFiniteSet()
+    val e = (this.edges intersect other.edges).filter { e -> e.from in v && e.to in v }.toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(v, e)
+}
+
+/** Meet on a fixed [universe] (both coerced to the same carrier). */
+fun <V : Any> UndirectedGraph<V>.meetOn(universe: FiniteSet<V>, other: UndirectedGraph<V>): UndirectedGraph<V> {
+    val gx = this.embedIntoUniverse(universe)
+    val gy = other.embedIntoUniverse(universe)
+    val e = (gx.edges intersect gy.edges).toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(universe.toUnorderedFiniteSet(), e)
+}
+
+fun <V : Any> DirectedGraph<V>.meetOn(universe: FiniteSet<V>, other: DirectedGraph<V>): DirectedGraph<V> {
+    val gx = this.embedIntoUniverse(universe)
+    val gy = other.embedIntoUniverse(universe)
+    val e = (gx.edges intersect gy.edges).toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(universe.toUnorderedFiniteSet(), e)
+}
+
+/** Subgraph relation. */
+infix fun <V : Any> UndirectedGraph<V>.isSubgraphOf(other: UndirectedGraph<V>): Boolean =
+    this.vertices.all { it in other.vertices } && this.edges.all { it in other.edges }
+
+infix fun <V : Any> DirectedGraph<V>.isSubgraphOf(other: DirectedGraph<V>): Boolean =
+    this.vertices.all { it in other.vertices } && this.edges.all { it in other.edges }
+
+/** Undirected connect (⋈): add all cross edges {u,v} with u∈V(G), v∈V(H), u≠v. */
+infix fun <V : Any> UndirectedGraph<V>.connect(other: UndirectedGraph<V>): UndirectedGraph<V> {
+    val v = (this.vertices + other.vertices).toUnorderedFiniteSet()
+    val cross = this.vertices.flatMap { u ->
+        other.vertices.mapNotNull { w -> if (u != w) UndirectedEdge(u, w) else null }
+    }.toUnorderedFiniteSet()
+    val e = (this.edges + other.edges + cross).toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(v, e)
+}
+
+/** Directed connect: add all cross arcs u→v with u∈V(G), v∈V(H), u≠v. */
+infix fun <V : Any> DirectedGraph<V>.connect(other: DirectedGraph<V>): DirectedGraph<V> {
+    val v = (this.vertices + other.vertices).toUnorderedFiniteSet()
+    val cross = this.vertices.flatMap { u ->
+        other.vertices.mapNotNull { w -> if (u != w) DirectedEdge(u, w) else null }
+    }.toUnorderedFiniteSet()
+    val e = (this.edges + other.edges + cross).toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(v, e)
+}
+
+/* =========================================================
+ *  Products
+ * ========================================================= */
+
+/** Tensor/direct product ⊗ (undirected). */
+infix fun <V : Any, W : Any> UndirectedGraph<V>.tensorProduct(other: UndirectedGraph<W>): UndirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val e = v.flatMap { (u1, v1) ->
+        v.mapNotNull { (u2, v2) ->
+            if (u1 != u2 || v1 != v2) {
+                val e1 = UndirectedEdge(u1, u2) in this.edges
+                val e2 = UndirectedEdge(v1, v2) in other.edges
+                if (e1 && e2) UndirectedEdge(u1 to v1, u2 to v2) else null
+            } else null
+        }
+    }.toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(v, e)
+}
+
+/** Tensor/direct/Kronecker product ⊗ (directed). */
+infix fun <V : Any, W : Any> DirectedGraph<V>.tensorProduct(other: DirectedGraph<W>): DirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val e = edges.flatMap { (a, b) -> other.edges.map { (c, d) -> DirectedEdge(a to c, b to d) } }.toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(v, e)
+}
+
+/** Strong product ⊠ (undirected). */
+infix fun <V : Any, W : Any> UndirectedGraph<V>.strongProduct(other: UndirectedGraph<W>): UndirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val e = v.flatMap { (u1, v1) ->
+        v.mapNotNull { (u2, v2) ->
+            if (u1 != u2 || v1 != v2) {
+                val gEdge = UndirectedEdge(u1, u2) in this.edges
+                val hEdge = UndirectedEdge(v1, v2) in other.edges
+                if ((gEdge && v1 == v2) || (hEdge && u1 == u2) || (gEdge && hEdge))
+                    UndirectedEdge(u1 to v1, u2 to v2) else null
+            } else null
+        }
+    }.toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(v, e)
+}
+
+/** Strong product ⊠ (directed) = □ (cartesian) ∪ ⊗ (tensor). */
+infix fun <V : Any, W : Any> DirectedGraph<V>.strongProduct(other: DirectedGraph<W>): DirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val cart = buildList {
+        other.edges.forEach { (c, d) -> vertices.forEach { a -> add(DirectedEdge(a to c, a to d)) } }
+        edges.forEach { (a, b) -> other.vertices.forEach { c -> add(DirectedEdge(a to c, b to c)) } }
+    }
+    val tens = edges.flatMap { (a, b) -> other.edges.map { (c, d) -> DirectedEdge(a to c, b to d) } }
+    val e = (cart + tens).toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(v, e)
+}
+
+/** Lexicographic product (undirected). */
+infix fun <V : Any, W : Any> UndirectedGraph<V>.lexicographicProduct(other: UndirectedGraph<W>): UndirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val e = v.flatMap { (u1, v1) ->
+        v.mapNotNull { (u2, v2) ->
+            if (u1 != u2 || v1 != v2) {
+                val gEdge = UndirectedEdge(u1, u2) in this.edges
+                val hEdge = UndirectedEdge(v1, v2) in other.edges
+                if (gEdge || (u1 == u2 && hEdge)) UndirectedEdge(u1 to v1, u2 to v2) else null
+            } else null
+        }
+    }.toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(v, e)
+}
+
+/** Lexicographic product (directed). */
+infix fun <V : Any, W : Any> DirectedGraph<V>.lexicographicProduct(other: DirectedGraph<W>): DirectedGraph<Pair<V, W>> {
+    val v = vertices.cartesianProduct(other.vertices).toUnordered()
+    val across = edges.flatMap { (a, b) ->
+        other.vertices.flatMap { c -> other.vertices.map { d -> DirectedEdge(a to c, b to d) } }
+    }
+    val within = vertices.flatMap { a -> other.edges.map { (c, d) -> DirectedEdge(a to c, a to d) } }
+    val e = (across + within).toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(v, e)
+}
+
+/* =========================================================
+ *  Edge complements (fixed universe)
+ * ========================================================= */
+
+/** Undirected edge-complement on a fixed universe (simple graphs; no loops). */
+fun <V : Any> UndirectedGraph<V>.edgeComplementOn(universe: FiniteSet<V>): UndirectedGraph<V> {
+    val g = this.embedIntoUniverse(universe)
+    val all = AdjacencySetUndirectedGraph.complete(universe).edges
+    val comp = (all - g.edges).toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(universe.toUnorderedFiniteSet(), comp)
+}
+
+/** Directed edge-complement on a fixed universe (no loops). */
+fun <V : Any> DirectedGraph<V>.edgeComplementOn(universe: FiniteSet<V>): DirectedGraph<V> {
+    val g = this.embedIntoUniverse(universe)
+    val all = AdjacencySetDirectedGraph.complete(universe).edges
+    val comp = (all - g.edges).toUnorderedFiniteSet()
+    return AdjacencySetDirectedGraph.of(universe.toUnorderedFiniteSet(), comp)
+}
