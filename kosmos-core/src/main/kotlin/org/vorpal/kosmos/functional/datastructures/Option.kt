@@ -2,32 +2,18 @@ package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.Identity
-import org.vorpal.kosmos.functional.optics.Prism
 import org.vorpal.kosmos.functional.core.Kind
-import org.vorpal.kosmos.functional.instances.option.OptionApplicative
+import org.vorpal.kosmos.functional.optics.Prism
 
-/**
- * The tag type for Option's "F".
- * There is exactly one instance of this type; it is only used at the type level.
- */
-//object ForOption
-//typealias OptionOf<A> = Kind<ForOption, A>
-typealias OptionOf<A> = Kind<Option<*>, A>
 
-/**
- * Safe downcast from `Kind<ForOption, A>` back to `Option<A>`.
- *
- * Remember that `OptionOf<A>` is an alias to `Kind<ForOption, A>`.
- *
- * Use only when you *know* the [Kind] originated from [Option] (the type system enforces this).
- */
+// HKT basis for Option.
+object ForOption
+typealias OptionOf<A> = Kind<ForOption, A>
 @Suppress("UNCHECKED_CAST")
-fun <A> OptionOf<A>.fix(): Option<A> = this as Option<A>
+val <A> OptionOf<A>.fix: Option<A>
+    get() = this as Option<A>
 
 
-/**
- * A minimal Option ADT that participates in the HKT encoding by extending Kind<ForOption, A>.
- */
 sealed class Option<out A>: OptionOf<A> {
     data class Some<A>(val value: A) : Option<A>()
     data object None : Option<Nothing>()
@@ -80,13 +66,13 @@ inline fun <A> Option<A>.orElseGet(other: () -> A): A = when (this) {
     is Option.None -> other()
 }
 
-fun <A> Option<A>.isPresent(): Boolean = when (this) {
+fun <A> Option<A>.isNonEmpty(): Boolean = when (this) {
     is Option.Some -> true
     is Option.None -> false
 }
 
 fun <A> Option<A>.isEmpty(): Boolean =
-    !isPresent()
+    !isNonEmpty()
 
 inline fun <A> Option<A>.filter(predicate: (A) -> Boolean): Option<A> = when (this) {
     is Option.Some -> if (predicate(value)) this else Option.None
@@ -154,36 +140,22 @@ inline fun <A, L, R> Option<A>.toIor(ifNone: () -> L, ifSome: (A) -> R): Ior<L, 
 
 object Options {
     /**
-     * Puts an `A` inside an [Option] via [Option].
-     */
-    fun <A> just(a: A): Option<A> =
-        OptionApplicative.just(a).fix()
-
-    /**
      * Convenience function to
      */
     fun <A, B, C> map2(a: Option<A>, b: Option<B>, f: (A, B) -> C): Option<C> =
-//        a.flatMap { a -> b.map { b -> f(a, b) } }
-//        f.liftOption()(a, b)
-        OptionApplicative.map2(a, b, f).fix()
+        f.liftOption()(a, b)
 
-//    fun <A, B, C, D> map3(a: Option<A>, b: Option<B>, c: Option<C>, f: (A, B, C) -> D): Option<D> =
-//        a.flatMap { a -> b.flatMap { b -> c.map { c -> f(a, b, c) } } }
-//        f.liftOption().invoke(a, b, c)
     fun <A, B, C, D> map3(a: Option<A>, b: Option<B>, c: Option<C>, f: (A, B, C) -> D): Option<D> =
-        OptionApplicative.map3(a, b, c, f).fix()
+        f.liftOption().invoke(a, b, c)
 
     fun <A, B> ((A) -> B).liftOption(): (Option<A>) -> Option<B> =
-//        { it.map(this) }
-        { oa -> OptionApplicative.map(oa, this).fix() }
+        { it.map(this) }
 
     fun <A, B, C> ((A, B) -> C).liftOption(): (Option<A>, Option<B>) -> Option<C> =
-//        { ea, eb -> ea.flatMap { a -> eb.map { b -> this(a, b) } } }
-        {oa, ob -> map2(oa, ob, this) }
+        { ea, eb -> ea.flatMap { a -> eb.map { b -> this(a, b) } } }
 
     fun <A, B, C, D> ((A, B, C) -> D).liftOption(): (Option<A>, Option<B>, Option<C>) -> Option<D> =
-//        { ea, eb, ec -> ea.flatMap { a -> eb.flatMap { b -> ec.map { c -> this(a, b, c) } } } }
-        { oa, ob, oc -> map3(oa, ob, oc, this) }
+        { ea, eb, ec -> ea.flatMap { a -> eb.flatMap { b -> ec.map { c -> this(a, b, c) } } } }
 
 
     fun <A> sequence(xs: Collection<Option<A>>): Option<List<A>> {
