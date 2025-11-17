@@ -4,6 +4,13 @@ package org.vorpal.kosmos.graphs
 import org.vorpal.kosmos.core.FiniteSet
 import org.vorpal.kosmos.core.toUnorderedFiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
+import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.getOrNull
+import org.vorpal.kosmos.functional.datastructures.isEmpty
+import org.vorpal.kosmos.functional.datastructures.map
+import org.vorpal.kosmos.functional.datastructures.orElseGet
+import kotlin.math.max
+import kotlin.math.min
 
 /* ==========================================================
  *  Distances / eccentricity / radius / diameter (undirected)
@@ -36,35 +43,35 @@ fun <V: Any> UndirectedGraph<V>.distancesFrom(source: V): Map<V, Int> {
  * Eccentricity of [v]: max shortest‑path distance from [v] to any vertex in its component;
  * null if graph disconnected.
  */
-fun <V: Any> UndirectedGraph<V>.eccentricity(v: V): Int? {
-    if (vertices.isEmpty) return 0
-    if (!isConnected()) return null
+fun <V: Any> UndirectedGraph<V>.eccentricity(v: V): Option<Int> {
+    if (vertices.isEmpty) return Option.of(0)
+    if (!isConnected()) return Option.None
     val d = distancesFrom(v)
-    return d.values.maxOrNull() ?: 0
+    return Option.of(d.values.maxOrNull() ?: 0)
 }
 
 /** Radius: minimum eccentricity; null if graph disconnected. */
-fun <V: Any> UndirectedGraph<V>.radius(): Int? {
-    if (vertices.isEmpty) return 0
-    if (!isConnected()) return null
+fun <V: Any> UndirectedGraph<V>.radius(): Option<Int> {
+    if (vertices.isEmpty) return Option.of(0)
+    if (!isConnected()) return Option.None
     var best = Int.MAX_VALUE
     for (v in vertices) {
-        val ecc = eccentricity(v) ?: return null
+        val ecc = eccentricity(v).getOrNull() ?: return Option.None
         if (ecc < best) best = ecc
     }
-    return best
+    return Option.of(best)
 }
 
 /** Diameter: maximum eccentricity; null if graph disconnected. */
-fun <V: Any> UndirectedGraph<V>.diameter(): Int? {
-    if (vertices.isEmpty) return 0
-    if (!isConnected()) return null
+fun <V: Any> UndirectedGraph<V>.diameter(): Option<Int> {
+    if (vertices.isEmpty) return Option.of(0)
+    if (!isConnected()) return Option.None
     var worst = 0
     for (v in vertices) {
-        val ecc = eccentricity(v) ?: return null
+        val ecc = eccentricity(v).getOrNull() ?: return Option.None
         if (ecc > worst) worst = ecc
     }
-    return worst
+    return Option.of(worst)
 }
 
 /* ===========================
@@ -152,17 +159,17 @@ fun <V: Any> UndirectedGraph<V>.isBipartite(): Boolean =
     }
 
 /** The bipartition if bipartite, else null. */
-fun <V: Any> UndirectedGraph<V>.bipartition(): Pair<FiniteSet.Unordered<V>, FiniteSet.Unordered<V>>? =
+fun <V: Any> UndirectedGraph<V>.bipartition(): Option<Pair<FiniteSet.Unordered<V>, FiniteSet.Unordered<V>>> =
     when (val r = bipartitionOrOddCycle()) {
-        is Either.Left -> null
-        is Either.Right -> r.value
+        is Either.Left -> Option.None
+        is Either.Right -> Option.of(r.value)
     }
 
 /** An odd cycle if non‑bipartite, else null. */
-fun <V: Any> UndirectedGraph<V>.oddCycle(): List<V>? =
+fun <V: Any> UndirectedGraph<V>.oddCycle(): Option<List<V>> =
     when (val r = bipartitionOrOddCycle()) {
-        is Either.Left -> r.value
-        is Either.Right -> null
+        is Either.Left -> Option.of(r.value)
+        is Either.Right -> Option.None
     }
 
 /* =====================================
