@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import io.kotest.property.arbitrary.int
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.testing.finiteSet
 
 class FiniteSetGenSpec : StringSpec({

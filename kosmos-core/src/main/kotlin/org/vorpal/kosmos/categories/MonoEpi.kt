@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.categories
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 // TODO: This needs to be moved, probably to a testing location.
 fun <A, B> isMonoSet(

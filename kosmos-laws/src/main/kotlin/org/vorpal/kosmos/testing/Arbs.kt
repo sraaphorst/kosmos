@@ -8,7 +8,7 @@ import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.set
 import io.kotest.property.arbitrary.triple
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.Eq
 
 /** suchThat is simply an alias for filter, implemented for enhanced readability. */

@@ -1,15 +1,26 @@
 package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.core.Identity
+import org.vorpal.kosmos.functional.core.Kind
+import org.vorpal.kosmos.functional.core.Kind2
 import org.vorpal.kosmos.functional.optics.Prism
 
-sealed class Either<out L, out R> {
+object ForEither
+typealias EitherOf<A, B> = Kind2<ForEither, A, B>
+@Suppress("UNCHECKED_CAST")
+val <A, B> EitherOf<A, B>.fix: Either<A, B>
+    get() = this as Either<A, B>
+
+
+sealed class Either<out L, out R>: EitherOf<L, R> {
     data class Left<out L>(val value: L) : Either<L, Nothing>()
     data class Right<out R>(val value: R) : Either<Nothing, R>()
 
     companion object {
         fun <L> left(value: L): Either<L, Nothing> = Left(value)
+        fun <L, R> leftAs(value: L): Either<L, R> = Left(value)
         fun <R> right(value: R): Either<Nothing, R> = Right(value)
+        fun <L, R> rightAs(value: R): Either<L, R> = Right(value)
     }
 }
 
@@ -197,8 +208,7 @@ object Eithers {
         tailrec fun aux(iter: Iterator<Either<L, R>> = xs.iterator(),
                         rights: MutableList<R> = mutableListOf()): Either<L, List<R>> {
             if (!iter.hasNext()) return Either.Right(rights.toList())
-            val head = iter.next()
-            return when (head) {
+            return when (val head = iter.next()) {
                 is Either.Left -> Either.Left(head.value)
                 is Either.Right -> {
                     rights.add(head.value)
@@ -220,8 +230,7 @@ object Eithers {
         tailrec fun aux(iter: Iterator<A> = xs.iterator(),
                         rights: MutableList<R> = mutableListOf()): Either<L, List<R>> {
             if (!iter.hasNext()) return Either.Right(rights.toList())
-            val head = iter.next()
-            return when (val result = f(head)) {
+            return when (val result = f(iter.next())) {
                 is Either.Left -> Either.Left(result.value)
                 is Either.Right -> {
                     rights.add(result.value)

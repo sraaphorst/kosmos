@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.functional.optics
 
+import org.vorpal.kosmos.core.Identity
+
 /**
  * # Prism
  *
@@ -250,6 +252,17 @@ data class PPrism<S, T, A, B>(
      */
     fun toSetter(): PSetter<S, T, A, B> =
         PSetter(this::modify)
+
+    companion object {
+        /**
+         * A Prism that never matches: useful for composition tricks.
+         */
+        fun <S, A> never(): Prism<S, A> = Prism(
+            getterOrNull = { null },
+            reverseGetter = { throw IllegalStateException("Unreachable") },
+            identityT = Identity()
+        )
+    }
 }
 
 /**

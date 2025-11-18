@@ -8,6 +8,7 @@ import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.string
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.functional.datastructures.Options.catches
+import org.vorpal.kosmos.functional.datastructures.Options.catchesAll
 import org.vorpal.kosmos.functional.datastructures.Options.map2
 import org.vorpal.kosmos.functional.datastructures.Options.sequence
 import org.vorpal.kosmos.functional.datastructures.Options.traverse
@@ -194,12 +195,12 @@ class OptionSpec : FunSpec({
 
         test("Some(x).isPresent() == true") {
             checkAll(Arb.int()) { x ->
-                Option.Some(x).isPresent() shouldBe true
+                Option.Some(x).isNonEmpty() shouldBe true
             }
         }
 
         test("None.isPresent() == false") {
-            Option.None.isPresent() shouldBe false
+            Option.None.isNonEmpty() shouldBe false
         }
     }
 
@@ -386,7 +387,7 @@ class OptionSpec : FunSpec({
         }
     }
 
-    context("catches") {
+    context("catches and catchesAll") {
 
         test("successful computation returns Option.Some") {
             checkAll(Arb.int()) { x ->
@@ -473,7 +474,7 @@ class OptionSpec : FunSpec({
         }
 
         test("catches errors (not just exceptions)") {
-            val result = catches<Int> {
+            val result = catchesAll<Int> {
                 throw OutOfMemoryError("simulated")
             }
             result shouldBe Option.None

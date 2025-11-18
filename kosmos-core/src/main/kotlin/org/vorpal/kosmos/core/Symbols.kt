@@ -37,7 +37,10 @@ object Symbols {
     const val BB_Y = "𝕐"
     const val BB_Z = "ℤ"
     const val BECAUSE = "∵"
+    const val BIG_DOT = "•"
+    const val BOWTIE = "⋈"
     const val BOX = "□"
+    const val BOX_TIMES = "⊠"
     const val COLON_EQUALS = "≔"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
@@ -55,6 +58,8 @@ object Symbols {
     const val FALSE = "⊥"
     const val FORCES = "⊩"
     const val FORALL = "∀"
+    const val GREATER_THAN = ">"
+    const val GREATER_THAN_EQ = "≥"
     const val IFF = "↔"
     const val IFF_BB = "⇔"
     const val IMPLIES = "→"
@@ -64,6 +69,8 @@ object Symbols {
     const val INTEGRAL_DOUBLE = "∬"
     const val INTEGRAL_TRIPLE = "∭"
     const val ISOMORPHIC = "≅"
+    const val LESS_THAN = "<"
+    const val LESS_THAN_EQ = "≤"
     const val MAPS_INTO = "↪"
     const val MAPS_ONTO = "↠"
     const val MAPS_TO = "↦"
@@ -77,25 +84,30 @@ object Symbols {
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
     const val PLUS = "+"
-    const val PLUSMINUS = "±"
+    const val PLUS_MINUS = "±"
     const val PROD = "∏"
     const val PROVES = "⊢"
     const val PROVES_NOT = "⊬"
+    const val REL = "R"
+    const val SET_COMPLEMENT_PRE = "~"
+    const val SET_COMPLEMENT_POST = "ᶜ"
     const val SET_ELEM = "∈"
     const val SET_ELEM_NOT = "∉"
     const val SET_EMPTY = "Ø"
     const val SET_INTERSECTION = "∩"
+    const val SET_MINUS = "\\"
     const val SET_SUBSET = "⊂"
     const val SET_SUBSET_EQ = "⊆"
     const val SET_SUBSET_NOT = "⊄"
     const val SET_SUPERSET = "⊃"
     const val SET_SUPERSET_EQ = "⊇"
     const val SET_SUPERSET_NOT = "⊅"
-    const val SET_SYMM_DIFF = "∆"
+    const val SET_SYMM_DIFF = "Δ"
     const val SET_UNION = "∪"
     const val SET_UNION_DISJOINT = "⊔"
     const val SQRT = "√"
     const val SUM = "∑"
+    const val TENSOR = "⊗"
     const val THEREFORE = "∴"
     const val TIMES = "×"
     const val TRIANGLE_RIGHT = "⊳"
@@ -108,9 +120,13 @@ object Symbols {
 
     // Aliases
     const val ARROW_RIGHT = IMPLIES
+    const val BOOL_AND = WEDGE
+    const val BOOL_OR = VEE
     const val INJECTION = MAPS_INTO
+    const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT
     const val SIGMA = SUM
+    const val SQUARED_TIMES = BOX_TIMES
     const val SURJECTION = MAPS_ONTO
     const val TURNSTYLE_DOUBLE = ENTAILS
     const val TURNSTYLE = PROVES

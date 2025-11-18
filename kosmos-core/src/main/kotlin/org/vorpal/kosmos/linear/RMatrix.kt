@@ -1,9 +1,10 @@
 package org.vorpal.kosmos.linear
 
+import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.Ring
 
 /**
- * The most general form of a matrix over a ring.
+ * The most general form of a matrix over a [Ring] (as opposed to [Matrix], which is over a [Field]).
  */
 open class RMatrix<R: Any>(
     val rows: Int,
@@ -23,14 +24,15 @@ open class RMatrix<R: Any>(
         RMatrix(rows, cols, ring, data.map { row -> row.map(f) })
 
     fun transpose(): RMatrix<R> =
-        RMatrix(cols, rows, ring, (0 until cols).map { j -> (0 until rows).map { i -> data[i][j] } })
+        RMatrix(cols, rows, ring,
+            (0 until cols).map { j -> (0 until rows).map { i -> data[i][j] } })
 
     /** Matrix addition over the field. */
     operator fun plus(other: RMatrix<R>): RMatrix<R> {
         require(rows == other.rows && cols == other.cols)
         val sum = List(rows) { i ->
             List(cols) { j ->
-                ring.add.op.combine(this[i, j], other[i, j])
+                ring.add.op(this[i, j], other[i, j])
             }
         }
         return RMatrix(rows, cols, ring, sum)
@@ -43,8 +45,8 @@ open class RMatrix<R: Any>(
             List(other.cols) { j ->
                 var sum = ring.add.identity
                 for (k in 0 until cols) {
-                    val term = ring.mul.op.combine(this[i, k], other[k, j])
-                    sum = ring.add.op.combine(sum, term)
+                    val term = ring.mul.op(this[i, k], other[k, j])
+                    sum = ring.add.op(sum, term)
                 }
                 sum
             }

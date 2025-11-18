@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     kotlin("jvm")
     kotlin("plugin.serialization") version "2.2.0"
@@ -9,4 +11,9 @@ val serializationVersion = extra["serializationVersion"]
 
 dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:$serializationVersion")
+}
+
+val compileKotlin: KotlinCompile by tasks
+compileKotlin.compilerOptions {
+    freeCompilerArgs.set(listOf("-Xcontext-parameters"))
 }
