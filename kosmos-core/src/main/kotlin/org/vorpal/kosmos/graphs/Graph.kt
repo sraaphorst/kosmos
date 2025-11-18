@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.graphs
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 /**
  * An abstraction of a general graph, containing a set of vertices.

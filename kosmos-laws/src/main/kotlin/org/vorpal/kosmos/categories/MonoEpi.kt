@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.categories
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.implies
 
 object MonoEpi {

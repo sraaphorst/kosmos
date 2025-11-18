@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.algorithms.combinatorial
 
 import org.vorpal.kosmos.combinatorics.Factorial
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
 import java.math.BigInteger
 import java.util.Random

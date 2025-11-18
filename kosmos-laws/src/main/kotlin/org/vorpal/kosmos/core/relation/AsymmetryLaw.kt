@@ -5,17 +5,14 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
 
-import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.relations.Relation
-import org.vorpal.kosmos.testing.distinct
 
-/** Connexity (Totality): a≠b ⇒ R(a,b) ∨ R(b,a) */
-class ConnexityLaw<A: Any>(
+/** Asymmetry: x R y ⇒ y ¬R x */
+class AsymmetryLaw<A: Any>(
     private val rel: Relation<A>,
     private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
     private val pr: Printable<A> = Printable.default(),
     private val symbol: String = "R",
     private val notSymbol: String = "¬$symbol"
@@ -24,18 +21,19 @@ class ConnexityLaw<A: Any>(
     constructor(
         rel: Relation<A>,
         arb: Arb<A>,
-        eq: Eq<A>,
         pr: Printable<A> = Printable.default(),
         symbol: String = "R",
         notSymbol: String = "¬$symbol"
-    ) : this(rel, Arb.pair(arb, arb), eq, pr, symbol, notSymbol)
+    ) : this(rel, Arb.pair(arb, arb), pr, symbol, notSymbol)
 
-    override val name = "connexity ($symbol)"
+    override val name = "asymmetry ($symbol)"
 
     override suspend fun test() {
-        checkAll(pairArb.distinct(eq)) { (a, b) ->
-            withClue(failureMessage(a, b)) {
-                check(rel(a, b) || rel(b, a))
+        checkAll(pairArb) { (a, b) ->
+            if (rel(a, b)) {
+                withClue(failureMessage(a, b)) {
+                    check(!rel(b, a))
+                }
             }
         }
     }
@@ -43,6 +41,6 @@ class ConnexityLaw<A: Any>(
     private fun failureMessage(a: A, b: A): () -> String = {
         val sa = pr.render(a)
         val sb = pr.render(b)
-        "Connexity failed: $sa ≠ $sb, but $sa $notSymbol $sb and $sb $notSymbol $sa"
+        "Asymmetry failed: $sa $symbol $sb and $sb $symbol $sa"
     }
 }

@@ -2,7 +2,7 @@ package org.vorpal.kosmos.categories
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 // Reused sets
 private val set03 = FiniteSet.ordered(0..3)

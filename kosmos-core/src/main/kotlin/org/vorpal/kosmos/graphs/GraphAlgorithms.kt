@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.graphs
 
-import org.vorpal.kosmos.core.FiniteSet
-import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.Options.liftOption

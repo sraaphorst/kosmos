@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSet
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 

@@ -1,14 +1,14 @@
 package org.vorpal.kosmos.bridge
 
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras.F2
-import org.vorpal.kosmos.core.FiniteSet
-import org.vorpal.kosmos.core.toOrderedFiniteSet
-import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.finiteset.toOrderedFiniteSet
+import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.graphs.AdjacencySetDirectedGraph
 import org.vorpal.kosmos.graphs.DirectedEdge
 import org.vorpal.kosmos.graphs.DirectedGraph
 import org.vorpal.kosmos.linear.Matrix
-import org.vorpal.kosmos.relations.Relation
 
 /**
  * A functorial bridge between finite binary relations, directed graphs,

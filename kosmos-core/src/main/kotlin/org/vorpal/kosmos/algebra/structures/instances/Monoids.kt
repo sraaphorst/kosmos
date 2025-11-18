@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 
@@ -15,24 +15,5 @@ object Monoids {
     fun <A> listMonoid(): Monoid<List<A>> = object : Monoid<List<A>> {
         override val identity: List<A> = emptyList()
         override val op: BinOp<List<A>> = BinOp(symbol = Symbols.PLUS) { a, b -> a + b }
-    }
-
-    /**
-     * For a finite set S, create the commutative monoid (P(S), ∪) where the identity is Ø.
-     */
-    fun <A> setUnionMonoid(): CommutativeMonoid<FiniteSet<A>> = object : CommutativeMonoid<FiniteSet<A>> {
-        override val identity: FiniteSet<A> = FiniteSet.of()
-        override val op: BinOp<FiniteSet<A>> = BinOp(symbol = Symbols.SET_UNION) { a, b -> a + b }
-    }
-
-    /**
-     * For a finite set S, create the monoid (P(S), ∩) where the identity is S.
-     */
-    fun <A> setIntersectionMonoid(fullSet: FiniteSet<A>): CommutativeMonoid<FiniteSet<A>> = object : CommutativeMonoid<FiniteSet<A>> {
-        override val identity: FiniteSet<A> = fullSet
-        override val op: BinOp<FiniteSet<A>> = BinOp(symbol = Symbols.SET_INTERSECTION) { a, b ->
-            check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
-            check(b.isSubsetOf(fullSet)) { "Set $b is not a subset of $fullSet" }
-            a.intersect(b) }
     }
 }
