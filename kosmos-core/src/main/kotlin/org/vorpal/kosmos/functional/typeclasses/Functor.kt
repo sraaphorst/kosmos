@@ -12,6 +12,3 @@ import org.vorpal.kosmos.functional.core.Kind
 interface Functor<F> {
     fun <A, B> map(fa: Kind<F, A>, f: (A) -> B): Kind<F, B>
 }
-
-fun <F, A, B> Kind<F, A>.maps(fx: Functor<F>, f: (A) -> B): Kind<F, B> =
-    fx.map(this, f)

@@ -743,6 +743,79 @@ fun <V: Any> UndirectedGraph<V>.bridgesAndArticulations(): BridgeArt<V> {
     return BridgeArt(bridges = s.bridges.toSet(), articulations = s.articulations.toSet())
 }
 
+/* ============================
+ *  Undirected radius-d balls
+ * ============================ */
+
+/** Vertices within distance ≤ d from [source] (inclusive). */
+fun <V : Any> UndirectedGraph<V>.dNeighborsFrom(source: V, d: Int): FiniteSet.Unordered<V> {
+    require(source in vertices) { "dNeighborsFrom: $source not in vertex set" }
+    require(d >= 0) { "dNeighborsFrom: d must be nonnegative" }
+
+    val acc = LinkedHashSet<V>()
+    bfsDepthLimitedFrom(
+        start = source,
+        neighbors = { v -> neighbors(v) },
+        maxDepth = d,
+        initial = Unit,
+        onDiscover = { _, v, _ ->
+            acc.add(v)
+            Unit
+        },
+        onEdge = { s, _, _, _, _ -> s }
+    )
+    return acc.toUnorderedFiniteSet()
+}
+
+/** For each v, the set of vertices at distance ≤ d from v (inclusive). */
+fun <V : Any> UndirectedGraph<V>.dNeighbors(d: Int): Map<V, FiniteSet.Unordered<V>> {
+    require(d >= 0) { "dNeighbors: d must be nonnegative" }
+    if (vertices.isEmpty) return emptyMap()
+    val out = LinkedHashMap<V, FiniteSet.Unordered<V>>(vertices.size)
+    for (v in vertices) out[v] = dNeighborsFrom(v, d)
+    return out
+}
+
+/* ============================
+ *  Directed radius-d reachability
+ * ============================ */
+
+/** Out-reachability within ≤ d steps from [source] following OUT-arcs. */
+fun <V : Any> DirectedGraph<V>.dReachableOutFrom(source: V, d: Int): FiniteSet.Unordered<V> {
+    require(source in vertices) { "dReachableOutFrom: $source not in vertex set" }
+    require(d >= 0) { "dReachableOutFrom: d must be nonnegative" }
+
+    val acc = LinkedHashSet<V>()
+    bfsDepthLimitedFrom(
+        start = source,
+        neighbors = { v -> outNeighbors(v) },
+        maxDepth = d,
+        initial = Unit,
+        onDiscover = { _, v, _ ->
+            acc.add(v)
+            Unit
+        },
+        onEdge = { s, _, _, _, _ -> s }
+    )
+    return acc.toUnorderedFiniteSet()
+}
+
+/** In-reachability within ≤ d steps to [source] (i.e., along IN-arcs). */
+fun <V : Any> DirectedGraph<V>.dReachableInFrom(source: V, d: Int): FiniteSet.Unordered<V> {
+    // Use the transpose to reuse the OUT-BFS
+    return this.toTransposeGraph().dReachableOutFrom(source, d)
+}
+
+/** For each v, the set of vertices reachable within ≤ d steps along OUT-arcs. */
+fun <V : Any> DirectedGraph<V>.dReachableOut(d: Int): Map<V, FiniteSet.Unordered<V>> {
+    require(d >= 0) { "dReachableOut: d must be nonnegative" }
+    if (vertices.isEmpty) return emptyMap()
+    val out = LinkedHashMap<V, FiniteSet.Unordered<V>>(vertices.size)
+    for (v in vertices) out[v] = dReachableOutFrom(v, d)
+    return out
+}
+
+
 /* ===============================
  *  SCCs & condensation (directed)
  * ===============================*/

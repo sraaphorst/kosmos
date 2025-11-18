@@ -185,3 +185,53 @@ fun <V: Any, S> dfsFoldComponentsWithFinish(
     }
     return s
 }
+
+/**
+ * Depth-limited BFS fold from a single start.
+ *
+ * @param neighbors adjacency function
+ * @param maxDepth inclusive limit (0 ⇒ only the start)
+ * @param initial initial state threaded through the traversal
+ * @param onDiscover called exactly once per vertex when first discovered (with its depth)
+ * @param onEdge called for every examined edge v→w; `tree` indicates first-time discovery of w
+ *               `nextDepth` is depth(v)+1 (not necessarily ≤ maxDepth if you ignore it)
+ * @return final state
+ */
+fun <V : Any, S> bfsDepthLimitedFrom(
+    start: V,
+    neighbors: (V) -> Iterable<V>,
+    maxDepth: Int,
+    initial: S,
+    onDiscover: (S, V, Int) -> S,
+    onEdge: (S, V, V, Boolean, Int) -> S
+): S {
+    require(maxDepth >= 0) { "bfsDepthLimitedFrom: maxDepth must be ≥ 0" }
+
+    val depth = HashMap<V, Int>()
+    val q = ArrayDeque<V>()
+
+    var state = initial
+    depth[start] = 0
+    q.add(start)
+    state = onDiscover(state, start, 0)
+
+    while (q.isNotEmpty()) {
+        val v = q.removeFirst()
+        val dv = depth.getValue(v)
+
+        if (dv == maxDepth) continue
+
+        for (w in neighbors(v)) {
+            val nextDepth = dv + 1
+            if (w !in depth) {
+                depth[w] = nextDepth
+                q.add(w)
+                state = onEdge(state, v, w, true, nextDepth)
+                state = onDiscover(state, w, nextDepth)
+            } else {
+                state = onEdge(state, v, w, false, nextDepth)
+            }
+        }
+    }
+    return state
+}
