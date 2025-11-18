@@ -5,9 +5,9 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.checkAll
 
+import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.relations.Relation
 
 /** Transitivity: (a R b ∧ b R c) ⇒ a R c */
 class TransitivityLaw<A: Any>(

@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.graphs
 
-import org.vorpal.kosmos.core.FiniteSet
-import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 
 // ---------- Induced restriction (just V ∩ universe) ----------
 
@@ -43,4 +43,10 @@ fun <V: Any> DirectedGraph<V>.embedIntoUniverse(
     val g = inducedSubgraph(subV)
     val missing = (universe - subV).toUnorderedFiniteSet()
     return if (missing.isEmpty) g else g overlay factory(missing)
+}
+
+fun <V: Any> UndirectedGraph<V>.complementOn(universe: FiniteSet.Unordered<V>): UndirectedGraph<V> {
+    val all = AdjacencySetUndirectedGraph.complete(universe).edges
+    val e = (all - edges).toUnorderedFiniteSet()
+    return AdjacencySetUndirectedGraph.of(universe, e)
 }

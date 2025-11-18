@@ -5,7 +5,7 @@ import io.kotest.property.arbitrary.element
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.ops.OpTag
 import org.vorpal.kosmos.algebra.structures.*
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.assertEquals
 import org.vorpal.kosmos.laws.property.CommutativityLaws

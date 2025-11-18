@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.functional.datastructures
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.functional.core.Kind
 import org.vorpal.kosmos.functional.optics.Prism

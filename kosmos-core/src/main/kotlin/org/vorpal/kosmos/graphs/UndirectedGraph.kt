@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.graphs
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.neighborhood.Neighborhood
 import org.vorpal.kosmos.functional.datastructures.Either
 import org.vorpal.kosmos.functional.datastructures.Option

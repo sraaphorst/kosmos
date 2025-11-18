@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics
 
 import org.vorpal.kosmos.categories.Bijection
 import org.vorpal.kosmos.categories.Morphism
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.gcd
 import org.vorpal.kosmos.core.lcm
 import org.vorpal.kosmos.core.ops.UnaryOp

@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.core.neighborhood
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 /**
  * Represents an object that can have a neighborhood. Examples include:

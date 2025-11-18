@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.core
+package org.vorpal.kosmos.core.finiteset
 
 import org.vorpal.kosmos.functional.core.Kind
 import kotlin.collections.emptyList

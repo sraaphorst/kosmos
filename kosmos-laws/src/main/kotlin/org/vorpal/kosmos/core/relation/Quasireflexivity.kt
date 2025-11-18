@@ -5,9 +5,9 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
 
+import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.relations.Relation
 
 private sealed interface QuasiReflexivityCore<A: Any> {
     val rel: Relation<A>

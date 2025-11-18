@@ -3,8 +3,8 @@ package org.vorpal.kosmos.graphs
 import io.kotest.property.Arb
 import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.*
-import org.vorpal.kosmos.core.FiniteSet
-import org.vorpal.kosmos.core.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 import kotlin.math.min
 
 /**
