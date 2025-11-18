@@ -388,6 +388,129 @@ infix fun <V : Any, W : Any> DirectedGraph<V>.lexicographicProduct(other: Direct
     return AdjacencySetDirectedGraph.of(v, e)
 }
 
+/**
+ * Builds the *d-th power* of this undirected graph, commonly denoted `G^d`.
+ *
+ * Two distinct vertices `u` and `v` are adjacent in `G^d` iff their shortest-path
+ * distance in the original graph is at most `d`.
+ *
+ * Formally:
+ *
+ *  - `V(G^d) = V(G)`,
+ *  - `E(G^d) = { {u,v} : u ≠ v and dist_G(u, v) ≤ d }`.
+ *
+ * The resulting graph is simple:
+ *  - no self-loops are added (pairs with `u == v` are ignored),
+ *  - parallel edges are deduplicated by the underlying `FiniteSet`.
+ *
+ * Special cases and behavior:
+ *  - `d == 0` ⇒ edgeless graph on `V(G)`.
+ *  - `d == 1` ⇒ exactly the original graph.
+ *  - Disconnected inputs are handled component-wise: only vertices within the
+ *    same connected component can become adjacent.
+ *
+ * Implementation notes:
+ *  - Uses a depth-limited BFS from each vertex (cut off at depth `d`). To avoid
+ *    generating each undirected edge twice, vertices are given stable indices and
+ *    we only add an edge `{u,v}` the first time we encounter it (when `idx(v) > idx(u)`).
+ *
+ * Complexity:
+ *  - Time: `O( Σ_v BFS_d(v) )`, i.e. the sum of depth-limited BFS costs. In the worst
+ *    case this is `O(|V|(|V|+|E|))`, but typically much smaller for moderate `d`.
+ *  - Space: `O(|V| + |E|)` transiently (queue/visited), plus the output edge set.
+ *
+ * @receiver The base undirected graph `G`.
+ * @param d Non-negative radius used to define adjacency in `G^d`.
+ * @return A new [AdjacencySetUndirectedGraph] on the same vertex set representing `G^d`.
+ * @throws IllegalArgumentException if `d < 0`.
+ *
+ * @see distancesFrom for the underlying metric used
+ * @see bfsDepthLimitedFrom for the traversal primitive
+ */
+fun <V: Any> UndirectedGraph<V>.power(d: Int): AdjacencySetUndirectedGraph<V> {
+    require(d >= 0) { "Power must be non-negative: $d" }
+    if (vertices.isEmpty || d == 0) return AdjacencySetUndirectedGraph.edgeless(vertices)
+
+    // Give each vertex a stable index so we only add edges once (idx[w] > idx[v]).
+    val idx = vertices.toList().withIndex().associate { (i, v) -> v to i }
+
+    val acc = mutableListOf<UndirectedEdge<V>>()
+    for (v in vertices) {
+        val iv = idx.getValue(v)
+        // reuse the depth-limited BFS helper
+        bfsDepthLimitedFrom(
+            start = v,
+            neighbors = { x -> neighbors(x) },
+            maxDepth = d,
+            initial = Unit,
+            onDiscover = { _, w, _ ->
+                if (w !== v && idx.getValue(w) > iv) acc += UndirectedEdge(v, w)
+            },
+            onEdge = { s, _, _, _, _ -> s }
+        )
+    }
+    return AdjacencySetUndirectedGraph.of(vertices, acc.toUnorderedFiniteSet())
+}
+
+/**
+ * Builds the *out-power* `G^d_out` of this directed graph.
+ *
+ * For vertices `u` and `v`, the arc `u → v` is present in the result iff there exists
+ * a directed path in the original graph from `u` to `v` of length at most `d`
+ * following **out-edges only**. Formally,
+ *
+ *  - `V(G^d_out) = V(G)`,
+ *  - `E(G^d_out) = { (u,v) : u ≠ v and dist_G^→(u, v) ≤ d }`,
+ *
+ * where `dist_G^→` is the shortest directed (forward) path length. No self-loops are
+ * created (`u == v` is excluded). The operation is *not* symmetric: in general
+ * `(u,v)` in `G^d_out` does **not** imply `(v,u)` in `G^d_out`, even when both are within
+ * distance `≤ d` in the underlying undirected sense.
+ *
+ * Special cases:
+ *  - `d == 0` ⇒ edgeless digraph on `V(G)`.
+ *  - `d == 1` ⇒ exactly the original digraph.
+ *  - Strong connectivity is *not* required: if `v` is unreachable from `u`, no arc is added.
+ *
+ * Implementation notes:
+ *  - Performs a depth-limited BFS from each source `u` using `outNeighbors`. Every
+ *    discovered vertex `w ≠ u` within depth `≤ d` receives an arc `u → w`.
+ *
+ * Complexity:
+ *  - Time: `O( Σ_u BFS_d^→(u) )`, i.e. the sum of depth-limited forward BFS costs.
+ *    Worst-case `O(|V|(|V|+|E|))`.
+ *  - Space: `O(|V| + |E|)` transiently (queue/visited), plus output arcs.
+ *
+ * @receiver The base directed graph `G`.
+ * @param d Non-negative radius in terms of directed path length.
+ * @return A new `AdjacencySetDirectedGraph` whose arcs capture reachability within
+ *         `≤ d` steps along out-edges.
+ * @throws IllegalArgumentException if `d < 0`.
+ *
+ * @see DirectedGraph.outNeighbors for the direction respected by the metric
+ * @see bfsDepthLimitedFrom for the traversal primitive
+ * @see weakDistancesFrom for the undirected (weak) alternative
+ */
+fun <V: Any> DirectedGraph<V>.powerOut(d: Int): AdjacencySetDirectedGraph<V> {
+    require(d >= 0) { "Power must be non-negative: $d" }
+    if (vertices.isEmpty || d == 0) return AdjacencySetDirectedGraph.edgeless(vertices)
+
+    val acc = mutableListOf<DirectedEdge<V>>()
+    for (v in vertices) {
+        bfsDepthLimitedFrom(
+            start = v,
+            neighbors = { x -> outNeighbors(x) },
+            maxDepth = d,
+            initial = Unit,
+            onDiscover = { _, w, _ ->
+                if (w !== v) acc += DirectedEdge(v, w)
+            },
+            onEdge = { s, _, _, _, _ -> s }
+        )
+    }
+    return AdjacencySetDirectedGraph.of(vertices, acc.toUnorderedFiniteSet())
+}
+
 /* =========================================================
  *  Edge complements (fixed universe)
  * ========================================================= */
