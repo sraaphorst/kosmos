@@ -6,7 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSet
 
 class PermutationSpec : FreeSpec({

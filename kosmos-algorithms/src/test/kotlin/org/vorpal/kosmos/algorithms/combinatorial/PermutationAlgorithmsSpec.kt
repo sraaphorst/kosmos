@@ -13,7 +13,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.combinatorics.Factorial
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
 import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 import org.vorpal.kosmos.combinatorics.generateArbPermutationOfSize

@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.algorithms.combinatorial
 
-import org.vorpal.kosmos.core.FiniteSet
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 /**
  * Given an (ordered) subset, generate all subsets of the set as a sequence.

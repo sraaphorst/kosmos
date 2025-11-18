@@ -2,9 +2,16 @@ package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Identity
+import org.vorpal.kosmos.functional.core.Kind2
 import org.vorpal.kosmos.functional.optics.Prism
 
-sealed class Ior<out A, out B> {
+object ForIor
+typealias IorOf<A, B> = Kind2<ForIor, A, B>
+@Suppress("UNCHECKED_CAST")
+val <A, B> IorOf<A, B>.fix: Ior<A, B>
+    get() = this as Ior<A, B>
+
+sealed class Ior<out A, out B>: IorOf<A, B> {
     data class Left<out A>(val value: A) : Ior<A, Nothing>()
     data class Right<out B>(val value: B) : Ior<Nothing, B>()
     data class Both<out A, out B>(val first: A, val second: B) : Ior<A, B>()
@@ -100,6 +107,10 @@ fun <A1, A2, B1, B2> Ior<A1, B1>.bimap(
     is Ior.Both -> Ior.Both(f(first), g(second))
 }
 
+context(semigroup: Semigroup<B>)
+fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(f: (A1) -> Ior<A2, B>): Ior<A2, B> =
+    flatMapLeft(semigroup.op.combine, f)
+
 fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
     semigroup: Semigroup<B>,
     f: (A1) -> Ior<A2, B>
@@ -117,6 +128,10 @@ fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
         is Ior.Both -> Ior.Both(result.first, combine(second, result.second))
     }
 }
+
+context(semigroup: Semigroup<A>)
+fun <A: Any, B, C> Ior<A, B>.flatMap(f: (B) -> Ior<A, C>): Ior<A, C> =
+    flatMapRight(semigroup.op.combine, f)
 
 fun <A: Any, B1, B2> Ior<A, B1>.flatMapRight(
     semigroup: Semigroup<A>,
