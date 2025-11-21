@@ -13,7 +13,7 @@ object BooleanXORGroup: AbelianGroup<Boolean> {
     override val identity: Boolean = false
     override val op: BinOp<Boolean> =
         BinOp(symbol = Symbols.O_PLUS) { x, y -> x xor y}
-    override val inverse: (Boolean) -> Boolean = Identity()
+    override val inverse = Endo<Boolean>(Symbols.NOTHING, Identity())
 }
 
 object BooleanANDMonoid: CommutativeMonoid<Boolean> {
@@ -39,7 +39,7 @@ object BooleanField: Field<Boolean> {
     override val mul: AbelianGroup<Boolean> = object : AbelianGroup<Boolean> {
         override val identity: Boolean = true
         override val op: BinOp<Boolean> = BinOp(symbol = Symbols.WEDGE) { x, y -> x and y }
-        override val inverse: (Boolean) -> Boolean = Identity()
+        override val inverse = Endo<Boolean>(Symbols.NOTHING, Identity())
     }
 }
 

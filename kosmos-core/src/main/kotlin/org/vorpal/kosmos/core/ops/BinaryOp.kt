@@ -8,9 +8,9 @@ import org.vorpal.kosmos.core.Symbols
 
 /** A heterogeneous binary operation (A, B) -> R with a printable symbol. */
 data class BinaryOp<A, B, R>(
-    val symbol: String = Symbols.DOT,
+    override val symbol: String = Symbols.DOT,
     val combine: (A, B) -> R
-) {
+): Op {
     constructor(combine: (A, B) -> R) : this(Symbols.DOT, combine)
     operator fun invoke(a: A, b: B): R = combine(a, b)
 }

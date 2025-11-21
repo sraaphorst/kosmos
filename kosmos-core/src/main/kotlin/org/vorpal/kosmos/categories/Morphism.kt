@@ -8,8 +8,11 @@ fun interface Morphism<A, B> {
     fun apply(a: A): B
 
     /** Morphism composition: note (f then g)(x) = g(f(x)). */
-    infix fun <C> then(g: Morphism<B, C>): Morphism<A, C> =
+    infix fun <C> andThen(g: Morphism<B, C>): Morphism<A, C> =
         Morphism { g.apply(apply(it)) }
+
+    infix fun <C> compose(g: Morphism<C, A>): Morphism<C, B> =
+        g andThen this
 
     /** Create an equality checker for a given morphism from domain (a set of A) to B.
      * This produces a function that takes another morphism from A to B and determines if they are equal over the domain. */
@@ -84,7 +87,7 @@ fun interface Endomorphism<A> : Morphism<A, A> {
 interface Automorphism<A> : Isomorphism<A, A>, Endomorphism<A> {
     /** Composition of automorphisms: still an automorphism. */
     infix fun then(g: Automorphism<A>): Automorphism<A> = of(
-        forward then g.forward, g.backward then backward
+        forward andThen g.forward, g.backward andThen backward
     )
 
     override fun inverse(): Automorphism<A> = of(backward, forward)
@@ -160,13 +163,13 @@ fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> 
 val intAutoGroup: Group<Automorphism<Int>> = Group.of(
     op = Automorphism<Int>::then,
     identity = Automorphism.id(),
-    inverse = Automorphism<Int>::inverse
+    inverseOp = Automorphism<Int>::inverse
 )
 
 object CategoryOfMorphisms {
     fun <A> id(): Morphism<A, A> = Morphism.id()
     fun <A, B, C> compose(f: Morphism<B, C>, g: Morphism<A, B>): Morphism<A, C> =
-        g then f
+        g andThen f
 }
 
 class OneObjectCategory<A>(

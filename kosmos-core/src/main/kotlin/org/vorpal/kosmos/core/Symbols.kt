@@ -10,6 +10,7 @@ object Symbols {
     const val ARROW_UP = "↑"
     const val ARROW_DOWN = "↓"
     const val ASTERISK = "*"
+    const val BACKSLASH = "\\"
     const val BB_A = "𝔸"
     const val BB_B = "𝔹"
     const val BB_C = "ℂ"
@@ -68,6 +69,7 @@ object Symbols {
     const val INTEGRAL = "∫"
     const val INTEGRAL_DOUBLE = "∬"
     const val INTEGRAL_TRIPLE = "∭"
+    const val INVERSE = "⁻¹"
     const val ISOMORPHIC = "≅"
     const val LESS_THAN = "<"
     const val LESS_THAN_EQ = "≤"
@@ -95,7 +97,6 @@ object Symbols {
     const val SET_ELEM_NOT = "∉"
     const val SET_EMPTY = "Ø"
     const val SET_INTERSECTION = "∩"
-    const val SET_MINUS = "\\"
     const val SET_SUBSET = "⊂"
     const val SET_SUBSET_EQ = "⊆"
     const val SET_SUBSET_NOT = "⊄"
@@ -105,6 +106,7 @@ object Symbols {
     const val SET_SYMM_DIFF = "Δ"
     const val SET_UNION = "∪"
     const val SET_UNION_DISJOINT = "⊔"
+    const val SLASH = "/"
     const val SQRT = "√"
     const val SUM = "∑"
     const val TENSOR = "⊗"
@@ -125,6 +127,7 @@ object Symbols {
     const val INJECTION = MAPS_INTO
     const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT
+    const val SET_MINUS = BACKSLASH
     const val SIGMA = SUM
     const val SQUARED_TIMES = BOX_TIMES
     const val SURJECTION = MAPS_ONTO
