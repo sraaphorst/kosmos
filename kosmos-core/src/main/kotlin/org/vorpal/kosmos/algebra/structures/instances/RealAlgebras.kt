@@ -3,6 +3,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.clamp
 import org.vorpal.kosmos.core.math.lerp
 import org.vorpal.kosmos.core.ops.Action
@@ -14,15 +15,18 @@ typealias Real = Double
 object RealAlgebras {
     object DoubleField : Field<Double> {
         override val add: AbelianGroup<Double> = AbelianGroup.of(
-            op = Double::plus,
             identity = 0.0,
-            inverse = Double::unaryMinus
+            op = Double::plus,
+            inverseOp = Double::unaryMinus
         )
 
+        // Remember: This is over the NONZERO elements of Double.
         override val mul: AbelianGroup<Double> = AbelianGroup.of(
-            op = Double::times,
             identity = 1.0,
-            inverse = { if (it != 0.0) 1.0 / it else Double.NaN }
+            symbol = Symbols.ASTERISK,
+            op = Double::times,
+            inverseSymbol = Symbols.SLASH,
+            inverseOp = { if (it != 0.0) 1.0 / it else Double.NaN }
         )
     }
 
@@ -38,10 +42,10 @@ object RealAlgebras {
         override val group: AbelianGroup<Vec2R> = AbelianGroup.of(
             op = { a, b -> Vec2R(a.x + b.x, a.y + b.y) },
             identity = Vec2R_ZERO,
-            inverse = { Vec2R(-it.x, -it.y) }
+            inverseOp = { Vec2R(-it.x, -it.y) }
         )
 
-        override val action: Action<Real, Vec2R> = Action { scalar, vec ->
+        override val action: Action<Real, Vec2R> = Action(Symbols.ASTERISK) { scalar, vec ->
             Vec2R(scalar * vec.x, scalar * vec.y)
         }
     }

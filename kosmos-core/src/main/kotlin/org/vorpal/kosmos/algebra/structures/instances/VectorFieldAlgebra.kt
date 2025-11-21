@@ -8,6 +8,7 @@ import org.vorpal.kosmos.analysis.ScalarField
 import org.vorpal.kosmos.analysis.VectorField
 import org.vorpal.kosmos.analysis.VectorFields
 import org.vorpal.kosmos.analysis.plus
+import org.vorpal.kosmos.core.ops.Endo
 
 typealias VectorFieldModule<F, V> = RModule<ScalarField<F, V>, VectorField<F, V>>
 
@@ -28,7 +29,7 @@ object VectorFieldAlgebra {
         AbelianGroup.of(
             op = { vf1, vf2 -> vf1 + vf2 },
             identity = VectorFields.zero(space),
-            inverse = { vf ->
+            inverseOp = { vf ->
                 VectorFields.of(space) {
                     space.group.inverse(vf(it))
                 }

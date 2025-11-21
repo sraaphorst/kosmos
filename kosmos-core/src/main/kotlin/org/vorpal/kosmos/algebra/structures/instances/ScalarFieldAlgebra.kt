@@ -11,6 +11,7 @@ import org.vorpal.kosmos.analysis.ScalarFields
 import org.vorpal.kosmos.analysis.plus
 import org.vorpal.kosmos.analysis.times
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 /**
  * The set of ScalarField<F, V> for a commutative ring.
@@ -34,7 +35,7 @@ object ScalarFieldAlgebra {
                 combine = { sf1, sf2 -> sf1 + sf2 }
             )
 
-            override val inverse: (ScalarField<F, V>) -> ScalarField<F, V> = { sf ->
+            override val inverse: Endo<(ScalarField<F, V>)> = Endo { sf ->
                 ScalarFields.of(space) {
                     space.field.add.inverse(sf(it))
                 }

@@ -29,3 +29,4 @@ typealias Mapper<A, B> = UnaryOp<A, B>
  * An Endo is a UnaryOp from a type to itself.
  */
 typealias Endo<A> = UnaryOp<A, A>
+

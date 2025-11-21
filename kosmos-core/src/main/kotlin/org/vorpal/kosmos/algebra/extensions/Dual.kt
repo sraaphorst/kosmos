@@ -4,7 +4,9 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.Monoid
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.Dual> {
     inner class Dual(val a: F, val b: F) {
@@ -79,29 +81,26 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
         override val identity: Dual =
             Dual(base.add.identity, base.add.identity)
 
-        override val inverse: (Dual) -> Dual =
-            { d -> Dual(base.add.inverse(d.a), base.add.inverse(d.b)) }
+        override val inverse: Endo<Dual> =
+            Endo(Symbols.MINUS) { d -> Dual(base.add.inverse(d.a), base.add.inverse(d.b)) }
 
-        override val op: BinOp<Dual> = BinOp(
-            combine = { d1, d2 -> Dual(base.add(d1.a, d2.a), base.add(d1.b, d2.b)) },
-            symbol = "+"
-        )
+        override val op: BinOp<Dual> =
+            BinOp(Symbols.PLUS) { d1, d2 -> Dual(base.add(d1.a, d2.a), base.add(d1.b, d2.b)) }
     }
 
     override val mul: Monoid<Dual> = object: Monoid<Dual> {
         override val identity: Dual =
             Dual(base.mul.identity, base.add.identity)
 
-        override val op: BinOp<Dual> = BinOp(
+        override val op: BinOp<Dual> = BinOp(Symbols.ASTERISK)
             // a1 a2 + (a1 b2 + b1 a2)
-            combine = { d1, d2 ->
+            { d1, d2 ->
                 val (a1, b1) = d1
                 val (a2, b2) = d2
                 val a = base.mul(a1, a2)
                 val b = base.add(base.mul(a1, b2), base.mul(b1, a2))
                 Dual(a, b)
             }
-        )
     }
 
     /**
