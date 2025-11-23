@@ -19,7 +19,7 @@ import java.util.Random
 /**
  * Algorithms frequently assemble a mapping, so we use a local helper to create a Permutation.
  */
-private fun <A> permutationFromMap(
+private fun <A: Any> permutationFromMap(
     base: FiniteSet<A>,
     mapping: Map<A, A>
 ): Permutation<A> {
@@ -33,7 +33,7 @@ private fun <A> permutationFromMap(
  * Generate all permutations of a finite ordered set lazily as a [Sequence].
  * Lexicographic order is respected.
  */
-fun <A> permutations(base: FiniteSet.Ordered<A>): Sequence<Permutation<A>> = sequence {
+fun <A: Any> permutations(base: FiniteSet.Ordered<A>): Sequence<Permutation<A>> = sequence {
     val n = base.size
     val idx = IntArray(n) { it }
 
@@ -70,7 +70,7 @@ fun <A> permutations(base: FiniteSet.Ordered<A>): Sequence<Permutation<A>> = seq
  * Convert a permutation to its Lehmer code (factoradic representation).
  * Each position i gives the number of smaller elements to its right.
  */
-fun <A> lehmerCode(p: Permutation<A>, base: FiniteSet.Ordered<A>): IntArray {
+fun <A: Any> lehmerCode(p: Permutation<A>, base: FiniteSet.Ordered<A>): IntArray {
     require(p.domain.toSet() == base.toSet()) {
         "Permutation/domain mismatch with the given base."
     }
@@ -93,7 +93,7 @@ fun <A> lehmerCode(p: Permutation<A>, base: FiniteSet.Ordered<A>): IntArray {
 /**
  * Rank a permutation in lexicographic order using Lehmer code.
  */
-fun <A> rankPermutation(p: Permutation<A>, base: FiniteSet.Ordered<A>): BigInteger {
+fun <A: Any> rankPermutation(p: Permutation<A>, base: FiniteSet.Ordered<A>): BigInteger {
     val n = base.size
     val code = lehmerCode(p, base)
     return code.withIndex().fold(BigInteger.ZERO) { acc, (i, ci) ->
@@ -105,7 +105,7 @@ fun <A> rankPermutation(p: Permutation<A>, base: FiniteSet.Ordered<A>): BigInteg
  * Unrank a permutation from its lexicographic rank [rank].
  * Uses the inverse of the Lehmer encoding.
  */
-fun <A> unrankPermutation(base: FiniteSet.Ordered<A>, rank: BigInteger): Permutation<A> {
+fun <A: Any> unrankPermutation(base: FiniteSet.Ordered<A>, rank: BigInteger): Permutation<A> {
     val n = base.size
     require(rank >= BigInteger.ZERO && rank < Factorial(n)) {
         "Rank out of bounds for base of size $n."
@@ -129,7 +129,7 @@ fun <A> unrankPermutation(base: FiniteSet.Ordered<A>, rank: BigInteger): Permuta
 /**
  * Lexicographic successor of a permutation. Returns null if none exists.
  */
-fun <A> lexicographicSuccessor(
+fun <A: Any> lexicographicSuccessor(
     p: Permutation<A>,
     base: FiniteSet.Ordered<A>
 ): Permutation<A>? {
@@ -166,7 +166,7 @@ fun <A> lexicographicSuccessor(
  * Generate a random permutation using the Fisher–Yates shuffle.
  * This is an in-place O(n) algorithm with uniform distribution.
  */
-fun <A> randomPermutation(
+fun <A: Any> randomPermutation(
     base: FiniteSet.Ordered<A>,
     rng: Random = Random()
 ): Permutation<A> {

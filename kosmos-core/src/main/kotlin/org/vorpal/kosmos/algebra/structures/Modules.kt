@@ -70,17 +70,14 @@ interface RModule<R: Any, M: Any> : LeftRModule<R, M>, RightRModule<R, M>, Modul
         get() = action
 
     companion object {
-        private const val DEFAULT_SYMBOL = Symbols.TRIANGLE_RIGHT
-
         fun <R: Any, M: Any> of(
             ring: CommutativeRing<R>,
             group: AbelianGroup<M>,
-            symbol: String = DEFAULT_SYMBOL,
-            action: (R, M) -> M,
+            action: Action<R, M>
         ): RModule<R, M> = object : RModule<R, M> {
             override val ring: CommutativeRing<R> = ring
             override val group: AbelianGroup<M> = group
-            override val action: Action<R, M> = Action(symbol, action)
+            override val action: Action<R, M> = action
         }
     }
 }

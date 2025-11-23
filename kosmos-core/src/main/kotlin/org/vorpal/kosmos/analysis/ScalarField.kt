@@ -32,7 +32,7 @@ operator fun <F: Any, V: Any> ScalarField<F, V>.times(other: ScalarField<F, V>):
  */
 operator fun <F: Any, V: Any> ScalarField<F, V>.div(other: ScalarField<F, V>): ScalarField<F, V> =
     ScalarFields.of(space) { p ->
-        val inverse = field.mul.inverse(other(p))
+        val inverse = field.reciprocal(other(p))
         field.mul(this(p), inverse)
     }
 
@@ -83,7 +83,7 @@ fun <F : Any, V : Any> derivativeAt(
 
     val numerator = add(fForward, add.inverse(fBackward))
     val denominator = mul(two, h)
-    val denominatorInv = mul.inverse(denominator)
+    val denominatorInv = field.reciprocal(denominator)
 
     return mul.op(numerator, denominatorInv)
 }
