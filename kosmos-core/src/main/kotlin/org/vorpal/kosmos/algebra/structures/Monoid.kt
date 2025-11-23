@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 
 /**
@@ -10,15 +9,12 @@ interface Monoid<A: Any> : Semigroup<A> {
     val identity: A
 
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.DIAMOND
-
         fun <A: Any> of(
             identity: A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
+            op: BinOp<A>
         ): Monoid<A> = object : Monoid<A> {
-            override val identity: A get() = identity
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val identity = identity
+            override val op = op
         }
     }
 }
@@ -33,15 +29,12 @@ interface Monoid<A: Any> : Semigroup<A> {
  */
 interface CommutativeMonoid<A: Any> : Monoid<A> {
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.DIAMOND_BIG
-
         fun <A: Any> of(
             identity: A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
+            op: BinOp<A>
         ) : CommutativeMonoid<A> = object : CommutativeMonoid<A> {
-            override val identity: A get() = identity
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val identity = identity
+            override val op = op
         }
     }
 }

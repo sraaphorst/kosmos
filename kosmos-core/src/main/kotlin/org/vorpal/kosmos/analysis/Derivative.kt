@@ -60,7 +60,7 @@ object Derivative {
 
         val numerator = add(fForward, add.inverse(fBackward))
         val denominator = mul(two, h)
-        val denominatorInv = mul.inverse(denominator)
+        val denominatorInv = field.reciprocal(denominator)
 
         return mul.op(numerator, denominatorInv)
     }

@@ -52,7 +52,7 @@ class FiniteSetPermutationIntegrationSpec : FreeSpec({
                 // Can't easily enumerate all permutations, but we can verify
                 // properties of generated permutations
                 val perms = (1..10).map {
-                    generateArbPermutationOfSize(Arb.int(), base.size).single().second
+                    generateArbPermutationOfSize(Arb.int(), base.size).bind().second
                 }
                 perms.all { it.domain.size == base.size } shouldBe true
             }

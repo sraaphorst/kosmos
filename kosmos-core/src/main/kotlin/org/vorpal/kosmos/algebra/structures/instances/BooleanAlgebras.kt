@@ -9,50 +9,43 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 
-object BooleanXORGroup: AbelianGroup<Boolean> {
-    override val identity: Boolean = false
-    override val op: BinOp<Boolean> =
-        BinOp(symbol = Symbols.O_PLUS) { x, y -> x xor y}
-    override val inverse: (Boolean) -> Boolean = Identity()
-}
+// Note: we call concrete algebraic structures over Booleans BoolStructure to avoid name clashes.
+object BooleanAlgebras {
+    val BoolXorAbelianGroup: AbelianGroup<Boolean> = AbelianGroup.of(
+        identity = false,
+        op = BinOp(Symbols.O_PLUS) { x, y -> x xor y },
+        inverse = Endo(Symbols.NOTHING, Identity())
+    )
 
-object BooleanANDMonoid: CommutativeMonoid<Boolean> {
-    override val identity: Boolean = true
-    override val op: BinOp<Boolean> =
-        BinOp(symbol = Symbols.WEDGE) { x, y -> x and y }
-}
+    val BoolAndCommutativeMonoid: CommutativeMonoid<Boolean> = CommutativeMonoid.of(
+        identity = true,
+        op = BinOp(Symbols.WEDGE) { x, y -> x and y }
+    )
 
-object BooleanORMonoid: CommutativeMonoid<Boolean> {
-    override val identity: Boolean = false
-    override val op: BinOp<Boolean> =
-        BinOp(symbol = Symbols.VEE) { x, y -> x or y }
-}
+    val BoolOrCommutativeMonoid: CommutativeMonoid<Boolean> = CommutativeMonoid.of(
+        identity = false,
+        op = BinOp(Symbols.VEE) { x, y -> x or y }
+    )
 
-/**
- * Field isomorphic to GF(2).
- */
-object BooleanField: Field<Boolean> {
-    override val add: AbelianGroup<Boolean> = BooleanXORGroup
+    /**
+     * Field isomorphic to GF(2).
+     */
+    val BoolField: Field<Boolean> = Field.of(
+        add = BoolXorAbelianGroup,
+        mul = BoolAndCommutativeMonoid,
+        reciprocal = Endo(Symbols.NOTHING, Identity())
+    )
 
-    // Since the multiplicative group here just contains true, it does form a group,
-    // but not one that we want to make explicitly available outside the field.
-    override val mul: AbelianGroup<Boolean> = object : AbelianGroup<Boolean> {
-        override val identity: Boolean = true
-        override val op: BinOp<Boolean> = BinOp(symbol = Symbols.WEDGE) { x, y -> x and y }
-        override val inverse: (Boolean) -> Boolean = Identity()
-    }
-}
-
-// NOTE: Careful to not get the concrete type and structure mixed up.
-/**
- * Boolean algebra on Kotlin Boolean:
- *  - ⊥ = false, ⊤ = true
- *  - ∨ = OR, ∧ = AND, ¬ = NOT
- */
-object BooleanAlgebra: BooleanAlgebra<Boolean> {
-    override val not: Endo<Boolean> = Endo(Symbols.NOT) { a -> !a }
-    override val join: BinOp<Boolean> =  BinOp(Symbols.BOOL_OR) { a, b -> a || b }
-    override val meet: BinOp<Boolean> = BinOp(Symbols.BOOL_AND) { a, b -> a && b }
-    override val bottom: Boolean = false
-    override val top: Boolean = true
+    /**
+     * Boolean algebra on Kotlin Boolean:
+     *  - ⊥ = false, ⊤ = true
+     *  - ∨ = OR, ∧ = AND, ¬ = NOT
+     */
+    val BoolAlgebra: BooleanAlgebra<Boolean> = BooleanAlgebra.of(
+        join = BinOp(symbol = Symbols.BOOL_OR) { a, b -> a || b },
+        meet = BinOp(symbol = Symbols.BOOL_AND) { a, b -> a && b },
+        bottom = false,
+        top = true,
+        not = Endo(symbol = Symbols.NOT) { a -> !a }
+    )
 }

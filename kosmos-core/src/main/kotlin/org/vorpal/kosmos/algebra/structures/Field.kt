@@ -1,11 +1,104 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.functional.datastructures.Option
+import java.math.BigInteger
+
 /**
  * A Field is a commutative Ring where the multiplicative operator has inverses for
  * all elements except for the additive identity.
  */
 interface Field<A: Any> : CommutativeRing<A> {
-    override val mul: AbelianGroup<A>
+    /**
+     * Multiplicative inverse (reciprocal).
+     *
+     * For convenience, we refer to the:
+     * - Additive identity as 0
+     * - Multiplicative identity as 1.
+     *
+     * Law: for all `a ≠ 0`, `a * reciprocal(a) = 1 = reciprocal(a) * a`.
+     *
+     * Precondition: `a != add.identity (zero)`.
+     *
+     * May throw `ArithmeticException` if called on zero.
+     */
+    val reciprocal: Endo<A>
+
+    val reciprocalOrNull: UnaryOp<A, A?>
+        get() = UnaryOp(Symbols.SLASH) { a ->
+            if (a == add.identity) null else reciprocal(a)
+        }
+
+    val reciprocalOption: UnaryOp<A, Option<A>>
+        get() = UnaryOp(Symbols.SLASH) { a ->
+            Option.of(reciprocalOrNull(a))
+        }
+
+    companion object {
+        fun <A : Any> of(
+            add: AbelianGroup<A>,
+            mul: CommutativeMonoid<A>,
+            reciprocal: Endo<A>
+        ): Field<A> = object : Field<A> {
+            override val add: AbelianGroup<A> = add
+            override val mul: CommutativeMonoid<A> = mul
+            override val reciprocal: Endo<A> = reciprocal
+        }
+    }
 }
 
-val <A: Any> Field<A>.negOne: A get() = add.inverse(mul.identity)
+/**
+ * Convenience function to get the negation of the multiplicative identity.
+ */
+val <A: Any> Field<A>.negOne: A
+    get() = add.inverse(mul.identity)
+
+
+/**
+ * Prime fields 𝔽_p.
+ */
+data class PrimeField(val p: BigInteger) : Field<BigInteger> {
+    init {
+        require(p.isProbablePrime(PRIME_CHECKING)) { "$p is not a probable prime" }
+    }
+
+    override val reciprocal: Endo<BigInteger> =
+        Endo(Symbols.SLASH) { a ->
+            val c = canon(a)
+            require(c != BigInteger.ZERO) { "Zero has no multiplicative inverse in 𝔽_$p" }
+            c.modInverse(p)
+        }
+
+    /**
+     * Map the value to {0, ..., p-1}.
+     */
+    private fun canon(n: BigInteger): BigInteger = n.mod(p)
+
+    override val add = AbelianGroup.of(
+        identity = BigInteger.ZERO,
+        op = BinOp(Symbols.PLUS) { a, b -> canon(a + b) },
+        inverse = Endo(Symbols.MINUS) { a -> canon(-a) }
+    )
+
+    override val mul = CommutativeMonoid.of(
+        identity = canon(BigInteger.ONE),
+        op = BinOp(Symbols.ASTERISK) { a, b -> canon(a * b) }
+    )
+
+    override fun fromBigInt(n: BigInteger): BigInteger =
+        canon(n)
+
+    companion object {
+        /**
+         * For the purposes of primality for PrimeFields, run Miller-Rabin for this many rounds on
+         * the prime passed to this function to check primality.
+         *
+         * This should be more than sufficient, giving only approximately a 9e-16 chance of
+         * a false positive.
+         */
+        const val PRIME_CHECKING = 50
+    }
+}

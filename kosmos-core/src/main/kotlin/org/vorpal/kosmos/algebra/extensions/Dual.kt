@@ -4,7 +4,9 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.Monoid
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.Dual> {
     inner class Dual(val a: F, val b: F) {
@@ -27,8 +29,8 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
         operator fun times(other: Dual): Dual {
             val (c, d) = other
             val ac = base.mul(a, c)
-            val eps = base.add(base.mul(a, d), base.mul(b, c))
-            return Dual(ac, eps)
+            val epsPart = base.add(base.mul(a, d), base.mul(b, c))
+            return Dual(ac, epsPart)
         }
 
         operator fun times(scalar: F): Dual =
@@ -46,7 +48,7 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
             if (!isInvertible()) return null
 
             // invA = a^{-1}
-            val invA = base.mul.inverse(a)
+            val invA = base.reciprocal(a)
             // invA2 = a^{-2}
             val invA2 = base.mul(invA, invA)
 
@@ -75,34 +77,23 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
         override fun toString() = "$a + ${b}ε"
     }
 
-    override val add: AbelianGroup<Dual> = object: AbelianGroup<Dual> {
-        override val identity: Dual =
-            Dual(base.add.identity, base.add.identity)
+    override val add: AbelianGroup<Dual> = AbelianGroup.of(
+        identity = Dual(base.add.identity, base.add.identity),
+        op = BinOp(Symbols.PLUS) { d1, d2 ->
+            Dual(base.add(d1.a, d2.a), base.add(d1.b, d2.b)) },
+        inverse = Endo(Symbols.MINUS) { d -> Dual(base.add.inverse(d.a), base.add.inverse(d.b)) }
+    )
 
-        override val inverse: (Dual) -> Dual =
-            { d -> Dual(base.add.inverse(d.a), base.add.inverse(d.b)) }
-
-        override val op: BinOp<Dual> = BinOp(
-            combine = { d1, d2 -> Dual(base.add(d1.a, d2.a), base.add(d1.b, d2.b)) },
-            symbol = "+"
-        )
-    }
-
-    override val mul: Monoid<Dual> = object: Monoid<Dual> {
-        override val identity: Dual =
-            Dual(base.mul.identity, base.add.identity)
-
-        override val op: BinOp<Dual> = BinOp(
-            // a1 a2 + (a1 b2 + b1 a2)
-            combine = { d1, d2 ->
-                val (a1, b1) = d1
-                val (a2, b2) = d2
-                val a = base.mul(a1, a2)
-                val b = base.add(base.mul(a1, b2), base.mul(b1, a2))
-                Dual(a, b)
-            }
-        )
-    }
+    override val mul: Monoid<Dual> = Monoid.of(
+        identity = Dual(base.mul.identity, base.add.identity),
+        op = BinOp(Symbols.ASTERISK) { d1, d2 ->
+            val (a1, b1) = d1
+            val (a2, b2) = d2
+            val a = base.mul(a1, a2)
+            val b = base.add(base.mul(a1, b2), base.mul(b1, a2))
+            Dual(a, b)
+        }
+    )
 
     /**
      * Embed an element of the base field into the dual ring as `a + 0ε`.
