@@ -44,7 +44,7 @@ operator fun <F: Any, V: Any> VectorField<F, V>.times(scalar: F): VectorField<F,
  * i.e. multiply vector assignments of VectorField by -1_F.
  */
 operator fun <F: Any, V: Any> VectorField<F, V>.unaryMinus(): VectorField<F, V> =
-    this * field.negOne
+    VectorFields.of(space) { p -> space.group.inverse(this(p)) }
 
 /**
  * Apply a transformation φ: V -> V.

@@ -12,23 +12,18 @@ import org.vorpal.kosmos.core.ops.Endo
  */
 interface Group<A: Any> : Monoid<A>, Loop<A> {
     val inverse: Endo<A>
-    override fun leftDiv(a: A, b: A): A = op(inverse(a), b)
-    override fun rightDiv(b: A, a: A): A = op(b, inverse(a))
+    override fun leftDiv(a: A, b: A) = op(inverse(a), b)
+    override fun rightDiv(a: A, b: A) = op(b, inverse(a))
 
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.DOT
-        const val INVERSE_SYMBOL = Symbols.INVERSE
-
         fun <A: Any> of(
             identity: A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
-            inverseSymbol: String = INVERSE_SYMBOL,
-            inverseOp: (A) -> A,
+            op: BinOp<A>,
+            inverse: Endo<A>
         ): Group<A> = object : Group<A> {
             override val identity = identity
-            override val inverse: Endo<A> = Endo(inverseSymbol, inverseOp)
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val op = op
+            override val inverse = inverse
         }
     }
 }
@@ -40,19 +35,14 @@ interface Group<A: Any> : Monoid<A>, Loop<A> {
  */
 interface AbelianGroup<A: Any> : Group<A>, CommutativeMonoid<A> {
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.PLUS
-        const val INVERSE_SYMBOL = Symbols.MINUS
-
         fun <A: Any> of(
             identity: A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
-            inverseOp: (A) -> A,
-            inverseSymbol: String = INVERSE_SYMBOL,
+            op: BinOp<A>,
+            inverse: Endo<A>
         ): AbelianGroup<A> = object : AbelianGroup<A> {
             override val identity = identity
-            override val inverse: Endo<A> = Endo(inverseSymbol, inverseOp)
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val op = op
+            override val inverse = inverse
         }
     }
 }

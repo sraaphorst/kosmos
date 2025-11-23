@@ -9,6 +9,7 @@ import org.vorpal.kosmos.graphs.AdjacencySetDirectedGraph
 import org.vorpal.kosmos.graphs.DirectedEdge
 import org.vorpal.kosmos.graphs.DirectedGraph
 import org.vorpal.kosmos.linear.Matrix
+import java.math.BigInteger
 
 /**
  * A functorial bridge between finite binary relations, directed graphs,
@@ -32,46 +33,50 @@ object RelationGraphMatrixBridge {
         Relation { u, v -> v in this.neighbors(u) }
 
     /** DirectedGraph → Matrix(F₂) */
-    fun <V: Any> DirectedGraph<V>.toMatrix(): Matrix<Int> {
+    fun <V: Any> DirectedGraph<V>.toMatrix(): Matrix<BigInteger> {
         val ordered = vertices.toOrderedFiniteSet()
         val n = ordered.size
         val data = List(n) { i ->
             List(n) { j ->
-                if (DirectedEdge(ordered[i], ordered[j]) in edges) 1 else 0
+                if (DirectedEdge(ordered[i], ordered[j]) in edges) ONE else ZERO
             }
         }
         return Matrix(n, n, F2, data)
     }
 
     /** Matrix(F₂) → DirectedGraph<Int> */
-    fun Matrix<Int>.toRelationalGraph(): DirectedGraph<Int> {
-        require(rows == cols) { "Matrix must be square, but has dimensions $rows × $cols" }
-        val n = rows
+    fun Matrix<BigInteger>.toRelationalGraph(): DirectedGraph<Int> {
+        require(field == F2) { "Matrix must be over 𝔽₂" }
+        require(n == m) { "Matrix must be square, but has dimensions $n × $m" }
         val vertices = (0 until n).toUnorderedFiniteSet()
         val edges = buildList {
             for (i in 0 until n)
                 for (j in 0 until n)
-                    if (get(i, j) == 1) add(DirectedEdge(i, j))
+                    if (get(i, j) == ONE) add(DirectedEdge(i, j))
         }.toUnorderedFiniteSet()
 
         return AdjacencySetDirectedGraph.of(vertices, edges)
     }
 
     /** Matrix(F₂) → Relation<Int> */
-    fun Matrix<Int>.toRelation(): Relation<Int> {
+    fun Matrix<BigInteger>.toRelation(): Relation<Int> {
+        require(field == F2) { "Matrix must be over 𝔽₂" }
         require(n == m) { "Matrix must be square, but has dimensions $n × $m" }
-        return Relation { i, j -> get(i, j) == 1 }
+        return Relation { i, j -> get(i, j) == ONE }
     }
 
     /** Relation<Int> → Matrix(F₂) */
-    fun <V> Relation<V>.toMatrix(elements: FiniteSet<V>): Matrix<Int> {
+    fun <V: Any> Relation<V>.toMatrix(elements: FiniteSet<V>): Matrix<BigInteger> {
         val list = elements.toOrderedFiniteSet()
         val n = list.size
         val data = List(n) { i ->
             List(n) { j ->
-                if (rel(list[i], list[j])) 1 else 0
+                if (rel(list[i], list[j])) ONE else ZERO
             }
         }
         return Matrix(n, n, F2, data)
     }
+
+    private val ZERO: BigInteger = F2.add.identity
+    private val ONE: BigInteger = F2.mul.identity
 }

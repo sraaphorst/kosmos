@@ -85,11 +85,14 @@ object Symbols {
     const val O_PLUS_BIG = "⨁"
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
+    const val OPEN_CIRCLE = "∘"
+    const val PHI = "φ"
     const val PLUS = "+"
     const val PLUS_MINUS = "±"
     const val PROD = "∏"
     const val PROVES = "⊢"
     const val PROVES_NOT = "⊬"
+    const val PSI = "ψ"
     const val REL = "R"
     const val SET_COMPLEMENT_PRE = "~"
     const val SET_COMPLEMENT_POST = "ᶜ"
@@ -124,6 +127,7 @@ object Symbols {
     const val ARROW_RIGHT = IMPLIES
     const val BOOL_AND = WEDGE
     const val BOOL_OR = VEE
+    const val COMPOSE = OPEN_CIRCLE
     const val INJECTION = MAPS_INTO
     const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT

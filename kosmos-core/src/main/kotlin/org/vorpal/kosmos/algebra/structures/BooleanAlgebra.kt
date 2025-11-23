@@ -27,7 +27,7 @@ import org.vorpal.kosmos.core.relations.Poset
  * (equivalently the meet-induced order under the laws).
  */
 interface BooleanAlgebra<A: Any> : DistributiveLattice<A> {
-    val not: Endo<A> // ¬
+    val not: Endo<A>
     override val join: BinOp<A>
     override val meet: BinOp<A>
     override val bottom: A
@@ -60,44 +60,21 @@ interface BooleanAlgebra<A: Any> : DistributiveLattice<A> {
     /** NOR(a,b) ::= ¬(a ∨ b) */
     fun nor(a: A, b: A): A =
         not(join(a, b))
-}
 
-/* ---------- Lightweight builder ---------- */
-
-object BooleanAlgebras {
-    /**
-     * Build a Boolean algebra from its operations. Caller promises the laws.
-     */
-    fun <A : Any> of(
-        join: BinOp<A>,
-        meet: BinOp<A>,
-        bottom: A,
-        top: A,
-        not: Endo<A>
-    ): BooleanAlgebra<A> =
-        object : BooleanAlgebra<A> {
-            override val join: BinOp<A> = join
-            override val meet: BinOp<A> = meet
-            override val bottom: A = bottom
-            override val top: A = top
-            override val not: Endo<A> = not
-        }
-}
-
-/* ---------- Primitive Boolean instance (handy for specs) ---------- */
-
-object BooleanInstances {
-    /**
-     * Boolean algebra on Kotlin Boolean:
-     *  - ⊥ = false, ⊤ = true
-     *  - ∨ = OR, ∧ = AND, ¬ = NOT
-     */
-    val booleanAlgebra: BooleanAlgebra<Boolean> =
-        BooleanAlgebras.of(
-            join = BinOp(symbol = Symbols.BOOL_OR) { a, b -> a || b },
-            meet = BinOp(symbol = Symbols.BOOL_AND) { a, b -> a && b },
-            bottom = false,
-            top = true,
-            not = Endo(symbol = Symbols.NOT) { a -> !a }
-        )
+    companion object {
+        fun <A : Any> of(
+            join: BinOp<A>,
+            meet: BinOp<A>,
+            bottom: A,
+            top: A,
+            not: Endo<A>
+        ): BooleanAlgebra<A> =
+            object : BooleanAlgebra<A> {
+                override val join: BinOp<A> = join
+                override val meet: BinOp<A> = meet
+                override val bottom: A = bottom
+                override val top: A = top
+                override val not: Endo<A> = not
+            }
+    }
 }
