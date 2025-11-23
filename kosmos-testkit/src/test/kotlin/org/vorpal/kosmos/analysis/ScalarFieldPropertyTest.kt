@@ -191,7 +191,7 @@ class ScalarFieldPropertyTest : FunSpec({
                 arbVec2R()
             ) { f, g, point ->
                 val quotient = f / g
-                val gInverse = RealField.mul.inverse(g(point))
+                val gInverse = RealField.reciprocal(g(point))
                 val expected = RealField.mul(f(point), gInverse)
                 quotient(point) shouldBeApproximately expected
             }

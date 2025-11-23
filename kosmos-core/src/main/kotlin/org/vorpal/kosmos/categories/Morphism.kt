@@ -1,15 +1,21 @@
 package org.vorpal.kosmos.categories
 
 import org.vorpal.kosmos.algebra.structures.Group
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 /** A general morphism from one type to another. */
 fun interface Morphism<A, B> {
     fun apply(a: A): B
 
     /** Morphism composition: note (f then g)(x) = g(f(x)). */
-    infix fun <C> then(g: Morphism<B, C>): Morphism<A, C> =
+    infix fun <C> andThen(g: Morphism<B, C>): Morphism<A, C> =
         Morphism { g.apply(apply(it)) }
+
+    infix fun <C> compose(g: Morphism<C, A>): Morphism<C, B> =
+        g andThen this
 
     /** Create an equality checker for a given morphism from domain (a set of A) to B.
      * This produces a function that takes another morphism from A to B and determines if they are equal over the domain. */
@@ -25,8 +31,11 @@ fun interface Morphism<A, B> {
  * An injective (one-to-one) morphism from one type to another.
  */
 fun interface Monomorphism<A, B>: Morphism<A, B> {
-    infix fun <C> then(g: Monomorphism<B, C>): Monomorphism<A, C> =
+    infix fun <C> andThen(g: Monomorphism<B, C>): Monomorphism<A, C> =
         Monomorphism { g.apply(apply(it)) }
+
+    infix fun <C> compose(g: Monomorphism<C, A>): Monomorphism<C, B> =
+        g andThen this
 
     companion object {
         fun <A> id(): Monomorphism<A, A> = Monomorphism { it }
@@ -37,8 +46,12 @@ fun interface Monomorphism<A, B>: Morphism<A, B> {
  * A surjective (onto) morphism from one type to another.
  */
 fun interface Epimorphism<A, B>: Morphism<A, B> {
-    infix fun <C> then(g: Epimorphism<B, C>): Epimorphism<A, C> =
+    infix fun <C> andThen(g: Epimorphism<B, C>): Epimorphism<A, C> =
         Epimorphism { g.apply(apply(it)) }
+
+    infix fun <C> compose(g: Epimorphism<C, A>): Epimorphism<C, B> =
+        g andThen this
+
 
     companion object {
         fun <A> id(): Epimorphism<A, A> = Epimorphism { it }
@@ -55,10 +68,13 @@ interface Isomorphism<A, B> : Morphism<A, B> {
     override fun apply(a: A): B = forward.apply(a)
 
     /** Composition of two isomorphisms: (A ≅ B) ∘ (B ≅ C) = (A ≅ C). */
-    infix fun <C> then(g: Isomorphism<B, C>): Isomorphism<A, C> = of(
+    infix fun <C> andThen(g: Isomorphism<B, C>): Isomorphism<A, C> = of(
         forward = { a -> g.forward.apply(forward.apply(a)) },
         backward = { c -> backward.apply(g.backward.apply(c)) }
     )
+
+    infix fun <C> compose(g: Isomorphism<C, A>): Isomorphism<C, B> =
+        g andThen this
 
     /** Inverse isomorphism: (A ≅ B)^(-1) = (B ≅ A). */
     fun inverse(): Isomorphism<B, A> = of(backward, forward)
@@ -83,9 +99,12 @@ fun interface Endomorphism<A> : Morphism<A, A> {
 
 interface Automorphism<A> : Isomorphism<A, A>, Endomorphism<A> {
     /** Composition of automorphisms: still an automorphism. */
-    infix fun then(g: Automorphism<A>): Automorphism<A> = of(
-        forward then g.forward, g.backward then backward
+    infix fun andThen(g: Automorphism<A>): Automorphism<A> = of(
+        forward andThen g.forward, g.backward andThen backward
     )
+
+    infix fun compose(g: Automorphism<A>): Automorphism<A> =
+        g andThen this
 
     override fun inverse(): Automorphism<A> = of(backward, forward)
 
@@ -158,22 +177,22 @@ fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> 
 
 // TODO: *** REMOVE THESE EXAMPLES ***
 val intAutoGroup: Group<Automorphism<Int>> = Group.of(
-    op = Automorphism<Int>::then,
     identity = Automorphism.id(),
-    inverse = Automorphism<Int>::inverse
+    op = BinOp(Symbols.COMPOSE, Automorphism<Int>::andThen),
+    inverse = Endo(Symbols.INVERSE, Automorphism<Int>::inverse)
 )
 
 object CategoryOfMorphisms {
     fun <A> id(): Morphism<A, A> = Morphism.id()
     fun <A, B, C> compose(f: Morphism<B, C>, g: Morphism<A, B>): Morphism<A, C> =
-        g then f
+        g andThen f
 }
 
 class OneObjectCategory<A>(
     private val group: Group<Automorphism<A>>,
     private val obj: A
 ) : Category<A, Automorphism<A>> {
-    override val compose: (Automorphism<A>, Automorphism<A>) -> Automorphism<A> = {f, g -> f then g}
+    override val compose: (Automorphism<A>, Automorphism<A>) -> Automorphism<A> = {f, g -> f andThen g}
     override val id: (A) -> Automorphism<A> = { Automorphism.id() }
     override fun toString(): String = "Category(Obj=$obj, Morphisms=Automorphisms($obj))"
 }

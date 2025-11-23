@@ -14,6 +14,12 @@ data class UnaryOp<A, B>(
     operator fun invoke(a: A): B =
         transform(a)
 
+    infix fun <C> andThen(other: UnaryOp<B, C>): UnaryOp<A, C> =
+        UnaryOp("${other.symbol}${Symbols.COMPOSE}$symbol") { other(this(it)) }
+
+    infix fun <C> compose(other: UnaryOp<C, A>): UnaryOp<C, B> =
+        other andThen this
+
     companion object {
         const val DEFAULT_SYMBOL = Symbols.NOTHING
     }
@@ -29,3 +35,4 @@ typealias Mapper<A, B> = UnaryOp<A, B>
  * An Endo is a UnaryOp from a type to itself.
  */
 typealias Endo<A> = UnaryOp<A, A>
+

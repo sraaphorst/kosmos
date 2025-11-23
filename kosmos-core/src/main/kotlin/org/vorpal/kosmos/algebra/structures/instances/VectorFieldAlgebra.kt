@@ -8,6 +8,10 @@ import org.vorpal.kosmos.analysis.ScalarField
 import org.vorpal.kosmos.analysis.VectorField
 import org.vorpal.kosmos.analysis.VectorFields
 import org.vorpal.kosmos.analysis.plus
+import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 typealias VectorFieldModule<F, V> = RModule<ScalarField<F, V>, VectorField<F, V>>
 
@@ -24,16 +28,15 @@ object VectorFieldAlgebra {
      */
     fun <F: Any, V: Any> additiveAbelianGroup(
         space: VectorSpace<F, V>
-    ): AbelianGroup<VectorField<F, V>> =
-        AbelianGroup.of(
-            op = { vf1, vf2 -> vf1 + vf2 },
-            identity = VectorFields.zero(space),
-            inverse = { vf ->
-                VectorFields.of(space) {
-                    space.group.inverse(vf(it))
-                }
+    ): AbelianGroup<VectorField<F, V>> = AbelianGroup.of(
+        identity = VectorFields.zero(space),
+        op = BinOp(Symbols.PLUS) { vf1, vf2 -> vf1 + vf2 },
+        inverse = Endo(Symbols.MINUS){ vf ->
+            VectorFields.of(space) {
+                space.group.inverse(vf(it))
             }
-        )
+        }
+    )
 
     /**
      * Now we define an action of the commutative ring of [ScalarField]<F, V>
@@ -43,10 +46,9 @@ object VectorFieldAlgebra {
      */
     fun <F: Any, V: Any> module(
         space: VectorSpace<F, V>
-    ): RModule<ScalarField<F, V>, VectorField<F, V>> =
-        RModule.of(
-            ring = ScalarFieldAlgebra.commutativeRing(space),
-            group = additiveAbelianGroup(space),
-            action = { sf, vf -> sf actOn vf }
-        )
+    ): RModule<ScalarField<F, V>, VectorField<F, V>> = RModule.of(
+        ring = ScalarFieldAlgebra.commutativeRing(space),
+        group = additiveAbelianGroup(space),
+        action = Action(Symbols.TRIANGLE_RIGHT){ sf, vf -> sf actOn vf }
+    )
 }

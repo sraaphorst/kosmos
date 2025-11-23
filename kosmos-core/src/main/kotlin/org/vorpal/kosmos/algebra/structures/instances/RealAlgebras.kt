@@ -1,30 +1,37 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.clamp
 import org.vorpal.kosmos.core.math.lerp
 import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.linear.Vec2R
 import org.vorpal.kosmos.linear.Vec2R_ZERO
 
 typealias Real = Double
 
 object RealAlgebras {
-    object DoubleField : Field<Double> {
-        override val add: AbelianGroup<Double> = AbelianGroup.of(
-            op = Double::plus,
-            identity = 0.0,
-            inverse = Double::unaryMinus
-        )
+    val DoubleAdditiveAbelianGroup: AbelianGroup<Double> = AbelianGroup.of(
+        identity = 0.0,
+        op = BinOp(Symbols.PLUS, Double::plus),
+        inverse = Endo(Symbols.MINUS, Double::unaryMinus)
+    )
 
-        override val mul: AbelianGroup<Double> = AbelianGroup.of(
-            op = Double::times,
-            identity = 1.0,
-            inverse = { if (it != 0.0) 1.0 / it else Double.NaN }
-        )
-    }
+    val DoubleMultiplicativeCommutativeMonoid: CommutativeMonoid<Double> = CommutativeMonoid.of(
+        identity = 1.0,
+        op = BinOp(Symbols.PLUS, Double::times),
+    )
+
+    val DoubleField : Field<Double> = Field.of(
+        add = DoubleAdditiveAbelianGroup,
+        mul = DoubleMultiplicativeCommutativeMonoid,
+        reciprocal = Endo(Symbols.INVERSE) { 1.0 / it }
+    )
 
     val RealField = DoubleField
 
@@ -36,12 +43,12 @@ object RealAlgebras {
         override val dimension: Int = 2
 
         override val group: AbelianGroup<Vec2R> = AbelianGroup.of(
-            op = { a, b -> Vec2R(a.x + b.x, a.y + b.y) },
             identity = Vec2R_ZERO,
-            inverse = { Vec2R(-it.x, -it.y) }
+            op = BinOp(Symbols.PLUS) { a, b -> Vec2R(a.x + b.x, a.y + b.y) },
+            inverse = Endo(Symbols.MINUS) { Vec2R(-it.x, -it.y) }
         )
 
-        override val action: Action<Real, Vec2R> = Action { scalar, vec ->
+        override val action: Action<Real, Vec2R> = Action(Symbols.ASTERISK) { scalar, vec ->
             Vec2R(scalar * vec.x, scalar * vec.y)
         }
     }

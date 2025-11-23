@@ -13,10 +13,16 @@ interface Bijection<A, B> : Isomorphism<A, B> {
      * Compose with another bijection, preserving the Bijection type.
      * Note: This shadows the Isomorphism.then to maintain type precision.
      */
-    infix fun <C> then(g: Bijection<B, C>): Bijection<A, C> = of(
+    infix fun <C> andThen(g: Bijection<B, C>): Bijection<A, C> = of(
         domain = this.domain,
         codomain = g.codomain,
         forward = domain.associateWith { a -> g.apply(this.apply(a)) }
+    )
+
+    infix fun <C> compose(g: Bijection<C, A>): Bijection<C, B> = of(
+        domain = g.domain,
+        codomain = this.codomain,
+        forward = g.domain.associateWith { c -> apply(g.apply(c)) }
     )
 
     /**

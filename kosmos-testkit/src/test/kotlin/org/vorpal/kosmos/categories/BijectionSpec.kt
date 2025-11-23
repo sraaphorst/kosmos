@@ -186,7 +186,7 @@ class BijectionSpec : FunSpec({
 
         test("property: permutation composition preserves bijection properties") {
             checkAll(50, BijectionTestingCombinations.arbEndoBijectionPair(Arb.int(1..100), 6)) { (perm1, perm2) ->
-                val composed = perm1 then perm2
+                val composed = perm1 andThen perm2
 
                 // Image equals domain (still a permutation)
                 val image = perm1.domain.map { composed.apply(it) }.toSet()
@@ -245,7 +245,7 @@ class BijectionSpec : FunSpec({
                 mapOf("a" to 'x', "b" to 'y', "c" to 'z')
             )
 
-            val composed = bij1 then bij2
+            val composed = bij1 andThen bij2
 
             composed.apply(1) shouldBe 'x'
             composed.apply(2) shouldBe 'y'
@@ -256,7 +256,7 @@ class BijectionSpec : FunSpec({
             checkAll(60, BijectionTestingCombinations.arbComposablePair(
                 Arb.int(1..100), Arb.string(1..5), Arb.char('a'..'z'), 5
             )) { (bij1, bij2) ->
-                val composed = bij1 then bij2
+                val composed = bij1 andThen bij2
 
                 // Forward then backward is identity
                 bij1.domain.all { a ->
@@ -274,8 +274,8 @@ class BijectionSpec : FunSpec({
                             val g = Bijection.endo(domain, domain.order.zip(perm2).toMap())
                             val h = Bijection.endo(domain, domain.order.zip(perm3).toMap())
 
-                            val left = (f then g) then h
-                            val right = f then (g then h)
+                            val left = (f andThen g) andThen h
+                            val right = f andThen (g andThen h)
 
                             domain.all { a -> left.apply(a) == right.apply(a) } shouldBe true
                         }

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 
 /**
  * A Group can be considered:
@@ -10,22 +11,19 @@ import org.vorpal.kosmos.core.ops.BinOp
  * Since a Group is a Loop, which is a Quasigroup, we satisfy the Quasigroup operations here.
  */
 interface Group<A: Any> : Monoid<A>, Loop<A> {
-    val inverse: (A) -> A
-    override fun leftDiv(a: A, b: A): A = op(inverse(a), b)
-    override fun rightDiv(b: A, a: A): A = op(b, inverse(a))
+    val inverse: Endo<A>
+    override fun leftDiv(a: A, b: A) = op(inverse(a), b)
+    override fun rightDiv(a: A, b: A) = op(b, inverse(a))
 
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.DOT
-
         fun <A: Any> of(
             identity: A,
-            inverse: (A) -> A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
+            op: BinOp<A>,
+            inverse: Endo<A>
         ): Group<A> = object : Group<A> {
             override val identity = identity
-            override val inverse: (A) -> A = inverse
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val op = op
+            override val inverse = inverse
         }
     }
 }
@@ -37,17 +35,14 @@ interface Group<A: Any> : Monoid<A>, Loop<A> {
  */
 interface AbelianGroup<A: Any> : Group<A>, CommutativeMonoid<A> {
     companion object {
-        const val DEFAULT_SYMBOL = Symbols.PLUS
-
         fun <A: Any> of(
             identity: A,
-            inverse: (A) -> A,
-            symbol: String = DEFAULT_SYMBOL,
-            op: (A, A) -> A,
+            op: BinOp<A>,
+            inverse: Endo<A>
         ): AbelianGroup<A> = object : AbelianGroup<A> {
             override val identity = identity
-            override val inverse: (A) -> A = inverse
-            override val op: BinOp<A> = BinOp(symbol, op)
+            override val op = op
+            override val inverse = inverse
         }
     }
 }

@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.algebra.structures
 
+import java.math.BigInteger
+
 /**
  * A [Hemiring] does not attain the status of a [Ring], but has:
  * - A [CommutativeMonoid] for addition.
@@ -65,6 +67,15 @@ interface CommutativeSemiring<A: Any>: Semiring<A> {
 interface Ring<A: Any>: Semiring<A> {
     override val add: AbelianGroup<A>
 
+    fun fromBigInt(n: BigInteger): A {
+        tailrec fun aux(rem: BigInteger, acc: A): A = when (rem) {
+            BigInteger.ZERO -> acc
+            else -> aux(rem - BigInteger.ONE, add.op(acc, mul.identity))
+        }
+        val pos = aux(n.abs(), add.identity)
+        return if (n.signum() == -1) add.inverse(pos) else pos
+    }
+
     companion object {
         fun <A: Any> of(
             add: AbelianGroup<A>,
@@ -76,6 +87,7 @@ interface Ring<A: Any>: Semiring<A> {
     }
 }
 
+
 /**
  * Since CommutativeRings are special in the sense that they play so many roles in other algebraic structures,
  * they are included as an extension of Ring even though they add no inherent properties apart from being tagged
@@ -85,10 +97,10 @@ interface CommutativeRing<A: Any> : Ring<A> {
     companion object {
         fun <A: Any> of(
             add: AbelianGroup<A>,
-            mul: Monoid<A>,
+            mul: CommutativeMonoid<A>,
         ): CommutativeRing<A> = object : CommutativeRing<A> {
             override val add: AbelianGroup<A> = add
-            override val mul: Monoid<A> = mul
+            override val mul: CommutativeMonoid<A> = mul
         }
     }
 }

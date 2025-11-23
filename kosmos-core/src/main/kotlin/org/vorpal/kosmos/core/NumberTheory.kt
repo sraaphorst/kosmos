@@ -271,4 +271,6 @@ fun extendedGcd(first: BigInteger, second: BigInteger): BigIntegerGcdResult {
  */
 fun Int.modInverse(modulus: Int): Int = extendedGcd(this, modulus).modInverse()
 fun Long.modInverse(modulus: Long): Long = extendedGcd(this, modulus).modInverse()
-fun BigInteger.modInverse(modulus: BigInteger): BigInteger = extendedGcd(this, modulus).modInverse()
+
+// Java has a BigInteger.modInverse already, so this is redundant.
+//fun BigInteger.modInverse(modulus: BigInteger): BigInteger = extendedGcd(this, modulus).modInverse()
