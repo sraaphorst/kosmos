@@ -4,6 +4,8 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.clamp
 import org.vorpal.kosmos.core.math.lerp

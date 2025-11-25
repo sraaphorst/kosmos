@@ -104,3 +104,4 @@ interface CommutativeRing<A: Any> : Ring<A> {
         }
     }
 }
+
