@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.clamp
@@ -37,8 +38,20 @@ object RealAlgebras {
 
     val RealField = DoubleField
 
-    object RealInvolutiveRing: InvolutiveRing<Double>, Field<Double> by RealField {
-        override val conj: Endo<Double> = Endo("conj", Identity())
+    object RealInvolutiveRing:
+        InvolutiveRing<Real>,
+        Field<Real> by RealField,
+        NormedDivisionAlgebra<Real> {
+
+        override val conj: Endo<Double> =
+            Endo("conj", Identity())
+
+        override fun normSq(a: Real): Real =
+            a * a
+
+        // Disambiguate HasReciprocal.zero:
+        override val zero: Real
+            get() = RealField.zero
     }
 
     /**

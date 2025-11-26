@@ -8,6 +8,7 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
+import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionModule
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.asQuaternion
@@ -34,12 +35,13 @@ object OctonionAlgebras {
      *
      * We get everything but the reciprocal from the [InvolutiveAlgebra] returned by the [CayleyDickson] construction.
      */
-    object OctonionDivisionAlgebra : NonAssociativeDivisionAlgebra<Octonion> {
+    object OctonionDivisionAlgebra : NormedDivisionAlgebra<Octonion> {
         private val base = CayleyDickson(QuaternionDivisionRing)
         override val add: AbelianGroup<Octonion> = base.add
         override val mul: NonAssociativeMonoid<Octonion> = base.mul
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj: Endo<Octonion> = base.conj
+        override fun normSq(a: Octonion): Real = a.normSq()
         override val reciprocal: Endo<Octonion> = Endo(Symbols.SLASH) { o ->
             val n2 = o.normSq()
             require(n2 != 0.0) { "Zero has no multiplicative inverse in ${Symbols.BB_O}."}

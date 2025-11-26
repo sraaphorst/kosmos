@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
@@ -20,7 +21,10 @@ object ComplexAlgebras {
     fun Complex.normSq(): Real =
         re * re + im * im
 
-    object ComplexField: Field<Complex>, InvolutiveRing<Complex> {
+    object ComplexField:
+        Field<Complex>,
+        InvolutiveRing<Complex>,
+        NormedDivisionAlgebra<Complex> {
         private val base: InvolutiveAlgebra<Complex> =
             CayleyDickson(RealAlgebras.RealInvolutiveRing)
 
@@ -40,6 +44,11 @@ object ComplexAlgebras {
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
+        override fun normSq(a: Complex): Real =
+            a.normSq()
+
+        // Disambiguate zero.
+        override val zero = base.add.identity
         val one = Complex(1.0, 0.0)
         val i = Complex(0.0, 1.0)
     }
