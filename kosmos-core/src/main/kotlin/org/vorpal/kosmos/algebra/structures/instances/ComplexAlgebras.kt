@@ -33,16 +33,15 @@ object ComplexAlgebras {
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
             val normSq = c.normSq()
-            require(normSq != 0.0) { "Zero has no multiplicative inverse" }
+            require(normSq != 0.0) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
             CD(c.re / normSq, -c.im / normSq)
         }
 
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
-        val i = Complex(0.0, 1.0)
-        val zero = Complex(0.0, 0.0)
         val one = Complex(1.0, 0.0)
+        val i = Complex(0.0, 1.0)
     }
 
     val Complex.re: Real get() = a

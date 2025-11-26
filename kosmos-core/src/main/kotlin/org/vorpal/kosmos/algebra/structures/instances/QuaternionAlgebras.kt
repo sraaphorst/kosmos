@@ -1,11 +1,9 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexField
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexModule
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
-import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
@@ -27,7 +25,7 @@ import java.math.BigInteger
 typealias Quaternion = CD<Complex>
 
 object QuaternionAlgebras {
-    fun Quaternion.normSq(): Double =
+    fun Quaternion.normSq(): Real =
         a.normSq() + b.normSq()
 
     object QuaternionDivisionRing :
@@ -46,22 +44,19 @@ object QuaternionAlgebras {
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
             val n2 = q.normSq()
-            require(n2 != 0.0) { "Zero has no multiplicative inverse in ℍ" }
+            require(n2 != 0.0) { "Zero has no multiplicative inverse in ${Symbols.BB_H}." }
 
             val qc = conj(q)
             val scale = 1.0 / n2
 
             // Use the ComplexModule's action to scale.
-            val aScaled = ComplexModule.action(scale, qc.a)
-            val bScaled = ComplexModule.action(scale, qc.b)
-
-            Quaternion(aScaled, bScaled)
+            // We could use QuaternionModule, but we fall back to ComplexModule to avoid circular dependencies.
+            Quaternion(ComplexModule.action(scale, qc.a), ComplexModule.action(scale, qc.b))
         }
 
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
-        val zero = Quaternion(ComplexField.zero, ComplexField.zero)
         val one = Quaternion(ComplexField.one, ComplexField.zero)
         val i = Quaternion(ComplexField.i, ComplexField.zero)
         val j = Quaternion(ComplexField.zero, ComplexField.negOne)
@@ -71,26 +66,22 @@ object QuaternionAlgebras {
     /**
      * The scalar component of the quaternion.
      */
-    val Quaternion.w: Double
-        get() = a.re
+    val Quaternion.w: Double get() = a.re
 
     /**
      * The coefficient of the i term of the quaternion.
      */
-    val Quaternion.x: Double
-        get() = a.im
+    val Quaternion.x: Double get() = a.im
 
     /**
      * The coefficient of the j term of the quaternion.
      */
-    val Quaternion.y: Double
-        get() = -b.re
+    val Quaternion.y: Double get() = -b.re
 
     /**
      * The coefficient of the k term of the quaternion.
      */
-    val Quaternion.z: Double
-        get() = b.im
+    val Quaternion.z: Double get() = b.im
 
     /**
      * Convenience constructor for a quaternion:
@@ -109,21 +100,11 @@ object QuaternionAlgebras {
     }
 
     // Scalars: Double, act componentwise on (a, b)
-    object QuaternionModule : RModule<Double, Quaternion> {
-        override val ring: CommutativeRing<Double> =
-            RealField
-
-        override val group: AbelianGroup<Quaternion> =
-            QuaternionDivisionRing.add
-
-        override val action: Action<Double, Quaternion> =
-            Action { r, q -> quaternion(
-                r * q.w,
-                r * q.x,
-                r * q.y,
-                r * q.z)
-            }
-    }
+    val QuaternionModule: RModule<Real, Quaternion> = RModule.of(
+        ring = RealField,
+        group = QuaternionDivisionRing.add,
+        action = Action { r, q -> quaternion(r * q.w, r * q.x, r * q.y, r * q.z) }
+    )
 
     /**
      * Embed a complex number into a Quaternion.

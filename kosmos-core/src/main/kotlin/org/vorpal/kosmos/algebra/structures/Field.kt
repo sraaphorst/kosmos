@@ -3,8 +3,6 @@ package org.vorpal.kosmos.algebra.structures
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
-import org.vorpal.kosmos.core.ops.UnaryOp
-import org.vorpal.kosmos.functional.datastructures.Option
 import java.math.BigInteger
 
 /**
