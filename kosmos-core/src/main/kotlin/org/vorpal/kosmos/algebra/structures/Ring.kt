@@ -87,6 +87,13 @@ interface Ring<A: Any>: Semiring<A> {
     }
 }
 
+/**
+ * Convenience function to get the negation of the multiplicative identity.
+ */
+val <A: Any> Ring<A>.negOne: A
+    get() = add.inverse(mul.identity)
+
+
 
 /**
  * Since CommutativeRings are special in the sense that they play so many roles in other algebraic structures,

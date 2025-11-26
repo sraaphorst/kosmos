@@ -11,32 +11,7 @@ import java.math.BigInteger
  * A Field is a commutative Ring where the multiplicative operator has inverses for
  * all elements except for the additive identity.
  */
-interface Field<A: Any> : CommutativeRing<A> {
-    /**
-     * Multiplicative inverse (reciprocal).
-     *
-     * For convenience, we refer to the:
-     * - Additive identity as 0
-     * - Multiplicative identity as 1.
-     *
-     * Law: for all `a ≠ 0`, `a * reciprocal(a) = 1 = reciprocal(a) * a`.
-     *
-     * Precondition: `a != add.identity (zero)`.
-     *
-     * May throw `ArithmeticException` if called on zero.
-     */
-    val reciprocal: Endo<A>
-
-    val reciprocalOrNull: UnaryOp<A, A?>
-        get() = UnaryOp(Symbols.SLASH) { a ->
-            if (a == add.identity) null else reciprocal(a)
-        }
-
-    val reciprocalOption: UnaryOp<A, Option<A>>
-        get() = UnaryOp(Symbols.SLASH) { a ->
-            Option.of(reciprocalOrNull(a))
-        }
-
+interface Field<A: Any> : DivisionRing<A>, CommutativeRing<A> {
     companion object {
         fun <A : Any> of(
             add: AbelianGroup<A>,
@@ -49,13 +24,6 @@ interface Field<A: Any> : CommutativeRing<A> {
         }
     }
 }
-
-/**
- * Convenience function to get the negation of the multiplicative identity.
- */
-val <A: Any> Field<A>.negOne: A
-    get() = add.inverse(mul.identity)
-
 
 /**
  * Prime fields 𝔽_p.
