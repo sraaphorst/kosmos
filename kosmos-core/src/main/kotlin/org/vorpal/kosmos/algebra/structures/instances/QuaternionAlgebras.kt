@@ -9,6 +9,7 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.algebra.structures.Monoid
+import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.complex
@@ -30,7 +31,8 @@ object QuaternionAlgebras {
 
     object QuaternionDivisionRing :
         DivisionRing<Quaternion>,
-        InvolutiveRing<Quaternion> {
+        InvolutiveRing<Quaternion>,
+        NormedDivisionAlgebra<Quaternion> {
 
         private val base: InvolutiveAlgebra<Quaternion> =
             CayleyDickson(ComplexAlgebras.ComplexField)
@@ -57,6 +59,11 @@ object QuaternionAlgebras {
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
+        override fun normSq(a: Quaternion): Real =
+            a.normSq()
+
+        // Disambiguate zero.
+        override val zero = base.add.identity
         val one = Quaternion(ComplexField.one, ComplexField.zero)
         val i = Quaternion(ComplexField.i, ComplexField.zero)
         val j = Quaternion(ComplexField.zero, ComplexField.negOne)
