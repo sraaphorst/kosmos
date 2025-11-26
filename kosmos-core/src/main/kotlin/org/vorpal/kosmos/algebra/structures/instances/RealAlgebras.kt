@@ -37,6 +37,10 @@ object RealAlgebras {
 
     val RealField = DoubleField
 
+    object RealInvolutiveRing: InvolutiveRing<Double>, Field<Double> by RealField {
+        override val conj: Endo<Double> = Endo("conj", Identity())
+    }
+
     /**
      * 2D vector space over doubles.
      */
