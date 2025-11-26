@@ -64,17 +64,8 @@ interface CommutativeSemiring<A: Any>: Semiring<A> {
  * - An [AbelianGroup] for addition.
  * - A [Monoid] for multiplication.
  * with multiplication being distributive over addition. */
-interface Ring<A: Any>: Semiring<A> {
+interface Ring<A: Any>: NonAssociativeAlgebra<A>, Semiring<A> {
     override val add: AbelianGroup<A>
-
-    fun fromBigInt(n: BigInteger): A {
-        tailrec fun aux(rem: BigInteger, acc: A): A = when (rem) {
-            BigInteger.ZERO -> acc
-            else -> aux(rem - BigInteger.ONE, add.op(acc, mul.identity))
-        }
-        val pos = aux(n.abs(), add.identity)
-        return if (n.signum() == -1) add.inverse(pos) else pos
-    }
 
     companion object {
         fun <A: Any> of(
@@ -86,6 +77,13 @@ interface Ring<A: Any>: Semiring<A> {
         }
     }
 }
+
+/**
+ * Convenience function to get the negation of the multiplicative identity.
+ */
+val <A: Any> Ring<A>.negOne: A
+    get() = add.inverse(mul.identity)
+
 
 
 /**
@@ -104,3 +102,4 @@ interface CommutativeRing<A: Any> : Ring<A> {
         }
     }
 }
+
