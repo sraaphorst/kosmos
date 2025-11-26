@@ -7,10 +7,11 @@ import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.DivisionRing
+import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.LeftRModule
+import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.RModule
-import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.complex
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.im
@@ -33,12 +34,15 @@ object QuaternionAlgebras {
         DivisionRing<Quaternion>,
         InvolutiveRing<Quaternion> {
 
-        internal val QuaternionInvolutiveRing: InvolutiveRing<Quaternion> =
+        private val base: InvolutiveAlgebra<Quaternion> =
             CayleyDickson(ComplexAlgebras.ComplexField)
 
-        override val add = QuaternionInvolutiveRing.add
+        override val add = base.add
 
-        override val mul = QuaternionInvolutiveRing.mul
+        override val mul: Monoid<Quaternion> = Monoid.of(
+            identity = base.mul.identity,
+            op = base.mul.op
+        )
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
             val n2 = q.normSq()
@@ -54,8 +58,8 @@ object QuaternionAlgebras {
             Quaternion(aScaled, bScaled)
         }
 
-        override fun fromBigInt(n: BigInteger) = QuaternionInvolutiveRing.fromBigInt(n)
-        override val conj = QuaternionInvolutiveRing.conj
+        override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
+        override val conj = base.conj
 
         val zero = Quaternion(ComplexField.zero, ComplexField.zero)
         val one = Quaternion(ComplexField.one, ComplexField.zero)
@@ -121,11 +125,6 @@ object QuaternionAlgebras {
             }
     }
 
-    object QuaternionStarAlgebra:
-        StarAlgebra<Real, Quaternion>,
-        InvolutiveRing<Quaternion> by QuaternionDivisionRing,
-        RModule<Real, Quaternion> by QuaternionModule
-
     /**
      * Embed a complex number into a Quaternion.
      */
@@ -141,12 +140,17 @@ object QuaternionAlgebras {
      * - `(λ μ) · q = λ · (μ · q)`
      * - `1 · q = q`
      */
-    object QuaternionLeftComplexModule : LeftRModule<Complex, Quaternion> {
-        override val leftRing: Ring<Complex> = ComplexField
-        override val group: AbelianGroup<Quaternion> = QuaternionDivisionRing.add
-        override val leftAction: Action<Complex, Quaternion> = Action { c, q ->
+    val QuaternionLeftComplexModule: LeftRModule<Complex, Quaternion> = LeftRModule.of(
+        leftRing = ComplexField,
+        group = QuaternionDivisionRing.add,
+        leftAction = Action { c, q ->
             // Embed c into ℍ as (c, 0) and then multiply on the left.
             QuaternionDivisionRing.mul.op(c.asQuaternion(), q)
         }
-    }
+    )
+
+    object QuaternionStarAlgebra:
+        StarAlgebra<Real, Quaternion>,
+        InvolutiveRing<Quaternion> by QuaternionDivisionRing,
+        RModule<Real, Quaternion> by QuaternionModule
 }

@@ -1,11 +1,10 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
-import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
@@ -22,14 +21,14 @@ object ComplexAlgebras {
         re * re + im * im
 
     object ComplexField: Field<Complex>, InvolutiveRing<Complex> {
-        internal val ComplexInvolutiveRing: InvolutiveRing<Complex> =
+        private val base: InvolutiveAlgebra<Complex> =
             CayleyDickson(RealAlgebras.RealInvolutiveRing)
 
-        override val add = ComplexInvolutiveRing.add
+        override val add = base.add
 
         override val mul: CommutativeMonoid<Complex> = CommutativeMonoid.of(
-            identity = ComplexInvolutiveRing.mul.identity,
-            op = ComplexInvolutiveRing.mul.op
+            identity = base.mul.identity,
+            op = base.mul.op
         )
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
@@ -38,8 +37,8 @@ object ComplexAlgebras {
             CD(c.re / normSq, -c.im / normSq)
         }
 
-        override fun fromBigInt(n: BigInteger) = ComplexInvolutiveRing.fromBigInt(n)
-        override val conj = ComplexInvolutiveRing.conj
+        override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
+        override val conj = base.conj
 
         val i = Complex(0.0, 1.0)
         val zero = Complex(0.0, 0.0)
@@ -51,16 +50,11 @@ object ComplexAlgebras {
     fun complex(re: Real, im: Real): Complex = Complex(re, im)
 
     // Scalars: Double, act componentwise on (a, b)
-    object ComplexModule : RModule<Double, Complex> {
-        override val ring: CommutativeRing<Double> =
-            RealField
-
-        override val group: AbelianGroup<Complex> =
-            ComplexField.add
-
-        override val action: Action<Double, Complex> =
-            Action { r, (a, b) -> complex(r * a, r * b) }
-    }
+    val ComplexModule : RModule<Double, Complex> = RModule.of(
+        ring = RealField,
+        group = ComplexField.add,
+        action = Action { r, (a, b) -> complex(r * a, r * b) }
+    )
 
     object ComplexStarAlgebra:
         StarAlgebra<Real, Complex>,
