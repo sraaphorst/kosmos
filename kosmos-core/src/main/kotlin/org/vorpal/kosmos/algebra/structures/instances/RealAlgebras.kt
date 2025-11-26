@@ -19,31 +19,25 @@ import org.vorpal.kosmos.linear.Vec2R_ZERO
 typealias Real = Double
 
 object RealAlgebras {
-    val DoubleAdditiveAbelianGroup: AbelianGroup<Double> = AbelianGroup.of(
-        identity = 0.0,
-        op = BinOp(Symbols.PLUS, Double::plus),
-        inverse = Endo(Symbols.MINUS, Double::unaryMinus)
-    )
-
-    val DoubleMultiplicativeCommutativeMonoid: CommutativeMonoid<Double> = CommutativeMonoid.of(
-        identity = 1.0,
-        op = BinOp(Symbols.PLUS, Double::times),
-    )
-
-    val DoubleField : Field<Double> = Field.of(
-        add = DoubleAdditiveAbelianGroup,
-        mul = DoubleMultiplicativeCommutativeMonoid,
+    val RealField : Field<Real> = Field.of(
+        add = AbelianGroup.of(
+            identity = 0.0,
+            op = BinOp(Symbols.PLUS, Real::plus),
+            inverse = Endo(Symbols.MINUS, Real::unaryMinus)
+        ),
+        mul = CommutativeMonoid.of(
+            identity = 1.0,
+            op = BinOp(Symbols.PLUS, Real::times)
+        ),
         reciprocal = Endo(Symbols.INVERSE) { 1.0 / it }
     )
-
-    val RealField = DoubleField
 
     object RealInvolutiveRing:
         InvolutiveRing<Real>,
         Field<Real> by RealField,
         NormedDivisionAlgebra<Real> {
 
-        override val conj: Endo<Double> =
+        override val conj: Endo<Real> =
             Endo("conj", Identity())
 
         override fun normSq(a: Real): Real =
@@ -102,12 +96,12 @@ fun Vec2R.normalize(): Vec2R {
  * If t is in [0, 1], the value will range linearly between this and to.
  * If t < 0 or t > 1, the values will fall outside the vector range.
  */
-fun Vec2R.lerp(to: Vec2R, t: Double): Vec2R =
+fun Vec2R.lerp(to: Vec2R, t: Real): Vec2R =
     Vec2R(lerp(x, to.x, t), lerp(y, to.y, t))
 
 /**
  * Linearly interpolate from the calling vector to the [to] vector for [t] in [0, 1].
  * The value of t is clamped, so the vector will always be between this and [to].
  */
-fun Vec2R.lerpClamped(to: Vec2R, t: Double): Vec2R =
+fun Vec2R.lerpClamped(to: Vec2R, t: Real): Vec2R =
     lerp(to, clamp(t, 0.0, 1.0))
