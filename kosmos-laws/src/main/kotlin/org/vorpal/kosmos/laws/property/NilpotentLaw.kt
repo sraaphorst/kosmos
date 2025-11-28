@@ -3,6 +3,7 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.take
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.testing.existsSample
 import org.vorpal.kosmos.core.Eq
@@ -112,3 +113,11 @@ private fun <A> allParenthesizations(xs: List<A>, op: BinOp<A>): List<A> =
             ls.flatMap { l -> rs.map { r -> op(l, r) } }
         }
     }
+
+// Local helper: try up to [attempts] random samples to find a witness.
+private fun <A : Any> existsSample(
+    arb: Arb<A>,
+    attempts: Int,
+    pred: (A) -> Boolean
+): A? =
+    arb.take(attempts).firstOrNull(pred)

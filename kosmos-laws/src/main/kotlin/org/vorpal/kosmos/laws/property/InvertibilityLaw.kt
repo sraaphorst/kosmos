@@ -7,12 +7,10 @@ import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-
-/** Typealias so that we can refer to this law as both an InvertibilityLaw
- * and an InverseLaw. */
-typealias InverseLaw<A> = InvertibilityLaw<A>
 
 /** Invertibility Law: check, for a given operation and identity element, that there is a function
  * on the type that generates inverses of elements that combine to form the identity.
@@ -26,7 +24,7 @@ class InvertibilityLaw<A: Any> private constructor(
     private val identity: A,
     private val arb: Arb<A>,
     private val eq: Eq<A>,
-    private val inverseOrNull: (A) -> A?,
+    private val inverseOrNull: UnaryOp<A, A?>,
     private val modeLabel: String,
     private val pr: Printable<A> = Printable.default(),
     private val symbol: String = "⋆"
@@ -39,7 +37,7 @@ class InvertibilityLaw<A: Any> private constructor(
         identity: A,
         arbAll: Arb<A>,
         eq: Eq<A>,
-        inverse: (A) -> A,
+        inverse: Endo<A>,
         pr: Printable<A> = Printable.default(),
         symbol: String = "⋆"
     ) : this(
@@ -47,7 +45,7 @@ class InvertibilityLaw<A: Any> private constructor(
         identity = identity,
         arb = arbAll,
         eq = eq,
-        inverseOrNull = { a -> inverse(a) },
+        inverseOrNull = UnaryOp{ inverse(it) },
         pr = pr,
         symbol = symbol,
         modeLabel = "total")
@@ -61,7 +59,7 @@ class InvertibilityLaw<A: Any> private constructor(
         identity: A,
         arbAll: Arb<A>,
         eq: Eq<A>,
-        inverseOrNull: (A) -> A?,
+        inverseOrNull: UnaryOp<A, A?>,
         isUnit: (A) -> Boolean,
         pr: Printable<A> = Printable.default(),
         symbol: String = "⋆"
@@ -85,7 +83,7 @@ class InvertibilityLaw<A: Any> private constructor(
         identity: A,
         arbUnits: Arb<A>,
         eq: Eq<A>,
-        inverseOrNull: (A) -> A?,
+        inverseOrNull: UnaryOp<A, A?>,
         pr: Printable<A> = Printable.default(),
         symbol: String = "⋆"
     ) : this(
@@ -116,7 +114,7 @@ class InvertibilityLaw<A: Any> private constructor(
         identity = identity,
         arb = arbAll.filter(isUnit),
         eq = eq,
-        inverseOrNull = { a -> if (isUnit(a)) inverse(a) else null },
+        inverseOrNull = UnaryOp { a -> if (isUnit(a)) inverse(a) else null },
         pr = pr,
         symbol = symbol,
         modeLabel = "partial"

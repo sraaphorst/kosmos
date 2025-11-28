@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.core
 
+import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.std.Rational
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -33,6 +34,18 @@ fun <A> Eq<A>.nullable(): Eq<A?> =
         else this.eqv(x, y)
     }
 
+fun <A> Eq<A>.pair(): Eq<Pair<A, A>> =
+    Eq { x, y -> eqv(x.first, y.first)  && eqv(x.second, y.second) }
+
+fun <A> Eq<A>.triple(): Eq<Triple<A, A, A>> =
+    Eq { x, y -> eqv(x.first, y.first) && eqv(x.second, y.second) && eqv(x.third, y.third) }
+
+fun <A, B> Pair<Eq<A>, Eq<B>>.pairEq(): Eq<Pair<A, B>> =
+    Eq { x, y -> first.eqv(x.first, y.first) && second.eqv(x.second, y.second) }
+
+fun <A, B, C> Triple<Eq<A>, Eq<B>, Eq<C>>.tripleEq(): Eq<Triple<A, B, C>> =
+    Eq { x, y -> first.eqv(x.first, y.first) && second.eqv(x.second, y.second) && third.eqv(x.third, y.third) }
+
 fun <A> Eq<A>.list(): Eq<List<A>> =
     Eq { xs, ys -> xs.size == ys.size && xs.indices.all { i -> this.eqv(xs[i], ys[i]) } }
 
@@ -47,11 +60,11 @@ fun <A> Eq<A>.array(): Eq<Array<A>> =
     Eq { xs, ys -> xs.size == ys.size && xs.indices.all { i -> this.eqv(xs[i], ys[i]) } }
 
 /** Unordered set equality using this Eq for membership. Runs in O(n^2). */
-fun <A> Eq<A>.set(): Eq<Set<A>> =
+fun <A> Eq<A>.finiteSet(): Eq<FiniteSet<A>> =
     Eq { sa, sb ->
         if (sa.size != sb.size) false
         else {
-            fun containsEq(s: Set<A>, a: A) = s.any { this.eqv(it, a) }
+            fun containsEq(s: FiniteSet<A>, a: A) = s.any { this.eqv(it, a) }
             sa.all { containsEq(sb, it) } && sb.all { containsEq(sa, it) }
         }
     }

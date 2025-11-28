@@ -4,8 +4,10 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.InnerProductSpace
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.clamp
@@ -64,6 +66,17 @@ object RealAlgebras {
         override val action: Action<Real, Vec2R> = Action(Symbols.ASTERISK) { scalar, vec ->
             Vec2R(scalar * vec.x, scalar * vec.y)
         }
+    }
+
+    object Vec2RInnerProductSpace :
+        InnerProductSpace<Real, Vec2R>,
+        VectorSpace<Real, Vec2R> by Vec2RSpace {
+
+        override fun inner(v: Vec2R, w: Vec2R): Real =
+            v.x * w.x + v.y * w.y
+
+        override fun norm(v: Vec2R): Real =
+            kotlin.math.sqrt(inner(v, v))
     }
 }
 
