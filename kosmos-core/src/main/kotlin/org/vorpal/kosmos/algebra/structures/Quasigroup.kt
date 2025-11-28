@@ -15,13 +15,3 @@ val <A: Any> Quasigroup<A>.leftDiv: BinOp<A>
     get() = BinOp(Symbols.SLASH) { a, b -> this.leftDiv(a, b) }
 val <A: Any> Quasigroup<A>.rightDiv: BinOp<A>
     get() = BinOp(Symbols.BACKSLASH) { a, b -> this.rightDiv(a, b) }
-
-fun main() {
-    val a = object: Quasigroup<Int> {
-        override val op: BinOp<Int> = BinOp(Symbols.SLASH) { a, b -> a + b }
-        override fun leftDiv(a: Int, b: Int): Int = a - b
-        override fun rightDiv(a: Int, b: Int): Int = a - b
-    }
-
-    println(a.leftDiv.symbol)
-}

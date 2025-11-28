@@ -2,14 +2,12 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.testing.nonZeroBoth
-import org.vorpal.kosmos.testing.nonZeroLeft
-import org.vorpal.kosmos.testing.nonZeroRight
 
 /** No zero divisors (two–sided):  (a ≠ 0 ∧ b ≠ 0) ⇒ a ⋆ b ≠ 0. */
 class NoZeroDivisorsLaw<A: Any>(
@@ -95,3 +93,16 @@ class RightNoZeroDivisorsLaw<A: Any>(
         }
     }
 }
+
+// Local helpers so this law does not depend on kosmos-testkit.
+/** Create a generator that does not produce the value [zero] on the left. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroLeft(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    filter { (a, _) -> !eq.eqv(a, zero) }
+
+/** Create a generator that does not produce the value [zero] on the right. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroRight(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    filter { (_, b) -> !eq.eqv(b, zero) }
+
+/** Create a generator that does not produce the value [zero] on either side. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroBoth(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    filter { (a, b) -> !eq.eqv(a, zero) && !eq.eqv(b, zero) }
