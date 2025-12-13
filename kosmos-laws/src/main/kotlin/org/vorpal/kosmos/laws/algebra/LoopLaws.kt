@@ -39,7 +39,6 @@ class LoopLaws<A : Any>(
                 arb = arb,
                 eq = eq,
                 pr = pr,
-                symbol = symbol
             )
         )
 }

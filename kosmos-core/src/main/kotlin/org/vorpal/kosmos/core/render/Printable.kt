@@ -8,6 +8,7 @@ import java.math.BigInteger
  */
 fun interface Printable<in A> {
     fun render(a: A): String
+    operator fun invoke(a: A): String = render(a)
 
     companion object {
         /** Default printable: uses toString(). */

@@ -9,66 +9,120 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-class IdentityLaw<A: Any>(
-    private val op: BinOp<A>,
-    private val identity: A,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
-) : TestingLaw {
-    override val name = "identity ($symbol)"
+private sealed interface IdentityCore<A : Any> {
+    val op: BinOp<A>
+    val identity: A
+    val arb: Arb<A>
+    val eq: Eq<A>
+    val pr: Printable<A>
 
-    private suspend fun leftIdentityCheck() {
+    private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
+
+    /**
+     * `ea = a`
+     */
+    suspend fun leftIdentityCheck() {
         checkAll(arb) { a ->
             val value = op(identity, a)
-            withClue(leftFailureMessage(a, value)) {
-                check(eq.eqv(a, value))
+            withClue(leftIdentityFail(a, value)) {
+                check(eq(a, value))
             }
         }
     }
 
-    private fun leftFailureMessage(
+    private fun leftIdentityFail(
         a: A, value: A
-    ) : () -> String = {
-        val sa = pr.render(a)
-        val sValue = pr.render(value)
-        val sid = pr.render(identity)
+    ): () -> String = {
         buildString {
+            val sa = pr(a)
+            val sValue = pr(value)
+            val sid = pr(identity)
+
             appendLine("Left identity failed:")
-            append("$sid $symbol $sa")
+            append(expr(sid, sa))
             append(" = ")
             append(sValue)
-            append(" (expected: $sa)")
-            appendLine()
+            appendLine(" (expected: $sa)")
         }
     }
 
-    private suspend fun rightIdentityCheck() {
+    /**
+     * `ae = a`
+     */
+    suspend fun rightIdentityCheck() {
         checkAll(arb) { a ->
             val value = op(a, identity)
-            withClue(rightFailureMessage(a, value)) {
-                check(eq.eqv(a, value))
+            withClue(rightIdentityFail(a, value)) {
+                check(eq(a, value))
             }
         }
     }
 
-    private fun rightFailureMessage(
+    private fun rightIdentityFail(
         a: A, value: A
-    ) : () -> String = {
-        val sa = pr.render(a)
-        val sValue = pr.render(value)
-        val sid = pr.render(identity)
+    ): () -> String = {
         buildString {
+            val sa = pr(a)
+            val sValue = pr(value)
+            val sid = pr(identity)
+
             appendLine("Right identity failed:")
-            append("$sa $symbol $sid")
+            append(expr(sa, sid))
             append(" = ")
             append(sValue)
-            append(" (expected: $sa)")
-            appendLine()
+            appendLine(" (expected: $sa)")
         }
     }
+}
 
+/**
+ * There is a left identity element `e` such that for all `a`:
+ *
+ *    ea = a
+ */
+class LeftIdentityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, IdentityCore<A> {
+    override val name = "left identity (${op.symbol})"
+    override suspend fun test() =
+        leftIdentityCheck()
+}
+
+/**
+ * There is a right identity element `e` such that for all `a`:
+ *
+ *    ae = a
+ */
+class RightIdentityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, IdentityCore<A> {
+    override val name = "right identity (${op.symbol})"
+    override suspend fun test() =
+        rightIdentityCheck()
+}
+
+/**
+ * There is an identity element `e` such that for all `a`:
+ *
+ *    ae = a
+ *    ea = a
+ */
+class IdentityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, IdentityCore<A> {
+    override val name = "identity (${op.symbol})"
     override suspend fun test() {
         leftIdentityCheck()
         rightIdentityCheck()

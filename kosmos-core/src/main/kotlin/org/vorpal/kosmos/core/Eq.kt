@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.core
 
+import org.vorpal.kosmos.algebra.structures.instances.Real
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.std.Rational
 import java.math.BigDecimal
@@ -13,7 +14,15 @@ import kotlin.math.max
 
 fun interface Eq<A> {
     fun eqv(a: A, b: A): Boolean
+    operator fun invoke(a: A, b: A): Boolean = eqv(a, b)
+
+    companion object {
+        fun <A: Any> default(): Eq<A> = Eq { a, b -> a == b }
+    }
 }
+
+fun <A> Eq<A>.neqv(a: A, b: A): Boolean =
+    !eqv(a, b)
 
 fun <A> Eq<A>.assertEquals(x: A, y: A) =
     require(eqv(x, y)) { "Law failure: expected $x == $y" }
@@ -33,18 +42,6 @@ fun <A> Eq<A>.nullable(): Eq<A?> =
         else if (x == null || y == null) false
         else this.eqv(x, y)
     }
-
-fun <A> Eq<A>.pair(): Eq<Pair<A, A>> =
-    Eq { x, y -> eqv(x.first, y.first)  && eqv(x.second, y.second) }
-
-fun <A> Eq<A>.triple(): Eq<Triple<A, A, A>> =
-    Eq { x, y -> eqv(x.first, y.first) && eqv(x.second, y.second) && eqv(x.third, y.third) }
-
-fun <A, B> Pair<Eq<A>, Eq<B>>.pairEq(): Eq<Pair<A, B>> =
-    Eq { x, y -> first.eqv(x.first, y.first) && second.eqv(x.second, y.second) }
-
-fun <A, B, C> Triple<Eq<A>, Eq<B>, Eq<C>>.tripleEq(): Eq<Triple<A, B, C>> =
-    Eq { x, y -> first.eqv(x.first, y.first) && second.eqv(x.second, y.second) && third.eqv(x.third, y.third) }
 
 fun <A> Eq<A>.list(): Eq<List<A>> =
     Eq { xs, ys -> xs.size == ys.size && xs.indices.all { i -> this.eqv(xs[i], ys[i]) } }
@@ -148,12 +145,15 @@ object Eqs {
             }
         }
 
+    fun realApprox(absTol: Real = 1e-9, relTol: Real = 1e-9): Eq<Real> =
+        doubleApprox(absTol, relTol)
+
     fun floatApprox(absTol: Float = 1e-6f, relTol: Float = 1e-6f): Eq<Float> =
         Eq { x, y ->
             if (x.isNaN() && y.isNaN()) true
             else {
-                val diff = kotlin.math.abs(x - y)
-                diff <= absTol || diff <= relTol * max(kotlin.math.abs(x), kotlin.math.abs(y))
+                val diff = abs(x - y)
+                diff <= absTol || diff <= relTol * max(abs(x), abs(y))
             }
         }
 

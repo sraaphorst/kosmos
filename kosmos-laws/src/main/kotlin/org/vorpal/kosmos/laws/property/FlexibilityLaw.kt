@@ -2,7 +2,6 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
@@ -11,32 +10,24 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
 /**
-* Flexibility is a condition that is implied by but strictly weaker than alternativity.
-* The classic example is the sedenions, which are flexible, but not alternative.
-* The following condition must be met: for all x, y in the algebra:
-*  * x(yx) = (xy)x
-*/
-class FlexibilityLaw<A: Any>(
+ * Flexibility is a condition that is implied by but strictly weaker than alternativity:
+ *
+ * The classic example is the sedenions, which are flexible, but not alternative.
+ *
+ * The following condition must be met: for all `x, y` in the algebra:
+ *
+ *    x(yx) = (xy)x
+ */
+class FlexibilityLaw<A : Any>(
     private val op: BinOp<A>,
-    private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
 ) : TestingLaw {
+    override val name: String = "flexibility (${op.symbol})"
 
-    /** Convenience constructor from a single-element generator. */
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(arb, arb), eq, pr, symbol)
-
-    override val name: String = "flexibility ($symbol)"
-
-    override suspend fun test() {
-        checkAll(pairArb) { (x, y) ->
+    suspend fun flexibilityCheck() {
+        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
             // x (y x)
             val yx = op(y, x)
             val left = op(x, yx)
@@ -45,44 +36,44 @@ class FlexibilityLaw<A: Any>(
             val xy = op(x, y)
             val right = op(xy, x)
 
-            withClue(failureMessage(x, y, yx, xy, left, right)) {
-                check(eq.eqv(left, right))
+            withClue(flexibilityFail(x, y, yx, xy, left, right)) {
+                check(eq(left, right))
             }
         }
     }
 
-    private fun failureMessage(
+    private fun flexibilityFail(
         x: A, y: A,
         yx: A, xy: A,
         left: A, right: A
     ): () -> String = {
-        fun infix(l: String, r: String) = "$l $symbol $r"
-
-        val sx  = pr.render(x)
-        val sy  = pr.render(y)
-        val syx = pr.render(yx)
-        val sxy = pr.render(xy)
-        val sLeft = pr.render(left)
-        val sRight = pr.render(right)
+        fun expr(left: String, right: String) = "$left ${op.symbol} $right"
 
         buildString {
-            appendLine("Flexibility failed:")
-            append(infix(sx, "(" + infix(sy, sx) + ")"))
-            append(" = ")
-            append(infix(sx, syx))
-            append(" = ")
-            append(sLeft)
-            appendLine()
+            val sx  = pr(x)
+            val sy  = pr(y)
+            val syx = pr(yx)
+            val sxy = pr(xy)
+            val sLeft = pr(left)
+            val sRight = pr(right)
 
-            append(infix("(" + infix(sx, sy) + ")", sx))
+            appendLine("Flexibility failed (${op.symbol}):")
+            append(expr(sx, "(" + expr(sy, sx) + ")"))
             append(" = ")
-            append(infix(sxy, sx))
+            append(expr(sx, syx))
             append(" = ")
-            append(sRight)
-            appendLine()
+            appendLine(sLeft)
 
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            append(expr("(" + expr(sx, sy) + ")", sx))
+            append(" = ")
+            append(expr(sxy, sx))
+            append(" = ")
+            appendLine(sRight)
+
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
+
+    override suspend fun test() =
+        flexibilityCheck()
 }

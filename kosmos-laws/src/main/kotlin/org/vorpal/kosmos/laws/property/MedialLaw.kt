@@ -2,7 +2,6 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
@@ -18,36 +17,33 @@ typealias EntropicLaw<A> = MedialLaw<A>
 typealias BisymmetricLaw<A> = MedialLaw<A>
 
 /**
- * The medial law comes from semigroup / quasigroup literature.
- * It is strictly stronger than commutativity (i.e. it implies commutativity), but in an associative and
- * commutative magma (e.g. a commutative semigroup), the medial identity holds automatically:
- * (a + b) + (c + d) = a + b + c + d = a + c + b + d = (a + c) + (b + d).
- * This law should be applied to certify an entropic / medial magma (groupoid), e.g. in some quasigroup/quandle flavors
- * or specialized algebraic systems.
- * Note that it is generally not true for arbitrary idempotent / commutative quasigroups, so it is useful to distinguish
- * them from entropic ones.
- * Any finite entropic quasigroup is affine over an abelian group, i.e. you can represent the operation as:
- *     xy = (x) + (y)
- * where + is addition in an abelian group and
+ * Medial (entropic) law:
+ *
+ *    (a ∘ b) ∘ (c ∘ d) = (a ∘ c) ∘ (b ∘ d)
+ *
+ * This law should be applied to certify an entropic / medial magma (groupoid), e.g. in some
+ * quasigroup / quandle flavors or specialized algebraic systems.
+ *
+ * Note that it is generally not true for arbitrary idempotent / commutative quasigroups, so it is
+ * useful to distinguish them from entropic ones.
+ *
+ * Any medial quasigroup is affine over an abelian group (Toyoda–Bruck theorem): there exists an
+ * abelian group `(A, +)`, commuting automorphisms `α, β ∈ Aut(A)`, and a constant `c ∈ A` such that
+ *
+ *     x ∘ y = α(x) + β(y) + c
+ *
+ * where `+` is the abelian group operation.
+ * 
+ * In particular, mediality forces very strong linear/affine behaviour.
  */
-class MedialLaw<A: Any>(
+class MedialLaw<A : Any>(
     private val op: BinOp<A>,
-    private val arb: Arb<Pair<Pair<A, A>, Pair<A, A>>>,
-    private val eq: Eq<A>,
+    arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
 ) : TestingLaw {
-
-    /** Convenience constructor from an element generator. */
-    constructor(
-        op: BinOp<A>,
-        elemArb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(Arb.pair(elemArb, elemArb), Arb.pair(elemArb, elemArb)), eq, pr, symbol)
-
-    override val name = "medial ($symbol)"
+    private val arb = TestingLaw.arbPair(TestingLaw.arbPair(arb)) 
+    override val name = "medial (${op.symbol})"
 
     override suspend fun test() {
         checkAll(arb) { (abPair, cdPair) ->
@@ -63,7 +59,7 @@ class MedialLaw<A: Any>(
             val right = op(ac, bd)
 
             withClue(failureMessage(a, b, c, d, ab, cd, ac, bd, left, right)) {
-                check(eq.eqv(left, right))
+                check(eq(left, right))
             }
         }
     }
@@ -73,34 +69,34 @@ class MedialLaw<A: Any>(
         ab: A, cd: A, ac: A, bd: A,
         left: A, right: A
     ): () -> String = {
-        fun infix(l: String, r: String) = "$l $symbol $r"
-
-        val sa = pr.render(a)
-        val sb = pr.render(b)
-        val sc = pr.render(c)
-        val sd = pr.render(d)
-
-        val sab = pr.render(ab)
-        val scd = pr.render(cd)
-        val sLeft = pr.render(left)
-
-        val sac = pr.render(ac)
-        val sbd = pr.render(bd)
-        val sRight = pr.render(right)
+        fun expr(left: String, right: String) = "$left ${op.symbol} $right"
 
         buildString {
+            val sa = pr(a)
+            val sb = pr(b)
+            val sc = pr(c)
+            val sd = pr(d)
+
+            val sab = pr(ab)
+            val scd = pr(cd)
+            val sLeft = pr(left)
+
+            val sac = pr(ac)
+            val sbd = pr(bd)
+            val sRight = pr(right)
+            
             appendLine("Medial law failed:")
 
-            append(infix("(" + infix(sa, sb) + ")", "(" + infix(sc, sd) + ")"))
+            append(expr("(" + expr(sa, sb) + ")", "(" + expr(sc, sd) + ")"))
             append(" = ")
-            append(infix(sab, scd))
+            append(expr(sab, scd))
             append(" = ")
             append(sLeft)
             appendLine()
 
-            append(infix("(" + infix(sa, sc) + ")", "(" + infix(sb, sd) + ")"))
+            append(expr("(" + expr(sa, sc) + ")", "(" + expr(sb, sd) + ")"))
             append(" = ")
-            append(infix(sac, sbd))
+            append(expr(sac, sbd))
             append(" = ")
             append(sRight)
             appendLine()

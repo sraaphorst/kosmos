@@ -9,7 +9,6 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.testing.distinct
 
 /** Connexity (Totality): a≠b ⇒ R(a,b) ∨ R(b,a) */
 class ConnexityLaw<A: Any>(

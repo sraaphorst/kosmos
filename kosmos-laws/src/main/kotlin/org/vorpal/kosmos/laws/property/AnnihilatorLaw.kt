@@ -9,68 +9,115 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-/**
- * Test an annihilator (zero) for left and / or right annihilation of elements
- * of a given type under a binary operation. */
-class AnnihilatorLaw<A: Any>(
-    private val op: BinOp<A>,
-    private val zero: A,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
-) : TestingLaw {
-    override val name = "annihilator ($symbol)"
+private sealed interface AnnihilatorCore<A : Any> {
+    val op: BinOp<A>
+    val zero: A
+    val arb: Arb<A>
+    val eq: Eq<A>
+    val pr: Printable<A>
 
-    private suspend fun leftAnnihilationCheck() {
+    private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
+
+    /**
+     * `0a = 0`
+     */
+    suspend fun leftAnnihilationCheck() {
         checkAll(arb) { a ->
             val value = op(zero, a)
-            withClue(leftFailureMessage(a, value)) {
-                check(eq.eqv(zero, value))
+            withClue(leftAnnihilationFailure(a, value)) {
+                check(eq(zero, value))
             }
         }
     }
 
-    private fun leftFailureMessage(
+    private fun leftAnnihilationFailure(
         a: A, value: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val sValue = pr.render(value)
-        val sZero = pr.render(zero)
         buildString {
+            val sa = pr(a)
+            val sValue = pr(value)
+            val sZero = pr(zero)
+
             appendLine("Left annihilation failed:")
-            append("$sZero $symbol $sa")
+            append(expr(sZero, sa))
             append(" = ")
             append(sValue)
-            append(" (expected: $sZero)")
-            appendLine()
+            appendLine(" (expected: $sZero)")
         }
     }
 
-    private suspend fun rightAnnihilationCheck() {
+    /**
+     * `a0 = 0`
+     */
+    suspend fun rightAnnihilationCheck() {
         checkAll(arb) { a ->
             val value = op(a, zero)
-            withClue(rightFailureMessage(a, value)) {
-                check(eq.eqv(zero, value))
+            withClue(rightAnnihilationFailure(a, value)) {
+                check(eq(zero, value))
             }
         }
     }
 
-    private fun rightFailureMessage(
+    private fun rightAnnihilationFailure(
         a: A, value: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val sValue = pr.render(value)
-        val sZero = pr.render(zero)
         buildString {
+            val sa = pr(a)
+            val sValue = pr(value)
+            val sZero = pr(zero)
+
             appendLine("Right annihilation failed:")
-            append("$sa $symbol $sZero")
+            append(expr(sa, sZero))
             append(" = ")
             append(sValue)
-            append(" (expected: $sZero)")
-            appendLine()
+            appendLine(" (expected: $sZero)")
         }
     }
+}
+
+/**
+ * Left annihilator law: `0a = 0`
+ */
+class LeftAnnihilatorLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val zero: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+) : TestingLaw, AnnihilatorCore<A> {
+    override val name = "left annihilator (${op.symbol})"
+    override suspend fun test() = leftAnnihilationCheck()
+}
+
+/**
+ * Right annihilator law: `a0 = 0`
+ */
+class RightAnnihilatorLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val zero: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+) : TestingLaw, AnnihilatorCore<A> {
+    override val name = "right annihilator (${op.symbol})"
+    override suspend fun test() = rightAnnihilationCheck()
+}
+
+/**
+ * Test an annihilator (zero) for left and / or right annihilation of elements.
+ *
+ * Let us denote the annihilator as 0. Then for any a, the following laws should hold:
+ * - Left annihilation: `0a = 0`
+ * - Right annihilation: `a0 = 0`
+ */
+class AnnihilatorLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val zero: A,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, AnnihilatorCore<A> {
+    override val name = "annihilator (${op.symbol})"
 
     override suspend fun test() {
         leftAnnihilationCheck()

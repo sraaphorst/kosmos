@@ -9,38 +9,44 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-/** Idempotency Law. */
+/**
+ * Idempotency Law for a binary operation:
+ *
+ * For all `a ∈ A`:
+ *
+ *     a ⋆ a = a
+ *
+ */
 class IdempotencyLaw<A: Any>(
     private val op: BinOp<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
 ) : TestingLaw {
-    override val name = "idempotency ($symbol)"
+    override val name = "idempotency (${op.symbol})"
 
-    override suspend fun test() {
+    suspend fun idempotencyCheck() {
         checkAll(arb) { a ->
             val value = op(a, a)
-            withClue(failMessage(a, value)) {
-                check(eq.eqv(a, value))
+            withClue(idempotencyFail(a, value)) {
+                check(eq(a, value))
             }
         }
     }
 
-    private fun failMessage(
+    private fun idempotencyFail(
         a: A, value: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val sValue = pr.render(value)
-
         buildString {
+            val sa = pr.render(a)
+            val sValue = pr.render(value)
+
             appendLine("Idempotency failed:")
-            append("$sa $symbol $sa")
-            append(" = ")
-            append(sValue)
-            append(" (expected: $sa)")
-            appendLine()
+            append("$sa ${op.symbol} $sa = $sValue")
+            appendLine("Expected: $sa")
         }
     }
+
+    override suspend fun test() =
+        idempotencyCheck()
 }

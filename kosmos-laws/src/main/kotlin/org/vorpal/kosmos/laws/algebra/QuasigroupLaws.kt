@@ -8,7 +8,7 @@ import org.vorpal.kosmos.algebra.structures.Quasigroup
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.laws.property.CancellativeLaw
+import org.vorpal.kosmos.laws.property.CancellativityLaw
 
 /**
  * Laws for a Quasigroup:
@@ -36,7 +36,7 @@ class QuasigroupLaws<A : Any>(
     fun laws(): List<TestingLaw> {
         val op = quasigroup.op
 
-        val cancellative = CancellativeLaw(
+        val cancellative = CancellativityLaw(
             op = op,
             arb = arb,
             eq = eq,

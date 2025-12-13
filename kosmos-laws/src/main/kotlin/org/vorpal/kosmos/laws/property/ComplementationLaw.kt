@@ -7,22 +7,21 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.Printable.Companion.default
 import org.vorpal.kosmos.laws.TestingLaw
 
 /**
  * Laws for a Boolean-style complementation operator ¬ on a bounded lattice:
  *
- *  - Double negation:     ¬(¬x) = x
- *  - Meet with complement: x ∧ ¬x = ⊥
- *  - Join with complement: x ∨ ¬x = ⊤
+ *  - Double negation:     `¬(¬x) = x`
+ *  - Meet with complement: `x ∧ ¬x = ⊥`
+ *  - Join with complement: `x ∨ ¬x = ⊤`
  *
  * This is intended for Boolean algebras, but is generic over:
- *  - meet:      ∧
- *  - join:      ∨
- *  - bottom:    ⊥
- *  - top:       ⊤
- *  - complement: ¬
+ *  - meet:      `∧`
+ *  - join:      `∨`
+ *  - bottom:    `⊥`
+ *  - top:       `⊤`
+ *  - complement: `¬`
  */
 class ComplementationLaw<A : Any>(
     private val meet: BinOp<A>,
@@ -31,16 +30,17 @@ class ComplementationLaw<A : Any>(
     private val top: A,
     private val complement: Endo<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val meetSymbol: String = "∧",
-    private val joinSymbol: String = "∨",
-    private val notSymbol: String = "¬"
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
-
+    private val notSym = complement.symbol
     override val name: String =
-        "boolean complementation ($notSymbol, $meetSymbol, $joinSymbol)"
+        "Boolean complementation ($notSym, ${meet.symbol}, ${join.symbol})"
 
+    /**
+     * Not consistent with the other laws to have them all in here, but they are all fairly short,
+     * so this format makes sense.
+     */
     override suspend fun test() {
         checkAll(arb) { x ->
             val nx = complement(x)
@@ -49,16 +49,16 @@ class ComplementationLaw<A : Any>(
             val xAndNotX = meet(x, nx)
             val xOrNotX = join(x, nx)
 
-            withClue("Double negation failed for $notSymbol, element ${pr.render(x)}") {
-                check(eq.eqv(nnx, x))
+            withClue("Double negation failed for $notSym, element ${pr(x)}") {
+                check(eq(nnx, x))
             }
 
-            withClue("x $meetSymbol $notSymbol x = ⊥ failed for element ${pr.render(x)}") {
-                check(eq.eqv(xAndNotX, bottom))
+            withClue("x ${meet.symbol} $notSym x = ⊥ failed for element ${pr(x)}") {
+                check(eq(xAndNotX, bottom))
             }
 
-            withClue("x $joinSymbol $notSymbol x = ⊤ failed for element ${pr.render(x)}") {
-                check(eq.eqv(xOrNotX, top))
+            withClue("x ${join.symbol} $notSym x = ⊤ failed for element ${pr(x)}") {
+                check(eq(xOrNotX, top))
             }
         }
     }

@@ -5,7 +5,6 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.take
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.testing.existsSample
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
@@ -18,15 +17,14 @@ import org.vorpal.kosmos.laws.TestingLaw
  *
  * If `checkAllBracketings=true`, (1) is checked for *all* parenthesizations (nonassociative definition).
  */
-class NilpotentLaw<A: Any>(
+class NilpotentLaw<A : Any>(
     private val op: BinOp<A>,
     private val n: Int,
     private val zero: A,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
     private val nonzeroAttempts: Int = 1000,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆",
     private val checkAllBracketings: Boolean = false
 ) : TestingLaw {
 
@@ -36,8 +34,8 @@ class NilpotentLaw<A: Any>(
     }
 
     override val name =
-        if (checkAllBracketings) "nilpotent (n=$n, $symbol, all bracketings)"
-        else "nilpotent (n=$n, $symbol)"
+        if (checkAllBracketings) "nilpotent (n=$n, ${op.symbol}, all bracketings)"
+        else "nilpotent (n=$n, ${op.symbol})"
 
     override suspend fun test() {
         nonzeroProductExists()
@@ -51,9 +49,9 @@ class NilpotentLaw<A: Any>(
         withClue("Nilpotency failed: no nonzero product over $m elements was found.") {
             val witness = existsSample(listArb, nonzeroAttempts) { xs ->
                 val v = if (checkAllBracketings) {
-                    allParenthesizations(xs, op).any { !eq.eqv(it, zero) }
+                    allParenthesizations(xs, op).any { !eq(it, zero) }
                 } else {
-                    xs.reduce(op::invoke).let { !eq.eqv(it, zero) }
+                    xs.reduce(op::invoke).let { !eq(it, zero) }
                 }
                 v
             }
@@ -68,24 +66,24 @@ class NilpotentLaw<A: Any>(
             if (checkAllBracketings) {
                 val prods = allParenthesizations(xs, op)
                 withClue(zeroFailureMsgAll(xs, prods)) {
-                    check(prods.all { eq.eqv(it, zero) })
+                    check(prods.all { eq(it, zero) })
                 }
             } else {
                 val prod = xs.reduce(op::invoke)
                 withClue(zeroFailureMsg(xs, prod)) {
-                    check(eq.eqv(prod, zero))
+                    check(eq(prod, zero))
                 }
             }
         }
     }
 
     // ---- pretty messages ----
-    private fun expr(xs: List<A>) = xs.joinToString(" $symbol ") { pr.render(it) }
+    private fun expr(xs: List<A>) = xs.joinToString(" ${op.symbol} ") { pr(it) }
 
     private fun zeroFailureMsg(xs: List<A>, prod: A): () -> String = {
         buildString {
             appendLine("Nilpotency failed (single bracketing):")
-            appendLine("${expr(xs)} = ${pr.render(prod)} (expected: ${pr.render(zero)})")
+            appendLine("${expr(xs)} = ${pr(prod)} (expected: ${pr(zero)})")
         }
     }
 
@@ -93,9 +91,9 @@ class NilpotentLaw<A: Any>(
         buildString {
             appendLine("Nilpotency failed (some bracketing nonzero):")
             appendLine("operands: ${expr(xs)}")
-            val nonzeros = prods.filterNot { eq.eqv(it, zero) }
+            val nonzeros = prods.filterNot { eq(it, zero) }
             nonzeros.take(5).forEachIndexed { i, v ->
-                appendLine("  witness[$i] = ${pr.render(v)} ≠ ${pr.render(zero)}")
+                appendLine("  witness[$i] = ${pr(v)} ≠ ${pr(zero)}")
             }
             if (nonzeros.size > 5) appendLine("  ...and ${nonzeros.size - 5} more.")
         }
