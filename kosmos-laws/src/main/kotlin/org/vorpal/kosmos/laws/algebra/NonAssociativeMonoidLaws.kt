@@ -19,20 +19,11 @@ import org.vorpal.kosmos.laws.property.IdentityLaw
 class NonAssociativeMonoidLaws<A : Any>(
     private val monoid: NonAssociativeMonoid<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
-) {
+): TestingLaw {
 
-    fun laws(): List<TestingLaw> =
-        listOf(
-            IdentityLaw(
-                op = monoid.op,
-                identity = monoid.identity,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            )
-        )
+    override suspend fun test() {
+
+    }
 }

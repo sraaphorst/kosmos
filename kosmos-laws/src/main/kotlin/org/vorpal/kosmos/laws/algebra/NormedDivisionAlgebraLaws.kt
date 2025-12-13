@@ -8,7 +8,6 @@ import org.vorpal.kosmos.algebra.structures.instances.Real
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.Printable.Companion.default
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.NormLaw
 
@@ -17,7 +16,7 @@ class NormedDivisionAlgebraLaws<A : Any>(
     private val arb: Arb<A>,
     private val eqA: Eq<A>,
     private val eqReal: Eq<Real>,
-    private val prA: Printable<A> = default(),
+    private val prA: Printable<A> = Printable.default(),
     private val symbol: String = "⋆"
 ) {
 

@@ -2,7 +2,6 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
@@ -10,35 +9,25 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-/** Commutativity Law
- * Note that we allow a Double producing Arb so that we can impose constraints if necessary on the values produced,
- * e.g. that they all be distinct, or to avoid NaN / overflow for floating point types. */
+/**
+ * Commutativity Law: `ab = ba`.
+ */
 class CommutativityLaw<A: Any>(
     private val op: BinOp<A>,
-    private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
+    arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
 ) : TestingLaw {
-
-    /** Convenience secondary constructor that converts an Arb to an Arb producing a Pair. */
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(arb, arb), eq, pr, symbol)
-
-    override val name = "commutativity ($symbol)"
+    private val arbPair = TestingLaw.arbPair(arb)
+    override val name = "commutativity (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb) { (a, b) ->
+        checkAll(arbPair) { (a, b) ->
             val left  = op(a, b)
             val right = op(b, a)
 
             withClue(failureMessage(a, b, left, right)) {
-                check(eq.eqv(left, right))
+                check(eq(left, right))
             }
         }
     }
@@ -47,28 +36,18 @@ class CommutativityLaw<A: Any>(
         a: A, b: A,
         left: A, right: A
     ): () -> String = {
-        fun infix(l: String, r: String) = "$l $symbol $r"
-
-        val sa = pr.render(a)
-        val sb = pr.render(b)
-        val sLeft = pr.render(left)
-        val sRight = pr.render(right)
+        fun expr(left: String, right: String) = "$left ${op.symbol} $right"
 
         buildString {
+            val sa = pr(a)
+            val sb = pr(b)
+            val sLeft = pr(left)
+            val sRight = pr(right)
+
             appendLine("Commutativity failed:")
-
-            append(infix(sa, sb))
-            append(" = ")
-            append(sLeft)
-            appendLine()
-
-            append(infix(sb, sa))
-            append(" = ")
-            append(sRight)
-            appendLine()
-
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            appendLine("${expr(sa, sb)} = $sLeft")
+            appendLine("${expr(sb, sa)} = $sRight")
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
 }

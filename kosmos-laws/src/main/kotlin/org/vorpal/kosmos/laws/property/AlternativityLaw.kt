@@ -2,72 +2,74 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.pair
 import io.kotest.property.checkAll
+
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface AlternativityCore<A: Any> {
+private sealed interface AlternativityCore<A : Any> {
     val op: BinOp<A>
-    val pairArb: Arb<Pair<A, A>>
+    val arb: Arb<A>
     val eq: Eq<A>
     val pr: Printable<A>
-    val symbol: String
 
-    private fun infix(l: String, r: String) = "$l $symbol $r"
+    private fun expr(l: String, r: String): String = "$l ${op.symbol} $r"
 
+    /**
+     * Left alternativity: `x(xy) = (xx)y`
+     */
     suspend fun leftAlternativityCheck() {
-        checkAll(pairArb) { (x, y) ->
+        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
             val xy = op(x, y)
             val left = op(x, xy)
 
             val xx = op(x, x)
             val right = op(xx, y)
 
-            withClue(leftFailureMessage(x, y, xy, left, xx, right)) {
-                check(eq.eqv(left, right))
+            withClue(leftAlternativityFailure(x, y, xy, left, xx, right)) {
+                check(eq(left, right))
             }
         }
     }
 
-    private fun leftFailureMessage(
+    private fun leftAlternativityFailure(
         x: A, y: A,
         xy: A, left: A,
         xx: A, right: A
     ): () -> String = {
-        val sx = pr.render(x)
-        val sy = pr.render(y)
-        val sxy = pr.render(xy)
-        val sxx = pr.render(xx)
-        val sLeft = pr.render(left)
-        val sRight = pr.render(right)
-
         buildString {
+            val sx = pr(x)
+            val sy = pr(y)
+            val sxy = pr(xy)
+            val sxx = pr(xx)
+            val sLeft = pr(left)
+            val sRight = pr(right)
+
             appendLine("Left alternativity failed:")
 
-            append(infix(sx, "(" + infix(sx, sy) + ")"))
+            append(expr(sx, "(" + expr(sx, sy) + ")"))
             append(" = ")
-            append(infix(sx, sxy))
+            append(expr(sx, sxy))
             append(" = ")
-            append(sLeft)
-            appendLine()
+            appendLine(sLeft)
 
-            append(infix("(" + infix(sx, sx) + ")", sy))
+            append(expr("(" + expr(sx, sx) + ")", sy))
             append(" = ")
-            append(infix(sxx, sy))
+            append(expr(sxx, sy))
             append(" = ")
-            append(sRight)
-            appendLine()
+            appendLine(sRight)
 
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
 
+    /**
+     * Right alternativity: `(yx)x = y(xx)`
+     */
     suspend fun rightAlternativityCheck() {
-        checkAll(pairArb) { (x, y) ->
+        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
             // (yx)x = y(xx)
             val yx = op(y, x)
             val left = op(yx, x)
@@ -75,118 +77,96 @@ private sealed interface AlternativityCore<A: Any> {
             val xx = op(x, x)
             val right = op(y, xx)
 
-            withClue(rightFailureMessage(x, y, yx, left, xx, right)) {
-                check(eq.eqv(left, right))
+            withClue(rightAlternativityFailure(x, y, yx, left, xx, right)) {
+                check(eq(left, right))
             }
         }
     }
 
-    private fun rightFailureMessage(
+    private fun rightAlternativityFailure(
         x: A, y: A,
         yx: A, left: A,
         xx: A, right: A
     ): () -> String = {
-        val sx = pr.render(x)
-        val sy = pr.render(y)
-        val syx = pr.render(yx)
-        val sxx = pr.render(xx)
-        val sLeft = pr.render(left)
-        val sRight = pr.render(right)
-
         buildString {
+            val sx = pr(x)
+            val sy = pr(y)
+            val syx = pr(yx)
+            val sxx = pr(xx)
+            val sLeft = pr(left)
+            val sRight = pr(right)
+
             appendLine("Right alternativity failed:")
 
-            append(infix("(" + infix(sy, sx) + ")", sx))
+            append(expr("(" + expr(sy, sx) + ")", sx))
             append(" = ")
-            append(infix(syx, sx))
+            append(expr(syx, sx))
             append(" = ")
-            append(sLeft)
-            appendLine()
+            appendLine(sLeft)
 
-            append(infix(sy, "(" + infix(sx, sx) + ")"))
+            append(expr(sy, "(" + expr(sx, sx) + ")"))
             append(" = ")
-            append(infix(sy, sxx))
+            append(expr(sy, sxx))
             append(" = ")
-            append(sRight)
-            appendLine()
+            appendLine(sRight)
 
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
 }
 
-class LeftAlternativityLaw<A: Any>(
+/**
+ * Left alternativity: `x(xy) = (xx)y`
+ */
+class LeftAlternativityLaw<A : Any>(
     override val op: BinOp<A>,
-    override val pairArb: Arb<Pair<A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
-) : TestingLaw, AlternativityCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(arb, arb), eq, pr, symbol)
-
-    override val name = "alternativity (left: $symbol)"
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+): TestingLaw, AlternativityCore<A> {
+    override val name = "left alternativity (${op.symbol})"
     override suspend fun test() = leftAlternativityCheck()
 }
 
-class RightAlternativityLaw<A: Any>(
+/**
+ * Right alternativity: `(yx)x = y(xx)`
+ */
+class RightAlternativityLaw<A : Any>(
     override val op: BinOp<A>,
-    override val pairArb: Arb<Pair<A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
-) : TestingLaw, AlternativityCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(arb, arb), eq, pr, symbol)
-
-    override val name = "alternativity (right: $symbol)"
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+): TestingLaw, AlternativityCore<A> {
+    override val name = "right alternativity (${op.symbol})"
     override suspend fun test() = rightAlternativityCheck()
 }
 
 /**
  * Alternativity is a condition that is implied by but strictly weaker than associativity.
- * The classic example is the octonions: they are nonassociative, but alternative.
- * The following conditions must be met:
- * * Left alternativity: x(xy) = (xx)y
- * * Right alternativity: (yx)x = y(xx)
  *
- * for all x, y in the algebra.
+ * The classic example is the octonions: they are nonassociative, but alternative.
+ *
+ * The following conditions must be met:
+ * - Left alternativity: `x(xy) = (xx)y`
+ * - Right alternativity: `(yx)x = y(xx)`
+ *
+ * for all `x`, `y` in the algebra.
+ *
  * They are named as such because the associator is alternating:
- * * [x, y, z] = (xy)z - x(yz).
+ *
+ *     [x, y, z] = (xy)z - x(yz)
  *
  * Alternativity is quite strong: it forces any two elements to generate an associative subalgebra
  * (see Artin's theorem).
  */
-class AlternativityLaw<A: Any>(
+class AlternativityLaw<A : Any>(
     override val op: BinOp<A>,
-    override val pairArb: Arb<Pair<A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, AlternativityCore<A> {
+    override val name = "alternativity (${op.symbol})"
 
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.pair(arb, arb), eq, pr, symbol)
-
-    override val name = "alternativity (both: $symbol)"
     override suspend fun test() {
         leftAlternativityCheck()
         rightAlternativityCheck()

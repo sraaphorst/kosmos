@@ -7,7 +7,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.core.render.Printable.Companion.default
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.laws.property.BilinearityLaw
+import org.vorpal.kosmos.laws.property.BilinearFormLaw
 import org.vorpal.kosmos.laws.property.SymmetryLaw
 import org.vorpal.kosmos.laws.property.PositiveDefiniteLaw
 
@@ -40,18 +40,17 @@ class InnerProductSpaceLaws<F : Any, V : Any>(
             ),
 
             // Bilinearity in each variable, etc. (schematic)
-            BilinearityLaw(
+            BilinearFormLaw(
                 f = space::inner,
-                addF = space.field.add.op,
-                mulF = space.field.mul.op,
+                addS = space.field.add.op,
+                mulS = space.field.mul.op,
                 addV = space.group.op,
                 scalarAction = space.action,
                 scalarArb = scalarArb,
                 vectorArb = vectorArb,
                 eq = scalarEq,
-                prF = scalarPrintable,
+                prS = scalarPrintable,
                 prV = vectorPrintable,
-                symbol = scalarSymbol
             ),
 
             // Positive-definiteness: ⟨x,x⟩ ≥ 0 and = 0 iff x = 0

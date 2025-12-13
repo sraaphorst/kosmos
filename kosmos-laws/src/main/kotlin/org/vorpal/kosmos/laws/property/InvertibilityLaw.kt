@@ -3,183 +3,147 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
+import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
-import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-/** Invertibility Law: check, for a given operation and identity element, that there is a function
- * on the type that generates inverses of elements that combine to form the identity.
- * This can be either:
- * * A total invertibility (all elements must have an inverse)
- * * A partial invertibility (some elements may not have an inverse)
- * There are constructors to create either type for a given operation.
- */
-class InvertibilityLaw<A: Any> private constructor(
-    private val op: BinOp<A>,
-    private val identity: A,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val inverseOrNull: UnaryOp<A, A?>,
-    private val modeLabel: String,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆"
-) : TestingLaw {
+private sealed interface InvertibilityCore<A : Any> {
+    val op: BinOp<A>
+    val identity: A
+    val inverseOrNull: UnaryOp<A, A?>
+    val arb: Arb<A>
+    val eq: Eq<A>
+    val pr: Printable<A>
 
-    /** Total inverse constructor (e.g. groups).
-     * All elements must be invertible. */
-    constructor(
-        op: BinOp<A>,
-        identity: A,
-        arbAll: Arb<A>,
-        eq: Eq<A>,
-        inverse: Endo<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(
-        op = op,
-        identity = identity,
-        arb = arbAll,
-        eq = eq,
-        inverseOrNull = UnaryOp{ inverse(it) },
-        pr = pr,
-        symbol = symbol,
-        modeLabel = "total")
+    private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
+    private fun arbInv(): Arb<Pair<A, A>> =
+        arb.map { a -> Pair(a, inverseOrNull(a)) }
+            .filter { (_, aInv) -> aInv != null }
+            .map { (a, aInv) -> a to aInv!! }
 
-    /** Partial inverse constructor (e.g. fields: exclude 0).
-     * To be used when there is a generator that produces any element of the given type.
-     * The provided inverseOrNull function permits null (no inverse) to be returned
-     * for anything that is considered a unit. */
-    constructor(
-        op: BinOp<A>,
-        identity: A,
-        arbAll: Arb<A>,
-        eq: Eq<A>,
-        inverseOrNull: UnaryOp<A, A?>,
-        isUnit: (A) -> Boolean,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(
-        op = op,
-        identity = identity,
-        arb = arbAll.filter(isUnit),
-        eq = eq,
-        inverseOrNull = inverseOrNull,
-        pr = pr,
-        symbol = symbol,
-        modeLabel = "partial"
-    )
-
-    /** Partial inverse constructor.
-     * To be used when there is a generator that specifically only produces units, i.e.
-     * invertible elements. It is a failure if the generator produces an element that
-     * inverseOrNull indicates does not have an inverse (returns null). */
-    constructor(
-        op: BinOp<A>,
-        identity: A,
-        arbUnits: Arb<A>,
-        eq: Eq<A>,
-        inverseOrNull: UnaryOp<A, A?>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(
-        op = op,
-        identity = identity,
-        arb = arbUnits,
-        eq = eq,
-        inverseOrNull = inverseOrNull,
-        pr = pr,
-        symbol = symbol,
-        modeLabel = "partial"
-    )
-
-    /** Partial inverse constructor.
-     * To be used when there is a total inverse, but we want to limit the elements
-     * tested for invertibility (via the isUnit function). */
-    constructor(
-        op: BinOp<A>,
-        identity: A,
-        arbAll: Arb<A>,
-        eq: Eq<A>,
-        inverse: (A) -> A,
-        isUnit: (A) -> Boolean,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(
-        op = op,
-        identity = identity,
-        arb = arbAll.filter(isUnit),
-        eq = eq,
-        inverseOrNull = UnaryOp { a -> if (isUnit(a)) inverse(a) else null },
-        pr = pr,
-        symbol = symbol,
-        modeLabel = "partial"
-    )
-
-    override val name: String = "$modeLabel invertibility ($symbol)"
-
-    override suspend fun test() {
-        checkAll(arb) { a ->
-            val inv = inverseOrNull(a)
-                ?: error("No inverse for ${pr.render(a)} (generator produced a non-invertible value)")
-
-            val left = op(inv, a)
-            val right  = op(a, inv)
-
-            withClue(leftFailureMessage(a, inv, left)) {
-                check(eq.eqv(left, identity))
-            }
-            withClue(rightFailureMessage(a, inv, right)) {
-                check(eq.eqv(right, identity))
+    suspend fun leftInverseCheck() {
+        checkAll(arbInv()) { (a, aInv) ->
+            val right = op(aInv, a)
+            withClue(leftInverseFailure(a, aInv, right)) {
+                check(eq(right, identity))
             }
         }
     }
 
-    private fun infix(l: String, r: String) = "$l $symbol $r"
-
-    private fun leftFailureMessage(
-        a: A, aInv: A, left: A
-    ): () -> String = {
-        val sa = pr.render(a)
-        val saInv = pr.render(aInv)
-        val sLeft = pr.render(left)
-        val sId = pr.render(identity)
-
-        buildString {
-            appendLine("Left invertibility failed:")
-
-            append(infix("inv($sa)", sa))
-            append(" = ")
-            append(infix(saInv, sa))
-            append(" = ")
-            append(sLeft)
-            append(" (expected: $sId)")
-            appendLine()
-        }
-    }
-
-    private fun rightFailureMessage(
+    private fun leftInverseFailure(
         a: A, aInv: A, right: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val saInv = pr.render(aInv)
-        val sRight = pr.render(right)
-        val sId = pr.render(identity)
-
         buildString {
-            appendLine("Right invertibility failed:")
+            val sa = pr(a)
+            val saInv = pr(aInv)
+            val sRight = pr(right)
+            val sId = pr(identity)
 
-            append(infix(sa, "inv($sa)"))
+            appendLine("Left invertibility failed:")
+
+            append(expr("inv($sa)", sa))
             append(" = ")
-            append(infix(sa, saInv))
+            append(expr(saInv, sa))
             append(" = ")
             append(sRight)
             append(" (expected: $sId)")
             appendLine()
         }
+    }
+
+    suspend fun rightInverseCheck() {
+        checkAll(arbInv()) { (a, aInv) ->
+            val right = op(a, aInv)
+            withClue(rightInverseFailure(a, aInv, right)) {
+                check(eq(right, identity))
+            }
+        }
+    }
+
+    private fun rightInverseFailure(
+        a: A, aInv: A, right: A
+    ): () -> String = {
+        buildString {
+            val sa = pr(a)
+            val saInv = pr(aInv)
+            val sRight = pr(right)
+            val sId = pr(identity)
+
+            appendLine("Right invertibility failed:")
+
+            append(expr(sa, "inv($sa)"))
+            append(" = ")
+            append(expr(sa, saInv))
+            append(" = ")
+            append(sRight)
+            append(" (expected: $sId)")
+            appendLine()
+        }
+    }
+}
+
+/**
+ * Left invertibility:
+ *
+ * For each `a` where `inverseOrNull(a)` returns a value `b`, check that, for the identity `e`:
+ *
+ *     ba = e
+ */
+class LeftInvertibilityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val inverseOrNull: UnaryOp<A, A?>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, InvertibilityCore<A> {
+    override val name: String = "left invertibility (${op.symbol})"
+    override suspend fun test() = leftInverseCheck()
+}
+
+/**
+ * Right invertibility:
+ *
+ * For each `a` where `inverseOrNull(a)` returns a value `b`, check that, for the identity `e`:
+ *
+ *     ab = e
+ */
+class RightInvertibilityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val inverseOrNull: UnaryOp<A, A?>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, InvertibilityCore<A> {
+    override val name: String = "right invertibility (${op.symbol})"
+    override suspend fun test() = rightInverseCheck()
+}
+
+/**
+ * Invertibility:
+ *
+ * For each `a` where `inverseOrNull(a)` returns a value `b`, check that, for the identity `e`:
+ *
+ *     ba = e
+ *     ab = e
+ */
+class InvertibilityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val identity: A,
+    override val arb: Arb<A>,
+    override val inverseOrNull: UnaryOp<A, A?>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default(),
+) : TestingLaw, InvertibilityCore<A> {
+    override val name: String = "invertibility (${op.symbol})"
+    override suspend fun test() {
+        leftInverseCheck()
+        rightInverseCheck()
     }
 }
