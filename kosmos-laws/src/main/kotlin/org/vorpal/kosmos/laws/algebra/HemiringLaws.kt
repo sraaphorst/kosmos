@@ -4,57 +4,33 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Hemiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.property.DistributivityLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
- * Laws for a Hemiring:
- *
- *  - Additive structure (commutative monoid):
- *      * associativity of +
- *      * identity 0
- *      * commutativity of +
- *
- *  - Multiplicative structure (semigroup):
- *      * associativity of ⋅
- *
- *  - Distributivity:
- *      * a ⋅ (b + c) = a⋅b + a⋅c
- *      * (b + c) ⋅ a = b⋅a + c⋅a
+ * [Hemiring] laws:
+ * - [CommutativeMonoidLaws] over addition
+ * - [SemigroupLaws] over multiplication
+ * - [DistributivityLaw] of multiplication over addition
+ * - [AnnihilationLaw] of the additive identity with respect to multiplication
  */
 class HemiringLaws<A : Any>(
     private val hemiring: Hemiring<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val addSymbol: String = "+",
-    private val mulSymbol: String = "⋅"
-) {
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+): LawSuite {
+    override val name = suiteName("Hemiring", hemiring.add.op.symbol, hemiring.mul.op.symbol)
 
-    fun laws(): List<TestingLaw> =
+    override fun laws(): List<TestingLaw> =
         // additive commutative monoid (A, +, 0)
-        CommutativeMonoidLaws(
-            monoid = hemiring.add,
-            arb = arb,
-            eq = eq,
-            pr = pr,
-            symbol = addSymbol
-        ).laws() +
-                // multiplicative semigroup (A, ⋅)
-                SemigroupLaws(
-                    semigroup = hemiring.mul,
-                    arb = arb,
-                    eq = eq,
-                    pr = pr,
-                    symbol = mulSymbol
-                ).laws() +
-                // distributivity of ⋅ over +
-                listOf(
-                    DistributivityLaw(
-                        mul = hemiring.mul.op,
-                        add = hemiring.add.op,
-                        arb = arb,
-                        eq = eq
-                    )
-                )
+        CommutativeMonoidLaws(hemiring.add, arb, eq, pr).laws() +
+            SemigroupLaws(hemiring.mul, arb, eq, pr).laws() +
+            listOf(
+                AnnihilationLaw(hemiring.mul.op, hemiring.add.identity, arb, eq, pr),
+                DistributivityLaw(hemiring.mul.op, hemiring.add.op, arb, eq, pr)
+            )
 }

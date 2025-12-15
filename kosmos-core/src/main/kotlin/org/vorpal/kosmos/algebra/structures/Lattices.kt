@@ -19,10 +19,9 @@ interface JoinSemilattice<A : Any> {
     companion object {
         fun <A : Any> of(
             join: BinOp<A>
-        ): JoinSemilattice<A> =
-            object : JoinSemilattice<A> {
-                override val join = join
-            }
+        ): JoinSemilattice<A> = object : JoinSemilattice<A> {
+            override val join = join
+        }
     }
 }
 
@@ -39,10 +38,9 @@ interface MeetSemilattice<A : Any> {
     companion object {
         fun <A : Any> of(
             meet: BinOp<A>
-        ): MeetSemilattice<A> =
-            object : MeetSemilattice<A> {
-                override val meet = meet
-            }
+        ): MeetSemilattice<A> = object : MeetSemilattice<A> {
+            override val meet = meet
+        }
     }
 }
 
@@ -76,11 +74,13 @@ interface Lattice<A : Any> : JoinSemilattice<A>, MeetSemilattice<A> {
     fun le(a: A, b: A): Boolean = leFromJoin(a, b)
 
     companion object {
-        fun <A : Any> of(join: BinOp<A>, meet: BinOp<A>): Lattice<A> =
-            object : Lattice<A> {
-                override val join = join
-                override val meet = meet
-            }
+        fun <A : Any> of(
+            join: BinOp<A>,
+            meet: BinOp<A>
+        ): Lattice<A> = object : Lattice<A> {
+            override val join = join
+            override val meet = meet
+        }
     }
 }
 
@@ -95,15 +95,28 @@ interface BoundedLattice<A : Any> : Lattice<A> {
             meet: BinOp<A>,
             bottom: A,
             top: A
-        ): BoundedLattice<A> =
-            object : BoundedLattice<A> {
-                override val join = join
-                override val meet = meet
-                override val bottom = bottom
-                override val top = top
-            }
+        ): BoundedLattice<A> = object : BoundedLattice<A> {
+            override val join = join
+            override val meet = meet
+            override val bottom = bottom
+            override val top = top
+        }
     }
 }
 
 /** Marker interface (laws check distributivity). */
-interface DistributiveLattice<A : Any> : BoundedLattice<A>
+interface DistributiveLattice<A : Any> : BoundedLattice<A> {
+    companion object {
+        fun <A : Any> of(
+            join: BinOp<A>,
+            meet: BinOp<A>,
+            bottom: A,
+            top: A
+        ): DistributiveLattice<A> = object : DistributiveLattice<A> {
+            override val join = join
+            override val meet = meet
+            override val bottom = bottom
+            override val top = top
+        }
+    }
+}

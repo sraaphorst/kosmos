@@ -23,6 +23,12 @@ fun interface TestingLaw {
         get() = this::class.simpleName ?: "UnnamedLaw"
 
     companion object {
+        fun named(name: String, test: suspend () -> Unit): TestingLaw =
+            object : TestingLaw {
+                override val name: String = name
+                override suspend fun test() = test()
+            }
+
         fun <A> arbPair(arb: Arb<A>): Arb<Pair<A, A>> = Arb.pair(arb, arb)
         fun <A> arbTriple(arb: Arb<A>): Arb<Triple<A, A, A>> = Arb.triple(arb, arb, arb)
     }

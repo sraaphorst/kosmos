@@ -10,7 +10,7 @@ interface NonAssociativeSemigroup<A : Any> : Magma<A> {
     companion object {
         fun <A: Any> of(
             op: BinOp<A>
-        ) = object : NonAssociativeSemigroup<A> {
+        ): NonAssociativeSemigroup<A> = object : NonAssociativeSemigroup<A> {
             override val op = op
         }
     }

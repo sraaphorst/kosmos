@@ -54,7 +54,7 @@ object RealAlgebras {
      * 2D vector space over doubles.
      */
     object Vec2RSpace : FiniteVectorSpace<Real, Vec2R> {
-        override val ring: Field<Real> = RealField
+        override val scalars: Field<Real> = RealField
         override val dimension: Int = 2
 
         override val group: AbelianGroup<Vec2R> = AbelianGroup.of(

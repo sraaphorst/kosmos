@@ -18,7 +18,7 @@ import org.vorpal.kosmos.laws.property.CommutativityLaw
 import org.vorpal.kosmos.laws.property.IdempotencyLaw
 import org.vorpal.kosmos.laws.property.AbsorptionLaw
 import org.vorpal.kosmos.laws.property.IdentityLaw
-import org.vorpal.kosmos.laws.property.AnnihilatorLaw
+import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.property.DistributivityLaw
 
 /**
@@ -190,7 +190,7 @@ class BoundedLatticeLaws<A : Any>(
                 symbol = meetSymbol
             ),
             // Annihilators
-            AnnihilatorLaw(
+            AnnihilationLaw(
                 op = lattice.meet,
                 zero = lattice.bottom,
                 arb = arb,
@@ -198,7 +198,7 @@ class BoundedLatticeLaws<A : Any>(
                 pr = pr,
                 symbol = meetSymbol
             ),
-            AnnihilatorLaw(
+            AnnihilationLaw(
                 op = lattice.join,
                 zero = lattice.top,
                 arb = arb,

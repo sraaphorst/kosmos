@@ -21,6 +21,7 @@ import org.vorpal.kosmos.algebra.structures.negOne
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
 typealias Quaternion = CD<Complex>
@@ -35,7 +36,7 @@ object QuaternionAlgebras {
         NormedDivisionAlgebra<Quaternion> {
 
         private val base: InvolutiveAlgebra<Quaternion> =
-            CayleyDickson(ComplexAlgebras.ComplexField)
+            CayleyDickson(ComplexField)
 
         override val add = base.add
 
@@ -59,8 +60,8 @@ object QuaternionAlgebras {
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
-        override fun normSq(a: Quaternion): Real =
-            a.normSq()
+        override val normSq: UnaryOp<Quaternion, Real> =
+            UnaryOp(NormedDivisionAlgebra.normSqSymbol){ it.normSq() }
 
         // Disambiguate zero.
         override val zero = base.add.identity

@@ -20,8 +20,8 @@ class NumberTheorySpec : StringSpec({
 
     val nonZeroInts = Arb.int(-10000..10000).filter { it != 0 }
     val nonZeroLongs = Arb.long(-10000L..10000L).filter { it != 0L }
-    val positiveInts = Arb.int(1..10000)
-    val positiveLongs = Arb.long(1L..10000L)
+    Arb.int(1..10000)
+    Arb.long(1L..10000L)
 
     // Use smaller ranges to avoid overflow in LCM calculations
     // LCM can grow very quickly and cause Int overflow with large inputs
@@ -30,7 +30,7 @@ class NumberTheorySpec : StringSpec({
 
     val smallBigInts = Arb.int(-10000..10000).map { BigInteger.valueOf(it.toLong()) }
     val nonZeroBigInts = smallBigInts.filter { it != BigInteger.ZERO }
-    val positiveBigInts = Arb.int(1..10000).map { BigInteger.valueOf(it.toLong()) }
+    Arb.int(1..10000).map { BigInteger.valueOf(it.toLong()) }
 
     // Generate coprime pairs for modular inverse testing
     val coprimePairs = Arb.bind(

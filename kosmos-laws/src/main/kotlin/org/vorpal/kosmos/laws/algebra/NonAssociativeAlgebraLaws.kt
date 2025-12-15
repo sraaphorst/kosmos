@@ -4,8 +4,10 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.DistributivityLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
  * Laws for a NonAssociativeAlgebra:
@@ -23,11 +25,11 @@ import org.vorpal.kosmos.laws.property.DistributivityLaw
 class NonAssociativeAlgebraLaws<A : Any>(
     private val algebra: NonAssociativeAlgebra<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val addSymbol: String = "+",
-    private val mulSymbol: String = "⋆"
-) {
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+): LawSuite {
+
+    override val name = suiteName("NonAssociativeAlgebra", algebra.add.op.symbol, algebra.mul.op.symbol)
 
     fun laws(): List<TestingLaw> =
         // (A, +, 0) is an abelian group

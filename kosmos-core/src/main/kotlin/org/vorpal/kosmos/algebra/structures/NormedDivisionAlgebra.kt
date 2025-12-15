@@ -1,6 +1,12 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.algebra.structures.instances.Complex
+import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.normSq
 import org.vorpal.kosmos.algebra.structures.instances.Real
+import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
+import kotlin.math.sqrt
 
 /**
  * A real normed division *-algebra:
@@ -20,10 +26,29 @@ interface NormedDivisionAlgebra<A : Any>: NonAssociativeDivisionAlgebra<A> {
     /**
      * Squared norm N(a) (so we avoid a sqrt).
      */
-    fun normSq(a: A): Real
+    val normSq: UnaryOp<A, Real>
 
     /**
      * Convenience of actual norm if needed.
      */
-    fun norm(a: A): Real = kotlin.math.sqrt(normSq(a))
+    fun norm(a: A): Real = sqrt(normSq(a))
+
+    companion object {
+        const val normSqSymbol: String = "|${Symbols.DOT}|${Symbols.SQUARE}"
+
+        fun <A : Any> of(
+            add: AbelianGroup<A>,
+            mul: NonAssociativeMonoid<A>,
+            reciprocal: Endo<A>,
+            conj: Endo<A>,
+            normSq: UnaryOp<A, Real>
+        ): NormedDivisionAlgebra<A> = object : NormedDivisionAlgebra<A> {
+            override val zero: A = add.identity
+            override val add = add
+            override val mul = mul
+            override val reciprocal = reciprocal
+            override val conj = conj
+            override val normSq = normSq
+        }
+    }
 }

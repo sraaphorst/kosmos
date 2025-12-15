@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface AnnihilatorCore<A : Any> {
+private sealed interface AnnihilationCore<A : Any> {
     val op: BinOp<A>
     val zero: A
     val arb: Arb<A>
@@ -78,13 +78,13 @@ private sealed interface AnnihilatorCore<A : Any> {
 /**
  * Left annihilator law: `0a = 0`
  */
-class LeftAnnihilatorLaw<A : Any>(
+class LeftAnnihilationLaw<A : Any>(
     override val op: BinOp<A>,
     override val zero: A,
     override val arb: Arb<A>,
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
-) : TestingLaw, AnnihilatorCore<A> {
+) : TestingLaw, AnnihilationCore<A> {
     override val name = "left annihilator (${op.symbol})"
     override suspend fun test() = leftAnnihilationCheck()
 }
@@ -92,13 +92,13 @@ class LeftAnnihilatorLaw<A : Any>(
 /**
  * Right annihilator law: `a0 = 0`
  */
-class RightAnnihilatorLaw<A : Any>(
+class RightAnnihilationLaw<A : Any>(
     override val op: BinOp<A>,
     override val zero: A,
     override val arb: Arb<A>,
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
-) : TestingLaw, AnnihilatorCore<A> {
+) : TestingLaw, AnnihilationCore<A> {
     override val name = "right annihilator (${op.symbol})"
     override suspend fun test() = rightAnnihilationCheck()
 }
@@ -110,13 +110,13 @@ class RightAnnihilatorLaw<A : Any>(
  * - Left annihilation: `0a = 0`
  * - Right annihilation: `a0 = 0`
  */
-class AnnihilatorLaw<A : Any>(
+class AnnihilationLaw<A : Any>(
     override val op: BinOp<A>,
     override val zero: A,
     override val arb: Arb<A>,
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
-) : TestingLaw, AnnihilatorCore<A> {
+) : TestingLaw, AnnihilationCore<A> {
     override val name = "annihilator (${op.symbol})"
 
     override suspend fun test() {

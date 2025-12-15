@@ -6,11 +6,11 @@ package org.vorpal.kosmos.algebra.structures
  * the multiplicative monoid is a [CommutativeMonoid].
  * with multiplication being distributive over addition.
  */
-interface CommutativeSemiring<A: Any>: Semiring<A> {
+interface CommutativeSemiring<A : Any>: Semiring<A> {
     override val mul: CommutativeMonoid<A>
 
     companion object {
-        fun <A: Any> of(
+        fun <A : Any> of(
             add: CommutativeMonoid<A>,
             mul: CommutativeMonoid<A>
         ): CommutativeSemiring<A> = object : CommutativeSemiring<A> {

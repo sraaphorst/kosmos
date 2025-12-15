@@ -24,8 +24,6 @@ object PrimeSequence : CachedRecurrenceImplementation<BigInteger>(), CachedRecur
         }
     }
 
-    override fun clearRecurrenceCache() = super.clearRecurrenceCache()
-
     // --- Helpers ---
 
     private fun nextPrime(after: BigInteger): BigInteger {

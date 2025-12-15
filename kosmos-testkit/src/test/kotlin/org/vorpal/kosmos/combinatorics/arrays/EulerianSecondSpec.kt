@@ -447,8 +447,8 @@ class EulerianSecondSpec : StringSpec({
     "recurrence and closed form agree for all small values" {
         for (n in 0..7)
             for (k in 0 until maxOf(n,1)) {
-                val v1 = EulerianSecond(n, k)
-                val v2 = EulerianSecond.closedForm(n, k)
+                EulerianSecond(n, k)
+                EulerianSecond.closedForm(n, k)
                 EulerianSecond(n, k) shouldBe EulerianSecond.closedForm(n, k)
             }
     }

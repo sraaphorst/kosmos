@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.laws
 
 import kotlinx.coroutines.CancellationException
+import org.vorpal.kosmos.core.ops.BinOp
 
 /**
  * A bundle of [TestingLaw]s that collectively describe the axioms expected
@@ -118,4 +119,24 @@ suspend fun runLawSuite(
     }
 
     return LawSuiteReport(suiteName = suiteName, results = results)
+}
+
+/**
+ * Derive a name for the [LawSuite] based on the object being tested and its operator symbols.
+ */
+fun suiteName(objName: String, vararg opNames: String): String {
+    require(objName.isNotBlank()) { "In suiteName, the object name cannot be blank." }
+
+    val ops = opNames
+        .map { it.trim() }
+        .filter { it.isNotEmpty() }
+
+    return buildString {
+        append(objName)
+        if (ops.isNotEmpty()) {
+            append(" (")
+            append(ops.joinToString(", "))
+            append(")")
+        }
+    }
 }

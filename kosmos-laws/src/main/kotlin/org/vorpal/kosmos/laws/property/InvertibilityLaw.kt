@@ -8,6 +8,7 @@ import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
@@ -147,3 +148,9 @@ class InvertibilityLaw<A : Any>(
         rightInverseCheck()
     }
 }
+
+/**
+ * Helper function to turn an Endo<A> into a UnaryOp<A, A?> to make complete [Endo] types fit.
+ */
+fun <A : Any> Endo<A>.asInverseOrNull(): UnaryOp<A, A?> =
+    UnaryOp(this.symbol) { a -> this(a) }

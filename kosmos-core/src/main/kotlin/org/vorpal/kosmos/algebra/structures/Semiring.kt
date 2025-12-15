@@ -6,11 +6,11 @@ package org.vorpal.kosmos.algebra.structures
  * - A [Monoid] for multiplication.
  * with multiplication being distributive over addition.
  */
-interface Semiring<A: Any>: Hemiring<A> {
+interface Semiring<A : Any>: Hemiring<A> {
     override val mul: Monoid<A>
 
     companion object {
-        fun <A: Any> of(
+        fun <A : Any> of(
             add: CommutativeMonoid<A>,
             mul: Monoid<A>,
         ): Semiring<A> = object : Semiring<A> {

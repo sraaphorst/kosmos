@@ -53,8 +53,8 @@ fun <F : Any, V : Any> gradient(
     metric: (V) -> (V, V) -> F
 ): VectorField<F, V> =
     VectorFields.of(f.space) { p ->
-        val g = metric(p)
-        val df = differential(f) { point, func ->
+        metric(p)
+        differential(f) { point, func ->
             // Build Covector<F, V> at point using the local derivative of f
             TODO("Implement derivative")
         }

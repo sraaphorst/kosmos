@@ -8,7 +8,13 @@ import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.core.render.Printable.Companion.default
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.module.actionAssociatesWithScalarMultiplicationLaw
+import org.vorpal.kosmos.laws.module.actionDistributesOverAdditionLaw
+import org.vorpal.kosmos.laws.module.additionDistributesOverActionLaw
+import org.vorpal.kosmos.laws.module.unitActsAsIdentityLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
  * Laws for an R-module M over a commutative ring R.
@@ -28,138 +34,56 @@ class RModuleLaws<R : Any, M : Any>(
     private val module: RModule<R, M>,
     private val scalarArb: Arb<R>,
     private val vectorArb: Arb<M>,
-    private val eq: Eq<M>,
-    private val pr: Printable<M> = default(),
-    private val scalarSymbol: String = "⋅",
-    private val addSymbol: String = "+"
-) {
+    private val eqM: Eq<M> = Eq.default(),
+    private val prR: Printable<R> = Printable.default(),
+    private val prM: Printable<M> = Printable.default(),
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
+    override val name = suiteName(
+        "RModule",
+        module.scalars.add.op.symbol,
+        module.scalars.mul.op.symbol,
+        module.action.symbol,
+        module.group.op.symbol
+    )
+
+    override fun laws(): List<TestingLaw> =
         listOf(
-            scalarDistributesOverVectorAddition(),
-            scalarAdditionDistributesOverVector(),
-            scalarMultiplicationAssociativity(),
-            unitActsAsIdentity()
+            actionDistributesOverAdditionLaw(
+                addM = module.group.op,
+                act = module.action,
+                arbR = scalarArb,
+                arbM = vectorArb,
+                eqM = eqM,
+                prR = prR,
+                prM = prM
+            ),
+            additionDistributesOverActionLaw(
+                addR = module.scalars.add.op,
+                addM = module.group.op,
+                act = module.action,
+                arbR = scalarArb,
+                arbM = vectorArb,
+                eqM = eqM,
+                prR = prR,
+                prM = prM
+            ),
+            actionAssociatesWithScalarMultiplicationLaw(
+                mulR = module.scalars.mul.op,
+                act = module.action,
+                arbR = scalarArb,
+                arbM = vectorArb,
+                eqM = eqM,
+                prR = prR,
+                prM = prM
+            ),
+            unitActsAsIdentityLaw(
+                oneR = module.scalars.mul.identity,
+                act = module.action,
+                arbM = vectorArb,
+                eqM = eqM,
+                prR = prR,
+                prM = prM
+            )
         )
-
-    /**
-     * 1. r · (x + y) = r · x + r · y
-     */
-    private fun scalarDistributesOverVectorAddition(): TestingLaw =
-        object : TestingLaw {
-            override val name: String =
-                "module: scalar distributes over vector addition"
-
-            override suspend fun test() {
-                val add = module.group.op
-                val act = module.action
-
-                checkAll(scalarArb, Arb.pair(vectorArb, vectorArb)) { r, (x, y) ->
-                    val left = act(r, add(x, y))
-                    val right = add(act(r, x), act(r, y))
-
-                    withClue(buildString {
-                        appendLine("Scalar distributivity over vector addition failed:")
-                        appendLine("  r $scalarSymbol (x $addSymbol y)  vs  r $scalarSymbol x  $addSymbol  r $scalarSymbol y")
-                        appendLine("  r  = $r")
-                        appendLine("  x  = ${pr.render(x)}")
-                        appendLine("  y  = ${pr.render(y)}")
-                        appendLine("  LHS = ${pr.render(left)}")
-                        appendLine("  RHS = ${pr.render(right)}")
-                    }) {
-                        check(eq.eqv(left, right))
-                    }
-                }
-            }
-        }
-
-    /**
-     * 2. (r + s) · x = r · x + s · x
-     */
-    private fun scalarAdditionDistributesOverVector(): TestingLaw =
-        object : TestingLaw {
-            override val name: String =
-                "module: scalar addition distributes over scalar action"
-
-            override suspend fun test() {
-                val addR = module.ring.add.op
-                val addM = module.group.op
-                val act = module.action
-
-                checkAll(Arb.pair(scalarArb, scalarArb), vectorArb) { (r, s), x ->
-                    val left = act(addR(r, s), x)
-                    val right = addM(act(r, x), act(s, x))
-
-                    withClue(buildString {
-                        appendLine("Scalar addition distributivity failed:")
-                        appendLine("  (r + s) $scalarSymbol x  vs  r $scalarSymbol x  $addSymbol  s $scalarSymbol x")
-                        appendLine("  r  = $r")
-                        appendLine("  s  = $s")
-                        appendLine("  x  = ${pr.render(x)}")
-                        appendLine("  LHS = ${pr.render(left)}")
-                        appendLine("  RHS = ${pr.render(right)}")
-                    }) {
-                        check(eq.eqv(left, right))
-                    }
-                }
-            }
-        }
-
-    /**
-     * 3. (r * s) · x = r · (s · x)
-     */
-    private fun scalarMultiplicationAssociativity(): TestingLaw =
-        object : TestingLaw {
-            override val name: String =
-                "module: associativity with ring multiplication"
-
-            override suspend fun test() {
-                val mulR = module.ring.mul.op
-                val act = module.action
-
-                checkAll(Arb.pair(scalarArb, scalarArb), vectorArb) { (r, s), x ->
-                    val left = act(mulR(r, s), x)
-                    val right = act(r, act(s, x))
-
-                    withClue(buildString {
-                        appendLine("Module associativity with ring multiplication failed:")
-                        appendLine("  (r * s) $scalarSymbol x  vs  r $scalarSymbol (s $scalarSymbol x)")
-                        appendLine("  r  = $r")
-                        appendLine("  s  = $s")
-                        appendLine("  x  = ${pr.render(x)}")
-                        appendLine("  LHS = ${pr.render(left)}")
-                        appendLine("  RHS = ${pr.render(right)}")
-                    }) {
-                        check(eq.eqv(left, right))
-                    }
-                }
-            }
-        }
-
-    /**
-     * 4. 1_R · x = x
-     */
-    private fun unitActsAsIdentity(): TestingLaw =
-        object : TestingLaw {
-            override val name: String =
-                "module: unit of ring acts as identity"
-
-            override suspend fun test() {
-                val oneR = module.ring.mul.identity
-                val act = module.action
-
-                checkAll(vectorArb) { x ->
-                    val result = act(oneR, x)
-
-                    withClue(buildString {
-                        appendLine("Module unit law failed:")
-                        appendLine("  1_R $scalarSymbol x = x")
-                        appendLine("  x      = ${pr.render(x)}")
-                        appendLine("  result = ${pr.render(result)}")
-                    }) {
-                        check(eq.eqv(result, x))
-                    }
-                }
-            }
-        }
 }
