@@ -13,6 +13,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
 typealias Complex = CD<Double>
@@ -44,8 +45,8 @@ object ComplexAlgebras {
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
-        override fun normSq(a: Complex): Real =
-            a.normSq()
+        override val normSq: UnaryOp<Complex, Real> =
+            UnaryOp(NormedDivisionAlgebra.normSqSymbol){ it.normSq() }
 
         // Disambiguate zero.
         override val zero = base.add.identity

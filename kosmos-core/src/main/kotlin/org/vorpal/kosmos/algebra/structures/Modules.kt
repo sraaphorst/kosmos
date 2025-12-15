@@ -6,23 +6,24 @@ import org.vorpal.kosmos.core.ops.Action
  * A Left R-Module is a (noncommutative) [Ring] R acting on an [AbelianGroup] M from the left.
  *
  * Laws:
- *  - r ⊳ (x + y) = r ⊳ x + r ⊳ y
- *  - (r + s) ⊳ x = r ⊳ x + s ⊳ x
- *  - (r · s) ⊳ x = r ⊳ (s ⊳ x)
- *  - 1 ⊳ x = x
+ *
+ *    r ⊳ (x + y) = r ⊳ x + r ⊳ y
+ *    (r + s) ⊳ x = r ⊳ x + s ⊳ x
+ *    (r · s) ⊳ x = r ⊳ (s ⊳ x)
+ *    1 ⊳ x = x
  */
 interface LeftRModule<R : Any, M : Any> {
-    val leftRing: Ring<R>
+    val leftScalars: Ring<R>
     val group: AbelianGroup<M>
     val leftAction: Action<R, M>
 
     companion object {
         fun <R: Any, M: Any> of(
-            leftRing: Ring<R>,
+            leftScalars: Ring<R>,
             group: AbelianGroup<M>,
             leftAction: Action<R, M>,
         ): LeftRModule<R, M> = object : LeftRModule<R, M> {
-            override val leftRing = leftRing
+            override val leftScalars = leftScalars
             override val group = group
             override val leftAction = leftAction
         }
@@ -33,23 +34,24 @@ interface LeftRModule<R : Any, M : Any> {
  * A Right R-Module is a (noncommutative) [Ring] R acting on an [AbelianGroup] from the right.
  *
  * Laws:
- *  - (x + y) ⊲ r = x ⊲ r + y ⊲ r
- *  - x ⊲ (r + s) = x ⊲ r + x ⊲ s
- *  - x ⊲ (r · s) = (x ⊲ r) ⊲ s
- *  - x ⊲ 1 = x
+ *
+ *    (x + y) ⊲ r = x ⊲ r + y ⊲ r
+ *    x ⊲ (r + s) = x ⊲ r + x ⊲ s
+ *    x ⊲ (r · s) = (x ⊲ r) ⊲ s
+ *    x ⊲ 1 = x
  */
 interface RightRModule<R : Any, M : Any> {
-    val rightRing: Ring<R>
+    val rightScalars: Ring<R>
     val group: AbelianGroup<M>
     val rightAction: Action<R, M>
 
     companion object {
         fun <R: Any, M: Any> of(
-            rightRing: Ring<R>,
+            rightScalars: Ring<R>,
             group: AbelianGroup<M>,
             rightAction: Action<R, M>,
         ): RightRModule<R, M> = object : RightRModule<R, M> {
-            override val rightRing = rightRing
+            override val rightScalars = rightScalars
             override val group = group
             override val rightAction = rightAction
         }
@@ -59,19 +61,20 @@ interface RightRModule<R : Any, M : Any> {
 /**
  * An (R,S)-Bimodule is an [AbelianGroup] that is simultaneously a left R-Module
  * and a right S-Module, with the compatibility condition:
+ *
  *    (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)
  */
 interface RSBiModule<R : Any, S : Any, M : Any> : LeftRModule<R, M>, RightRModule<S, M> {
     companion object {
         fun <R: Any, S: Any, M: Any> of(
-            leftRing: Ring<R>,
-            rightRing: Ring<S>,
+            leftScalars: Ring<R>,
+            rightScalars: Ring<S>,
             group: AbelianGroup<M>,
             leftAction: Action<R, M>,
             rightAction: Action<S, M>
         ): RSBiModule<R, S, M> = object : RSBiModule<R, S, M> {
-            override val leftRing = leftRing
-            override val rightRing = rightRing
+            override val leftScalars = leftScalars
+            override val rightScalars = rightScalars
             override val group = group
             override val leftAction = leftAction
             override val rightAction = rightAction
@@ -84,7 +87,7 @@ interface RSBiModule<R : Any, S : Any, M : Any> : LeftRModule<R, M>, RightRModul
  * to define both left and right module structures.
  */
 interface ModuleCore<R : Any, M : Any> {
-    val ring: CommutativeRing<R>
+    val scalars: CommutativeRing<R>
     val group: AbelianGroup<M>
     val action: Action<R, M>
 }
@@ -94,13 +97,13 @@ interface ModuleCore<R : Any, M : Any> {
  * It is both a [LeftRModule] and [RightRModule], with the actions coinciding.
  */
 interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M> {
-    override val ring: CommutativeRing<R>
+    override val scalars: CommutativeRing<R>
 
-    override val leftRing: Ring<R>
-        get() = ring
+    override val leftScalars: Ring<R>
+        get() = scalars
 
-    override val rightRing: Ring<R>
-        get() = ring
+    override val rightScalars: Ring<R>
+        get() = scalars
 
     override val leftAction: Action<R, M>
         get() = action
@@ -109,14 +112,29 @@ interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<R, M>, Mod
         get() = action
 
     companion object {
-        fun <R: Any, M: Any> of(
-            ring: CommutativeRing<R>,
+        fun <R : Any, M : Any> of(
+            scalars: CommutativeRing<R>,
             group: AbelianGroup<M>,
             action: Action<R, M>
         ): RModule<R, M> = object : RModule<R, M> {
-            override val ring: CommutativeRing<R> = ring
-            override val group: AbelianGroup<M> = group
-            override val action: Action<R, M> = action
+            override val scalars = scalars
+            override val group = group
+            override val action = action
         }
     }
 }
+
+/**
+ * Helper function for RightRModules to allow the scalars to act from the right instead of the left,
+ * as is the convention with [Action].
+ */
+fun <R : Any, M : Any> RightRModule<R, M>.actRight(m: M, r: R): M =
+    rightAction(r, m)
+
+/**
+ * Helper function for LeftRModules to clarify that scalars act from the left.
+ *
+ * This is mainly just to mirror [actRight].
+ */
+fun <R : Any, M : Any> LeftRModule<R, M>.actLeft(r: R, m: M): M =
+    leftAction(r, m)

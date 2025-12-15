@@ -10,9 +10,9 @@ import org.vorpal.kosmos.core.ops.BinOp
  *
  * [AbelianGroup] implements this.
  */
-interface CommutativeMonoid<A: Any> : Monoid<A> {
+interface CommutativeMonoid<A : Any> : Monoid<A>, CommutativeSemigroup<A> {
     companion object {
-        fun <A: Any> of(
+        fun <A : Any> of(
             identity: A,
             op: BinOp<A>
         ) : CommutativeMonoid<A> = object : CommutativeMonoid<A> {

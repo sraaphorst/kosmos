@@ -111,6 +111,7 @@ object Symbols {
     const val SET_UNION_DISJOINT = "⊔"
     const val SLASH = "/"
     const val SQRT = "√"
+    const val SQUARE = "²"
     const val SUM = "∑"
     const val TENSOR = "⊗"
     const val THEREFORE = "∴"
@@ -128,6 +129,8 @@ object Symbols {
     const val BOOL_AND = WEDGE
     const val BOOL_OR = VEE
     const val COMPOSE = OPEN_CIRCLE
+    const val DIV_LEFT = BACKSLASH
+    const val DIV_RIGHT = SLASH
     const val INJECTION = MAPS_INTO
     const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT

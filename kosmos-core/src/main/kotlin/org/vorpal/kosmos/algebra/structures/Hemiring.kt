@@ -7,12 +7,12 @@ package org.vorpal.kosmos.algebra.structures
  * - A [Semigroup] for multiplication.
  * with multiplication being distributive over addition.
  */
-interface Hemiring<A: Any> {
+interface Hemiring<A : Any> {
     val add: CommutativeMonoid<A>
     val mul: Semigroup<A>
 
     companion object {
-        fun <A: Any> of(
+        fun <A : Any> of(
             add: CommutativeMonoid<A>,
             mul: Semigroup<A>,
         ): Hemiring<A> = object : Hemiring<A> {

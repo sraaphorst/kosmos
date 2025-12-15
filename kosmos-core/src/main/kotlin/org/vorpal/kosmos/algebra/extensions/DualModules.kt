@@ -29,7 +29,7 @@ object DualModules {
     ): RModule<DualOf<F>, Pair<V, V>> = object : RModule<DualOf<F>, Pair<V, V>> {
 
         // Dual<F> is a commutative *ring*, not a field → RModule, not VectorSpace.
-        override val ring: CommutativeRing<DualOf<F>> = dual
+        override val scalars: CommutativeRing<DualOf<F>> = dual
 
         override val group: AbelianGroup<Pair<V, V>> = AbelianGroup.of(
             identity = base.group.identity to base.group.identity,

@@ -22,6 +22,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
 typealias Octonion = CD<Quaternion>
@@ -41,7 +42,7 @@ object OctonionAlgebras {
         override val mul: NonAssociativeMonoid<Octonion> = base.mul
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj: Endo<Octonion> = base.conj
-        override fun normSq(a: Octonion): Real = a.normSq()
+        override val normSq: UnaryOp<Octonion, Real> = UnaryOp(NormedDivisionAlgebra.normSqSymbol) { it.normSq() }
         override val reciprocal: Endo<Octonion> = Endo(Symbols.SLASH) { o ->
             val n2 = o.normSq()
             require(n2 != 0.0) { "Zero has no multiplicative inverse in ${Symbols.BB_O}."}

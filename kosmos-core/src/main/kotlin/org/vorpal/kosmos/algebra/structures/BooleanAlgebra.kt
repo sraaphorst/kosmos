@@ -26,7 +26,7 @@ import org.vorpal.kosmos.core.relations.Poset
  * The canonical order on a Boolean algebra is the join-induced order
  * (equivalently the meet-induced order under the laws).
  */
-interface BooleanAlgebra<A: Any> : DistributiveLattice<A> {
+interface BooleanAlgebra<A : Any> : DistributiveLattice<A> {
     val not: Endo<A>
     override val join: BinOp<A>
     override val meet: BinOp<A>
@@ -68,13 +68,12 @@ interface BooleanAlgebra<A: Any> : DistributiveLattice<A> {
             bottom: A,
             top: A,
             not: Endo<A>
-        ): BooleanAlgebra<A> =
-            object : BooleanAlgebra<A> {
-                override val join: BinOp<A> = join
-                override val meet: BinOp<A> = meet
-                override val bottom: A = bottom
-                override val top: A = top
-                override val not: Endo<A> = not
-            }
+        ): BooleanAlgebra<A> = object : BooleanAlgebra<A> {
+            override val join: BinOp<A> = join
+            override val meet: BinOp<A> = meet
+            override val bottom: A = bottom
+            override val top: A = top
+            override val not: Endo<A> = not
+        }
     }
 }
