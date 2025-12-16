@@ -39,10 +39,12 @@ object Symbols {
     const val BB_Z = "ℤ"
     const val BECAUSE = "∵"
     const val BIG_DOT = "•"
+    const val BILINEAR = "B(·,·)"
     const val BOWTIE = "⋈"
     const val BOX = "□"
     const val BOX_TIMES = "⊠"
     const val COLON_EQUALS = "≔"
+    const val CONJ = "¯"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
     const val DIVISION = "÷"
@@ -66,6 +68,7 @@ object Symbols {
     const val IMPLIES = "→"
     const val IMPLIES_BB = "⇒"
     const val INFINITY = "∞"
+    const val INNER_PRODUCT = "⟨·,·⟩"
     const val INTEGRAL = "∫"
     const val INTEGRAL_DOUBLE = "∬"
     const val INTEGRAL_TRIPLE = "∭"
@@ -141,4 +144,6 @@ object Symbols {
     const val TURNSTYLE_DOUBLE = ENTAILS
     const val TURNSTYLE = PROVES
 
+    // Intricate symbols
+    const val NORM_SQ_SYMBOL = "|${Symbols.DOT}|${Symbols.SQUARE}"
 }

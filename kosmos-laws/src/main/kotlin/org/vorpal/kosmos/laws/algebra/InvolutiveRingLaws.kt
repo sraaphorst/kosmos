@@ -4,48 +4,35 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
- * Laws for an InvolutiveRing<A>, i.e. a Ring with a conjugation:
- *
- *  - All Ring laws:
- *      * (A, +, 0) is an abelian group
- *      * (A, ⋆, 1) is a monoid
- *      * ⋆ distributes over +
- *
- *  - All InvolutiveAlgebra laws:
- *      * (a*)* = a
- *      * (a + b)* = a* + b*
- *      * (ab)* = b* a*
- *      * 1* = 1
+ * [InvolutiveRing] laws:
+ * - [RingLaws]
+ * - [ConjugationLaws]
  */
 class InvolutiveRingLaws<A : Any>(
-    private val ring: InvolutiveRing<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val addSymbol: String = "+",
-    private val mulSymbol: String = "⋆",
-    private val starSymbol: String = "*"
-) {
+    ring: InvolutiveRing<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+): LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        RingLaws(
-            ring = ring,
-            arb = arb,
-            eq = eq,
-            pr = pr,
-            addSymbol = addSymbol,
-            mulSymbol = mulSymbol
-        ).laws() +
-                InvolutiveAlgebraLaws(
-                    algebra = ring,
-                    arb = arb,
-                    eq = eq,
-                    pr = pr,
-                    addSymbol = addSymbol,
-                    mulSymbol = mulSymbol,
-                    starSymbol = starSymbol
-                ).laws()
+    override val name = suiteName(
+        "InvolutiveRing",
+        ring.add.op.symbol,
+        ring.mul.op.symbol,
+        ring.conj.symbol
+    )
+
+    private val ringLaws = RingLaws(ring, arb, eq, pr)
+    private val conjugationLaws = ConjugationLaws(ring.conj, ring.add, ring.mul, arb, eq, pr)
+
+    override fun laws(): List<TestingLaw> =
+        ringLaws.laws() + conjugationLaws.laws()
+
+    override fun fullLaws(): List<TestingLaw> =
+        ringLaws.fullLaws() + conjugationLaws.fullLaws()
 }

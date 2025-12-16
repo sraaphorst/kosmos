@@ -15,15 +15,22 @@ import org.vorpal.kosmos.laws.suiteName
  * - [IdentityLaw] on multiplication
  */
 class RingLaws<A : Any>(
-    private val ring: Ring<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default()
+    ring: Ring<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
 ): LawSuite {
 
     override val name = suiteName("Ring", ring.add.op.symbol, ring.mul.op.symbol)
 
+    private val rngLaws = RngLaws(ring, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        RngLaws(ring, arb, eq, pr).laws() +
-            listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
+        rngLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        rngLaws.fullLaws() + structureLaws
 }

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.analysis.Covector
 import org.vorpal.kosmos.analysis.Covectors
+import org.vorpal.kosmos.core.ops.BilinearForm
 
 /**
  * Inner product space (pre-Hilbert space) over a scalar field F with vectors V.
@@ -17,13 +18,19 @@ interface InnerProductSpace<F : Any, V : Any> : VectorSpace<F, V> {
      * For real spaces: symmetric, bilinear, positive-definite.
      * For complex spaces: conjugate-symmetric, sesquilinear, positive-definite.
      */
-    fun inner(v: V, w: V): F
+    val inner: BilinearForm<V, F>
 
     /**
      * Squared norm ‖v‖² = ⟨v, v⟩.
+     *
+     * Note: In real inner product spaces, ⟨v,v⟩ lies in the scalar field ℝ.
+     * In complex (Hermitian) inner product spaces, ⟨v,v⟩ is real and ≥ 0,
+     * even though ⟨·,·⟩ : V×V → ℂ. Modeling that cleanly likely needs a
+     * separate HermitianInnerProductSpace type (or a “RealPart” scalar view).
+     * TODO: This needs to be revisited. For the complex case, this is sesquilinear, i.e.
+     * TODO: conjugate-linear in one argument and linear in the other.
      */
-    fun normSq(v: V): F =
-        inner(v, v)
+    fun normSq(v: V): F = inner(v, v)
 
     /**
      * Norm ‖v‖ = sqrt(⟨v, v⟩).

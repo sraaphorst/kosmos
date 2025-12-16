@@ -10,15 +10,15 @@ import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.clamp
 import org.vorpal.kosmos.core.math.lerp
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.linear.Vec2R
 import org.vorpal.kosmos.linear.Vec2R_ZERO
-
-typealias Real = Double
 
 object RealAlgebras {
     val RealField : Field<Real> = Field.of(
@@ -29,9 +29,13 @@ object RealAlgebras {
         ),
         mul = CommutativeMonoid.of(
             identity = 1.0,
-            op = BinOp(Symbols.PLUS, Real::times)
+            op = BinOp(Symbols.ASTERISK, Real::times)
         ),
-        reciprocal = Endo(Symbols.INVERSE) { 1.0 / it }
+        // TODO: Add tolerance
+        reciprocal = Endo(Symbols.INVERSE) { x ->
+            require(x != 0.0 && x.isFinite()) { "0 has no reciprocal." }
+            1.0 / x
+        }
     )
 
     object RealInvolutiveRing:
@@ -39,11 +43,13 @@ object RealAlgebras {
         Field<Real> by RealField,
         NormedDivisionAlgebra<Real> {
 
-        override val conj: Endo<Real> =
-            Endo("conj", Identity())
+        override val one = RealField.one
 
-        override fun normSq(a: Real): Real =
-            a * a
+        override val conj: Endo<Real> =
+            Endo(Symbols.CONJ, Identity())
+
+        override val normSq: Endo<Real> =
+            Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
         // Disambiguate HasReciprocal.zero:
         override val zero: Real
@@ -63,7 +69,7 @@ object RealAlgebras {
             inverse = Endo(Symbols.MINUS) { Vec2R(-it.x, -it.y) }
         )
 
-        override val action: Action<Real, Vec2R> = Action(Symbols.ASTERISK) { scalar, vec ->
+        override val leftAction = LeftAction<Real, Vec2R> { scalar, vec ->
             Vec2R(scalar * vec.x, scalar * vec.y)
         }
     }
@@ -72,8 +78,7 @@ object RealAlgebras {
         InnerProductSpace<Real, Vec2R>,
         VectorSpace<Real, Vec2R> by Vec2RSpace {
 
-        override fun inner(v: Vec2R, w: Vec2R): Real =
-            v.x * w.x + v.y * w.y
+        override val inner = BilinearForm<Vec2R, Real> {v, w -> v.x * w.x + v.y * w.y}
 
         override fun norm(v: Vec2R): Real =
             kotlin.math.sqrt(inner(v, v))

@@ -15,15 +15,21 @@ import org.vorpal.kosmos.laws.suiteName
  * - [IdentityLaw] for multiplication
  */
 class SemiringLaws<A : Any>(
-    private val semiring: Semiring<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default()
+    semiring: Semiring<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
 ): LawSuite {
     override val name = suiteName("Semiring", semiring.add.op.symbol, semiring.mul.op.symbol)
 
+    private val hemiringLaws = HemiringLaws(semiring, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(IdentityLaw(semiring.mul.op, semiring.mul.identity, arb, eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        // Hemiring: additive commutative monoid + multiplicative semigroup + distributivity
-        HemiringLaws(semiring, arb, eq, pr).laws() +
-            listOf(IdentityLaw(semiring.mul.op, semiring.mul.identity, arb, eq, pr))
+        hemiringLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        hemiringLaws.fullLaws() + structureLaws
 }

@@ -2,12 +2,13 @@
 package org.vorpal.kosmos.linear
 
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.core.math.Real
 
-// 1) Specialize by aliasing the generic to Double.
-typealias Vec2R = Vec2<Double>
+// 1) Specialize by aliasing the generic to Real.
+typealias Vec2R = Vec2<Real>
 
 // 2) A ctor-like factory so you can still write `Vec2R(…, …)`.
-fun Vec2R(x: Double, y: Double): Vec2R =
+fun Vec2R(x: Real, y: Real): Vec2R =
     Vec2(x, y, RealField)
 
 // 3) Zero convenient constant.

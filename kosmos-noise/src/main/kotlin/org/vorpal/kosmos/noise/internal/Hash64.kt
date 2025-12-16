@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.noise.internal
 
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.toReal
+
 /**
  * Internals for noise: hash64, mix64, maps.
  */
@@ -29,12 +32,12 @@ private fun mix64(z0: Long): Long {
 /**
  * Map of h to [0, 1).
  */
-private const val INV_2_POW_53: Double = 1.0 / (1L shl 53).toDouble()
-private fun longToUnit01(h: Long): Double =
-    (h ushr 11).toDouble() * INV_2_POW_53
+private val INV_2_POW_53: Real = 1.0 / (1L shl 53).toReal()
+private fun longToUnit01(h: Long): Real =
+    (h ushr 11).toReal() * INV_2_POW_53
 
 /**
  * Map of h through longToUnit01 to [0, 1) and then to [-1, 1).
  */
-private fun longToMinus1To1(h: Long): Double =
+private fun longToMinus1To1(h: Long): Real =
     longToUnit01(h) * 2.0 - 1.0

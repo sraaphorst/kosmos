@@ -34,7 +34,7 @@ package org.vorpal.kosmos.functional.optics
  * stringToList.reverseGet(listOf('h', 'i'))  // "hi"
  *
  * // Temperature: Celsius ↔ Fahrenheit
- * val celsiusToFahrenheit = PIso<Double, Double, Double, Double>(
+ * val celsiusToFahrenheit = PIso<Real, Real, Real, Real>(
  *     getter = { c -> c * 9/5 + 32 },
  *     reverseGetter = { f -> (f - 32) * 5/9 }
  * )

@@ -5,16 +5,18 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-
-private fun <S : Any> mulAsScalarAction(mulS: BinOp<S>): Action<S, S> =
-    Action(mulS.symbol, mulS::invoke)
+import org.vorpal.kosmos.laws.util.midfix
 
 private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
     val f: (V, W) -> X
+
+    val symbol: String
+        get() = Symbols.BILINEAR
 
     // Additions
     val addX: BinOp<X>
@@ -22,9 +24,9 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
     val addW: BinOp<W>
 
     // Scalar actions
-    val scalarActionV: Action<S, V>  // S × V → V
-    val scalarActionW: Action<S, W>  // S × W → W
-    val scalarActionX: Action<S, X>  // S × X → X
+    val scalarActionV: LeftAction<S, V>  // S × V → V
+    val scalarActionW: LeftAction<S, W>  // S × W → W
+    val scalarActionX: LeftAction<S, X>  // S × X → X
 
     // Generators
     val scalarArb: Arb<S>
@@ -38,154 +40,154 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
     val prW: Printable<W>
     val prX: Printable<X>
 
-    private fun expr(left: String, right: String): String = "⟨$left, $right⟩"
+    // TODO: The expr should not be hardcoded, but it looks much nicer this way.
+    // TODO: We need to figure out a better rendering mechanism at some point.
+    private fun expr(left: String, right: String): String =
+        if (symbol.contains("·,·")) symbol.replace("·,·", "$left, $right")
+        else "$symbol($left, $right)"
 
-    // (x, y, z) with x, y ∈ V and z ∈ W
+    // (v1, v2, w) with v1, v2 ∈ V and w ∈ W
     private fun vvwArb() = Arb.triple(arbV, arbV, arbW)
 
-    // (x, y, z) with x ∈ V and y, z ∈ W
+    // (v, w1, w2) with v ∈ V and w1, w2 ∈ W
     private fun vwwArb() = Arb.triple(arbV, arbW, arbW)
 
-    // (s, x, z) with s ∈ S, x ∈ V, z ∈ W
+    // (s, v, w) with s ∈ S, v ∈ V, w ∈ W
     private fun svwArb() = Arb.triple(scalarArb, arbV, arbW)
 
     /**
-     * Left additivity: `f(x + y, z) = f(x, z) + f(y, z)`
+     * Left additivity: `f(v1 + v2, w) = f(v1, w) + f(v2, w)`
      */
     suspend fun leftAdditivityCheck() {
-        checkAll(vvwArb()) { (x, y, z) ->
-            val left = f(addV(x, y), z)
-            val right = addX(f(x, z), f(y, z))
+        checkAll(vvwArb()) { (v1, v2, w) ->
+            val left = f(addV(v1, v2), w)
+            val right = addX(f(v1, w), f(v2, w))
 
-            withClue(leftAdditivityFailure(x, y, z, left, right)) {
+            withClue(leftAdditivityFailure(v1, v2, w, left, right)) {
                 check(eq(left, right))
             }
         }
     }
 
     private fun leftAdditivityFailure(
-        x: V, y: V, z: W,
+        v1: V, v2: V, w: W,
         left: X, right: X
     ): () -> String = {
         buildString {
-            val sx = prV(x)
-            val sy = prV(y)
-            val sz = prW(z)
+            val sx = prV(v1)
+            val sy = prV(v2)
+            val sz = prW(w)
             val sl = prX(left)
             val sr = prX(right)
-            appendLine("Left additivity of $SYMBOL failed:")
-            appendLine("${expr("$sx ${addV.symbol} $sy", sz)} = $sl")
-            appendLine("${expr(sx, sz)} ${addX.symbol} ${expr(sy, sz)} = $sr")
+            appendLine("Left additivity of $symbol failed:")
+            appendLine("${expr("$sx${addV.symbol.midfix()}$sy", sz)} = $sl")
+            appendLine("${expr(sx, sz)}${addX.symbol.midfix()}${expr(sy, sz)} = $sr")
             appendLine("Expected: $sl = $sr")
         }
     }
 
     /**
-     * Left homogeneity: `f(a·x, z) = a ⋅ f(x, z)`
+     * Left homogeneity: `f(s·v, w) = s ⋅ f(v, w)`
      */
     suspend fun leftHomogeneityCheck() {
-        checkAll(svwArb()) { (a, x, z) ->
-            val left = f(scalarActionV(a, x), z)
-            val right = scalarActionX(a, f(x, z))
+        checkAll(svwArb()) { (s, v, w) ->
+            val left = f(scalarActionV(s, v), w)
+            val right = scalarActionX(s, f(v, w))
 
-            withClue(leftHomogeneityFailure(a, x, z, left, right)) {
+            withClue(leftHomogeneityFailure(s, v, w, left, right)) {
                 check(eq(left, right))
             }
         }
     }
 
     private fun leftHomogeneityFailure(
-        a: S, x: V, z: W,
+        s: S, v: V, w: W,
         left: X, right: X
     ): () -> String = {
         buildString {
-            val sa = prS(a)
-            val sx = prV(x)
-            val sz = prW(z)
+            val sa = prS(s)
+            val sx = prV(v)
+            val sz = prW(w)
             val sl = prX(left)
             val sr = prX(right)
-            appendLine("Left homogeneity of $SYMBOL failed:")
-            appendLine("${expr("$sa ${scalarActionV.symbol} $sx", sz)} = $sl")
-            appendLine("$sa ${scalarActionX.symbol} ${expr(sx, sz)} = $sr")
+            appendLine("Left homogeneity of $symbol failed:")
+            appendLine("${expr("$sa${scalarActionV.symbol.midfix()}$sx", sz)} = $sl")
+            appendLine("$sa${scalarActionX.symbol.midfix()}${expr(sx, sz)} = $sr")
             appendLine("Expected: $sl = $sr")
         }
     }
 
     /**
-     * Right additivity: `f(x, y + z) = f(x, y) + f(x, z)`
+     * Right additivity: `f(v, w1 + w2) = f(v, w1) + f(v, w2)`
      */
     suspend fun rightAdditivityCheck() {
-        checkAll(vwwArb()) { (x, y, z) ->
-            val left = f(x, addW(y, z))
-            val right = addX(f(x, y), f(x, z))
+        checkAll(vwwArb()) { (v, w1, w2) ->
+            val left = f(v, addW(w1, w2))
+            val right = addX(f(v, w1), f(v, w2))
 
-            withClue(rightAdditivityFailure(x, y, z, left, right)) {
+            withClue(rightAdditivityFailure(v, w1, w2, left, right)) {
                 check(eq(left, right))
             }
         }
     }
 
     private fun rightAdditivityFailure(
-        x: V, y: W, z: W,
+        v: V, w1: W, w2: W,
         left: X, right: X
     ): () -> String = {
         buildString {
-            val sx = prV(x)
-            val sy = prW(y)
-            val sz = prW(z)
+            val sx = prV(v)
+            val sy = prW(w1)
+            val sz = prW(w2)
             val sl = prX(left)
             val sr = prX(right)
-            appendLine("Right additivity of $SYMBOL failed:")
-            appendLine("${expr(sx, "$sy ${addW.symbol} $sz")} = $sl")
-            appendLine("${expr(sx, sy)} ${addX.symbol} ${expr(sx, sz)} = $sr")
+            appendLine("Right additivity of $symbol failed:")
+            appendLine("${expr(sx, "$sy${addW.symbol.midfix()}$sz")} = $sl")
+            appendLine("${expr(sx, sy)}${addX.symbol.midfix()}${expr(sx, sz)} = $sr")
             appendLine("Expected: $sl = $sr")
         }
     }
 
     /**
-     * Right homogeneity: `f(x, b·z) = b ⋅ f(x, z)`
+     * Right homogeneity: `f(v, s·w) = s ⋅ f(v, w)`
      */
     suspend fun rightHomogeneityCheck() {
-        checkAll(svwArb()) { (b, x, z) ->
-            val left = f(x, scalarActionW(b, z))
-            val right = scalarActionX(b, f(x, z))
+        checkAll(svwArb()) { (s, v, w) ->
+            val left = f(v, scalarActionW(s, w))
+            val right = scalarActionX(s, f(v, w))
 
-            withClue(rightHomogeneityFailure(b, x, z, left, right)) {
+            withClue(rightHomogeneityFailure(s, v, w, left, right)) {
                 check(eq(left, right))
             }
         }
     }
 
     private fun rightHomogeneityFailure(
-        b: S, x: V, z: W,
+        s: S, v: V, w: W,
         left: X, right: X
     ): () -> String = {
         buildString {
-            val sb = prS(b)
-            val sx = prV(x)
-            val sz = prW(z)
+            val sb = prS(s)
+            val sx = prV(v)
+            val sz = prW(w)
             val sl = prX(left)
             val sr = prX(right)
-            appendLine("Right homogeneity of $SYMBOL failed:")
-            appendLine("${expr(sx, "$sb ${scalarActionW.symbol} $sz")} = $sl")
-            appendLine("$sb ${scalarActionX.symbol} ${expr(sx, sz)} = $sr")
+            appendLine("Right homogeneity of $symbol failed:")
+            appendLine("${expr(sx, "$sb${scalarActionW.symbol.midfix()}$sz")} = $sl")
+            appendLine("$sb${scalarActionX.symbol.midfix()}${expr(sx, sz)} = $sr")
             appendLine("Expected: $sl = $sr")
         }
     }
-
-    companion object {
-        const val SYMBOL = "⟨·,·⟩"
-    }
 }
 
-class LeftBilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
+class LinearInFirstArgLaw<S : Any, V : Any, W : Any, X : Any>(
     override val f: (V, W) -> X,
     override val addX: BinOp<X>,
     override val addV: BinOp<V>,
     override val addW: BinOp<W>,
-    override val scalarActionV: Action<S, V>,
-    override val scalarActionW: Action<S, W>,
-    override val scalarActionX: Action<S, X>,
+    override val scalarActionV: LeftAction<S, V>,
+    override val scalarActionW: LeftAction<S, W>,
+    override val scalarActionX: LeftAction<S, X>,
     override val scalarArb: Arb<S>,
     override val arbV: Arb<V>,
     override val arbW: Arb<W>,
@@ -195,21 +197,21 @@ class LeftBilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val prW: Printable<W> = Printable.default(),
     override val prX: Printable<X> = Printable.default()
 ) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "left bilinearity ${BilinearityCore.SYMBOL}"
+    override val name = "linearity (1st arg) $symbol"
     override suspend fun test() {
         leftAdditivityCheck()
         leftHomogeneityCheck()
     }
 }
 
-class RightBilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
+class LinearInSecondArgLaw<S : Any, V : Any, W : Any, X : Any>(
     override val f: (V, W) -> X,
     override val addX: BinOp<X>,
     override val addV: BinOp<V>,
     override val addW: BinOp<W>,
-    override val scalarActionV: Action<S, V>,
-    override val scalarActionW: Action<S, W>,
-    override val scalarActionX: Action<S, X>,
+    override val scalarActionV: LeftAction<S, V>,
+    override val scalarActionW: LeftAction<S, W>,
+    override val scalarActionX: LeftAction<S, X>,
     override val scalarArb: Arb<S>,
     override val arbV: Arb<V>,
     override val arbW: Arb<W>,
@@ -219,7 +221,7 @@ class RightBilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val prW: Printable<W> = Printable.default(),
     override val prX: Printable<X> = Printable.default()
 ) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "right bilinearity ${BilinearityCore.SYMBOL}"
+    override val name = "linearity (2nd arg) $symbol"
     override suspend fun test() {
         rightAdditivityCheck()
         rightHomogeneityCheck()
@@ -239,9 +241,9 @@ class BilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val addX: BinOp<X>,
     override val addV: BinOp<V>,
     override val addW: BinOp<W>,
-    override val scalarActionV: Action<S, V>,
-    override val scalarActionW: Action<S, W>,
-    override val scalarActionX: Action<S, X>,
+    override val scalarActionV: LeftAction<S, V>,
+    override val scalarActionW: LeftAction<S, W>,
+    override val scalarActionX: LeftAction<S, X>,
     override val scalarArb: Arb<S>,
     override val arbV: Arb<V>,
     override val arbW: Arb<W>,
@@ -251,7 +253,7 @@ class BilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val prW: Printable<W> = Printable.default(),
     override val prX: Printable<X> = Printable.default()
 ) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "bilinearity ${BilinearityCore.SYMBOL}"
+    override val name = "bilinearity $symbol"
     override suspend fun test() {
         leftAdditivityCheck()
         leftHomogeneityCheck()
@@ -272,15 +274,15 @@ object LeftBilinearFormLaw {
         addS: BinOp<S>,
         mulS: BinOp<S>,
         addV: BinOp<V>,
-        scalarAction: Action<S, V>,
+        scalarAction: LeftAction<S, V>,
         scalarArb: Arb<S>,
         vectorArb: Arb<V>,
         eq: Eq<S> = Eq.default(),
         prS: Printable<S> = Printable.default(),
         prV: Printable<V> = Printable.default()
-    ): TestingLaw = LeftBilinearityLaw(
+    ): TestingLaw = LinearInFirstArgLaw(
         f, addS, addV, addV,
-        scalarAction, scalarAction, mulAsScalarAction(mulS),
+        scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,
         eq, prS, prV, prV, prS
     )
@@ -298,15 +300,15 @@ object RightBilinearFormLaw {
         addS: BinOp<S>,
         mulS: BinOp<S>,
         addV: BinOp<V>,
-        scalarAction: Action<S, V>,
+        scalarAction: LeftAction<S, V>,
         scalarArb: Arb<S>,
         vectorArb: Arb<V>,
         eq: Eq<S> = Eq.default(),
         prS: Printable<S> = Printable.default(),
         prV: Printable<V> = Printable.default()
-    ): TestingLaw = RightBilinearityLaw(
+    ): TestingLaw = LinearInSecondArgLaw(
         f, addS, addV, addV,
-        scalarAction, scalarAction, mulAsScalarAction(mulS),
+        scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,
         eq, prS, prV, prV, prS
     )
@@ -326,7 +328,7 @@ object BilinearFormLaw {
         addS: BinOp<S>,
         mulS: BinOp<S>,
         addV: BinOp<V>,
-        scalarAction: Action<S, V>,
+        scalarAction: LeftAction<S, V>,
         scalarArb: Arb<S>,
         vectorArb: Arb<V>,
         eq: Eq<S> = Eq.default(),
@@ -334,7 +336,7 @@ object BilinearFormLaw {
         prV: Printable<V> = Printable.default()
     ): TestingLaw = BilinearityLaw(
         f, addS, addV, addV,
-        scalarAction, scalarAction, mulAsScalarAction(mulS),
+        scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,
         eq, prS, prV, prV, prS
     )

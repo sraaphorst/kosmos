@@ -1,9 +1,9 @@
 package org.vorpal.kosmos.algebra.extensions
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -39,7 +39,7 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
         operator fun unaryMinus(): Dual =
             Dual(base.add.inverse(a), base.add.inverse(b))
 
-        // We test the inverse of the additive identity here to cover the case of Double
+        // We test the inverse of the additive identity here to cover the case of Real
         // where a could be 0.0 or -0.0.
         fun isInvertible(): Boolean =
             a != base.add.identity && a != base.add.inverse(base.add.identity)
@@ -84,7 +84,7 @@ class DualRing<F: Any>(private val base: Field<F>): CommutativeRing<DualRing<F>.
         inverse = Endo(Symbols.MINUS) { d -> Dual(base.add.inverse(d.a), base.add.inverse(d.b)) }
     )
 
-    override val mul: Monoid<Dual> = Monoid.of(
+    override val mul: CommutativeMonoid<Dual> = CommutativeMonoid.of(
         identity = Dual(base.mul.identity, base.add.identity),
         op = BinOp(Symbols.ASTERISK) { d1, d2 ->
             val (a1, b1) = d1

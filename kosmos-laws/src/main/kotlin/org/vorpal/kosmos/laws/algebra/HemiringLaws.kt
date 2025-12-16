@@ -12,8 +12,8 @@ import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [Hemiring] laws:
- * - [CommutativeMonoidLaws] over addition
- * - [SemigroupLaws] over multiplication
+ * - [CommutativeMonoidLaws] over addition (full)
+ * - [SemigroupLaws] over multiplication (full)
  * - [DistributivityLaw] of multiplication over addition
  * - [AnnihilationLaw] of the additive identity with respect to multiplication
  */
@@ -25,12 +25,17 @@ class HemiringLaws<A : Any>(
 ): LawSuite {
     override val name = suiteName("Hemiring", hemiring.add.op.symbol, hemiring.mul.op.symbol)
 
+    private val structureLaws: List<TestingLaw> =
+        listOf(
+            AnnihilationLaw(hemiring.mul.op, hemiring.add.identity, arb, eq, pr),
+            DistributivityLaw(hemiring.mul.op, hemiring.add.op, arb, eq, pr)
+        )
+
     override fun laws(): List<TestingLaw> =
-        // additive commutative monoid (A, +, 0)
-        CommutativeMonoidLaws(hemiring.add, arb, eq, pr).laws() +
-            SemigroupLaws(hemiring.mul, arb, eq, pr).laws() +
-            listOf(
-                AnnihilationLaw(hemiring.mul.op, hemiring.add.identity, arb, eq, pr),
-                DistributivityLaw(hemiring.mul.op, hemiring.add.op, arb, eq, pr)
-            )
+        structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        CommutativeMonoidLaws(hemiring.add, arb, eq, pr).fullLaws() +
+            SemigroupLaws(hemiring.mul, arb, eq, pr).fullLaws() +
+            laws()
 }

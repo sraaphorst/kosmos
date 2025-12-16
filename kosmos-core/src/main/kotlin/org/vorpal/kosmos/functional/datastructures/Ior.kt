@@ -109,12 +109,12 @@ fun <A1, A2, B1, B2> Ior<A1, B1>.bimap(
 
 context(semigroup: Semigroup<B>)
 fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(f: (A1) -> Ior<A2, B>): Ior<A2, B> =
-    flatMapLeft(semigroup.op.combine, f)
+    flatMapLeft(semigroup.op::invoke, f)
 
 fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
     semigroup: Semigroup<B>,
     f: (A1) -> Ior<A2, B>
-): Ior<A2, B> = flatMapLeft(semigroup.op.combine, f)
+): Ior<A2, B> = flatMapLeft(semigroup.op::invoke, f)
 
 fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
     combine: (B, B) -> B,
@@ -131,12 +131,12 @@ fun <A1, A2, B: Any> Ior<A1, B>.flatMapLeft(
 
 context(semigroup: Semigroup<A>)
 fun <A: Any, B, C> Ior<A, B>.flatMap(f: (B) -> Ior<A, C>): Ior<A, C> =
-    flatMapRight(semigroup.op.combine, f)
+    flatMapRight(semigroup.op::invoke, f)
 
 fun <A: Any, B1, B2> Ior<A, B1>.flatMapRight(
     semigroup: Semigroup<A>,
     g: (B1) -> Ior<A, B2>
-): Ior<A, B2> = flatMapRight(semigroup.op.combine, g)
+): Ior<A, B2> = flatMapRight(semigroup.op::invoke, g)
 
 fun <A: Any, B1, B2> Ior<A, B1>.flatMapRight(
     combine: (A, A) -> A,
@@ -291,7 +291,7 @@ fun <A: Any, B: Any> Ior<A, B>.mergeWith(
     semigroupA: Semigroup<A>,
     semigroupB: Semigroup<B>,
     other: Ior<A, B>
-): Ior<A, B> = mergeWith(semigroupA.op.combine, semigroupB.op.combine, other)
+): Ior<A, B> = mergeWith(semigroupA.op::invoke, semigroupB.op::invoke, other)
 
 fun <A, B> Ior<A, B>.tapLeft(f: (A) -> Unit): Ior<A, B> = apply {
     getLeftOrNull()?.let(f)
@@ -350,12 +350,12 @@ object Iors {
             }
             return when (val head = f(iter.next())) {
                 is Ior.Left -> {
-                    val newB = b?.let { semigroup.op.combine(b, head.value)} ?: head.value
+                    val newB = b?.let { semigroup.op(b, head.value)} ?: head.value
                     aux(iter, newB, cs)
                 }
                 is Ior.Right -> aux(iter, b, cs.apply { add(head.value) })
                 is Ior.Both -> {
-                    val newB = b?.let { semigroup.op.combine(b, head.first)} ?: head.first
+                    val newB = b?.let { semigroup.op(b, head.first)} ?: head.first
                     aux(iter, newB, cs.apply { add(head.second) })
                 }
             }

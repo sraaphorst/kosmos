@@ -19,11 +19,18 @@ class CommutativeRngLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): LawSuite {
+) : LawSuite {
 
     override val name = suiteName("CommutativeRng", rng.add.op.symbol, rng.mul.op.symbol)
 
+    private val rngLaws = RngLaws(rng, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(CommutativityLaw(rng.mul.op, arb, eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        RngLaws(rng, arb, eq, pr).laws() +
-            listOf(CommutativityLaw(rng.mul.op, arb, eq, pr))
+        rngLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        rngLaws.fullLaws() + structureLaws
 }

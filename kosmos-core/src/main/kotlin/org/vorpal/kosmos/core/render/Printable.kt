@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.core.render
 
+import org.vorpal.kosmos.core.math.Real
 import java.math.BigDecimal
 import java.math.BigInteger
 
@@ -33,7 +34,7 @@ object Printables {
     val bigInt: Printable<BigInteger> = Printable.default()
 
     val float: Printable<Float> = Printable.default()
-    val double: Printable<Double> = Printable.default()
+    val real: Printable<Real> = Printable.default()
     val bigDecimal: Printable<BigDecimal> = Printable { it.stripTrailingZeros().toPlainString() }
 
     val string: Printable<String> = Printable.default()

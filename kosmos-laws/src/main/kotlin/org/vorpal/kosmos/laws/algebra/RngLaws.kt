@@ -24,7 +24,13 @@ class RngLaws<A : Any>(
 
     override val name = suiteName("Rng", rng.add.op.symbol, rng.mul.op.symbol)
 
+    private fun structureLaws(): List<TestingLaw> =
+        listOf(InvertibilityLaw(rng.add.op, rng.add.identity, arb, rng.add.inverse.asInverseOrNull(), eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        HemiringLaws(rng, arb, eq, pr).laws() +
-            listOf(InvertibilityLaw(rng.add.op, rng.add.identity, arb, rng.add.inverse.asInverseOrNull(), eq, pr))
+        HemiringLaws(rng, arb, eq, pr).laws() + structureLaws()
+
+
+    override fun fullLaws(): List<TestingLaw> =
+        HemiringLaws(rng, arb, eq, pr).fullLaws() + structureLaws()
 }

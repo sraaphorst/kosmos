@@ -102,12 +102,12 @@ import org.vorpal.kosmos.std.toRational
  * val x1: Rational = v4.closedForm(1)     // 1/4
  * val x2: Rational = v4.recursiveTerm(2)  // 1/2
  *
- * // Convert to Double if needed
- * val x2Double = x2.toDouble()            // 0.5
+ * // Convert to Real if needed
+ * val x2Real = x2.toReal()            // 0.5
  * ```
  *
  * In higher-level numerical code (e.g. quasi-Monte Carlo integration) you’ll
- * typically convert terms to `Double` or to vector types; in combinatorics,
+ * typically convert terms to `Real` or to vector types; in combinatorics,
  * the exact [Rational] representation is often preferable.
  *
  * ### Low–discrepancy properties

@@ -10,17 +10,10 @@ import org.vorpal.kosmos.laws.property.DistributivityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
- * Laws for a NonAssociativeAlgebra:
- *
- *  - (A, +, 0) is an abelian group
- *      * associativity, commutativity, identity, inverses for +
- *
- *  - (A, ⋆, 1) is a non-associative monoid
- *      * identity element 1 for ⋆ (no associativity required)
- *
- *  - ⋆ distributes over +
- *      * left:  a ⋆ (b + c) = a ⋆ b + a ⋆ c
- *      * right: (a + b) ⋆ c = a ⋆ c + b ⋆ c
+ * [NonAssociativeAlgebra] laws:
+ * - [AbelianGroupLaws] on addition (full)
+ * - [NonAssociativeMonoidLaws] on multiplication (full)
+ * - [DistributivityLaw] of multiplication over addition
  */
 class NonAssociativeAlgebraLaws<A : Any>(
     private val algebra: NonAssociativeAlgebra<A>,
@@ -29,35 +22,14 @@ class NonAssociativeAlgebraLaws<A : Any>(
     private val pr: Printable<A> = Printable.default()
 ): LawSuite {
 
-    override val name = suiteName("NonAssociativeAlgebra", algebra.add.op.symbol, algebra.mul.op.symbol)
+    override val name = suiteName("NonAssociativeAlgebra",
+        algebra.add.op.symbol, algebra.mul.op.symbol)
 
-    fun laws(): List<TestingLaw> =
-        // (A, +, 0) is an abelian group
-        AbelianGroupLaws(
-            group = algebra.add,
-            arb = arb,
-            eq = eq,
-            pr = pr,
-            symbol = addSymbol
-        ).laws() +
-                // (A, ⋆, 1) is a non-associative monoid (identity only)
-                NonAssociativeMonoidLaws(
-                    monoid = algebra.mul,
-                    arb = arb,
-                    eq = eq,
-                    pr = pr,
-                    symbol = mulSymbol
-                ).laws() +
-                // Distributivity of ⋆ over +
-                listOf(
-                    DistributivityLaw(
-                        mul = algebra.mul.op,
-                        add = algebra.add.op,
-                        arb = arb,
-                        eq = eq,
-                        pr = pr,
-                        mulSymbol = mulSymbol,
-                        addSymbol = addSymbol
-                    )
-                )
+    override fun laws(): List<TestingLaw> =
+        listOf(DistributivityLaw(algebra.mul.op, algebra.add.op, arb, eq, pr))
+
+    override fun fullLaws(): List<TestingLaw> =
+        AbelianGroupLaws(algebra.add, arb, eq, pr).fullLaws() +
+            NonAssociativeMonoidLaws(algebra.mul, arb, eq, pr).fullLaws() +
+            laws()
 }

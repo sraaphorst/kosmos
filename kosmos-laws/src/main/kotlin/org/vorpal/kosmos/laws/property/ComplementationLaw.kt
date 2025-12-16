@@ -12,15 +12,15 @@ import org.vorpal.kosmos.laws.TestingLaw
 /**
  * Laws for a Boolean-style complementation operator ¬ on a bounded lattice:
  *
- *  - Double negation:     `¬(¬x) = x`
+ *  - Real negation:        `¬(¬x) = x`
  *  - Meet with complement: `x ∧ ¬x = ⊥`
  *  - Join with complement: `x ∨ ¬x = ⊤`
  *
  * This is intended for Boolean algebras, but is generic over:
- *  - meet:      `∧`
- *  - join:      `∨`
- *  - bottom:    `⊥`
- *  - top:       `⊤`
+ *  - meet:       `∧`
+ *  - join:       `∨`
+ *  - bottom:     `⊥`
+ *  - top:        `⊤`
  *  - complement: `¬`
  */
 class ComplementationLaw<A : Any>(
@@ -49,7 +49,7 @@ class ComplementationLaw<A : Any>(
             val xAndNotX = meet(x, nx)
             val xOrNotX = join(x, nx)
 
-            withClue("Double negation failed for $notSym, element ${pr(x)}") {
+            withClue("Real negation failed for $notSym, element ${pr(x)}") {
                 check(eq(nnx, x))
             }
 

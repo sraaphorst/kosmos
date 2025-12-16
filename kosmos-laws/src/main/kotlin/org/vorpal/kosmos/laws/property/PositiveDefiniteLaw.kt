@@ -114,7 +114,7 @@ fun <V: Any> realPositiveDefiniteLaw(
     inner: UnaryOp<V, Real>,
     zeroVector: V,
     vectorArb: Arb<V>,
-    tolerance: Real = 1e-9,
+    tolerance: Real = 1e-10,
     vectorEq: Eq<V> = Eq.default(),
     vectorPrintable: Printable<V> = Printable.default(),
 ): PositiveDefiniteLaw<Real, V> =
