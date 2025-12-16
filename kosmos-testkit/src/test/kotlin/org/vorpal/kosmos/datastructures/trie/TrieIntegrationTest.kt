@@ -7,6 +7,7 @@ import io.kotest.matchers.doubles.shouldBeLessThan
 import io.kotest.matchers.ints.shouldBeLessThan
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import org.vorpal.kosmos.core.math.toReal
 
 /**
  * Integration tests that verify consistent behavior across different Trie implementations
@@ -138,7 +139,7 @@ class TrieIntegrationTest : FunSpec({
             }
 
             // Radix should have significantly fewer nodes
-            val compressionRatio = radix.nodeCount().toDouble() / standard.nodeCount()
+            val compressionRatio = radix.nodeCount().toReal() / standard.nodeCount()
             compressionRatio shouldBeLessThan 0.5
         }
 

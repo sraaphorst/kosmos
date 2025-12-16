@@ -3,12 +3,12 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.Real
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.core.math.Real
 
 /**
  * Norm law for a map N: A → ℝ that is supposed to be a "norm squared":
@@ -17,8 +17,6 @@ import org.vorpal.kosmos.core.Eqs
  *  - Definiteness:   N(a) = 0  ⇔  a = 0.
  *
  * Multiplicativity (e.g. N(ab) = N(a)N(b)) can be tested separately via homomorphism laws.
- *
- * Note: `Real` is typealias `Double`.
  */
 class NormLaw<A : Any>(
     private val normSq: UnaryOp<A, Real>,

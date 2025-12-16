@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.combinatorics.sequences
 
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.frameworks.sequence.CachedLinearRecurrenceImplementation
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
@@ -48,7 +48,7 @@ private object Padovan1Recurrence : CachedLinearRecurrenceImplementation<BigInte
     selectors = listOf(-2, -3),
     coefficients = listOf(1, 1),
     constantTerm = BigInteger.ZERO,
-    multiply = Action { s, t -> s.toBigInteger() * t },
+    multiply = LeftAction { s, t -> s.toBigInteger() * t },
     add = BinOp(BigInteger::add)
 )
 
@@ -71,6 +71,6 @@ private object Padovan2Recurrence : CachedLinearRecurrenceImplementation<BigInte
     selectors = listOf(-1, -5),
     coefficients = listOf(1, 1),
     constantTerm = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    multiply = LeftAction({ s, t -> s.toBigInteger() * t }),
     add = BinOp(BigInteger::add)
 )

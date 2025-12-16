@@ -1,69 +1,66 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.filter
-import io.kotest.property.arbitrary.pair
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.InvertibilityLaw
-import org.vorpal.kosmos.laws.property.NoZeroDivisorsLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
- * Laws for a DivisionRing ⟨A, +, *, 0, 1⟩.
+ * [DivisionRing] laws:
+ * - [RingLaws]
+ * - [InvertibilityLaw]
  *
- * Conceptually:
- *  - All ring laws (additive abelian group, multiplicative monoid, distributivity)
- *  - Every non-zero element has a multiplicative inverse
- *  - No zero divisors
- *
- * No commutativity of * is assumed here.
+ * Note: reciprocal is typically undefined at the additive identity, so we treat it as "no inverse".
  */
 class DivisionRingLaws<A : Any>(
-    private val divisionRing: DivisionRing<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val addSymbol: String = "+",
-    private val mulSymbol: String = "⋅"
-) {
-    private val nonZeroArb: Arb<A> = arb.filter { s -> !eq.eqv(s, divisionRing.add.identity) }
+    ring: DivisionRing<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> {
-        val add = divisionRing.add
-        val mul = divisionRing.mul
+    override val name = suiteName(
+        "DivisionRing",
+        ring.add.op.symbol,
+        ring.mul.op.symbol,
+        ring.reciprocal.symbol
+    )
 
-        return RingLaws(
-            ring = divisionRing,
+    private val ringLaws = RingLaws(ring, arb, eq, pr)
+
+    private val reciprocalOrNull: UnaryOp<A, A?> =
+        UnaryOp(ring.reciprocal.symbol) { a ->
+            // Exclude zero (under the provided Eq, so approximate rings can decide what "zero" means).
+            if (eq(a, ring.zero)) null
+            else {
+                // If the implementation throws on non-invertibles, treat it as "no inverse".
+                try {
+                    ring.reciprocal(a)
+                } catch (_: Throwable) {
+                    null
+                }
+            }
+        }
+
+    private val structureLaws: List<TestingLaw> = listOf(
+        InvertibilityLaw(
+            op = ring.mul.op,
+            identity = ring.mul.identity,
             arb = arb,
+            inverseOrNull = reciprocalOrNull,
             eq = eq,
-            pr = pr,
-            addSymbol = addSymbol,
-            mulSymbol = mulSymbol
-        ).laws() + listOf(
-            // 1) Every non-zero element has a multiplicative inverse.
-            // Since we pass nonZeroArb here, we can use inverse instead of inverseOrNull.
-            InvertibilityLaw(
-                op = mul.op,
-                identity = mul.identity,
-                arbAll = nonZeroArb,
-                eq = eq,
-                pr = pr,
-                inverse = divisionRing.reciprocal,
-                symbol = mulSymbol
-            ),
-
-            // 2) No zero divisors: if a⋅b = 0 then a = 0 or b = 0.
-            //    Implemented via: for all non-zero a,b, a⋅b ≠ 0.
-            NoZeroDivisorsLaw(
-                op = mul.op,
-                zero = add.identity,
-                pairArb = Arb.pair(nonZeroArb, nonZeroArb),
-                eq = eq,
-                pr = pr,
-                symbol = mulSymbol
-            )
+            pr = pr
         )
-    }
+    )
+
+    override fun laws(): List<TestingLaw> =
+        ringLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        ringLaws.fullLaws() + structureLaws
 }

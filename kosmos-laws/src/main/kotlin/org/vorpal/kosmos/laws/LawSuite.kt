@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.laws
 
 import kotlinx.coroutines.CancellationException
-import org.vorpal.kosmos.core.ops.BinOp
 
 /**
  * A bundle of [TestingLaw]s that collectively describe the axioms expected
@@ -13,8 +12,14 @@ interface LawSuite {
     val name: String
         get() = this::class.simpleName ?: "UnnamedLawSuite"
 
-    /** The laws to check for this structure. */
+    /** The core laws to check for this structure. */
     fun laws(): List<TestingLaw>
+
+    /**
+     * Full laws: include constituent structure checks (e.g. "Ring" includes "AbelianGroup" on +).
+     * Default is just the core laws.
+     */
+    fun fullLaws(): List<TestingLaw> = laws()
 
     /**
      * Run all laws and collect results instead of failing fast.
@@ -23,7 +28,17 @@ interface LawSuite {
      * `runLaws(*laws().toTypedArray())`
      */
     suspend fun test(): LawSuiteReport = runLawSuite(name, laws())
+    suspend fun fullTest(): LawSuiteReport = runLawSuite(name, fullLaws())
 }
+
+suspend fun List<LawSuite>.testAll(): List<LawSuiteReport> =
+    map { it.test() }
+
+suspend fun List<LawSuite>.fullTestAll(): List<LawSuiteReport> =
+    map { it.fullTest() }
+
+fun List<LawSuite>.flatten(full: Boolean): List<TestingLaw> =
+    flatMap { if (full) it.fullLaws() else it.laws() }
 
 /**
  * Result of running an entire [LawSuite].

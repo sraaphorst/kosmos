@@ -33,9 +33,9 @@ class NormedDivisionAlgebraLaws<A : Any>(
         ).laws()
 
         val normHomLaws = UnitalHomomorphismLaws(
+            hom = { algebra.normSq(it) },
             domain = algebra.mul,
             codomain = RealAlgebras.RealField.mul,
-            hom = { algebra.normSq(it) },
             arb = arb,
             eqB = eqReal,
             prA = prA

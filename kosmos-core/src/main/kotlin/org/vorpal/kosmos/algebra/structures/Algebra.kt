@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.LeftAction
 
 /**
  * An Algebra A over a commutative ring R is:
@@ -33,13 +33,13 @@ interface Algebra<R : Any, A : Any> : RModule<R, A>, Ring<A> {
         fun <R : Any, A : Any> of(
             scalars: CommutativeRing<R>,
             algebraRing: Ring<A>,
-            action: Action<R, A>
+            leftAction: LeftAction<R, A>
         ): Algebra<R, A> = object : Algebra<R, A> {
             override val scalars = scalars
             override val group = algebraRing.add
             override val add = algebraRing.add
             override val mul = algebraRing.mul
-            override val action = action
+            override val leftAction = leftAction
         }
     }
 }

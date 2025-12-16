@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.algebra.innerproduct
 
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RInnerProductSpace
-import org.vorpal.kosmos.analysis.arbFieldDouble
+import org.vorpal.kosmos.analysis.arbFieldReal
 import org.vorpal.kosmos.analysis.arbVec2R
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -12,10 +12,10 @@ import org.vorpal.kosmos.linear.Vec2R
 
 object RealInnerProductFixtures {
 
-    val realEq = Eqs.doubleUlps() /* Eq<Real> */
+    val realEq = Eqs.realUlps() /* Eq<Real> */
     val vecEq: Eq<Vec2R> = Eq { x, y -> realEq.eqv(x.x, y.x) && realEq.eqv(x.y, y.y) }
     val vecArb = arbVec2R()
-    val scalarArb = arbFieldDouble()
+    val scalarArb = arbFieldReal()
 
     val vec2RealInnerProductSpaceLaws =
         InnerProductSpaceLaws(

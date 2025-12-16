@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.numerical.quasirandom
 
 import org.vorpal.kosmos.combinatorics.sequences.VanDerCorput
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
 import org.vorpal.kosmos.numbertheory.primes.PrimeSequence
@@ -24,8 +25,8 @@ import java.math.BigInteger
  *
  * * uses [VanDerCorput] from the combinatorics layer as an exact, rational
  *   primitive,
- * * converts each coordinate to `Double` via `Rational.toDouble()`,
- * * returns each point as a `List<Double>` of length `dimension`.
+ * * converts each coordinate to `Real` via `Rational.toReal()`,
+ * * returns each point as a `List<Real>` of length `dimension`.
  *
  * The resulting sequence lives in `[0,1]^dimension` and is well–suited for
  * quasi–Monte Carlo and stratified sampling tasks.
@@ -56,10 +57,10 @@ import java.math.BigInteger
  * val halton2d = HaltonSequence(intArrayOf(2, 3))
  *
  * // First few points in [0,1]^2
- * val p0: DoubleArray = halton2d.closedForm(0)  // [0.0,      0.0     ]
- * val p1: DoubleArray = halton2d.closedForm(1)  // [0.5,      1/3 ≈ 0.3333]
- * val p2: DoubleArray = halton2d.closedForm(2)  // [0.25,     2/3 ≈ 0.6667]
- * val p3: DoubleArray = halton2d.closedForm(3)  // [0.75,     1/9 ≈ 0.1111]
+ * val p0: RealArray = halton2d.closedForm(0)  // [0.0,      0.0     ]
+ * val p1: RealArray = halton2d.closedForm(1)  // [0.5,      1/3 ≈ 0.3333]
+ * val p2: RealArray = halton2d.closedForm(2)  // [0.25,     2/3 ≈ 0.6667]
+ * val p3: RealArray = halton2d.closedForm(3)  // [0.75,     1/9 ≈ 0.1111]
  *
  * // Iterate a bunch of points, e.g. for quasi-Monte Carlo integration
  * for (n in 0 until 1024) {
@@ -81,13 +82,13 @@ import java.math.BigInteger
  * and the `n`-th Halton point is:
  *
  * ```
- * Hₙ[i] = φ_{bᵢ}(n).toDouble()
+ * Hₙ[i] = φ_{bᵢ}(n).toReal()
  * ```
  *
  * Thus:
  *
  * - The **combinatorics layer** provides exact rational evaluations.
- * - The **numerical/quasirandom layer** converts them to `Double` and organizes
+ * - The **numerical/quasirandom layer** converts them to `Real` and organizes
  *   them into points in `[0,1]^d`.
  *
  * ### Caching and performance
@@ -112,7 +113,7 @@ import java.math.BigInteger
  */
 class HaltonSequence(
     bases: List<BigInteger>
-) : CachedClosedFormImplementation<List<Double>>() {
+) : CachedClosedFormImplementation<List<Real>>() {
 
     // Defensive copy and conversion.
     val bases: List<BigInteger> = bases.toList()
@@ -131,8 +132,8 @@ class HaltonSequence(
         require(bases.isNotEmpty()) { "At least one base is required for a Halton sequence." }
     }
 
-    override fun closedFormCalculator(n: Int): List<Double> {
+    override fun closedFormCalculator(n: Int): List<Real> {
         require(n >= 0) { "Index n must be non-negative, but was $n." }
-        return components.map { it.closedForm(n).toDouble() }
+        return components.map { it.closedForm(n).toReal() }
     }
 }

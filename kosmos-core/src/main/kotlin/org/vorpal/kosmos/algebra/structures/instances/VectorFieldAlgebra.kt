@@ -9,15 +9,15 @@ import org.vorpal.kosmos.analysis.VectorField
 import org.vorpal.kosmos.analysis.VectorFields
 import org.vorpal.kosmos.analysis.plus
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.Action
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 
 typealias VectorFieldModule<F, V> = RModule<ScalarField<F, V>, VectorField<F, V>>
 
 object VectorFieldAlgebra {
     infix fun <F: Any, V: Any> ScalarField<F, V>.actOn(vf: VectorField<F, V>): VectorField<F, V> =
-        VectorFields.of(vf.space) { p -> vf.space.action(this(p), vf(p)) }
+        VectorFields.of(vf.space) { p -> vf.space.leftAction(this(p), vf(p)) }
 
     /**
      * Given a [VectorSpace] `V` over a [Field] `F`, this defines the
@@ -47,8 +47,8 @@ object VectorFieldAlgebra {
     fun <F: Any, V: Any> module(
         space: VectorSpace<F, V>
     ): RModule<ScalarField<F, V>, VectorField<F, V>> = RModule.of(
-        ring = ScalarFieldAlgebra.commutativeRing(space),
+        scalars = ScalarFieldAlgebra.commutativeRing(space),
         group = additiveAbelianGroup(space),
-        action = Action(Symbols.TRIANGLE_RIGHT){ sf, vf -> sf actOn vf }
+        leftAction = LeftAction { sf, vf -> sf actOn vf }
     )
 }

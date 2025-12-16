@@ -15,12 +15,11 @@ class InnerProductSpaceLaws<F : Any, V : Any>(
     private val space: InnerProductSpace<F, V>,
     private val scalarArb: Arb<F>,
     private val vectorArb: Arb<V>,
-    private val scalarEq: Eq<F>,
-    private val vectorEq: Eq<V>,
     private val isNonNegative: (F) -> Boolean,
+    private val scalarEq: Eq<F> = Eq.default(),
+    private val vectorEq: Eq<V> = Eq.default(),
     private val scalarPrintable: Printable<F> = default(),
     private val vectorPrintable: Printable<V> = default(),
-    private val scalarSymbol: String = "⟨·,·⟩",
 ) {
 
     fun laws(): List<TestingLaw> {

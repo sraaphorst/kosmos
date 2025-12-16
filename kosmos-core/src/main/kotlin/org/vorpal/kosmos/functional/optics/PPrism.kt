@@ -27,12 +27,12 @@ import org.vorpal.kosmos.core.Identity
  *
  * ```kotlin
  * sealed class Shape {
- *     data class Circle(val radius: Double) : Shape()
- *     data class Rectangle(val width: Double, val height: Double) : Shape()
+ *     data class Circle(val radius: Real) : Shape()
+ *     data class Rectangle(val width: Real, val height: Real) : Shape()
  * }
  *
  * // Prism for the Circle variant
- * val circlePrism = Prism<Shape, Double>(
+ * val circlePrism = Prism<Shape, Real>(
  *     getterOrNull = { shape ->
  *         when (shape) {
  *             is Shape.Circle -> shape.radius
@@ -171,8 +171,8 @@ data class PPrism<S, T, A, B>(
      * Example:
      * ```kotlin
      * val circlePrism: Prism<Shape, Shape.Circle> = ...
-     * val radiusLens: Lens<Shape.Circle, Double> = ...
-     * val circleRadius = circlePrism andThen radiusLens  // Shape -> Double?
+     * val radiusLens: Lens<Shape.Circle, Real> = ...
+     * val circleRadius = circlePrism andThen radiusLens  // Shape -> Real?
      * ```
      */
     infix fun <C, D> andThen(other: PLens<A, B, C, D>): POptional<S, T, C, D> =
@@ -268,6 +268,6 @@ data class PPrism<S, T, A, B>(
 /**
  * Monomorphic Prism where types don't change.
  *
- * Example: `Prism<Shape, Double>` for extracting Circle radius from Shape.
+ * Example: `Prism<Shape, Real>` for extracting Circle radius from Shape.
  */
 typealias Prism<S, A> = PPrism<S, S, A, A>

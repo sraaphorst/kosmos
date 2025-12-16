@@ -3,21 +3,22 @@ package org.vorpal.kosmos.testutils
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.algebra.extensions.DualRing
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.Vec2R
 import kotlin.math.abs
 
 /**
- * Compares two Doubles with a relative tolerance (default 1e-9).
+ * Compares two Reals with a relative tolerance (default 1e-9).
  * Works well for both small and large magnitudes.
  */
-infix fun Double.shouldBeApproximately(
-    other: Double
+infix fun Real.shouldBeApproximately(
+    other: Real
 ) = this.shouldBeApproximately(other, 1e-9, 1e-12)
 
 /**
  * Variant with custom tolerance.
  */
-fun Double.shouldBeApproximately(other: Double, relTol: Double, absTol: Double) {
+fun Real.shouldBeApproximately(other: Real, relTol: Real, absTol: Real) {
     if (this.isFinite() && other.isFinite()) {
         val safeThis = if (abs(this) < 1e-300) 0.0 else this
         val safeOther = if (abs(other) < 1e-300) 0.0 else other
@@ -28,7 +29,7 @@ fun Double.shouldBeApproximately(other: Double, relTol: Double, absTol: Double) 
     }
 }
 
-fun Double.shouldBeZero() {
+fun Real.shouldBeZero() {
     abs(this) shouldBeApproximately 0.0
 }
 
@@ -46,7 +47,7 @@ fun Vec2R.shouldBeZero() {
 /**
  * Compare two dual numbers with tolerance.
  */
-infix fun DualRing<Double>.Dual.shouldBeApproximately(other: DualRing<Double>.Dual) {
+infix fun DualRing<Real>.Dual.shouldBeApproximately(other: DualRing<Real>.Dual) {
     a shouldBeApproximately other.a
     b shouldBeApproximately other.b
 }

@@ -11,6 +11,9 @@ import org.vorpal.kosmos.core.ops.Endo
  * 5. `0* = 0` (follows from additivity)
  */
 interface InvolutiveRing<A : Any> : InvolutiveAlgebra<A>, Ring<A> {
+    // We have to disambiguate one since it comes from both InvolutiveAlgebra and Ring.
+    override val one: A
+
     companion object {
         fun <A : Any> of(
             ring: Ring<A>,
@@ -19,6 +22,7 @@ interface InvolutiveRing<A : Any> : InvolutiveAlgebra<A>, Ring<A> {
             override val add = ring.add
             override val mul = ring.mul
             override val conj = conj
+            override val one = ring.one
         }
     }
 }

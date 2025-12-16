@@ -49,6 +49,18 @@ fun <A : Any, B : Any> preservesBinaryOpLaw(
 }
 
 /**
+ * Simplified version for when the domain and codomain are the same.
+ */
+fun <A : Any> preservesBinaryOpLaw(
+    domainOp: BinOp<A>,
+    hom: (A) -> A,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default(),
+    label: String = "endomorphism: preserves op"
+) = preservesBinaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
+
+/**
  * Op anti-preservation:
  *
  *    f(a ⋆ b) = f(b) * f(a)
@@ -89,6 +101,18 @@ fun <A : Any, B : Any> antiPreservesBinaryOpLaw(
 }
 
 /**
+ * Simplified version for when the domain and the codomain are the same.
+ */
+fun <A : Any> antiPreservesBinaryOpLaw(
+    domainOp: BinOp<A>,
+    hom: (A) -> A,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default(),
+    label: String = "endoomorphism: anti-preserves op"
+) = antiPreservesBinaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
+
+/**
  * Identity preservation:
  *
  *    f(1_A) = 1_B
@@ -115,3 +139,14 @@ fun <A : Any, B : Any> preservesIdentityLaw(
             check(eqB(left, codomainIdentity))
         }
     }
+
+/**
+ * Simplified version for when the domain and the codomain are the same.
+ */
+fun <A : Any> preservesIdentityLaw(
+    identity: A,
+    hom: (A) -> A,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default(),
+    label: String = "endomorphism: preserves identity"
+) = preservesIdentityLaw(identity, identity, hom, eq, pr, pr, label)

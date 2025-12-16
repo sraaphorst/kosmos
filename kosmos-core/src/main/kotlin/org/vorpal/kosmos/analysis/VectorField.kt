@@ -2,7 +2,6 @@ package org.vorpal.kosmos.analysis
 
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
-import org.vorpal.kosmos.algebra.structures.negOne
 
 /**
  * In this representation, a [VectorField] is a mapping from a [VectorSpace] to itself.
@@ -37,7 +36,7 @@ operator fun <F: Any, V: Any> VectorField<F, V>.plus(other: VectorField<F, V>): 
  * scalar of the [Field] via the action on the [VectorSpace].
  */
 operator fun <F: Any, V: Any> VectorField<F, V>.times(scalar: F): VectorField<F, V> =
-    VectorFields.of(space) { p -> space.action(scalar, this(p)) }
+    VectorFields.of(space) { p -> space.leftAction(scalar, this(p)) }
 
 /**
  * Unary negation (additive inverse of multiplicative identity): -f(p),
@@ -56,14 +55,14 @@ fun <F: Any, V: Any> VectorField<F, V>.map(f: (V) -> V): VectorField<F, V> =
  * Scaling a [VectorField] by an element of the base [Field].
  */
 operator fun <F: Any, V: Any> F.times(vf: VectorField<F, V>): VectorField<F, V>  =
-    VectorFields.of(vf.space) { point -> vf.space.action(this@times, vf(point)) }
+    VectorFields.of(vf.space) { point -> vf.space.leftAction(this@times, vf(point)) }
 
 /**
  * Pointwise multiplication of a [ScalarField] and a [VectorField]:
  * (f * X)(p) = f(p) ⋅ X(p).
  */
 operator fun <F: Any, V: Any> ScalarField<F, V>.times(vf: VectorField<F, V>): VectorField<F, V> =
-    VectorFields.of(vf.space) { point -> vf.space.action(this@times(point), vf(point)) }
+    VectorFields.of(vf.space) { point -> vf.space.leftAction(this@times(point), vf(point)) }
 
 /**
  * [VectorField] composition: (f then g)(v) = g(f(v)).

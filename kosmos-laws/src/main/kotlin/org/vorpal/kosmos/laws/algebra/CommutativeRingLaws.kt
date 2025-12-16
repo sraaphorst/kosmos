@@ -15,15 +15,22 @@ import org.vorpal.kosmos.laws.suiteName
  * - [IdentityLaw] on multiplication
  */
 class CommutativeRingLaws<A : Any>(
-    private val ring: CommutativeRing<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default()
+    ring: CommutativeRing<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
 ): LawSuite {
 
     override val name = suiteName("CommutativeRing", ring.add.op.symbol, ring.mul.op.symbol)
 
+    private val commutativeRngLaws = CommutativeRngLaws(ring, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        CommutativeRngLaws(ring, arb, eq, pr).laws() +
-            listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
+        commutativeRngLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        commutativeRngLaws.fullLaws() + structureLaws
 }

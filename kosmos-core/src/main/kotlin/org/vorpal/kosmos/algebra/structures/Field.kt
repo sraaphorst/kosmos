@@ -1,9 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
-import java.math.BigInteger
 
 /**
  * A Field is a commutative Ring where the multiplicative operator has inverses for

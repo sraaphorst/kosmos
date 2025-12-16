@@ -15,15 +15,22 @@ import org.vorpal.kosmos.laws.suiteName
  * - [CommutativityLaw] over multiplication
  */
 class CommutativeSemiringLaws<A : Any>(
-    private val semiring: CommutativeSemiring<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default()
+    semiring: CommutativeSemiring<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
 ): LawSuite {
 
     override val name = suiteName("CommutativeSemiring", semiring.add.op.symbol, semiring.mul.op.symbol)
 
+    private val semiringLaws = SemiringLaws(semiring, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(CommutativityLaw(semiring.mul.op, arb, eq, pr))
+
     override fun laws(): List<TestingLaw> =
-        SemiringLaws(semiring, arb, eq, pr).laws() +
-            listOf(CommutativityLaw(semiring.mul.op, arb, eq, pr))
+        semiringLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        semiringLaws.fullLaws() + structureLaws
 }

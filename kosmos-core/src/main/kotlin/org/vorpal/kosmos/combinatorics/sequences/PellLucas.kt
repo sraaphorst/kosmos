@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.combinatorics.sequences
 
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
@@ -28,7 +28,7 @@ private object PellLucasRecurrence : CachedLinearRecurrenceImplementation<BigInt
     selectors = listOf(-1, -2),
     coefficients = listOf(2, 1),
     constantTerm = BigInteger.ZERO,
-    multiply = Action({ s, t -> s.toBigInteger() * t }),
+    multiply = LeftAction({ s, t -> s.toBigInteger() * t }),
     add = BinOp(BigInteger::add)
 )
 

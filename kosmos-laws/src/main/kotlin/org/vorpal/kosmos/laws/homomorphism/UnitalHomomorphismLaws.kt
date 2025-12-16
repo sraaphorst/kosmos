@@ -14,14 +14,15 @@ import org.vorpal.kosmos.laws.TestingLaw
  *    hom(1_A) = 1_B
  */
 class UnitalHomomorphismLaws<A : Any, B : Any>(
+    private val hom: (A) -> B,
     private val domain: NonAssociativeMonoid<A>,
     private val codomain: NonAssociativeMonoid<B>,
-    private val hom: (A) -> B,
     private val arb: Arb<A>,
     private val eqB: Eq<B> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
 ) : LawSuite {
+
     override val name = "UnitalHomomorphism (${domain.op.symbol} → ${codomain.op.symbol})"
 
     override fun laws(): List<TestingLaw> = listOf(

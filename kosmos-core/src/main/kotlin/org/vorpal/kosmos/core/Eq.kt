@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.core
 
-import org.vorpal.kosmos.algebra.structures.instances.Real
 import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.std.Rational
 import java.math.BigDecimal
 import java.math.BigInteger
@@ -129,36 +129,45 @@ object Eqs {
     val zonedDateTime: Eq<ZonedDateTime>   = Eq { a, b -> a.isEqual(b) }     // same instant
     val duration: Eq<Duration>             = Eq { a, b -> a.compareTo(b) == 0 }
 
-    /** Doubles / Floats: factories for strict, epsilon, ULPs... */
+    /** Reals / Floats: factories for strict, epsilon, ULPs... */
 
     /** Strict IEEE equality (NaN != NaN), mostly for low-level cases. */
-    val doubleStrict: Eq<Double> = Eq { a, b -> a == b }
+    val realStrict: Eq<Real> = Eq { a, b -> a == b }
     val floatStrict: Eq<Float> = Eq { a, b -> a == b }
 
-    /** Treat NaNs as equal and use absolute/relative tolerance. */
-    fun doubleApprox(absTol: Double = 1e-9, relTol: Double = 1e-9): Eq<Double> =
-        Eq { x, y ->
-            if (x.isNaN() && y.isNaN()) true
-            else {
-                val diff = abs(x - y)
-                diff <= absTol || diff <= relTol * max(abs(x), abs(y))
-            }
+    /**
+     * Treat NaNs as not equal to anything, and use absolute/relative tolerance.
+     */
+    fun realApprox(
+        absTol: Real = 1e-12,
+        relTol: Real = 1e-12
+    ): Eq<Real> = Eq { x, y ->
+        if (x.isNaN() || y.isNaN()) false
+        else if (x == 0.0 && y == 0.0) true
+        else if (x.isInfinite() || y.isInfinite()) x == y
+        else {
+            val diff = abs(x - y)
+            val scale = max(abs(x), abs(y))
+            diff <= absTol + relTol * scale
         }
+    }
 
-    fun realApprox(absTol: Real = 1e-9, relTol: Real = 1e-9): Eq<Real> =
-        doubleApprox(absTol, relTol)
-
-    fun floatApprox(absTol: Float = 1e-6f, relTol: Float = 1e-6f): Eq<Float> =
-        Eq { x, y ->
-            if (x.isNaN() && y.isNaN()) true
-            else {
-                val diff = abs(x - y)
-                diff <= absTol || diff <= relTol * max(abs(x), abs(y))
-            }
+    fun floatApprox(
+        absTol: Float = 1e-6f,
+        relTol: Float = 1e-6f
+    ): Eq<Float> = Eq { x, y ->
+        if (x.isNaN() || y.isNaN()) false
+        else if (x == 0.0f && y == 0.0f) true
+        else if (x.isInfinite() || y.isInfinite()) x == y
+        else {
+            val diff = abs(x - y)
+            val scale = max(abs(x), abs(y))
+            diff <= absTol + relTol * scale
         }
+    }
 
-    /** ULP-based for Double. `maxUlps` ~ 2..16 is typical. */
-    fun doubleUlps(maxUlps: Int = 8): Eq<Double> = Eq { a, b ->
+    /** ULP-based for Real. `maxUlps` ~ 2..16 is typical. */
+    fun realUlps(maxUlps: Int = 8): Eq<Real> = Eq { a, b ->
         if (a == b) true
         else if (a.isNaN() && b.isNaN()) true
         else {

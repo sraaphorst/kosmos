@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.structures.RModule
+import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
@@ -10,8 +10,8 @@ import org.vorpal.kosmos.laws.module.leftRModuleLaws
 import org.vorpal.kosmos.laws.suiteName
 
 /**
- * [RModule] laws (for a left module `M` over a commutative ring `R`):
- * - [CommutativeRingLaws] (full)
+ * [LeftRModule] laws (for a left module `M` over a ring `R`):
+ * - [RingLaws] (full)
  * - [AbelianGroupLaws] (full)
  *
  *
@@ -20,26 +20,26 @@ import org.vorpal.kosmos.laws.suiteName
  *     (r * s) ⊳ x = r ⊳ (s ⊳ x)
  *     1_R ⊳ x = x
  */
-class RModuleLaws<R : Any, M : Any>(
-    module: RModule<R, M>,
+class LeftRModuleLaws<R : Any, M : Any>(
+    module: LeftRModule<R, M>,
     scalarArb: Arb<R>,
     vectorArb: Arb<M>,
     eqR: Eq<R> = Eq.default(),
     eqM: Eq<M> = Eq.default(),
     prR: Printable<R> = Printable.default(),
-    prM: Printable<M> = Printable.default()
-): LawSuite {
+    prM: Printable<M> = Printable.default(),
+) : LawSuite {
     private val leftScalarDescription = "R[${module.leftScalars.add.op.symbol}${module.leftScalars.mul.op.symbol}]"
     private val moduleDescription = "M[${module.group.op.symbol}]"
     override val name = suiteName(
-        "RModule",
+        "LeftRModule",
         leftScalarDescription,
         module.leftAction.symbol,
         moduleDescription
     )
 
-    private val ringLaws: CommutativeRingLaws<R> by lazy {
-        CommutativeRingLaws(module.scalars, scalarArb, eqR, prR)
+    private val ringLaws: RingLaws<R> by lazy {
+        RingLaws(module.leftScalars, scalarArb, eqR, prR)
     }
     private val groupLaws: AbelianGroupLaws<M> by lazy {
         AbelianGroupLaws(module.group, vectorArb, eqM, prM)
@@ -54,5 +54,4 @@ class RModuleLaws<R : Any, M : Any>(
         ringLaws.fullLaws() +
             groupLaws.fullLaws() +
             structureLaws
-
 }
