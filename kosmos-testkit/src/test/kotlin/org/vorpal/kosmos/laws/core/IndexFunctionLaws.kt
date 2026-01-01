@@ -1,9 +1,9 @@
 package org.vorpal.kosmos.laws.core
 
-import arrow.core.identity
 import io.kotest.matchers.shouldBe
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import org.vorpal.kosmos.algebra.IndexFunction
+import org.vorpal.kosmos.core.Identity
 
 /**
  * Generic algebraic laws for any self-composable IndexFunction<T>.
@@ -70,7 +70,7 @@ object IndexFunctionLaws {
      */
     fun <T : IndexFunction<T>> rightIdentityLaw(ctx: Context<T>, n: Int = 5) {
         val m = ctx.sample()
-        m.flatMap { ctx.pure(::identity) }.run(n) shouldBe m.run(n)
+        m.flatMap { ctx.pure(Identity()) }.run(n) shouldBe m.run(n)
     }
 
     /**

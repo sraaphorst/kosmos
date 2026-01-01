@@ -12,8 +12,8 @@ import org.vorpal.kosmos.linear.Vec2R
 
 object RealInnerProductFixtures {
 
-    val realEq = Eqs.realUlps() /* Eq<Real> */
-    val vecEq: Eq<Vec2R> = Eq { x, y -> realEq.eqv(x.x, y.x) && realEq.eqv(x.y, y.y) }
+    val realEq = Eqs.realApprox()
+    val vecEq: Eq<Vec2R> = Eq { x, y -> realEq(x.x, y.x) && realEq(x.y, y.y) }
     val vecArb = arbVec2R()
     val scalarArb = arbFieldReal()
 
@@ -22,8 +22,7 @@ object RealInnerProductFixtures {
             space = Vec2RInnerProductSpace,
             scalarArb = scalarArb,
             vectorArb = vecArb,
-            scalarEq = realEq,
-            vectorEq = vecEq,
-            isNonNegative = { r -> r >= -1e-10 },
+            eqReal = Eqs.realApprox(),
+            eqV = vecEq
         )
 }

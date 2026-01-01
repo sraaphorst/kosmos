@@ -5,7 +5,7 @@ import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
-import org.vorpal.kosmos.algebra.structures.instances.Real
+import org.vorpal.kosmos.core.math.Real
 import kotlin.math.abs
 
 object RealArbitraries {
