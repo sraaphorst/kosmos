@@ -1,57 +1,90 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.structures.Monoid
+import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.Real
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.laws.homomorphism.UnitalHomomorphismLaws
-import org.vorpal.kosmos.laws.property.NormLaw
+import org.vorpal.kosmos.laws.homomorphism.preservesBinaryOpLaw
+import org.vorpal.kosmos.laws.property.realPositiveDefiniteLaw
+import org.vorpal.kosmos.laws.suiteName
 
+/**
+ * [NormedDivisionAlgebra] laws:
+ * - [NonAssociativeDivisionAlgebraLaws]
+ * - PositiveDefiniteLaw via [realPositiveDefiniteLaw]
+ * - [preservesBinaryOpLaw]
+ * - Check that norm and normSq are consistent
+ */
 class NormedDivisionAlgebraLaws<A : Any>(
-    private val algebra: NormedDivisionAlgebra<A>,
-    private val arb: Arb<A>,
-    private val eqA: Eq<A> = Eq.default(),
-    private val eqReal: Eq<Real> = Eqs.realApprox(),
-    private val prA: Printable<A> = Printable.default(),
+    algebra: NormedDivisionAlgebra<A>,
+    arb: Arb<A>,
+    eqA: Eq<A> = Eq.default(),
+    tolerance: Real = RealTolerances.DEFAULT,
+    eqReal: Eq<Real> = Eqs.realApprox(absTol = tolerance, relTol = tolerance),
+    prA: Printable<A> = Printable.default(),
+    prReal: Printable<Real> = Printable.default()
 ): LawSuite {
-    override val name = "NormedDivisionAlgebra"
 
-    override fun laws(): List<TestingLaw> {
-        val zero = algebra.zero
+    private val normDesc = "N[${algebra.normSq.symbol}]"
 
-        val baseDivisionLaws = NonAssociativeDivisionAlgebraLaws(
-            algebra = algebra,
-            arb = arb,
-            eq = eqA,
-            pr = prA
-        ).laws()
+    override val name = suiteName(
+        "NormedDivisionAlgebra",
+        algebra.add.op.symbol,
+        algebra.mul.op.symbol,
+        algebra.conj.symbol,
+        algebra.reciprocal.symbol,
+        normDesc
+    )
 
-        val normHomLaws = UnitalHomomorphismLaws(
-            hom = { algebra.normSq(it) },
-            domain = algebra.mul,
-            codomain = RealAlgebras.RealField.mul,
-            arb = arb,
+    private val divAlgLaws = NonAssociativeDivisionAlgebraLaws(algebra, arb, eqA, prA)
+
+    private val structureLaws: List<TestingLaw> = listOf(
+        // Ensure positive definite laws:
+        // N(a) >= 0
+        // N(a) = 0 ⇔ a = 0
+        realPositiveDefiniteLaw(
+            inner = algebra.normSq,
+            zeroVector = algebra.add.identity,
+            vectorArb = arb,
+            vectorEq = eqA,
+            vectorPr = prA,
+            tolerance = tolerance
+        ),
+
+        // Ensure N(ab) = N(a)N(b)
+        preservesBinaryOpLaw(
+            domainOp = algebra.mul.op,
+            codomainOp = RealField.mul.op,
+            hom = algebra.normSq::invoke,
+            arbA = arb,
             eqB = eqReal,
-            prA = prA
-        ).laws()
+            prA = prA,
+            prB = prReal
+        ),
 
-        val normLaws = listOf(
-            NormLaw(
-                normSq = algebra.normSq,
-                zero = zero,
-                arb = arb,
-                eqReal = eqReal,
-                eqA = eqA,
-                prA = prA
-            )
-        )
+        // Ensure norm matches normSq. This should happen by definition, but check in case user overrides.
+         TestingLaw.named("norm consistency: N(a) = ||a||^2") {
+             checkAll(arb) { a ->
+                 val left = algebra.normSq(a)
+                 val n = algebra.norm(a)
+                 val right = RealField.mul.op(n, n)
+                 check(eqReal(left, right)) {
+                     "Expected N(a) = ||a||^2, got N(a)=$left, ||a||^2=$right for a=${prA(a)}"
+                 }
+             }
+         }
+    )
 
-        return baseDivisionLaws + normHomLaws + normLaws
-    }
+    override fun laws(): List<TestingLaw> =
+        divAlgLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        divAlgLaws.fullLaws() + structureLaws
 }

@@ -94,7 +94,7 @@ class AbsorbOverLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ): TestingLaw, AbsorptionCore<A> {
-    override val name = "absorb over (${absorb.symbol}, ${over.symbol})"
+    override val name = "absorb-over: ${absorb.symbol} over ${over.symbol}"
     override suspend fun test() = absorbOverCheck()
 }
 
@@ -110,7 +110,7 @@ class OverAbsorbLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ): TestingLaw, AbsorptionCore<A> {
-    override val name = "over absorb (${absorb.symbol}, ${over.symbol})"
+    override val name = "over-absorb: ${over.symbol} over ${absorb.symbol}"
     override suspend fun test() = overAbsorbCheck()
 }
 
@@ -128,7 +128,7 @@ class AbsorptionLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, AbsorptionCore<A> {
-    override val name: String = "absorption (${absorb.symbol}, ${over.symbol})"
+    override val name = "absorption: ${absorb.symbol} over ${over.symbol} (both directions)"
 
     override suspend fun test() {
         absorbOverCheck()

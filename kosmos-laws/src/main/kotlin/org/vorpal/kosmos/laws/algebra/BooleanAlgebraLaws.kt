@@ -4,55 +4,49 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.BooleanAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.Printable.Companion.default
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.laws.property.ComplementationLaw
+import org.vorpal.kosmos.laws.property.InvolutionLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
- * Laws for Boolean algebras:
- *
- *  - Underlying distributive bounded lattice laws
- *  - Complementation:
- *      ¬(¬x) = x
- *      x ∧ ¬x = ⊥
- *      x ∨ ¬x = ⊤
+ * [BooleanAlgebra] laws:
+ * - [DistributiveLatticeLaws]
+ * - Various laws between operators
  */
 class BooleanAlgebraLaws<A : Any>(
-    private val booleanAlgebra: BooleanAlgebra<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val meetSymbol: String = "∧",
-    private val joinSymbol: String = "∨",
-    private val notSymbol: String = "¬"
-) {
+    algebra: BooleanAlgebra<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> {
-        val latticeLaws =
-            DistributiveLatticeLaws(
-                lattice = booleanAlgebra,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                meetSymbol = meetSymbol,
-                joinSymbol = joinSymbol
-            ).laws()
+    override val name = suiteName(
+        "BooleanAlgebra",
+        algebra.join.symbol,
+        algebra.meet.symbol,
+        algebra.not.symbol
+    )
 
-        val complementLaw =
-            ComplementationLaw(
-                meet = booleanAlgebra.meet,
-                join = booleanAlgebra.join,
-                bottom = booleanAlgebra.bottom,
-                top = booleanAlgebra.top,
-                complement = booleanAlgebra.not,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                meetSymbol = meetSymbol,
-                joinSymbol = joinSymbol,
-                notSymbol = notSymbol
-            )
+    private val latticeLaws = DistributiveLatticeLaws(algebra, arb, eq, pr)
 
-        return latticeLaws + complementLaw
-    }
+    private val complementAndNegationLaws: List<TestingLaw> = listOf(
+        complementJoinTopLaw(algebra.join, algebra.not, algebra.top, arb, eq, pr),
+        complementMeetBottomLaw(algebra.meet, algebra.not, algebra.bottom, arb, eq, pr),
+
+        // Debug-friendly checks
+        notBottomIsTopLaw(algebra.not, algebra.bottom, algebra.top, eq, pr),
+        notTopIsBottomLaw(algebra.not, algebra.bottom, algebra.top, eq, pr),
+        InvolutionLaw(algebra.not, arb, eq, pr),
+        deMorganJoinLaw(algebra.join, algebra.meet, algebra.not, arb, eq, pr),
+        deMorganMeetLaw(algebra.join, algebra.meet, algebra.not, arb, eq, pr),
+    )
+
+    override fun laws(): List<TestingLaw> =
+        latticeLaws.laws() +
+            complementAndNegationLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        latticeLaws.fullLaws() +
+            complementAndNegationLaws
 }

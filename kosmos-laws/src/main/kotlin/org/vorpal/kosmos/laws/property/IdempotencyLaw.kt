@@ -38,8 +38,8 @@ class IdempotencyLaw<A: Any>(
         a: A, value: A
     ): () -> String = {
         buildString {
-            val sa = pr.render(a)
-            val sValue = pr.render(value)
+            val sa = pr(a)
+            val sValue = pr(value)
 
             appendLine("Idempotency failed:")
             append("$sa ${op.symbol} $sa = $sValue")

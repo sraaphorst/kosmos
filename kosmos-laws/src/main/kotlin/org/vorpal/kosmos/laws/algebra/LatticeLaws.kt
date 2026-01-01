@@ -1,255 +1,168 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-
-import org.vorpal.kosmos.algebra.structures.JoinSemilattice
-import org.vorpal.kosmos.algebra.structures.MeetSemilattice
-import org.vorpal.kosmos.algebra.structures.Lattice
 import org.vorpal.kosmos.algebra.structures.BoundedLattice
 import org.vorpal.kosmos.algebra.structures.DistributiveLattice
-
+import org.vorpal.kosmos.algebra.structures.JoinSemilattice
+import org.vorpal.kosmos.algebra.structures.Lattice
+import org.vorpal.kosmos.algebra.structures.MeetSemilattice
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.Printable.Companion.default
-
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.AbsorbOverLaw
+import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.property.CommutativityLaw
-import org.vorpal.kosmos.laws.property.IdempotencyLaw
-import org.vorpal.kosmos.laws.property.AbsorptionLaw
-import org.vorpal.kosmos.laws.property.IdentityLaw
-import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.property.DistributivityLaw
+import org.vorpal.kosmos.laws.property.IdempotencyLaw
+import org.vorpal.kosmos.laws.property.IdentityLaw
+import org.vorpal.kosmos.laws.property.OverAbsorbLaw
+import org.vorpal.kosmos.laws.suiteName
 
-/**
- * Laws for a join-semilattice (A, ∨):
- *  - Associativity: (x ∨ y) ∨ z = x ∨ (y ∨ z)
- *  - Commutativity: x ∨ y = y ∨ x
- *  - Idempotency:   x ∨ x = x
- */
 class JoinSemilatticeLaws<A : Any>(
-    private val joinSemilattice: JoinSemilattice<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val symbol: String = "∨"
-) {
+    semilattice: JoinSemilattice<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        listOf(
-            AssociativityLaw(
-                op = joinSemilattice.join,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            ),
-            CommutativityLaw(
-                op = joinSemilattice.join,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            ),
-            IdempotencyLaw(
-                op = joinSemilattice.join,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            )
-        )
+    override val name = suiteName("JoinSemilattice", semilattice.join.symbol)
+
+    private val laws: List<TestingLaw> = listOf(
+        AssociativityLaw(semilattice.join, arb, eq, pr),
+        CommutativityLaw(semilattice.join, arb, eq, pr),
+        IdempotencyLaw(semilattice.join, arb, eq, pr)
+    )
+
+    override fun laws(): List<TestingLaw> = laws
+    override fun fullLaws(): List<TestingLaw> = laws
 }
 
-/**
- * Laws for a meet-semilattice (A, ∧):
- *  - Associativity: (x ∧ y) ∧ z = x ∧ (y ∧ z)
- *  - Commutativity: x ∧ y = y ∧ x
- *  - Idempotency:   x ∧ x = x
- */
 class MeetSemilatticeLaws<A : Any>(
-    private val meetSemilattice: MeetSemilattice<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val symbol: String = "∧"
-) {
+    semilattice: MeetSemilattice<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        listOf(
-            AssociativityLaw(
-                op = meetSemilattice.meet,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            ),
-            CommutativityLaw(
-                op = meetSemilattice.meet,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            ),
-            IdempotencyLaw(
-                op = meetSemilattice.meet,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = symbol
-            )
-        )
+    override val name = suiteName("MeetSemilattice", semilattice.meet.symbol)
+
+    private val laws: List<TestingLaw> = listOf(
+        AssociativityLaw(semilattice.meet, arb, eq, pr),
+        CommutativityLaw(semilattice.meet, arb, eq, pr),
+        IdempotencyLaw(semilattice.meet, arb, eq, pr)
+    )
+
+    override fun laws(): List<TestingLaw> = laws
+    override fun fullLaws(): List<TestingLaw> = laws
 }
 
-/**
- * Lattice (A, ∧, ∨) = meet-semilattice + join-semilattice + absorption.
- *
- * Absorption:
- *  - x ∧ (x ∨ y) = x
- *  - x ∨ (x ∧ y) = x
- */
 class LatticeLaws<A : Any>(
-    private val lattice: Lattice<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val meetSymbol: String = "∧",
-    private val joinSymbol: String = "∨"
-) {
+    lattice: Lattice<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        JoinSemilatticeLaws(
-            joinSemilattice = lattice,
-            arb = arb,
-            eq = eq,
-            pr = pr,
-            symbol = joinSymbol
-        ).laws() +
-                MeetSemilatticeLaws(
-                    meetSemilattice = lattice,
-                    arb = arb,
-                    eq = eq,
-                    pr = pr,
-                    symbol = meetSymbol
-                ).laws() +
-                listOf(
-                    AbsorptionLaw(
-                        absorb = lattice.meet,
-                        over = lattice.join,
-                        arb = arb,
-                        eq = eq,
-                        pr = pr,
-                        absorbSymbol = meetSymbol,
-                        overSymbol = joinSymbol
-                    )
-                )
+    override val name = suiteName(
+        "Lattice",
+        lattice.join.symbol,
+        lattice.meet.symbol
+    )
+
+    private val joinLaws = JoinSemilatticeLaws(lattice, arb, eq, pr)
+    private val meetLaws = MeetSemilatticeLaws(lattice, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> = listOf(
+        AbsorbOverLaw(absorb = lattice.meet, over = lattice.join, arb = arb, eq = eq, pr = pr),
+        OverAbsorbLaw(absorb = lattice.meet, over = lattice.join, arb = arb, eq = eq, pr = pr)
+    )
+
+    override fun laws(): List<TestingLaw> =
+        joinLaws.laws() +
+            meetLaws.laws() +
+            structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        joinLaws.fullLaws() +
+            meetLaws.fullLaws() +
+            structureLaws
 }
 
-
-/**
- * Bounded lattice (A, ∧, ∨, 0, 1):
- *
- *  - 0 is identity for ∨ and annihilator for ∧:
- *      x ∨ 0 = x,    x ∧ 0 = 0
- *  - 1 is identity for ∧ and annihilator for ∨:
- *      x ∧ 1 = x,    x ∨ 1 = 1
- */
 class BoundedLatticeLaws<A : Any>(
-    private val lattice: BoundedLattice<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val meetSymbol: String = "∧",
-    private val joinSymbol: String = "∨"
-) {
+    lattice: BoundedLattice<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        LatticeLaws(
-            lattice = lattice,
-            arb = arb,
-            eq = eq,
-            pr = pr,
-            meetSymbol = meetSymbol,
-            joinSymbol = joinSymbol
-        ).laws() + listOf(
-            // Identities
-            IdentityLaw(
-                op = lattice.join,
-                identity = lattice.bottom,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = joinSymbol
-            ),
-            IdentityLaw(
-                op = lattice.meet,
-                identity = lattice.top,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = meetSymbol
-            ),
-            // Annihilators
-            AnnihilationLaw(
-                op = lattice.meet,
-                zero = lattice.bottom,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = meetSymbol
-            ),
-            AnnihilationLaw(
-                op = lattice.join,
-                zero = lattice.top,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                symbol = joinSymbol
-            )
-        )
+    override val name = suiteName(
+        "BoundedLattice",
+        lattice.join.symbol,
+        lattice.meet.symbol,
+        "⊥",
+        "⊤"
+    )
+
+    private val latticeLaws = LatticeLaws(lattice, arb, eq, pr)
+
+    private val boundsLaws: List<TestingLaw> = listOf(
+        // join identity is bottom: x ∨ ⊥ = x
+        IdentityLaw(lattice.join, lattice.bottom, arb, eq, pr),
+        // meet identity is top: x ∧ ⊤ = x
+        IdentityLaw(lattice.meet, lattice.top, arb, eq, pr),
+
+        // meet annihilator is bottom: x ∧ ⊥ = ⊥
+        AnnihilationLaw(lattice.meet, lattice.bottom, arb, eq, pr),
+        // join annihilator is top: x ∨ ⊤ = ⊤
+        AnnihilationLaw(lattice.join, lattice.top, arb, eq, pr)
+    )
+
+    override fun laws(): List<TestingLaw> =
+        latticeLaws.laws() + boundsLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        latticeLaws.fullLaws() + boundsLaws
 }
 
-/**
- * Distributive lattice:
- *
- *  - x ∧ (y ∨ z) = (x ∧ y) ∨ (x ∧ z)
- *  - x ∨ (y ∧ z) = (x ∨ y) ∧ (x ∨ z)
- */
 class DistributiveLatticeLaws<A : Any>(
-    private val lattice: DistributiveLattice<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = default(),
-    private val meetSymbol: String = "∧",
-    private val joinSymbol: String = "∨"
-) {
+    lattice: DistributiveLattice<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+) : LawSuite {
 
-    fun laws(): List<TestingLaw> =
-        BoundedLatticeLaws(
-            lattice = lattice,
+    override val name = suiteName(
+        "DistributiveLattice",
+        lattice.join.symbol,
+        lattice.meet.symbol
+    )
+
+    private val bounded = BoundedLatticeLaws(lattice, arb, eq, pr)
+
+    private val distributivity: List<TestingLaw> = listOf(
+        // x ∧ (y ∨ z) = (x ∧ y) ∨ (x ∧ z)
+        DistributivityLaw(
+            mul = lattice.meet,
+            add = lattice.join,
             arb = arb,
             eq = eq,
-            pr = pr,
-            meetSymbol = meetSymbol,
-            joinSymbol = joinSymbol
-        ).laws() + listOf(
-            DistributivityLaw(
-                mul = lattice.meet,
-                add = lattice.join,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                mulSymbol = meetSymbol,
-                addSymbol = joinSymbol
-            ),
-            DistributivityLaw(
-                mul = lattice.join,
-                add = lattice.meet,
-                arb = arb,
-                eq = eq,
-                pr = pr,
-                mulSymbol = joinSymbol,
-                addSymbol = meetSymbol
-            )
+            pr = pr
+        ),
+        // x ∨ (y ∧ z) = (x ∨ y) ∧ (x ∨ z)
+        DistributivityLaw(
+            mul = lattice.join,
+            add = lattice.meet,
+            arb = arb,
+            eq = eq,
+            pr = pr
         )
+    )
+
+    override fun laws(): List<TestingLaw> =
+        bounded.laws() + distributivity
+
+    override fun fullLaws(): List<TestingLaw> =
+        bounded.fullLaws() + distributivity
 }

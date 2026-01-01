@@ -16,7 +16,6 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.core.neqv
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import java.math.BigInteger
@@ -43,10 +42,10 @@ fun octonion(
 }
 
 object OctonionAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
+
     fun Octonion.normSq(): Real =
         a.normSq() + b.normSq()
-
-    private val realEq = Eqs.realApprox()
 
     /**
      * In this case, the most we can say about the Octonions are that they are an [NonAssociativeDivisionAlgebra].
@@ -61,7 +60,7 @@ object OctonionAlgebras {
         override val conj: Endo<Octonion> = base.conj
         override val reciprocal: Endo<Octonion> = Endo(Symbols.SLASH) { o ->
             val n2: Real = o.normSq()
-            require(realEq.neqv(n2, 0.0) && n2.isFinite()) { "$n2 has no multiplicative inverse in ${Symbols.BB_O}."}
+            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "$n2 has no multiplicative inverse in ${Symbols.BB_O}."}
 
             val oc = conj(o)
             val scale: Real = 1.0 / n2

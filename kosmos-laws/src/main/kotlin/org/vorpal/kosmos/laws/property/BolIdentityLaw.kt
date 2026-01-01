@@ -151,7 +151,7 @@ class BolIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
-    override val name = "Bol identity (${op.symbol})"
+    override val name = "bol identity (${op.symbol})"
 
     override suspend fun test() {
         leftBolIdentityCheck()
@@ -178,7 +178,7 @@ class LeftBolIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
-    override val name = "left Bol identity (${op.symbol})"
+    override val name = "left bol identity (${op.symbol})"
 
     override suspend fun test() =
         leftBolIdentityCheck()
@@ -203,7 +203,7 @@ class RightBolIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
-    override val name = "right Bol identity (${op.symbol})"
+    override val name = "right bol identity (${op.symbol})"
 
     override suspend fun test() =
         rightBolIdentityCheck()

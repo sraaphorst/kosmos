@@ -25,6 +25,8 @@ val Complex.im: Real get() = b
 fun complex(re: Real, im: Real): Complex = Complex(re, im)
 
 object ComplexAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
+
     fun Complex.normSq(): Real =
         re * re + im * im
 
@@ -33,7 +35,7 @@ object ComplexAlgebras {
         InvolutiveRing<Complex>,
         NormedDivisionAlgebra<Complex> {
         private val base: InvolutiveAlgebra<Complex> =
-            CayleyDickson(RealAlgebras.RealInvolutiveRing)
+            CayleyDickson(RealAlgebras.RealStarField)
 
         override val add = base.add
 
@@ -44,9 +46,7 @@ object ComplexAlgebras {
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
             val normSq = c.normSq()
-
-            // TODO: We probably want a tolerance check here.
-            require(normSq != 0.0 && normSq.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
+            require(eqRealApprox.neqv(normSq, 0.0) && normSq.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
             CD(c.re / normSq, -c.im / normSq)
         }
 

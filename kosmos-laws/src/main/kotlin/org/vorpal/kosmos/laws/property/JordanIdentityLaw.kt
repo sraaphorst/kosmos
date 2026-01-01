@@ -24,7 +24,7 @@ class JordanIdentityLaw<A : Any>(
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
     private val arbPair = TestingLaw.arbPair(arb)
-    override val name: String = "Jordan identity (${op.symbol})"
+    override val name: String = "jordan identity (${op.symbol})"
 
     suspend fun jordanIdentityCheck() {
         checkAll(arbPair) { (x, y) ->

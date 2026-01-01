@@ -55,6 +55,7 @@ object Symbols {
     const val DOTS_VERTICAL = "⋮"
     const val ENTAILS = "⊨"
     const val ENTAILS_NOT = "⊭"
+    const val EQUALS = "="
     const val EQUALS_NOT = "≠"
     const val EXISTS = "∃"
     const val EXISTS_NOT = "∄"

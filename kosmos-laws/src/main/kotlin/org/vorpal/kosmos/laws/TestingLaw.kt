@@ -1,6 +1,8 @@
 package org.vorpal.kosmos.laws
 
+import io.kotest.core.Tuple4
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
 
@@ -31,6 +33,12 @@ fun interface TestingLaw {
 
         fun <A> arbPair(arb: Arb<A>): Arb<Pair<A, A>> = Arb.pair(arb, arb)
         fun <A> arbTriple(arb: Arb<A>): Arb<Triple<A, A, A>> = Arb.triple(arb, arb, arb)
+
+        /**
+         * Quadruples will be necessary for testing posets / orders.
+         */
+        fun <A> arbQuadruple(arb: Arb<A>): Arb<Tuple4<A, A, A, A>> =
+            Arb.bind(arb, arb, arb, arb) { a, b, c, d -> Tuple4(a, b, c, d) }
     }
 }
 
