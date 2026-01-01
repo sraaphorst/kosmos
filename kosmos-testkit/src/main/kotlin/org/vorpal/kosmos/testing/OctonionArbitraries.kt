@@ -6,7 +6,7 @@ import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
 import org.vorpal.kosmos.algebra.structures.instances.Octonion
 import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.normSq
-import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.octonion
+import org.vorpal.kosmos.algebra.structures.instances.octonion
 
 object OctonionArbitraries {
 

@@ -6,7 +6,7 @@ import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
 import org.vorpal.kosmos.algebra.structures.instances.Quaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.normSq
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.quaternion
+import org.vorpal.kosmos.algebra.structures.instances.quaternion
 
 object QuaternionArbitraries {
 
