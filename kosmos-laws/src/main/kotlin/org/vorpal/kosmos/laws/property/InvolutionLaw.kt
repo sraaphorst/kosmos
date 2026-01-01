@@ -22,7 +22,7 @@ class InvolutionLaw<A : Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
-    override val name = "Involution (${op.symbol})"
+    override val name = "involution (${op.symbol})"
 
     /**
      * `f(f(x)) = x`

@@ -35,7 +35,7 @@ class ComplementationLaw<A : Any>(
 ) : TestingLaw {
     private val notSym = complement.symbol
     override val name: String =
-        "Boolean complementation ($notSym, ${meet.symbol}, ${join.symbol})"
+        "boolean complementation ($notSym, ${meet.symbol}, ${join.symbol})"
 
     /**
      * Not consistent with the other laws to have them all in here, but they are all fairly short,

@@ -22,7 +22,7 @@ fun interface Printable<in A> {
 
 /** Contravariant mapping: reuse a Printable<B> for A via A -> B. */
 fun <A, B> Printable<B>.contramap(f: (A) -> B): Printable<A> =
-    Printable { a -> this.render(f(a)) }
+    Printable { a -> render(f(a)) }
 
 /** Small convenience for inline use. */
 fun <A> Printable<A>.pretty(a: A): String = render(a)

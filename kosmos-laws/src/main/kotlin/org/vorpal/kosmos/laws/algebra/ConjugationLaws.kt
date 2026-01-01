@@ -27,8 +27,8 @@ class ConjugationLaws<A : Any>(
     private val add: NonAssociativeMonoid<A>,
     private val mul: NonAssociativeMonoid<A>,
     private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.Companion.default(),
-    private val pr: Printable<A> = Printable.Companion.default()
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
 ): LawSuite {
 
     override val name = suiteName("Conjugation", conj.symbol, add.op.symbol, mul.op.symbol)

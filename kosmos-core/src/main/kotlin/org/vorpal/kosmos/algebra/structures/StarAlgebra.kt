@@ -11,11 +11,11 @@ interface StarAlgebra<R : Any, A : Any> : Algebra<R, A>, InvolutiveRing<A> {
 
     companion object {
         fun <R : Any, A : Any> of(
-            ring: CommutativeRing<R>,
+            scalars: CommutativeRing<R>,
             involutiveRing: InvolutiveRing<A>,
             leftAction: LeftAction<R, A>
         ): StarAlgebra<R, A> = object : StarAlgebra<R, A> {
-            override val scalars = ring
+            override val scalars = scalars
             override val group = involutiveRing.add
             override val add = group
             override val mul = involutiveRing.mul

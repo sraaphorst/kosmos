@@ -101,7 +101,7 @@ class NilpotentLaw<A : Any>(
 }
 
 /** Enumerate all parenthesizations’ results of combining a list with a binary op. */
-private fun <A> allParenthesizations(xs: List<A>, op: BinOp<A>): List<A> =
+private fun <A : Any> allParenthesizations(xs: List<A>, op: BinOp<A>): List<A> =
     when (xs.size) {
         0 -> emptyList()
         1 -> listOf(xs[0])

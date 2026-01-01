@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.filterNot
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.UnaryOp
@@ -37,21 +38,14 @@ class DivisionRingLaws<A : Any>(
         UnaryOp(ring.reciprocal.symbol) { a ->
             // Exclude zero (under the provided Eq, so approximate rings can decide what "zero" means).
             if (eq(a, ring.zero)) null
-            else {
-                // If the implementation throws on non-invertibles, treat it as "no inverse".
-                try {
-                    ring.reciprocal(a)
-                } catch (_: Throwable) {
-                    null
-                }
-            }
+            else ring.reciprocal(a)
         }
 
     private val structureLaws: List<TestingLaw> = listOf(
         InvertibilityLaw(
             op = ring.mul.op,
             identity = ring.mul.identity,
-            arb = arb,
+            arb = arb.filterNot { eq(it, ring.zero) },
             inverseOrNull = reciprocalOrNull,
             eq = eq,
             pr = pr

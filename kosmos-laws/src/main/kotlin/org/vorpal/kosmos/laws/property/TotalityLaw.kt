@@ -19,7 +19,9 @@ class TotalityLaw<A : Any>(
     arb: Arb<A>,
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
+
     private val arbPair = TestingLaw.arbPair(arb)
+
     override val name: String = "totality (${op.symbol})"
 
     override suspend fun test() {
@@ -30,7 +32,7 @@ class TotalityLaw<A : Any>(
                 throw t
             } catch (t: Throwable) {
                 withClue(failureMessage(a, b, t)) {
-                    throw AssertionError("Totality failed for ${op.symbol}.", t)
+                    throw AssertionError("Totality failed.", t)
                 }
             }
         }

@@ -42,7 +42,7 @@ class LeftMoufangLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, MoufangCore<A> {
-    override val name = "Moufang (left: ${op.symbol})"
+    override val name = "moufang (left: ${op.symbol})"
 
     override suspend fun test() {
         checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
@@ -69,7 +69,7 @@ class RightMoufangLaw<A: Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, MoufangCore<A> {
-    override val name = "Moufang (right: ${op.symbol})"
+    override val name = "moufang (right: ${op.symbol})"
 
     override suspend fun test() {
         checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
@@ -125,7 +125,7 @@ class MoufangLaw<A: Any>(
     private val left   = LeftMoufangLaw(op, arb, eq, pr)
     private val right  = RightMoufangLaw(op, arb, eq, pr)
     private val middle = MiddleMoufangLaw(op, arb, eq, pr)
-    override val name = "Moufang (all: ${op.symbol})"
+    override val name = "moufang (all: ${op.symbol})"
     override suspend fun test() {
         left.test()
         right.test()

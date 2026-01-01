@@ -3,6 +3,7 @@ package org.vorpal.kosmos.algebra.structures
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
+import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
@@ -28,7 +29,7 @@ interface NormedDivisionAlgebra<A : Any>: NonAssociativeDivisionAlgebra<A> {
     /**
      * Convenience of actual norm if needed.
      */
-    fun norm(a: A): Real = sqrt(normSq(a))
+    fun norm(a: A): Real = sqrt(max(0.0, normSq(a)))
 
     companion object {
         fun <A : Any> of(

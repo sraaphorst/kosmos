@@ -15,6 +15,7 @@ import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.normSq
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
@@ -62,6 +63,7 @@ fun quaternion(
 }
 
 object QuaternionAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
 
     fun Quaternion.normSq(): Real =
         a.normSq() + b.normSq()
@@ -83,8 +85,7 @@ object QuaternionAlgebras {
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
             val n2 = q.normSq()
-            // TODO: We probably want a tolerance check here.
-            require(n2 != 0.0 && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_H}." }
+            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_H}." }
 
             val qc = conj(q)
             val scale = 1.0 / n2

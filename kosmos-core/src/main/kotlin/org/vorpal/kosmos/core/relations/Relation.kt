@@ -43,7 +43,7 @@ interface Reflexive<A>     : HasRelation<A>
 interface Symmetric<A>     : HasRelation<A>
 interface Antisymmetric<A> : HasRelation<A>
 interface Transitive<A>    : HasRelation<A>
-interface Connex<A>        : HasRelation<A>   // total/connected: ∀a,b. R(a,b) ∨ R(b,a)
+interface Connex<A>        : HasRelation<A>   // total/connected: ∀a,b R(a,b) ∨ R(b,a)
 
 // Strict (<) properties
 interface Irreflexive<A>       : HasStrictRelation<A>

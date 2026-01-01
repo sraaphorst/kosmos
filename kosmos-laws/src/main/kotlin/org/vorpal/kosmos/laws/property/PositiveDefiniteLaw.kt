@@ -3,9 +3,10 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.Real
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
@@ -13,12 +14,16 @@ import org.vorpal.kosmos.laws.TestingLaw
 /**
  * Positive-definiteness of a quadratic form induced by an inner product.
  *
- * Given inner : V -> F representing x ↦ ⟨x, x⟩, we require:
+ * Given `inner : V -> F` representing `x ↦ ⟨x, x⟩`, we require:
  *
  *  1. Non-negativity:
+ *
+ *
  *        inner(x) ≥ 0    for all x
  *
  *  2. Non-degeneracy:
+ *
+ *
  *        inner(x) = 0  ⇔  x = 0
  *
  * The actual notion of "≥ 0" is provided by [isNonNegative].
@@ -114,9 +119,9 @@ fun <V: Any> realPositiveDefiniteLaw(
     inner: UnaryOp<V, Real>,
     zeroVector: V,
     vectorArb: Arb<V>,
-    tolerance: Real = 1e-10,
     vectorEq: Eq<V> = Eq.default(),
-    vectorPrintable: Printable<V> = Printable.default(),
+    vectorPr: Printable<V> = Printable.default(),
+    tolerance: Real = RealTolerances.DEFAULT
 ): PositiveDefiniteLaw<Real, V> =
     PositiveDefiniteLaw(
         inner = inner,
@@ -127,5 +132,5 @@ fun <V: Any> realPositiveDefiniteLaw(
         scalarEq = Eqs.realApprox(absTol = tolerance, relTol = tolerance),
         vectorEq = vectorEq,
         scalarPrintable = Printable.default(),
-        vectorPrintable = vectorPrintable
+        vectorPrintable = vectorPr
     )

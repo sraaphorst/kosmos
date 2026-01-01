@@ -8,6 +8,7 @@ import org.vorpal.kosmos.algebra.structures.InnerProductSpace
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -21,6 +22,8 @@ import org.vorpal.kosmos.linear.Vec2R
 import org.vorpal.kosmos.linear.Vec2R_ZERO
 
 object RealAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
+
     val RealField : Field<Real> = Field.of(
         add = AbelianGroup.of(
             identity = 0.0,
@@ -31,19 +34,16 @@ object RealAlgebras {
             identity = 1.0,
             op = BinOp(Symbols.ASTERISK, Real::times)
         ),
-        // TODO: Add tolerance
         reciprocal = Endo(Symbols.INVERSE) { x ->
-            require(x != 0.0 && x.isFinite()) { "0 has no reciprocal." }
+            require(eqRealApprox.neqv(x, 0.0) && x.isFinite()) { "0 has no reciprocal." }
             1.0 / x
         }
     )
 
-    object RealInvolutiveRing:
-        InvolutiveRing<Real>,
+    object RealStarField:
         Field<Real> by RealField,
+        InvolutiveRing<Real>,
         NormedDivisionAlgebra<Real> {
-
-        override val one = RealField.one
 
         override val conj: Endo<Real> =
             Endo(Symbols.CONJ, Identity())
@@ -54,6 +54,9 @@ object RealAlgebras {
         // Disambiguate HasReciprocal.zero:
         override val zero: Real
             get() = RealField.zero
+
+        override val one: Real
+            get() = RealField.one
     }
 
     /**

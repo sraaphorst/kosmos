@@ -40,7 +40,7 @@ class MedialLaw<A : Any>(
     private val op: BinOp<A>,
     arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default(),
+    private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
     private val arb = TestingLaw.arbPair(TestingLaw.arbPair(arb)) 
     override val name = "medial (${op.symbol})"
