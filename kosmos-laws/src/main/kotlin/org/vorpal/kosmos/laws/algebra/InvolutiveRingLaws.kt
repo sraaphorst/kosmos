@@ -1,0 +1,38 @@
+package org.vorpal.kosmos.laws.algebra
+
+import io.kotest.property.Arb
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.suiteName
+
+/**
+ * [InvolutiveRing] laws:
+ * - [RingLaws]
+ * - [ConjugationLaws]
+ */
+class InvolutiveRingLaws<A : Any>(
+    ring: InvolutiveRing<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+): LawSuite {
+
+    override val name = suiteName(
+        "InvolutiveRing",
+        ring.add.op.symbol,
+        ring.mul.op.symbol,
+        ring.conj.symbol
+    )
+
+    private val ringLaws = RingLaws(ring, arb, eq, pr)
+    private val conjugationLaws = ConjugationLaws(ring.conj, ring.add, ring.mul, arb, eq, pr)
+
+    override fun laws(): List<TestingLaw> =
+        ringLaws.laws() + conjugationLaws.laws()
+
+    override fun fullLaws(): List<TestingLaw> =
+        ringLaws.fullLaws() + conjugationLaws.fullLaws()
+}

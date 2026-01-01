@@ -1,6 +1,8 @@
 // src/main/kotlin/org/vorpal/kosmos/std/Rational.kt
 package org.vorpal.kosmos.std
 
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.toReal
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -73,8 +75,13 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     // Type converters:
     fun toBigDecimal(scale: Int = 20): BigDecimal =
         n.toBigDecimal().divide(d.toBigDecimal(), scale, RoundingMode.HALF_EVEN)
-    fun toDouble(): Double = n.toDouble() / d.toDouble()
+    fun toReal(): Real = n.toReal() / d.toReal()
     fun toFloat(): Float = n.toFloat() / d.toFloat()
+
+    @Deprecated("use toReal() instead",
+        ReplaceWith("toReal()", imports = ["org.vorpal.kosmos.core.math.Real"]),
+        level = DeprecationLevel.ERROR)
+    fun toDouble(): Double = n.toDouble() / d.toDouble()
 
     val isInteger: Boolean
         get() = d == BigInteger.ONE

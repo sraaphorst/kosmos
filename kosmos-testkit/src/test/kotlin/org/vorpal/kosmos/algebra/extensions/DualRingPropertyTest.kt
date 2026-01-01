@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 
@@ -14,7 +15,7 @@ class DualRingPropertyTest : FunSpec({
     val dualRing = RealField.dual()
 
     // Helper to create dual numbers easily in tests
-    fun dual(a: Double, b: Double) = dualRing.Dual(a, b)
+    fun dual(a: Real, b: Real) = dualRing.Dual(a, b)
 
     // ------------------------------------------------------------------------
     // Basic Structure
@@ -23,7 +24,7 @@ class DualRingPropertyTest : FunSpec({
     context("Dual number construction") {
 
         test("dual number stores components correctly") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val d = dual(a, b)
                 d.a shouldBe a
                 d.b shouldBe b
@@ -31,7 +32,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("component destructuring works") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val d = dual(a, b)
                 val (c1, c2) = d
                 c1 shouldBe a
@@ -40,7 +41,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("lift creates dual number with zero infinitesimal part") {
-            checkAll(arbDualDouble()) { a ->
+            checkAll(arbDualReal()) { a ->
                 val d = dualRing.lift(a)
                 d.a shouldBe a
                 d.b shouldBe 0.0
@@ -48,7 +49,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("eps creates dual number with zero real part") {
-            checkAll(arbDualDouble()) { b ->
+            checkAll(arbDualReal()) { b ->
                 val d = dualRing.eps(b)
                 d.a shouldBe 0.0
                 d.b shouldBe b
@@ -115,7 +116,7 @@ class DualRingPropertyTest : FunSpec({
             }
         }
 
-        test("double negation is identity: -(-d) = d") {
+        test("Real negation is identity: -(-d) = d") {
             checkAll(arbDual()) { d ->
                 val result = -(-d)
                 result shouldBeApproximately d
@@ -123,7 +124,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("addition components: (a₁+b₁ε) + (a₂+b₂ε) = (a₁+a₂) + (b₁+b₂)ε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble(), arbDualDouble()) { a1, b1, a2, b2 ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal(), arbDualReal()) { a1, b1, a2, b2 ->
                 val d1 = dual(a1, b1)
                 val d2 = dual(a2, b2)
                 val sum = d1 + d2
@@ -180,8 +181,8 @@ class DualRingPropertyTest : FunSpec({
 
         test("multiplication formula: (a+bε)(c+dε) = ac + (ad+bc)ε") {
             checkAll(
-                arbDualDouble(), arbDualDouble(),
-                arbDualDouble(), arbDualDouble()
+                arbDualReal(), arbDualReal(),
+                arbDualReal(), arbDualReal()
             ) { a, b, c, d ->
                 val d1 = dual(a, b)
                 val d2 = dual(c, d)
@@ -249,7 +250,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("pure infinitesimal squared is zero: (0+bε)² = 0") {
-            checkAll(arbDualDouble()) { b ->
+            checkAll(arbDualReal()) { b ->
                 val d = dualRing.eps(b)
                 val d2 = d * d
                 val zero = dualRing.add.identity
@@ -265,7 +266,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("any power of epsilon beyond 1 is zero") {
-            checkAll(arbDualDouble()) { b ->
+            checkAll(arbDualReal()) { b ->
                 val eps = dualRing.eps(b)
                 val eps2 = eps * eps
                 val eps3 = eps2 * eps
@@ -284,7 +285,7 @@ class DualRingPropertyTest : FunSpec({
     context("Lift operation") {
 
         test("lift preserves addition: lift(a + b) = lift(a) + lift(b)") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val left = dualRing.lift(a + b)
                 val right = dualRing.lift(a) + dualRing.lift(b)
                 left shouldBeApproximately right
@@ -292,7 +293,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("lift preserves multiplication: lift(a * b) = lift(a) * lift(b)") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val left = dualRing.lift(a * b)
                 val right = dualRing.lift(a) * dualRing.lift(b)
                 left shouldBeApproximately right
@@ -312,7 +313,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("lifted elements commute with epsilon") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val lifted = dualRing.lift(a)
                 val eps = dualRing.eps(b)
 
@@ -347,8 +348,8 @@ class DualRingPropertyTest : FunSpec({
 
         test("subtraction components: (a₁+b₁ε) - (a₂+b₂ε) = (a₁-a₂) + (b₁-b₂)ε") {
             checkAll(
-                arbDualDouble(), arbDualDouble(),
-                arbDualDouble(), arbDualDouble()
+                arbDualReal(), arbDualReal(),
+                arbDualReal(), arbDualReal()
             ) { a1, b1, a2, b2 ->
                 val d1 = dual(a1, b1)
                 val d2 = dual(a2, b2)
@@ -375,14 +376,14 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("lifted non-zero elements are invertible") {
-            checkAll(arbNonZeroDualDouble()) { a ->
+            checkAll(arbNonZeroDualReal()) { a ->
                 val d = dualRing.lift(a)
                 d.isInvertible() shouldBe true
             }
         }
 
         test("pure infinitesimals are not invertible") {
-            checkAll(arbNonZeroDualDouble()) { b ->
+            checkAll(arbNonZeroDualReal()) { b ->
                 val d = dualRing.eps(b)
                 d.isInvertible() shouldBe false
             }
@@ -415,7 +416,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("reciprocal formula: (a+bε)⁻¹ = a⁻¹ - ba⁻²ε") {
-            checkAll(arbNonZeroDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbNonZeroDualReal(), arbDualReal()) { a, b ->
                 val d = dual(a, b)
                 val inv = d.reciprocal()
 
@@ -437,7 +438,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("reciprocal of lifted element: lift(a)⁻¹ = lift(a⁻¹)") {
-            checkAll(arbNonZeroDualDouble()) { a ->
+            checkAll(arbNonZeroDualReal()) { a ->
                 val d = dualRing.lift(a)
                 val inv = d.reciprocal()
                 val expected = dualRing.lift(1.0 / a)
@@ -462,7 +463,7 @@ class DualRingPropertyTest : FunSpec({
             }
         }
 
-        test("double reciprocal is identity: (d⁻¹)⁻¹ = d") {
+        test("Real reciprocal is identity: (d⁻¹)⁻¹ = d") {
             checkAll(arbInvertibleDual()) { d ->
                 val inv = d.reciprocal()
                 val invInv = inv.reciprocal()
@@ -533,7 +534,7 @@ class DualRingPropertyTest : FunSpec({
     context("Scalar operations") {
 
         test("dual plus scalar: (a+bε) + c = (a+c) + bε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { a, b, c ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
                 val d = dual(a, b)
                 val result = d + c
 
@@ -543,7 +544,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("dual minus scalar: (a+bε) - c = (a-c) + bε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { a, b, c ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
                 val d = dual(a, b)
                 val result = d - c
 
@@ -553,7 +554,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("dual times scalar: (a+bε) * c = (ac) + (bc)ε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { a, b, c ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
                 val d = dual(a, b)
                 val result = d * c
 
@@ -563,7 +564,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("dual divided by scalar: (a+bε) / c = (a/c) + (b/c)ε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbNonZeroDualDouble()) { a, b, c ->
+            checkAll(arbDualReal(), arbDualReal(), arbNonZeroDualReal()) { a, b, c ->
                 val d = dual(a, b)
                 val result = d / c
 
@@ -586,7 +587,7 @@ class DualRingPropertyTest : FunSpec({
     context("Extension functions") {
 
         test("scalar plus dual: c + (a+bε) = (c+a) + bε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { c, a, b ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { c, a, b ->
                 val d = dual(a, b)
                 val result = c + d
 
@@ -596,7 +597,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar plus dual is commutative with dual plus scalar") {
-            checkAll(arbDualDouble(), arbDual()) { c, d ->
+            checkAll(arbDualReal(), arbDual()) { c, d ->
                 val left = c + d
                 val right = d + c
                 left shouldBeApproximately right
@@ -604,7 +605,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar minus dual: c - (a+bε) = (c-a) - bε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { c, a, b ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { c, a, b ->
                 val d = dual(a, b)
                 val result = c - d
 
@@ -614,7 +615,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar times dual: c * (a+bε) = (ca) + (cb)ε") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { c, a, b ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { c, a, b ->
                 val d = dual(a, b)
                 val result = c * d
 
@@ -624,7 +625,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar times dual is commutative with dual times scalar") {
-            checkAll(arbDualDouble(), arbDual()) { c, d ->
+            checkAll(arbDualReal(), arbDual()) { c, d ->
                 val left = c * d
                 val right = d * c
                 left shouldBeApproximately right
@@ -632,7 +633,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar divided by dual: c / (a+bε)") {
-            checkAll(arbNonZeroDualDouble(), arbNonZeroDualDouble(), arbDualDouble()) { c, a, b ->
+            checkAll(arbNonZeroDualReal(), arbNonZeroDualReal(), arbDualReal()) { c, a, b ->
                 val d = dual(a, b)
                 val result = c / d
 
@@ -643,7 +644,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("scalar divOrNull returns null for zero dual") {
-            checkAll(arbDualDouble()) { c ->
+            checkAll(arbDualReal()) { c ->
                 val zero = dualRing.add.identity
                 c.divOrNull(zero) shouldBe null
             }
@@ -657,7 +658,7 @@ class DualRingPropertyTest : FunSpec({
     context("Complex expressions") {
 
         test("polynomial evaluation: (a+bε)² = a² + 2abε") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val d = dual(a, b)
                 val d2 = d * d
 
@@ -670,7 +671,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("polynomial: (a+bε)³ = a³ + 3a²bε") {
-            checkAll(arbDualDouble(), arbDualDouble()) { a, b ->
+            checkAll(arbDualReal(), arbDualReal()) { a, b ->
                 val d = dual(a, b)
                 val d3 = d * d * d
 
@@ -728,7 +729,7 @@ class DualRingPropertyTest : FunSpec({
     context("Automatic differentiation") {
 
         test("linear function derivative: f(x) = mx + b, f'(x) = m") {
-            checkAll(arbDualDouble(), arbDualDouble(), arbDualDouble()) { x, m, b ->
+            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { x, m, b ->
                 // Evaluate f(x + ε) = m(x + ε) + b = (mx + b) + mε
                 val input = dual(x, 1.0)  // x + ε
                 val result = m * input + b
@@ -741,7 +742,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("quadratic function derivative: f(x) = x², f'(x) = 2x") {
-            checkAll(arbDualDouble()) { x ->
+            checkAll(arbDualReal()) { x ->
                 val input = dual(x, 1.0)  // x + ε
                 val result = input * input
 
@@ -753,7 +754,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("cubic function derivative: f(x) = x³, f'(x) = 3x²") {
-            checkAll(arbDualDouble()) { x ->
+            checkAll(arbDualReal()) { x ->
                 val input = dual(x, 1.0)  // x + ε
                 val result = input * input * input
 
@@ -766,8 +767,8 @@ class DualRingPropertyTest : FunSpec({
 
         test("product rule: (fg)' = f'g + fg'") {
             checkAll(
-                arbDualDouble(), arbDualDouble(),
-                arbDualDouble(), arbDualDouble()
+                arbDualReal(), arbDualReal(),
+                arbDualReal(), arbDualReal()
             ) { _, f0, g0, fPrime ->
                 // f(x + ε) = f(x) + f'(x)ε, g(x + ε) = g(x) + g'(x)ε
                 // We'll use specific values for testing
@@ -783,7 +784,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("chain rule through composition") {
-            checkAll(arbDualDouble()) { x ->
+            checkAll(arbDualReal()) { x ->
                 // Let f(u) = u² and u(x) = 3x
                 // Then (f ∘ u)(x) = (3x)² = 9x²
                 // And (f ∘ u)'(x) = 2(3x) * 3 = 18x
@@ -833,7 +834,7 @@ class DualRingPropertyTest : FunSpec({
         }
 
         test("very small infinitesimal parts") {
-            checkAll(arbDualDouble()) { a ->
+            checkAll(arbDualReal()) { a ->
                 val d = dual(a, 1e-10)
                 val d2 = d * d
 

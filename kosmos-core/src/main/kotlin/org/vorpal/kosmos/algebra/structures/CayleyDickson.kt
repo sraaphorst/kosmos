@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -8,7 +9,13 @@ import java.math.BigInteger
 /**
  * The Cayley-Dickson elements: a Pair over the CommutativeRing.
  */
-data class CD<A : Any>(val a: A, val b: A)
+data class CD<A : Any>(val a: A, val b: A) {
+    companion object {
+        fun <A : Any> eq(eqA: Eq<A>): Eq<CD<A>> = Eq { x, y ->
+            eqA(x.a, y.a) && eqA(x.b, y.b)
+        }
+    }
+}
 
 /**
  * The generic doubling step.

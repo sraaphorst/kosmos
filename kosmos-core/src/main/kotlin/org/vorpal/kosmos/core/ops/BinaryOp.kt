@@ -7,48 +7,101 @@ import org.vorpal.kosmos.core.Symbols
  * ========================= */
 
 /** A heterogeneous binary operation (A, B) -> R with a printable symbol. */
-data class BinaryOp<A, B, R>(
-    override val symbol: String = Symbols.DOT,
-    val combine: (A, B) -> R
-): Op {
-    constructor(combine: (A, B) -> R) : this(Symbols.DOT, combine)
-    operator fun invoke(a: A, b: B): R = combine(a, b)
+interface BinaryOp<A : Any, B : Any, R : Any> : Op {
+    operator fun invoke(a: A, b: B): R
 }
-
-/** Homogeneous specialization: (A, A) -> A, i.e. a closed operation. */
-typealias BinOp<A> = BinaryOp<A, A, A>
-
-/* =====================
- *  Actions = BinaryOps
- * ===================== */
 
 /**
- * An action is just (S, V) -> V.
- * Commonly, this is the action of a field on a vector space, a ring on a module, etc.
+ * A left action is (R, M) -> M.
  */
-typealias Action<S, V> = BinaryOp<S, V, V>
+interface LeftAction<R : Any, M : Any> : BinaryOp<R, M, M> {
+    fun toRightAction(newSymbol: String? = null): RightAction<M, R> =
+        RightAction(newSymbol ?: symbol) { m, r -> this(r, m)}
 
-/* ----------------
- *  Action helpers
- * ---------------- */
-object Actions {
-    /** Use a conventional “left action” symbol (▷). */
-    fun <S, V> leftAction(apply: (S, V) -> V): Action<S, V> =
-        BinaryOp(Symbols.TRIANGLE_RIGHT, apply)
+    fun toEndo(r: R): Endo<M> =
+        Endo(symbol) { m -> this(r, m) }
 
-    /** Use a conventional “right action” symbol (◁). */
-    fun <S, V> rightAction(apply: (S, V) -> V): Action<S, V> =
-        BinaryOp(Symbols.TRIANGLE_LEFT, apply)
+    /** Post-map the result in `M`. */
+    fun map(f: (M) -> M): LeftAction<R, M> =
+        LeftAction(symbol) { r, m -> f(this(r, m)) }
 
-    /** Fix the scalar to get an endomorphism on V: s ↦ (v ↦ s • v). */
-    fun <S, V> Action<S, V>.toEndo(s: S): Endo<V> =
-        Endo(this.symbol) { v -> this(s, v) }
-
-    /** Post-map the result in V. */
-    fun <S, V> Action<S, V>.map(f: (V) -> V): Action<S, V> =
-        BinaryOp(this.symbol) { s, v -> f(this(s, v)) }
-
-    /** Pre-map the scalar in S. */
-    fun <S, V> Action<S, V>.contramap(g: (S) -> S): Action<S, V> =
-        BinaryOp(this.symbol) { s, v -> this(g(s), v) }
+    /** Pre-map the scalar in `R`. */
+    fun contramap(g: (R) -> R): LeftAction<R, M> =
+        LeftAction(symbol) { r, m -> this(g(r), m) }
 }
+
+/**
+ * A right action is (M, S) -> M.
+ */
+interface RightAction<M : Any, S : Any> : BinaryOp<M, S, M> {
+    fun toLeftAction(newSymbol: String? = null): LeftAction<S, M> =
+        LeftAction(newSymbol ?: symbol) { s, m -> this(m, s)}
+
+    fun toEndo(s: S): Endo<M> = Endo(symbol) { m -> this (m, s)}
+
+    /** Post-map the result in `M`. */
+    fun map(f: (M) -> M): RightAction<M, S> =
+        RightAction(symbol) { m, s -> f(this(m, s)) }
+
+    /** Pre-map the scalar in `S`. */
+    fun contramap(g: (S) -> S): RightAction<M, S> =
+        RightAction(symbol) { m, s -> this(m, g(s)) }
+}
+
+/**
+ * A closed operation (A, A) -> A.
+ *
+ * IMPORTANT: this is also a LeftAction<A, A>, so you can pass a BinOp anywhere a LeftAction<A, A> is needed.
+ */
+interface BinOp<A : Any> : LeftAction<A, A>
+
+/** Bilinear form: (V, V) -> F */
+typealias BilinearForm<V, F> = BinaryOp<V, V, F>
+
+/* =========================
+ *  Factory functions
+ * ========================= */
+
+fun <A : Any, B : Any, R : Any> BinaryOp(
+    symbol: String = Symbols.DOT,
+    combine: (A, B) -> R
+): BinaryOp<A, B, R> = object : BinaryOp<A, B, R> {
+    override val symbol: String = symbol
+    override fun invoke(a: A, b: B): R = combine(a, b)
+}
+
+fun <A : Any> BinOp(
+    symbol: String,
+    combine: (A, A) -> A
+): BinOp<A> = object : BinOp<A> {
+    override val symbol: String = symbol
+    override fun invoke(a: A, b: A): A = combine(a, b)
+}
+fun <A : Any> BinOp(combine: (A, A) -> A) = BinOp(Symbols.DOT, combine)
+
+fun <R : Any, M : Any> LeftAction(
+    symbol: String,
+    apply: (R, M) -> M
+): LeftAction<R, M> = object : LeftAction<R, M> {
+    override val symbol: String = symbol
+    override fun invoke(a: R, b: M): M = apply(a, b)
+}
+fun <R : Any, M : Any> LeftAction(apply: (R, M) -> M) = LeftAction(Symbols.TRIANGLE_RIGHT, apply)
+
+fun <M : Any, S : Any> RightAction(
+    symbol: String,
+    apply: (M, S) -> M
+): RightAction<M, S> = object : RightAction<M, S> {
+    override val symbol: String = symbol
+    override fun invoke(a: M, b: S): M = apply(a, b)
+}
+fun <M : Any, S : Any> RightAction(apply: (M, S) -> M) = RightAction(Symbols.TRIANGLE_LEFT, apply)
+
+fun <V : Any, F : Any> BilinearForm(
+    symbol: String,
+    apply: (V, V) -> F
+): BilinearForm<V, F> = object : BilinearForm<V, F> {
+    override val symbol: String = symbol
+    override fun invoke(a: V, b: V): F = apply(a, b)
+}
+fun <V : Any, F : Any> BilinearForm(apply: (V, V) -> F) = BilinearForm(Symbols.DOT, apply)

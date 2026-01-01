@@ -22,14 +22,14 @@ class FiniteSetSpec : StringSpec({
     // ===== Generators =====
     val arbInt = Arb.int(-100..100)
     val arbString = Arb.string(1..5)
-    val arbChar = Arb.char('a'..'z')
+    Arb.char('a'..'z')
 
     val arbSmallOrderedSet = generateArbOrderedFiniteSet(arbInt, 0, 10)
     val arbSmallUnorderedSet = generateArbUnorderedFiniteSet(arbInt, 0, 10)
     val arbSmallSet = generateArbFiniteSet(arbInt, 0, 10)
 
     val arbNonEmptyOrderedSet = generateArbNonEmptyOrderedFiniteSet(arbInt, 10)
-    val arbNonEmptyUnorderedSet = generateArbNonEmptyUnorderedFiniteSet(arbInt, 10)
+    generateArbNonEmptyUnorderedFiniteSet(arbInt, 10)
 
     // ===== Basic Invariants =====
 

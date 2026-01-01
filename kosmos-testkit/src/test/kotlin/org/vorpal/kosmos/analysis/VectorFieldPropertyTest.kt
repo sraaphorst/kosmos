@@ -108,23 +108,23 @@ class VectorFieldPropertyTest : FunSpec({
     context("Scalar multiplication (Field element)") {
 
         test("scalar multiplication from right: x * c") {
-            checkAll(arbVectorField(), arbFieldDouble(), arbVec2R()) { x, c, point ->
+            checkAll(arbVectorField(), arbFieldReal(), arbVec2R()) { x, c, point ->
                 val result = x * c
-                val expected = Vec2RSpace.action(c, x(point))
+                val expected = Vec2RSpace.leftAction(c, x(point))
                 result(point) shouldBeApproximately expected
             }
         }
 
         test("scalar multiplication from left: c * x") {
-            checkAll(arbFieldDouble(), arbVectorField(), arbVec2R()) { c, x, point ->
+            checkAll(arbFieldReal(), arbVectorField(), arbVec2R()) { c, x, point ->
                 val result = c * x
-                val expected = Vec2RSpace.action(c, x(point))
+                val expected = Vec2RSpace.leftAction(c, x(point))
                 result(point) shouldBeApproximately expected
             }
         }
 
         test("scalar multiplication is commutative: c * x = x * c") {
-            checkAll(arbFieldDouble(), arbVectorField(), arbVec2R()) { c, x, point ->
+            checkAll(arbFieldReal(), arbVectorField(), arbVec2R()) { c, x, point ->
                 val left = c * x
                 val right = x * c
                 left(point) shouldBeApproximately right(point)
@@ -147,8 +147,8 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("scalar multiplication associates: (c * d) * x = c * (d * x)") {
             checkAll(
-                arbFieldDouble(),
-                arbFieldDouble(),
+                arbFieldReal(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVec2R()
             ) { c, d, x, point ->
@@ -161,7 +161,7 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("scalar multiplication distributes over vector addition: c * (X + Y) = c*X + c*Y") {
             checkAll(
-                arbFieldDouble(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVectorField(),
                 arbVec2R()
@@ -174,8 +174,8 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("field addition distributes over scalar multiplication: (c + d) * x = c*X + d*X") {
             checkAll(
-                arbFieldDouble(),
-                arbFieldDouble(),
+                arbFieldReal(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVec2R()
             ) { c, d, x, point ->
@@ -200,14 +200,14 @@ class VectorFieldPropertyTest : FunSpec({
                 arbVec2R()
             ) { f, x, point ->
                 val result = f * x
-                val expected = Vec2RSpace.action(f(point), x(point))
+                val expected = Vec2RSpace.leftAction(f(point), x(point))
                 result(point) shouldBeApproximately expected
             }
         }
 
         test("constant scalar field multiplication: c * x = (const_c) * x") {
             checkAll(
-                arbFieldDouble(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVec2R()
             ) { c, x, point ->
@@ -306,7 +306,7 @@ class VectorFieldPropertyTest : FunSpec({
             }
         }
 
-        test("double negation is identity: -(-x) = x") {
+        test("Real negation is identity: -(-x) = x") {
             checkAll(arbVectorField(), arbVec2R()) { x, point ->
                 val result = -(-x)
                 result(point) shouldBeApproximately x(point)
@@ -330,7 +330,7 @@ class VectorFieldPropertyTest : FunSpec({
         }
 
         test("negation of scalar times vector: -(c * x) = (-c) * x = c * (-x)") {
-            checkAll(arbFieldDouble(), arbVectorField(), arbVec2R()) { c, x, point ->
+            checkAll(arbFieldReal(), arbVectorField(), arbVec2R()) { c, x, point ->
                 val left = -(c * x)
                 val middle = (-c) * x
                 val right = c * (-x)
@@ -349,8 +349,8 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("map applies function pointwise") {
             checkAll(arbVectorField(), arbVec2R()) { x, point ->
-                val doubled = x.map { v -> Vec2R(v.x * 2.0, v.y * 2.0) }
-                val result = doubled(point)
+                val Reald = x.map { v -> Vec2R(v.x * 2.0, v.y * 2.0) }
+                val result = Reald(point)
                 val original = x(point)
                 result shouldBeApproximately Vec2R(original.x * 2.0, original.y * 2.0)
             }
@@ -379,7 +379,7 @@ class VectorFieldPropertyTest : FunSpec({
             checkAll(
                 arbVectorField(),
                 arbVectorField(),
-                arbFieldDouble(),
+                arbFieldReal(),
                 arbVec2R()
             ) { x, y, c, point ->
                 val linear: (Vec2R) -> Vec2R = { v -> Vec2R(v.x * c, v.y * c) }
@@ -611,8 +611,8 @@ class VectorFieldPropertyTest : FunSpec({
             ) { f, g, x, y, point ->
                 val result = (f * x) + (g * y)
 
-                val fX = Vec2RSpace.action(f(point), x(point))
-                val gY = Vec2RSpace.action(g(point), y(point))
+                val fX = Vec2RSpace.leftAction(f(point), x(point))
+                val gY = Vec2RSpace.leftAction(g(point), y(point))
                 val expected = Vec2RSpace.group(fX, gY)
 
                 result(point) shouldBeApproximately expected
@@ -621,8 +621,8 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("complex expression: c * (X + Y) - d * Z") {
             checkAll(
-                arbFieldDouble(),
-                arbFieldDouble(),
+                arbFieldReal(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVectorField(),
                 arbVectorField(),
@@ -631,8 +631,8 @@ class VectorFieldPropertyTest : FunSpec({
                 val result = (c * (x + y)) + ((-d) * z)
 
                 val xy = Vec2RSpace.group(x(point), y(point))
-                val cxy = Vec2RSpace.action(c, xy)
-                val dz = Vec2RSpace.action(d, z(point))
+                val cxy = Vec2RSpace.leftAction(c, xy)
+                val dz = Vec2RSpace.leftAction(d, z(point))
                 val negdz = Vec2RSpace.group.inverse(dz)
                 val expected = Vec2RSpace.group(cxy, negdz)
 
@@ -642,7 +642,7 @@ class VectorFieldPropertyTest : FunSpec({
 
         test("composition with scaling: (c * x) then Y") {
             checkAll(
-                arbFieldDouble(),
+                arbFieldReal(),
                 arbVectorField(),
                 arbVectorField(),
                 arbVec2R()
@@ -650,7 +650,7 @@ class VectorFieldPropertyTest : FunSpec({
                 val scaled = c * x
                 val composed = scaled then y
 
-                val intermediate = Vec2RSpace.action(c, x(point))
+                val intermediate = Vec2RSpace.leftAction(c, x(point))
                 val expected = y(intermediate)
 
                 composed(point) shouldBeApproximately expected
@@ -668,7 +668,7 @@ class VectorFieldPropertyTest : FunSpec({
                 val result = f * composed
 
                 val composedValue = y(x(point))
-                val expected = Vec2RSpace.action(f(point), composedValue)
+                val expected = Vec2RSpace.leftAction(f(point), composedValue)
 
                 result(point) shouldBeApproximately expected
             }

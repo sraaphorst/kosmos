@@ -3,6 +3,7 @@ package org.vorpal.kosmos.combinatorics.arrays
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.combinatorics.Factorial
+import org.vorpal.kosmos.core.math.toReal
 import java.math.BigInteger
 
 /**
@@ -97,7 +98,7 @@ class EulerianSecondSpec : StringSpec({
 
     // ========== Row Sum Properties ==========
 
-    "row sums equal double factorial (2n-1)!!" {
+    "row sums equal Real factorial (2n-1)!!" {
         // (2n-1)!! = (2n-1)·(2n-3)·...·3·1
         val expectedSums = listOf(
             1,      // n=0: 1!! = 1
@@ -117,18 +118,18 @@ class EulerianSecondSpec : StringSpec({
         }
     }
 
-    "computed double factorial matches row sum" {
+    "computed Real factorial matches row sum" {
         for (n in 0..8) {
             val rowSum = (0 until maxOf(n, 1)).fold(BigInteger.ZERO) { acc, k ->
                 acc + EulerianSecond(n, k)
             }
 
             // Compute (2n-1)!!
-            val doubleFactorial = (1..n).fold(BigInteger.ONE) { acc, i ->
+            val RealFactorial = (1..n).fold(BigInteger.ONE) { acc, i ->
                 acc * BigInteger.valueOf((2L * i - 1))
             }
 
-            rowSum shouldBe doubleFactorial
+            rowSum shouldBe RealFactorial
         }
     }
 
@@ -166,8 +167,8 @@ class EulerianSecondSpec : StringSpec({
     "values grow exponentially with n for fixed k > 0" {
         for (k in 1..4) {
             for (n in (k + 2)..8) {
-                val ratio = EulerianSecond(n, k).toDouble() /
-                        EulerianSecond(n - 1, k).toDouble()
+                val ratio = EulerianSecond(n, k).toReal() /
+                        EulerianSecond(n - 1, k).toReal()
                 (ratio > 1.5) shouldBe true
             }
         }
@@ -207,8 +208,8 @@ class EulerianSecondSpec : StringSpec({
 
     "second column divided by first column grows" {
         for (n in 2..8) {
-            val ratio = EulerianSecond(n, 1).toDouble() / EulerianSecond(n, 0).toDouble()
-            val prevRatio = EulerianSecond(n - 1, 1).toDouble() / EulerianSecond(n - 1, 0).toDouble()
+            val ratio = EulerianSecond(n, 1).toReal() / EulerianSecond(n, 0).toReal()
+            val prevRatio = EulerianSecond(n - 1, 1).toReal() / EulerianSecond(n - 1, 0).toReal()
             (ratio > prevRatio) shouldBe true
         }
     }
@@ -311,7 +312,7 @@ class EulerianSecondSpec : StringSpec({
 
 
 
-    fun oddDoubleFactorial(n: Int): BigInteger {
+    fun oddRealFactorial(n: Int): BigInteger {
         // (2n-1)!! with (−1)!! := 1 and 0!! := 1 => for n=0 return 1
         if (n == 0) return BigInteger.ONE
         var acc = BigInteger.ONE
@@ -389,14 +390,14 @@ class EulerianSecondSpec : StringSpec({
         }
     }
 
-    // ---------- Row sums (odd double factorial) ----------
+    // ---------- Row sums (odd Real factorial) ----------
 
     "row sums equal (2n−1)!! with special-case n=0" {
         for (n in 0..8) {
             val sum =
                 if (n == 0) BigInteger.ONE
                 else (0 until n).fold(BigInteger.ZERO) { acc, k -> acc + EulerianSecond(n, k) }
-            sum shouldBe oddDoubleFactorial(n)
+            sum shouldBe oddRealFactorial(n)
         }
     }
 
@@ -447,8 +448,8 @@ class EulerianSecondSpec : StringSpec({
     "recurrence and closed form agree for all small values" {
         for (n in 0..7)
             for (k in 0 until maxOf(n,1)) {
-                val v1 = EulerianSecond(n, k)
-                val v2 = EulerianSecond.closedForm(n, k)
+                EulerianSecond(n, k)
+                EulerianSecond.closedForm(n, k)
                 EulerianSecond(n, k) shouldBe EulerianSecond.closedForm(n, k)
             }
     }

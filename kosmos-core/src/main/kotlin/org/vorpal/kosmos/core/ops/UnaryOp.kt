@@ -3,36 +3,52 @@ package org.vorpal.kosmos.core.ops
 import org.vorpal.kosmos.core.Symbols
 
 /**
- * A unary operator that takes a value of a type `A` and transforms it to another type `B`.
- * This is typealiased to a [Mapper] since it can be used in map operations and an [Endo] so
- * it can map an element from a type to another element from the same type.
+ * A unary operator A -> B with a printable symbol.
+ * We want B to be able to be nullable.
  */
-data class UnaryOp<A, B>(
-    override val symbol: String = DEFAULT_SYMBOL,
-    val transform: (A) -> B
-): Op {
-    operator fun invoke(a: A): B =
-        transform(a)
+interface UnaryOp<A, B> : Op {
+    operator fun invoke(a: A): B
 
+    /**
+     * Compose on the right: (A -> B) andThen (B -> C) = (A -> C).
+     *
+     * Member function so callers don't need to import an extension.
+     */
     infix fun <C> andThen(other: UnaryOp<B, C>): UnaryOp<A, C> =
-        UnaryOp("${other.symbol}${Symbols.COMPOSE}$symbol") { other(this(it)) }
+        UnaryOp(this.symbol) { a -> other(this(a)) }
 
+    /**
+     * Compose on the left: (A -> B) compose (C -> A) = (C -> B).
+     */
     infix fun <C> compose(other: UnaryOp<C, A>): UnaryOp<C, B> =
         other andThen this
-
-    companion object {
-        const val DEFAULT_SYMBOL = Symbols.NOTHING
-    }
 }
 
-/**
- * A [Mapper] is a mapping operation that can be used in maps, functors, etc.
- * It is a typealias of a [UnaryOp].
- */
+fun <A, B> UnaryOp(
+    symbol: String,
+    transform: (A) -> B
+): UnaryOp<A, B> = object : UnaryOp<A, B> {
+    override val symbol: String = symbol
+    override fun invoke(a: A): B = transform(a)
+}
+
+fun <A, B> UnaryOp(transform: (A) -> B): UnaryOp<A, B> =
+    UnaryOp(Symbols.NOTHING, transform)
+
+/** A Mapper is just a UnaryOp. */
 typealias Mapper<A, B> = UnaryOp<A, B>
 
-/**
- * An Endo is a UnaryOp from a type to itself.
- */
+fun <A, B> Mapper(symbol: String, transform: (A) -> B): Mapper<A, B> =
+    UnaryOp(symbol, transform)
+
+fun <A, B> Mapper(transform: (A) -> B): Mapper<A, B> =
+    UnaryOp(transform)
+
+/** An Endo is a UnaryOp from a type to itself. */
 typealias Endo<A> = UnaryOp<A, A>
 
+fun <A> Endo(symbol: String, transform: (A) -> A): Endo<A> =
+    UnaryOp(symbol, transform)
+
+fun <A> Endo(transform: (A) -> A): Endo<A> =
+    UnaryOp(transform)

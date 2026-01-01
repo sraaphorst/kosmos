@@ -2,6 +2,7 @@ package org.vorpal.kosmos.combinatorics.arrays
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import org.vorpal.kosmos.core.math.toReal
 import java.math.BigInteger
 
 class AitkenSpec : StringSpec({
@@ -194,7 +195,7 @@ class AitkenSpec : StringSpec({
     "diagonal grows exponentially" {
         // Each diagonal element significantly larger than previous
         for (n in 1..7) {
-            val ratio = Aitken(n, n).toDouble() / Aitken(n - 1, n - 1).toDouble()
+            val ratio = Aitken(n, n).toReal() / Aitken(n - 1, n - 1).toReal()
             (ratio > 1.5) shouldBe true
         }
     }

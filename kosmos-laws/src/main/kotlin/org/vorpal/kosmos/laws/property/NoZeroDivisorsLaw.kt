@@ -2,37 +2,34 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.testing.nonZeroBoth
-import org.vorpal.kosmos.testing.nonZeroLeft
-import org.vorpal.kosmos.testing.nonZeroRight
 
 /** No zero divisors (two–sided):  (a ≠ 0 ∧ b ≠ 0) ⇒ a ⋆ b ≠ 0. */
 class NoZeroDivisorsLaw<A: Any>(
     private val op: BinOp<A>,
     private val zero: A,
-    private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆",
+    arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
-
-    override val name = "no zero divisors ($symbol)"
+    private val pairArb = TestingLaw.arbPair(arb).nonZeroBoth(eq, zero)
+    override val name = "no zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb.nonZeroBoth(eq, zero)) { (a, b) ->
+        checkAll(pairArb) { (a, b) ->
             val prod = op(a, b)
             withClue({
-                val sa = pr.render(a)
-                val sb = pr.render(b)
-                val s0 = pr.render(zero)
-                "Zero divisor found: $sa $symbol $sb = $s0 with $sa ≠ $s0 and $sb ≠ $s0"
+                val sa = pr(a)
+                val sb = pr(b)
+                val s0 = pr(zero)
+                "Zero divisor found: $sa ${op.symbol} $sb = $s0 with $sa ≠ $s0 and $sb ≠ $s0"
             }) {
-                check(!eq.eqv(prod, zero))
+                check(!eq(prod, zero))
             }
         }
     }
@@ -42,25 +39,24 @@ class NoZeroDivisorsLaw<A: Any>(
 class LeftNoZeroDivisorsLaw<A: Any>(
     private val op: BinOp<A>,
     private val zero: A,
-    private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆",
+    arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
-
-    override val name = "no left zero divisors ($symbol)"
+    private val pairArb = TestingLaw.arbPair(arb).nonZeroLeft(eq, zero)
+    override val name = "no left zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb.nonZeroLeft(eq, zero)) { (a, b) ->
+        checkAll(pairArb) { (a, b) ->
             val prod = op(a, b)
-            if (eq.eqv(prod, zero)) {
+            if (eq(prod, zero)) {
                 withClue({
-                    val sa = pr.render(a)
-                    val sb = pr.render(b)
-                    val s0 = pr.render(zero)
-                    "Left zero divisor: $sa $symbol $sb = $s0 with $sa ≠ $s0 ⇒ must have $sb = $s0"
+                    val sa = pr(a)
+                    val sb = pr(b)
+                    val s0 = pr(zero)
+                    "Left zero divisor: $sa ${op.symbol} $sb = $s0 with $sa ≠ $s0 ⇒ must have $sb = $s0"
                 }) {
-                    check(eq.eqv(b, zero))
+                    check(eq(b, zero))
                 }
             }
         }
@@ -71,27 +67,39 @@ class LeftNoZeroDivisorsLaw<A: Any>(
 class RightNoZeroDivisorsLaw<A: Any>(
     private val op: BinOp<A>,
     private val zero: A,
-    private val pairArb: Arb<Pair<A, A>>,
-    private val eq: Eq<A>,
-    private val pr: Printable<A> = Printable.default(),
-    private val symbol: String = "⋆",
+    arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
-
-    override val name = "no right zero divisors ($symbol)"
+    private val pairArb = TestingLaw.arbPair(arb).nonZeroRight(eq, zero)
+    override val name = "no right zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb.nonZeroRight(eq, zero)) { (a, b) ->
+        checkAll(pairArb) { (a, b) ->
             val prod = op(a, b)
-            if (eq.eqv(prod, zero)) {
+            if (eq(prod, zero)) {
                 withClue({
-                    val sa = pr.render(a)
-                    val sb = pr.render(b)
-                    val s0 = pr.render(zero)
-                    "Right zero divisor: $sa $symbol $sb = $s0 with $sb ≠ $s0 ⇒ must have $sa = $s0"
+                    val sa = pr(a)
+                    val sb = pr(b)
+                    val s0 = pr(zero)
+                    "Right zero divisor: $sa ${op.symbol} $sb = $s0 with $sb ≠ $s0 ⇒ must have $sa = $s0"
                 }) {
-                    check(eq.eqv(a, zero))
+                    check(eq(a, zero))
                 }
             }
         }
     }
 }
+
+// Local helpers so this law does not depend on kosmos-testkit.
+/** Create a generator that does not produce the value [zero] on the left. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroLeft(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    filter { (a, _) -> !eq(a, zero) }
+
+/** Create a generator that does not produce the value [zero] on the right. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroRight(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    filter { (_, b) -> !eq(b, zero) }
+
+/** Create a generator that does not produce the value [zero] on either side. */
+private fun <A : Any> Arb<Pair<A, A>>.nonZeroBoth(eq: Eq<A>, zero: A): Arb<Pair<A, A>> =
+    nonZeroLeft(eq, zero).nonZeroRight(eq, zero)

@@ -1,16 +1,17 @@
 package org.vorpal.kosmos.frameworks.noise
 
 import org.vorpal.kosmos.analysis.ScalarField
+import org.vorpal.kosmos.core.math.Real
 // TODO: SHOULD BE VEC3R.
 import org.vorpal.kosmos.linear.Vec2R
 
-typealias NoiseField = ScalarField<Double, Vec2R>
+typealias NoiseField = ScalarField<Real, Vec2R>
 /**
  * General noise generator.
  * Implementations can be treated as instances of a functor from R^n -> R.
  */
 fun interface Noise {
-    operator fun invoke(x: Double, y: Double, z: Double): Double
+    operator fun invoke(x: Real, y: Real, z: Real): Real
 
     companion object {
         /**
@@ -60,13 +61,13 @@ fun interface Noise {
          *
          * @see Noise for the general functional interface representing 3D noise mappings.
          */
-        fun fbm(base: Noise, octaves: Int, lacunarity: Double, gain: Double): Noise =
+        fun fbm(base: Noise, octaves: Int, lacunarity: Real, gain: Real): Noise =
             Noise { x, y, z ->
                 tailrec fun aux(
                     o: Int = octaves,
-                    freq: Double = 1.0,
-                    amp: Double = 1.0,
-                    acc: Double = 0.0): Double =
+                    freq: Real = 1.0,
+                    amp: Real = 1.0,
+                    acc: Real = 0.0): Real =
                     if (o == 0) acc
                     else aux(
                         o - 1,

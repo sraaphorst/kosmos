@@ -39,10 +39,12 @@ object Symbols {
     const val BB_Z = "ℤ"
     const val BECAUSE = "∵"
     const val BIG_DOT = "•"
+    const val BILINEAR = "B(·,·)"
     const val BOWTIE = "⋈"
     const val BOX = "□"
     const val BOX_TIMES = "⊠"
     const val COLON_EQUALS = "≔"
+    const val CONJ = "¯"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
     const val DIVISION = "÷"
@@ -53,6 +55,7 @@ object Symbols {
     const val DOTS_VERTICAL = "⋮"
     const val ENTAILS = "⊨"
     const val ENTAILS_NOT = "⊭"
+    const val EQUALS = "="
     const val EQUALS_NOT = "≠"
     const val EXISTS = "∃"
     const val EXISTS_NOT = "∄"
@@ -66,6 +69,7 @@ object Symbols {
     const val IMPLIES = "→"
     const val IMPLIES_BB = "⇒"
     const val INFINITY = "∞"
+    const val INNER_PRODUCT = "⟨·,·⟩"
     const val INTEGRAL = "∫"
     const val INTEGRAL_DOUBLE = "∬"
     const val INTEGRAL_TRIPLE = "∭"
@@ -111,6 +115,7 @@ object Symbols {
     const val SET_UNION_DISJOINT = "⊔"
     const val SLASH = "/"
     const val SQRT = "√"
+    const val SQUARE = "²"
     const val SUM = "∑"
     const val TENSOR = "⊗"
     const val THEREFORE = "∴"
@@ -128,6 +133,8 @@ object Symbols {
     const val BOOL_AND = WEDGE
     const val BOOL_OR = VEE
     const val COMPOSE = OPEN_CIRCLE
+    const val DIV_LEFT = BACKSLASH
+    const val DIV_RIGHT = SLASH
     const val INJECTION = MAPS_INTO
     const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT
@@ -138,4 +145,6 @@ object Symbols {
     const val TURNSTYLE_DOUBLE = ENTAILS
     const val TURNSTYLE = PROVES
 
+    // Intricate symbols
+    const val NORM_SQ_SYMBOL = "|${Symbols.DOT}|${Symbols.SQUARE}"
 }

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.analysis
 
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.core.math.Real
 
 /**
  * Provides generic finite-difference directional derivatives and differentials
@@ -52,8 +53,8 @@ object Derivative {
         val add = field.add
         val mul = field.mul
 
-        val pForward = space.group(p, space.action(h, v))
-        val pBackward = space.group(p, space.action(add.inverse(h), v))
+        val pForward = space.group(p, space.leftAction(h, v))
+        val pBackward = space.group(p, space.leftAction(add.inverse(h), v))
 
         val fForward = f(pForward)
         val fBackward = f(pBackward)
@@ -67,7 +68,7 @@ object Derivative {
 
     /**
      * Specialized overload for real vector spaces (ℝⁿ).
-     * Uses [Double] arithmetic and the standard central-difference formula.
+     * Uses [Real] arithmetic and the standard central-difference formula.
      *
      * @param space the real [VectorSpace]
      * @param f the scalar-valued function to differentiate
@@ -76,14 +77,14 @@ object Derivative {
      * @param h the finite step (default 1e-6)
      */
     fun <V : Any> derivativeAt(
-        space: VectorSpace<Double, V>,
-        f: (V) -> Double,
+        space: VectorSpace<Real, V>,
+        f: (V) -> Real,
         p: V,
         v: V,
-        h: Double = 1e-6
-    ): Double {
-        val pForward = space.group(p, space.action(h, v))
-        val pBackward = space.group(p, space.action(-h, v))
+        h: Real = 1e-6
+    ): Real {
+        val pForward = space.group(p, space.leftAction(h, v))
+        val pBackward = space.group(p, space.leftAction(-h, v))
         return (f(pForward) - f(pBackward)) / (2.0 * h)
     }
 
@@ -112,13 +113,13 @@ object Derivative {
     /**
      * Convenience extension for real scalar fields.
      *
-     * Computes the differential df using standard double arithmetic.
+     * Computes the differential df using standard Real arithmetic.
      *
      * @param h finite step size (default 1e-6)
      */
-    fun <V : Any> ScalarField<Double, V>.dReal(
-        h: Double = 1e-6
-    ): CovectorField<Double, V> =
+    fun <V : Any> ScalarField<Real, V>.dReal(
+        h: Real = 1e-6
+    ): CovectorField<Real, V> =
         CovectorFields.of(space) { p ->
             Covectors.of(space) { v ->
                 derivativeAt(space, this@dReal::invoke, p, v, h)

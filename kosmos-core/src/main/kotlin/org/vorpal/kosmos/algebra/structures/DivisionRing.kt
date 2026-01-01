@@ -11,7 +11,7 @@ interface DivisionRing<A : Any> : Ring<A>, HasReciprocal<A> {
             add: AbelianGroup<A>,
             mul: Monoid<A>,
             reciprocal: Endo<A>
-        ): Field<A> = object : Field<A> {
+        ): DivisionRing<A> = object : DivisionRing<A> {
             override val add: AbelianGroup<A> = add
             override val mul: Monoid<A> = mul
             override val reciprocal: Endo<A> = reciprocal

@@ -2,6 +2,7 @@ package org.vorpal.kosmos.analysis
 
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.core.math.Real
 
 /**
  * A [ScalarField] is a function that assigns a scalar from the [Field]
@@ -54,9 +55,9 @@ operator fun <F: Any, V: Any> ScalarField<F, V>.unaryMinus(): ScalarField<F, V> 
 fun <F: Any, V: Any> ScalarField<F, V>.map(f: (F) -> F): ScalarField<F, V> =
     ScalarFields.of(space) { p -> f(this(p)) }
 
-fun <V : Any> ScalarField<Double, V>.dReal(
-    h: Double = 1e-6
-): CovectorField<Double, V> =
+fun <V : Any> ScalarField<Real, V>.dReal(
+    h: Real = 1e-6
+): CovectorField<Real, V> =
     CovectorFields.of(space) { p ->
         Covectors.of(space) { v ->
             derivativeAt(space, this@dReal::invoke, p, v, h)
@@ -75,8 +76,8 @@ fun <F : Any, V : Any> derivativeAt(
     val add = field.add
     val mul = field.mul
 
-    val pForward = space.group(p, space.action(h, v))
-    val pBackward = space.group(p, space.action(add.inverse(h), v))
+    val pForward = space.group(p, space.leftAction(h, v))
+    val pBackward = space.group(p, space.leftAction(add.inverse(h), v))
 
     val fForward = f(pForward)
     val fBackward = f(pBackward)
@@ -89,14 +90,14 @@ fun <F : Any, V : Any> derivativeAt(
 }
 
 fun <V : Any> derivativeAt(
-    space: VectorSpace<Double, V>,
-    f: (V) -> Double,
+    space: VectorSpace<Real, V>,
+    f: (V) -> Real,
     p: V,
     v: V,
-    h: Double = 1e-6
-): Double {
-    val pForward = space.group(p, space.action(h, v))
-    val pBackward = space.group(p, space.action(-h, v))
+    h: Real = 1e-6
+): Real {
+    val pForward = space.group(p, space.leftAction(h, v))
+    val pBackward = space.group(p, space.leftAction(-h, v))
     return (f(pForward) - f(pBackward)) / (2.0 * h)
 }
 

@@ -7,10 +7,10 @@ import io.kotest.property.arbitrary.filter
 import java.math.BigInteger
 
 val arbRational: Arb<Rational> =
-    Arb.Companion.bind(
-        Arb.Companion.bigInt(64),
-        Arb.Companion.bigInt(64).filter { it != BigInteger.ZERO }
-    ) { n, d -> Rational.Companion.of(n, d) }
+    Arb.bind(
+        Arb.bigInt(64),
+        Arb.bigInt(64).filter { it != BigInteger.ZERO }
+    ) { n, d -> Rational.of(n, d) }
 
 val arbNonzeroRational: Arb<Rational> =
     arbRational.filter { it.n != BigInteger.ZERO }
