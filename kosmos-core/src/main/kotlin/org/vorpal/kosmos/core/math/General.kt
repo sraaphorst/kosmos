@@ -6,8 +6,8 @@ import kotlin.math.PI
 /**
  * Unclamped linear interpolation where t = 0 gives a and t = 1 gives b.
  */
-@JvmName("lerpDouble")
-fun lerp(a: Double, b: Double, t: Double): Double =
+@JvmName("lerpReal")
+fun lerp(a: Real, b: Real, t: Real): Real =
     Math.fma(t, (b - a), a)
 
 /**
@@ -20,7 +20,7 @@ fun lerp(a: Float, b: Float, t: Float): Float =
 /**
  * Clamp x down in the interval [lo, hi].
  */
-fun clamp(x: Double, lo: Double, hi: Double): Double =
+fun clamp(x: Real, lo: Real, hi: Real): Real =
     Math.clamp(x, lo, hi)
 
 /**
@@ -32,7 +32,7 @@ fun clamp(x: Float, lo: Float, hi: Float): Float =
 /**
  * lerp with t clamped to the interval [0, 1], thus clamping lerp to [a, b].
  */
-fun lerpClamped(a: Double, b: Double, t: Double): Double =
+fun lerpClamped(a: Real, b: Real, t: Real): Real =
     lerp(a, b, clamp(t, 0.0, 1.0))
 
 fun lerpClamped(a: Float, b: Float, t: Float): Float =
@@ -45,7 +45,7 @@ fun lerpClamped(a: Float, b: Float, t: Float): Float =
  * Values outside [0, 1] can be returned if x < a or x > b.
  * Precondition: a != b.
  */
-fun invLerp(a: Double, b: Double, x: Double): Double {
+fun invLerp(a: Real, b: Real, x: Real): Real {
     require( a != b) { "invLerp requires a ≠ b."}
     return (x - a) / (b - a)
 }
@@ -59,7 +59,7 @@ fun invLerp(a: Float, b: Float, x: Float): Float {
  * Given a value x in an interval [a0, b0], remap it to its corresponding position
  * in the interval [a1, b1].
  */
-fun remap(x: Double, a0: Double, b0: Double, a1: Double, b1: Double): Double =
+fun remap(x: Real, a0: Real, b0: Real, a1: Real, b1: Real): Real =
     lerp(a1, b1, invLerp(a0, b0, x))
 
 fun remap(x: Float, a0: Float, b0: Float, a1: Float, b1: Float): Float =
@@ -74,5 +74,5 @@ infix fun Long.modPositive(mod: Long): Long =
 infix fun BigInteger.modPositive(mod: BigInteger): BigInteger =
     ((this % mod) + mod) % mod
 
-fun Double.degToRad(): Double = this / 180.0 * PI
-fun Double.radToDeg(): Double = this * 180.0 / PI
+fun Real.degToRad(): Real = this / 180.0 * PI
+fun Real.radToDeg(): Real = this * 180.0 / PI

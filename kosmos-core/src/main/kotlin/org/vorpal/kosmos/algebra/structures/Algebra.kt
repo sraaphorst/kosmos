@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.ops.LeftAction
+
 /**
  * An Algebra A over a commutative ring R is:
  *  - an R-module (scalar multiplication by R on A)
@@ -24,6 +26,20 @@ package org.vorpal.kosmos.algebra.structures
  *
  *  Another simple example: C is an algebra over R.
  */
-interface Algebra<R: Any, A: Any> : RModule<R, A>, Ring<A> {
-    override val ring: CommutativeRing<R>  // scalar ring must be commutative
+interface Algebra<R : Any, A : Any> : RModule<R, A>, Ring<A> {
+    override val scalars: CommutativeRing<R>
+
+    companion object {
+        fun <R : Any, A : Any> of(
+            scalars: CommutativeRing<R>,
+            algebraRing: Ring<A>,
+            leftAction: LeftAction<R, A>
+        ): Algebra<R, A> = object : Algebra<R, A> {
+            override val scalars = scalars
+            override val group = algebraRing.add
+            override val add = algebraRing.add
+            override val mul = algebraRing.mul
+            override val leftAction = leftAction
+        }
+    }
 }

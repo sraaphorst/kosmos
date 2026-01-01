@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.frameworks.sequence
 
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
 import java.util.concurrent.ConcurrentHashMap
 
@@ -86,7 +86,7 @@ abstract class CachedLinearRecurrenceImplementation<T: Any, S: Any>(
     val selectors: List<Int>,
     val coefficients: List<S>,
     val constantTerm: T,
-    val multiply: Action<S, T>, // defines an apply(S, T) -> T
+    val multiply: LeftAction<S, T>, // defines an apply(S, T) -> T
     val add: BinOp<T> // defines a combine(T, T) -> T
 ) : CachedRecurrenceImplementation<T>() {
     protected val windowSize: Int = initialValues.size

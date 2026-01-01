@@ -1,0 +1,126 @@
+digraph KosmosAlgebraHierarchy {
+  rankdir=LR;
+  bgcolor="white";
+  graph [fontname="Helvetica", fontsize=10, labelloc="t", label="Kosmos algebraic structures: inheritance overview", pad="0.2", nodesep="0.25", ranksep="0.6", splines=true, overlap=false, pack=true, packmode="cluster"];
+  node  [fontname="Helvetica", fontsize=10, shape=box, style="rounded,filled", fillcolor="white", color="#444444", fontcolor="#111111"];
+  edge  [fontname="Helvetica", fontsize=9, color="#666666", fontcolor="#444444"];
+  "CayleyDickson" [fillcolor="#f0f0f0"];
+  "PrimeField" [fillcolor="#f0f0f0"];
+  "CD" [shape=note, fillcolor="#fafafa"];
+subgraph "cluster_Algebraic (one/two-op)" {
+    label="Algebraic (one/two-op)";
+    style="rounded";
+    color="#999999";
+    "Magma";
+    "NonAssociativeSemigroup";
+    "NonAssociativeMonoid";
+    "NonAssociativeAlgebra";
+    "Semigroup";
+    "Monoid";
+    "CommutativeSemigroup";
+    "CommutativeMonoid";
+    "Quasigroup";
+    "Loop";
+    "Group";
+    "AbelianGroup";
+    "Hemiring";
+    "Semiring";
+    "CommutativeSemiring";
+    "Ring";
+    "CommutativeRing";
+    "DivisionRing";
+    "Field";
+    "InvolutiveAlgebra";
+    "InvolutiveRing";
+    "NonAssociativeDivisionAlgebra";
+    "NormedDivisionAlgebra";
+    "Algebra";
+    "StarAlgebra";
+}
+
+subgraph "cluster_Modules & spaces" {
+    label="Modules & spaces";
+    style="rounded";
+    color="#999999";
+    "ModuleCore";
+    "LeftRModule";
+    "RightRModule";
+    "RSBiModule";
+    "RModule";
+    "VectorSpace";
+    "InnerProductSpace";
+}
+
+subgraph "cluster_Lattices" {
+    label="Lattices";
+    style="rounded";
+    color="#999999";
+    "JoinSemilattice";
+    "MeetSemilattice";
+    "Lattice";
+    "BoundedLattice";
+    "DistributiveLattice";
+    "BooleanAlgebra";
+}
+
+subgraph "cluster_Misc" {
+    label="Misc";
+    style="rounded";
+    color="#999999";
+    "HasReciprocal";
+    "CayleyDickson";
+    "PrimeField";
+    "CD";
+}
+
+  "AbelianGroup" -> "Group" [label="extends"];
+  "AbelianGroup" -> "CommutativeMonoid" [label="extends"];
+  "Algebra" -> "RModule" [label="extends"];
+  "Algebra" -> "Ring" [label="extends"];
+  "BooleanAlgebra" -> "DistributiveLattice" [label="extends"];
+  "CayleyDickson" -> "InvolutiveAlgebra" [label="extends"];
+  "CommutativeMonoid" -> "Monoid" [label="extends"];
+  "CommutativeMonoid" -> "CommutativeSemigroup" [label="extends"];
+  "CommutativeRing" -> "Ring" [label="extends"];
+  "CommutativeSemigroup" -> "Semigroup" [label="extends"];
+  "CommutativeSemiring" -> "Semiring" [label="extends"];
+  "DivisionRing" -> "Ring" [label="extends"];
+  "DivisionRing" -> "HasReciprocal" [label="extends"];
+  "Field" -> "DivisionRing" [label="extends"];
+  "Field" -> "CommutativeRing" [label="extends"];
+  "Group" -> "Monoid" [label="extends"];
+  "Group" -> "Loop" [label="extends"];
+  "InnerProductSpace" -> "VectorSpace" [label="extends"];
+  "InvolutiveAlgebra" -> "NonAssociativeAlgebra" [label="extends"];
+  "InvolutiveRing" -> "InvolutiveAlgebra" [label="extends"];
+  "InvolutiveRing" -> "Ring" [label="extends"];
+  "Lattice" -> "JoinSemilattice" [label="extends"];
+  "Lattice" -> "MeetSemilattice" [label="extends"];
+  "BoundedLattice" -> "Lattice" [label="extends"];
+  "DistributiveLattice" -> "BoundedLattice" [label="extends"];
+  "Loop" -> "Quasigroup" [label="extends"];
+  "Loop" -> "NonAssociativeMonoid" [label="extends"];
+  "RSBiModule" -> "LeftRModule" [label="extends"];
+  "RSBiModule" -> "RightRModule" [label="extends"];
+  "RModule" -> "LeftRModule" [label="extends"];
+  "RModule" -> "RightRModule" [label="extends"];
+  "RModule" -> "ModuleCore" [label="extends"];
+  "Monoid" -> "Semigroup" [label="extends"];
+  "Monoid" -> "NonAssociativeMonoid" [label="extends"];
+  "NonAssociativeDivisionAlgebra" -> "InvolutiveAlgebra" [label="extends"];
+  "NonAssociativeDivisionAlgebra" -> "HasReciprocal" [label="extends"];
+  "NonAssociativeMonoid" -> "NonAssociativeSemigroup" [label="extends"];
+  "NonAssociativeSemigroup" -> "Magma" [label="extends"];
+  "NormedDivisionAlgebra" -> "NonAssociativeDivisionAlgebra" [label="extends"];
+  "PrimeField" -> "Field" [label="extends"];
+  "Quasigroup" -> "NonAssociativeSemigroup" [label="extends"];
+  "Ring" -> "NonAssociativeAlgebra" [label="extends"];
+  "Ring" -> "Semiring" [label="extends"];
+  "Semigroup" -> "Magma" [label="extends"];
+  "Semigroup" -> "NonAssociativeSemigroup" [label="extends"];
+  "Semiring" -> "Hemiring" [label="extends"];
+  "StarAlgebra" -> "Algebra" [label="extends"];
+  "StarAlgebra" -> "InvolutiveRing" [label="extends"];
+  "VectorSpace" -> "RModule" [label="extends"];
+  "CayleyDickson" -> "CD" [style=dashed, label="uses"];
+}

@@ -1,28 +1,30 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.ops.RightAction
 
 /**
  * A Left R-Module is a (noncommutative) [Ring] R acting on an [AbelianGroup] M from the left.
  *
  * Laws:
- *  - r ⊳ (x + y) = r ⊳ x + r ⊳ y
- *  - (r + s) ⊳ x = r ⊳ x + s ⊳ x
- *  - (r · s) ⊳ x = r ⊳ (s ⊳ x)
- *  - 1 ⊳ x = x
+ *
+ *    r ⊳ (x + y) = r ⊳ x + r ⊳ y
+ *    (r + s) ⊳ x = r ⊳ x + s ⊳ x
+ *    (r · s) ⊳ x = r ⊳ (s ⊳ x)
+ *    1 ⊳ x = x
  */
 interface LeftRModule<R : Any, M : Any> {
-    val leftRing: Ring<R>
+    val leftScalars: Ring<R>
     val group: AbelianGroup<M>
-    val leftAction: Action<R, M>
+    val leftAction: LeftAction<R, M>
 
     companion object {
-        fun <R: Any, M: Any> of(
-            leftRing: Ring<R>,
+        fun <R : Any, M : Any> of(
+            leftScalars: Ring<R>,
             group: AbelianGroup<M>,
-            leftAction: Action<R, M>,
+            leftAction: LeftAction<R, M>,
         ): LeftRModule<R, M> = object : LeftRModule<R, M> {
-            override val leftRing = leftRing
+            override val leftScalars = leftScalars
             override val group = group
             override val leftAction = leftAction
         }
@@ -30,26 +32,27 @@ interface LeftRModule<R : Any, M : Any> {
 }
 
 /**
- * A Right R-Module is a (noncommutative) [Ring] R acting on an [AbelianGroup] from the right.
+ * A Right S-Module is a (noncommutative) [Ring] S acting on an [AbelianGroup] from the right.
  *
  * Laws:
- *  - (x + y) ⊲ r = x ⊲ r + y ⊲ r
- *  - x ⊲ (r + s) = x ⊲ r + x ⊲ s
- *  - x ⊲ (r · s) = (x ⊲ r) ⊲ s
- *  - x ⊲ 1 = x
+ *
+ *    (x + y) ⊲ s = x ⊲ s + y ⊲ s
+ *    x ⊲ (r + s) = x ⊲ r + x ⊲ s
+ *    x ⊲ (r · s) = (x ⊲ r) ⊲ s
+ *    x ⊲ 1 = x
  */
-interface RightRModule<R : Any, M : Any> {
-    val rightRing: Ring<R>
+interface RightRModule<M : Any, S : Any> {
+    val rightScalars: Ring<S>
     val group: AbelianGroup<M>
-    val rightAction: Action<R, M>
+    val rightAction: RightAction<M, S>
 
     companion object {
-        fun <R: Any, M: Any> of(
-            rightRing: Ring<R>,
+        fun <M : Any, S : Any> of(
+            rightScalars: Ring<S>,
             group: AbelianGroup<M>,
-            rightAction: Action<R, M>,
-        ): RightRModule<R, M> = object : RightRModule<R, M> {
-            override val rightRing = rightRing
+            rightAction: RightAction<M, S>,
+        ): RightRModule<M, S> = object : RightRModule<M, S> {
+            override val rightScalars = rightScalars
             override val group = group
             override val rightAction = rightAction
         }
@@ -59,19 +62,20 @@ interface RightRModule<R : Any, M : Any> {
 /**
  * An (R,S)-Bimodule is an [AbelianGroup] that is simultaneously a left R-Module
  * and a right S-Module, with the compatibility condition:
+ *
  *    (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)
  */
-interface RSBiModule<R : Any, S : Any, M : Any> : LeftRModule<R, M>, RightRModule<S, M> {
+interface RSBiModule<R : Any, M : Any, S : Any> : LeftRModule<R, M>, RightRModule<M, S> {
     companion object {
-        fun <R: Any, S: Any, M: Any> of(
-            leftRing: Ring<R>,
-            rightRing: Ring<S>,
+        fun <R : Any, M : Any, S : Any> of(
+            leftScalars: Ring<R>,
+            rightScalars: Ring<S>,
             group: AbelianGroup<M>,
-            leftAction: Action<R, M>,
-            rightAction: Action<S, M>
-        ): RSBiModule<R, S, M> = object : RSBiModule<R, S, M> {
-            override val leftRing = leftRing
-            override val rightRing = rightRing
+            leftAction: LeftAction<R, M>,
+            rightAction: RightAction<M, S>
+        ): RSBiModule<R, M, S> = object : RSBiModule<R, M, S> {
+            override val leftScalars = leftScalars
+            override val rightScalars = rightScalars
             override val group = group
             override val leftAction = leftAction
             override val rightAction = rightAction
@@ -80,43 +84,31 @@ interface RSBiModule<R : Any, S : Any, M : Any> : LeftRModule<R, M>, RightRModul
 }
 
 /**
- * A [ModuleCore] captures the commutative case: a single scalar action suffices
- * to define both left and right module structures.
+ * An R-Module is a module over a commutative ring R.
+ *
+ * We model it as a left module; a canonical right action is derived by commutativity.
  */
-interface ModuleCore<R : Any, M : Any> {
-    val ring: CommutativeRing<R>
-    val group: AbelianGroup<M>
-    val action: Action<R, M>
-}
+interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<M, R> {
+    val scalars: CommutativeRing<R>
 
-/**
- * An R-Module is a module over a [CommutativeRing] R.
- * It is both a [LeftRModule] and [RightRModule], with the actions coinciding.
- */
-interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<R, M>, ModuleCore<R, M> {
-    override val ring: CommutativeRing<R>
+    override val leftScalars: Ring<R>
+        get() = scalars
 
-    override val leftRing: Ring<R>
-        get() = ring
+    override val rightScalars: Ring<R>
+        get() = scalars
 
-    override val rightRing: Ring<R>
-        get() = ring
-
-    override val leftAction: Action<R, M>
-        get() = action
-
-    override val rightAction: Action<R, M>
-        get() = action
+    override val rightAction: RightAction<M, R>
+        get() = leftAction.toRightAction()
 
     companion object {
-        fun <R: Any, M: Any> of(
-            ring: CommutativeRing<R>,
+        fun <R : Any, M : Any> of(
+            scalars: CommutativeRing<R>,
             group: AbelianGroup<M>,
-            action: Action<R, M>
+            leftAction: LeftAction<R, M>
         ): RModule<R, M> = object : RModule<R, M> {
-            override val ring: CommutativeRing<R> = ring
-            override val group: AbelianGroup<M> = group
-            override val action: Action<R, M> = action
+            override val scalars = scalars
+            override val group = group
+            override val leftAction = leftAction
         }
     }
 }

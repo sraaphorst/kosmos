@@ -38,7 +38,7 @@ object UndirectedOverlayCommutativeMonoid {
     fun <V: Any> instance(): CommutativeMonoid<UndirectedGraph<V>> = object :
         CommutativeMonoid<UndirectedGraph<V>> {
         override val identity: UndirectedGraph<V> =
-            AdjacencySetUndirectedGraph.Companion.edgeless(FiniteSet.Companion.empty())
+            AdjacencySetUndirectedGraph.edgeless(FiniteSet.Companion.empty())
         override val op: BinOp<UndirectedGraph<V>> =
             BinOp(Symbols.PLUS) { x, y -> x overlay y }
     }
@@ -47,7 +47,7 @@ object UndirectedOverlayCommutativeMonoid {
 object DirectedOverlayCommutativeMonoid {
     fun <V : Any> instance(): CommutativeMonoid<DirectedGraph<V>> = object : CommutativeMonoid<DirectedGraph<V>> {
         override val identity: DirectedGraph<V> =
-            AdjacencySetDirectedGraph.Companion.edgeless(FiniteSet.Companion.empty())
+            AdjacencySetDirectedGraph.edgeless(FiniteSet.Companion.empty())
         override val op: BinOp<DirectedGraph<V>> =
             BinOp(Symbols.PLUS) { x, y -> x overlay y }
     }
@@ -58,7 +58,7 @@ object DirectedOverlayCommutativeMonoid {
  * =========================================== */
 
 private fun <V : Any> completeUndirected(vertices: FiniteSet<V>): AdjacencySetUndirectedGraph<V> =
-    AdjacencySetUndirectedGraph.Companion.complete(vertices)
+    AdjacencySetUndirectedGraph.complete(vertices)
 
 /** Meet monoid on a fixed universe: identity = complete graph K_universe. */
 object UndirectedMeetCommutativeMonoid {
@@ -73,7 +73,7 @@ object UndirectedMeetCommutativeMonoid {
 object DirectedMeetCommutativeMonoid {
     fun <V : Any> on(universe: FiniteSet<V>): CommutativeMonoid<DirectedGraph<V>> = object :
         CommutativeMonoid<DirectedGraph<V>> {
-        override val identity: DirectedGraph<V> = AdjacencySetDirectedGraph.Companion.complete(universe)
+        override val identity: DirectedGraph<V> = AdjacencySetDirectedGraph.complete(universe)
         override val op: BinOp<DirectedGraph<V>> = BinOp(Symbols.WEDGE) { x, y -> x.meetOn(universe, y) }
     }
 }

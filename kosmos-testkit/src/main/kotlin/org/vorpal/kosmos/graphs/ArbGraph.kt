@@ -5,6 +5,8 @@ import io.kotest.property.RandomSource
 import io.kotest.property.arbitrary.*
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.nextReal
 import kotlin.math.min
 
 /**
@@ -32,14 +34,14 @@ object GraphArbs {
     fun <V : Any> undirectedGnP(
         vertexArb: Arb<V>,
         nRange: IntRange,
-        p: Double
+        p: Real
     ): Arb<AdjacencySetUndirectedGraph<V>> = arbitrary { rs ->
         require(p in 0.0..1.0) { "p must be in [0,1], got $p" }
         val n = Arb.int(nRange).next(rs)
         val vs: List<V> = Arb.set(vertexArb, size = n).next(rs).toList()
         val pairs = unorderedPairs(vs)
         val edges = pairs.mapNotNull { (u, w) ->
-            if (rs.random.nextDouble() < p) UndirectedEdge(u, w) else null
+            if (rs.random.nextReal() < p) UndirectedEdge(u, w) else null
         }
         AdjacencySetUndirectedGraph.of(
             vs.toUnorderedFiniteSet(),
@@ -152,14 +154,14 @@ object GraphArbs {
     fun <V : Any> directedGnP(
         vertexArb: Arb<V>,
         nRange: IntRange,
-        p: Double
+        p: Real
     ): Arb<AdjacencySetDirectedGraph<V>> = arbitrary { rs ->
         require(p in 0.0..1.0) { "p must be in [0,1], got $p" }
         val n = Arb.int(nRange).next(rs)
         val vs: List<V> = Arb.set(vertexArb, size = n).next(rs).toList()
         val pairs = orderedPairsNoLoops(vs)
         val edges = pairs.mapNotNull { (u, w) ->
-            if (rs.random.nextDouble() < p) DirectedEdge(u, w) else null
+            if (rs.random.nextReal() < p) DirectedEdge(u, w) else null
         }
         AdjacencySetDirectedGraph.of(
             vs.toUnorderedFiniteSet(),

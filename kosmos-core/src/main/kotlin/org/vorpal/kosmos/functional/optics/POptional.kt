@@ -137,8 +137,8 @@ data class POptional<S, T, A, B>(
      *
      * Example:
      * ```kotlin
-     * atKey("a").modify(map) { it * 2 }  // Doubles value if key exists
-     * atKey("z").modify(map) { it * 2 }  // Returns map unchanged if key missing
+     * atKey("a").modify(map) { it * 2 }  // doubles value if key exists
+     * atKey("z").modify(map) { it * 2 }  // returns map unchanged if key missing
      * ```
      */
     fun modify(s: S, f: (A) -> B): T =

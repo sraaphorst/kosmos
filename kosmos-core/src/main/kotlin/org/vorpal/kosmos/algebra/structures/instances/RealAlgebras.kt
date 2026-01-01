@@ -4,21 +4,26 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.InnerProductSpace
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.clamp
 import org.vorpal.kosmos.core.math.lerp
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.linear.Vec2R
 import org.vorpal.kosmos.linear.Vec2R_ZERO
 
-typealias Real = Double
-
 object RealAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
+
     val RealField : Field<Real> = Field.of(
         add = AbelianGroup.of(
             identity = 0.0,
@@ -27,32 +32,38 @@ object RealAlgebras {
         ),
         mul = CommutativeMonoid.of(
             identity = 1.0,
-            op = BinOp(Symbols.PLUS, Real::times)
+            op = BinOp(Symbols.ASTERISK, Real::times)
         ),
-        reciprocal = Endo(Symbols.INVERSE) { 1.0 / it }
+        reciprocal = Endo(Symbols.INVERSE) { x ->
+            require(eqRealApprox.neqv(x, 0.0) && x.isFinite()) { "0 has no reciprocal." }
+            1.0 / x
+        }
     )
 
-    object RealInvolutiveRing:
-        InvolutiveRing<Real>,
+    object RealStarField:
         Field<Real> by RealField,
+        InvolutiveRing<Real>,
         NormedDivisionAlgebra<Real> {
 
         override val conj: Endo<Real> =
-            Endo("conj", Identity())
+            Endo(Symbols.CONJ, Identity())
 
-        override fun normSq(a: Real): Real =
-            a * a
+        override val normSq: Endo<Real> =
+            Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
         // Disambiguate HasReciprocal.zero:
         override val zero: Real
             get() = RealField.zero
+
+        override val one: Real
+            get() = RealField.one
     }
 
     /**
      * 2D vector space over doubles.
      */
     object Vec2RSpace : FiniteVectorSpace<Real, Vec2R> {
-        override val ring: Field<Real> = RealField
+        override val scalars: Field<Real> = RealField
         override val dimension: Int = 2
 
         override val group: AbelianGroup<Vec2R> = AbelianGroup.of(
@@ -61,9 +72,19 @@ object RealAlgebras {
             inverse = Endo(Symbols.MINUS) { Vec2R(-it.x, -it.y) }
         )
 
-        override val action: Action<Real, Vec2R> = Action(Symbols.ASTERISK) { scalar, vec ->
+        override val leftAction = LeftAction<Real, Vec2R> { scalar, vec ->
             Vec2R(scalar * vec.x, scalar * vec.y)
         }
+    }
+
+    object Vec2RInnerProductSpace :
+        InnerProductSpace<Real, Vec2R>,
+        VectorSpace<Real, Vec2R> by Vec2RSpace {
+
+        override val inner = BilinearForm<Vec2R, Real> {v, w -> v.x * w.x + v.y * w.y}
+
+        override fun norm(v: Vec2R): Real =
+            kotlin.math.sqrt(inner(v, v))
     }
 }
 

@@ -2,7 +2,6 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.triple
 import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
@@ -10,24 +9,22 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-/** Shared helpers for Moufang variants. */
-private sealed interface MoufangCore<A: Any> {
+private sealed interface MoufangCore<A : Any> {
     val op: BinOp<A>
-    val tripleArb: Arb<Triple<A, A, A>>
+    val arb: Arb<A>
     val eq: Eq<A>
     val pr: Printable<A>
-    val symbol: String
 
     fun failMsg(
         which: String,
         x: A, y: A, z: A,
         left: A, right: A
     ): () -> String = {
-        val sx = pr.render(x)
-        val sy = pr.render(y)
-        val sz = pr.render(z)
-        val sl = pr.render(left)
-        val sr = pr.render(right)
+        val sx = pr(x)
+        val sy = pr(y)
+        val sz = pr(z)
+        val sl = pr(left)
+        val sr = pr(right)
         buildString {
             appendLine("Moufang ($which) failed:")
             appendLine("x = $sx, y = $sy, z = $sz")
@@ -39,95 +36,73 @@ private sealed interface MoufangCore<A: Any> {
 }
 
 /** Left Moufang:  x ⋆ (y ⋆ (x ⋆ z)) = ((x ⋆ y) ⋆ x) ⋆ z */
-class LeftMoufangLaw<A: Any>(
+class LeftMoufangLaw<A : Any>(
     override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
 ) : TestingLaw, MoufangCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Moufang (left: $symbol)"
+    override val name = "moufang (left: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(tripleArb) { (x, y, z) ->
+        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
             val xz  = op(x, z)
             val lhs = op(x, op(y, xz))
             val xy  = op(x, y)
             val rhs = op(op(xy, x), z)
 
             withClue(failMsg("left", x, y, z, lhs, rhs)) {
-                check(eq.eqv(lhs, rhs))
+                check(eq(lhs, rhs))
             }
         }
     }
 }
 
-/** Right Moufang:  ((z ⋆ x) ⋆ y) ⋆ x = z ⋆ (x ⋆ (y ⋆ x)) */
+/**
+ * Right Moufang:
+ *
+ *    ((z ⋆ x) ⋆ y) ⋆ x = z ⋆ (x ⋆ (y ⋆ x))
+ */
 class RightMoufangLaw<A: Any>(
     override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
 ) : TestingLaw, MoufangCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Moufang (right: $symbol)"
+    override val name = "moufang (right: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(tripleArb) { (x, y, z) ->
+        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
             val lhs = op(op(op(z, x), y), x)
             val rhs = op(z, op(x, op(y, x)))
             withClue(failMsg("right", x, y, z, lhs, rhs)) {
-                check(eq.eqv(lhs, rhs))
+                check(eq(lhs, rhs))
             }
         }
     }
 }
 
-/** Middle Moufang:  (x ⋆ y) ⋆ (z ⋆ x) = x ⋆ (y ⋆ (z ⋆ x)) */
+/**
+ * Middle Moufang:
+ *
+ *     (x ⋆ y) ⋆ (z ⋆ x) = x ⋆ (y ⋆ (z ⋆ x))
+ */
 class MiddleMoufangLaw<A: Any>(
     override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
 ) : TestingLaw, MoufangCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Moufang (middle: $symbol)"
+    override val name = "Moufang (middle: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(tripleArb) { (x, y, z) ->
+        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
             val zx = op(z, x)
             val lhs = op(op(x, y), zx)
             val rhs = op(x, op(y, zx))
 
             withClue(failMsg("middle", x, y, z, lhs, rhs)) {
-                check(eq.eqv(lhs, rhs))
+                check(eq(lhs, rhs))
             }
         }
     }
@@ -144,14 +119,13 @@ class MiddleMoufangLaw<A: Any>(
 class MoufangLaw<A: Any>(
     op: BinOp<A>,
     arb: Arb<A>,
-    eq: Eq<A>,
+    eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
-    symbol: String = "⋆"
 ) : TestingLaw {
-    private val left   = LeftMoufangLaw(op, arb, eq, pr, symbol)
-    private val right  = RightMoufangLaw(op, arb, eq, pr, symbol)
-    private val middle = MiddleMoufangLaw(op, arb, eq, pr, symbol)
-    override val name = "Moufang (all: $symbol)"
+    private val left   = LeftMoufangLaw(op, arb, eq, pr)
+    private val right  = RightMoufangLaw(op, arb, eq, pr)
+    private val middle = MiddleMoufangLaw(op, arb, eq, pr)
+    override val name = "moufang (all: ${op.symbol})"
     override suspend fun test() {
         left.test()
         right.test()

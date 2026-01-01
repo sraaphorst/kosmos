@@ -10,14 +10,23 @@ import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.Action
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
-import java.math.BigInteger
+import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.ops.UnaryOp
 
-typealias Complex = CD<Double>
+typealias Complex = CD<Real>
+
+val Complex.re: Real get() = a
+val Complex.im: Real get() = b
+fun complex(re: Real, im: Real): Complex = Complex(re, im)
 
 object ComplexAlgebras {
+    private val eqRealApprox = Eqs.realApprox()
+
     fun Complex.normSq(): Real =
         re * re + im * im
 
@@ -26,7 +35,7 @@ object ComplexAlgebras {
         InvolutiveRing<Complex>,
         NormedDivisionAlgebra<Complex> {
         private val base: InvolutiveAlgebra<Complex> =
-            CayleyDickson(RealAlgebras.RealInvolutiveRing)
+            CayleyDickson(RealAlgebras.RealStarField)
 
         override val add = base.add
 
@@ -37,35 +46,36 @@ object ComplexAlgebras {
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
             val normSq = c.normSq()
-            require(normSq != 0.0) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
+            require(eqRealApprox.neqv(normSq, 0.0) && normSq.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
             CD(c.re / normSq, -c.im / normSq)
         }
 
-        override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj = base.conj
 
-        override fun normSq(a: Complex): Real =
-            a.normSq()
+        override val normSq: UnaryOp<Complex, Real> =
+            UnaryOp(Symbols.NORM_SQ_SYMBOL){ it.normSq() }
 
         // Disambiguate zero.
         override val zero = base.add.identity
-        val one = Complex(1.0, 0.0)
+        override val one: Complex
+            get() = mul.identity
         val i = Complex(0.0, 1.0)
     }
 
-    val Complex.re: Real get() = a
-    val Complex.im: Real get() = b
-    fun complex(re: Real, im: Real): Complex = Complex(re, im)
-
-    // Scalars: Double, act componentwise on (a, b)
-    val ComplexModule : RModule<Double, Complex> = RModule.of(
-        ring = RealField,
+    // Scalars: Real, act componentwise on (a, b)
+    val ComplexModule : RModule<Real, Complex> = RModule.of(
+        scalars = RealField,
         group = ComplexField.add,
-        action = Action { r, (a, b) -> complex(r * a, r * b) }
+        leftAction = LeftAction { r, (a, b) -> complex(r * a, r * b) }
     )
 
     object ComplexStarAlgebra:
         StarAlgebra<Real, Complex>,
         InvolutiveRing<Complex> by ComplexField,
-        RModule<Real, Complex> by ComplexModule
+        RModule<Real, Complex> by ComplexModule {
+            override val one = ComplexField.one
+        }
 }
+
+val eqComplexStrict: Eq<Complex> = CD.eq(Eqs.realStrict)
+val eqComplex: Eq<Complex> = CD.eq(Eqs.realApprox())

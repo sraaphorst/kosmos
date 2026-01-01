@@ -2,187 +2,139 @@ package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.triple
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
-private sealed interface BolIdentityCore<A: Any> {
+private sealed interface BolIdentityCore<A : Any> {
     val op: BinOp<A>
-    val tripleArb: Arb<Triple<A, A, A>>
+    val arb: Arb<A>
     val eq: Eq<A>
     val pr: Printable<A>
-    val symbol: String
 
-    private fun infix(l: String, r: String) = "$l $symbol $r"
-    private fun pinfix(l: String, r: String) = "(" + infix(l, r) + ")"
+    private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
+    private fun pexpr(left: String, right: String) = "(" + expr(left, right) + ")"
 
     // a(b(ac)) = (a(ba))c
     suspend fun leftBolIdentityCheck() {
-        checkAll(tripleArb) { (a, b, c) ->
+        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
             val ac = op(a, c)
-            val bAC = op(b, ac)
-            val left = op(a, bAC)
+            val bAc = op(b, ac)
+            val left = op(a, bAc)
 
             val ba = op(b, a)
             val aBA = op(a, ba)
             val right = op(aBA, c)
 
-            withClue(leftFailureMessage(a, b, c, ac, bAC, left, ba, aBA, right)) {
-                check(eq.eqv(left, right))
+            withClue(leftBolIdentityFailure(a, b, c, ac, bAc, left, ba, aBA, right)) {
+                check(eq(left, right))
             }
         }
     }
 
-    private fun leftFailureMessage(
+    private fun leftBolIdentityFailure(
         a: A, b: A, c: A,
-        ac: A, b_ac: A, left: A,
-        ba: A, a_ba: A, right: A
+        ac: A, bAc: A, left: A,
+        ba: A, aBa: A, right: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val sb = pr.render(b)
-        val sc = pr.render(c)
-        val sac = pr.render(ac)
-        val sb_ac = pr.render(b_ac)
-        val sLeft = pr.render(left)
-        val sba = pr.render(ba)
-        val sa_ba = pr.render(a_ba)
-        val sRight = pr.render(right)
-
         buildString {
+            val sa = pr(a)
+            val sb = pr(b)
+            val sc = pr(c)
+            val sac = pr(ac)
+            val sbAc = pr(bAc)
+            val sLeft = pr(left)
+            val sba = pr(ba)
+            val saBa = pr(aBa)
+            val sRight = pr(right)
+
             appendLine("Left Bol identity failed:")
 
-            append(infix(sa,pinfix(sb, pinfix(sa, sc))))
+            append(expr(sa,pexpr(sb, pexpr(sa, sc))))
             append(" = ")
-            append(infix(sa,pinfix(sb, sac)))
+            append(expr(sa,pexpr(sb, sac)))
             append(" = ")
-            append(infix(sa, sb_ac))
+            append(expr(sa, sbAc))
             append(" = ")
-            append(sLeft)
-            appendLine()
+            appendLine(sLeft)
 
-            append(infix(pinfix(sa,pinfix(sb, sa)), sc))
+            append(expr(pexpr(sa,pexpr(sb, sa)), sc))
             append(" = ")
-            append(infix(pinfix(sa, sba), sc))
+            append(expr(pexpr(sa, sba), sc))
             append(" = ")
-            append(infix(sa_ba, sc))
+            append(expr(saBa, sc))
             append(" = ")
-            append(sRight)
-            appendLine()
+            appendLine(sRight)
 
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
 
     // ((ca)b)a = c((ab)a)
     suspend fun rightBolIdentityCheck() {
-        checkAll(tripleArb) { (a, b, c) ->
+        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
             val ca = op(c, a)
-            val ca_b = op(ca, b)
-            val left = op(ca_b, a)
+            val caB = op(ca, b)
+            val left = op(caB, a)
 
             val ab = op(a, b)
-            val ab_a = op(ab, a)
-            val right = op(c, ab_a)
+            val abA = op(ab, a)
+            val right = op(c, abA)
 
-            withClue(rightFailureMessage(a, b, c, ca, ca_b, left, ab, ab_a, right)) {
-                check(eq.eqv(left, right))
+            withClue(rightBolIdentityFailure(a, b, c, ca, caB, left, ab, abA, right)) {
+                check(eq(left, right))
             }
         }
     }
 
-    private fun rightFailureMessage(
+    private fun rightBolIdentityFailure(
         a: A, b: A, c: A,
-        ca: A, ca_b: A, left: A,
-        ab: A, ab_a: A, right:A
+        ca: A, caB: A, left: A,
+        ab: A, abA: A, right: A
     ): () -> String = {
-        val sa = pr.render(a)
-        val sb = pr.render(b)
-        val sc = pr.render(c)
-        val sca = pr.render(ca)
-        val sca_b = pr.render(ca_b)
-        val sLeft = pr.render(left)
-        val sab = pr.render(ab)
-        val sab_a = pr.render(ab_a)
-        val sRight = pr.render(right)
-
         buildString {
+            val sa = pr(a)
+            val sb = pr(b)
+            val sc = pr(c)
+            val sca = pr(ca)
+            val scaB = pr(caB)
+            val sLeft = pr(left)
+            val sab = pr(ab)
+            val sabA = pr(abA)
+            val sRight = pr(right)
+
             appendLine("Right Bol identity failed:")
 
-            // (ca)b
-            append(infix(pinfix(pinfix(sc, sa), sb), sa))
+            append(expr(pexpr(pexpr(sc, sa), sb), sa))
             append(" = ")
-            append(infix(pinfix(sca, sb), sa))
+            append(expr(pexpr(sca, sb), sa))
             append(" = ")
-            append(infix(sca_b, sa))
+            append(expr(scaB, sa))
             append(" = ")
-            append(sLeft)
-            appendLine()
+            appendLine(sLeft)
 
-            append(infix(sc,pinfix(pinfix(sa, sb), sa)))
+            append(expr(sc,pexpr(pexpr(sa, sb), sa)))
             append(" = ")
-            append(infix(sc,pinfix(sab, sa)))
+            append(expr(sc,pexpr(sab, sa)))
             append(" = ")
-            append(infix(sc, sab_a))
+            append(expr(sc, sabA))
             append(" = ")
-            append(sRight)
-            appendLine()
+            appendLine(sRight)
 
-            append("Expected: $sLeft = $sRight")
-            appendLine()
+            appendLine("Expected: $sLeft = $sRight")
         }
     }
 }
 
-class LeftBolIdentityLaw<A: Any>(
-    override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
-) : TestingLaw, BolIdentityCore<A> {
 
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Bol identity (left: $symbol)"
-    override suspend fun test() = leftBolIdentityCheck()
-}
-
-class RightBolIdentityLaw<A: Any>(
-    override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
-) : TestingLaw, BolIdentityCore<A> {
-
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Bol identity (right: $symbol)"
-    override suspend fun test() = rightBolIdentityCheck()
-}
-
-/** The Bol identity laws.
- * A loop L is said to be a Bol loop if it satisfies the identities:
- * * a(b(ac)) = (a(ba))c
- * * ((ca)b)a = c((ab)a)
+/**
+ * A loop `L` is said to be a Bol loop if it satisfies the identities:
+ * - `a(b(ac)) = (a(ba))c`
+ * - `((ca)b)a = c((ab)a)`
  *
- * for all a, b, c in L.
+ * for all `a, b, c ∈ L`.
  *
  * These identities can be seen as:
  * * weakened forms of associativity
@@ -193,25 +145,66 @@ class RightBolIdentityLaw<A: Any>(
  * Alternatively, a right or left Bol loop is Moufang iff it satisfies
  * the flexibility law.
  */
-class BolIdentityLaw<A: Any>(
+class BolIdentityLaw<A : Any>(
     override val op: BinOp<A>,
-    override val tripleArb: Arb<Triple<A, A, A>>,
-    override val eq: Eq<A>,
-    override val pr: Printable<A> = Printable.default(),
-    override val symbol: String = "⋆"
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
+    override val name = "bol identity (${op.symbol})"
 
-    constructor(
-        op: BinOp<A>,
-        arb: Arb<A>,
-        eq: Eq<A>,
-        pr: Printable<A> = Printable.default(),
-        symbol: String = "⋆"
-    ) : this(op, Arb.triple(arb, arb, arb), eq, pr, symbol)
-
-    override val name = "Bol identity (both: $symbol)"
     override suspend fun test() {
         leftBolIdentityCheck()
         rightBolIdentityCheck()
     }
+}
+
+/**
+ * A loop `L` is said to be a left Bol loop if it satisfies the identity:
+ *
+ *     a(b(ac)) = (a(ba))c
+ *
+ * for all `a, b, c ∈ L`.
+ *
+ * This identity can be seen as a:
+ * * weakened form of associativity
+ * * strengthened form of left alternativity
+ *
+ * A left Bol loop is Moufang iff it satisfies the flexibility law.
+ */
+class LeftBolIdentityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+) : TestingLaw, BolIdentityCore<A> {
+    override val name = "left bol identity (${op.symbol})"
+
+    override suspend fun test() =
+        leftBolIdentityCheck()
+}
+
+/**
+ * A loop `L` is said to be a right Bol loop if it satisfies the identity:
+ *
+ *    ((ca)b)a = c((ab)a)
+ *
+ * for all `a, b, c ∈ L`.
+ *
+ * This identity can be seen as a:
+ * * weakened form of associativity
+ * * strengthened form of right alternativity
+ *
+ * A right Bol loop is Moufang iff it satisfies the flexibility law.
+ */
+class RightBolIdentityLaw<A : Any>(
+    override val op: BinOp<A>,
+    override val arb: Arb<A>,
+    override val eq: Eq<A> = Eq.default(),
+    override val pr: Printable<A> = Printable.default()
+) : TestingLaw, BolIdentityCore<A> {
+    override val name = "right bol identity (${op.symbol})"
+
+    override suspend fun test() =
+        rightBolIdentityCheck()
 }

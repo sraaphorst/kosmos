@@ -7,7 +7,7 @@ import org.vorpal.kosmos.core.ops.BinOp
  *
  * There is no guarantee of associativity or commutativity.
  */
-interface Magma<A: Any> {
+interface Magma<A : Any> {
     val op: BinOp<A>
 
     operator fun invoke(a1: A, a2: A): A =
