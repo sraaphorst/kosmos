@@ -54,3 +54,4 @@ interface Vector<F : Any, V : Vector<F, V>> {
     operator fun minus(other: V): V
     operator fun times(scalar: F): V
 }
+```

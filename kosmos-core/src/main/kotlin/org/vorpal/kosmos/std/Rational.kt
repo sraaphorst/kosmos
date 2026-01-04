@@ -1,4 +1,3 @@
-// src/main/kotlin/org/vorpal/kosmos/std/Rational.kt
 package org.vorpal.kosmos.std
 
 import org.vorpal.kosmos.core.math.Real

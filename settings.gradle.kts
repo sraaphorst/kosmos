@@ -5,4 +5,6 @@ include(
     ":kosmos-laws",
     ":kosmos-lawkit",
     "kosmos-noise",
-    "kosmos-testkit")
+    "kosmos-testkit"
+)
+include("kosmos-rec")
