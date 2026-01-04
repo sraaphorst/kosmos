@@ -114,6 +114,12 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
      */
     fun frac(): Rational = this % ONE
 
+    /**
+     * Return the whole number part of this [Rational], i.e. the part >= 1 or <= -1.
+     * Note that this includes the sign.
+     */
+    fun whole(): BigInteger = signum.toBigInteger() * n.abs() / d
+
     /** Arithmetic operations with integers (avoiding conversion) */
     operator fun plus(other: Int): Rational = this + other.toRational()
     operator fun plus(other: Long): Rational = this + other.toRational()
