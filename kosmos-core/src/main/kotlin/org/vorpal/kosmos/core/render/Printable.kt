@@ -27,6 +27,12 @@ fun <A, B> Printable<B>.contramap(f: (A) -> B): Printable<A> =
 /** Small convenience for inline use. */
 fun <A> Printable<A>.pretty(a: A): String = render(a)
 
+/**
+ * Defaults for classes that don't have a Printable explicitly defined.
+ */
+fun <A> pr(a: A, printable: Printable<A> = Printable.default()): String =
+    printable.render(a)
+
 object Printables {
     val char: Printable<Char> = Printable.default()
     val int: Printable<Int> = Printable.default()
