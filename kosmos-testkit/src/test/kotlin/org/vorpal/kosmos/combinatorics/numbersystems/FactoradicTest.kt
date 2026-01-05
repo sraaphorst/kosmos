@@ -242,4 +242,10 @@ class FactoradicTest : FunSpec({
             Factoradic.encode(120.toBigInteger()).size shouldBe 6
         }
     }
+
+    test("FactoradicPrintable produces expected results") {
+        FactoradicPrinter(Factoradic.fromDigitsLs(listOf(0, 1, 0, 3, 2))) shouldBe "(2 3 0 1 0)_!"
+        FactoradicPrinter(Factoradic.ZERO) shouldBe "()_!"
+        FactoradicPrinter(Factoradic.ONE) shouldBe "(1 0)_!"
+    }
 })
