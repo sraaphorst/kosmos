@@ -6,6 +6,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.combinatorics.numbersystems.render.FactoradicPrinter
 import java.math.BigInteger
 
 class FactoradicTest : FunSpec({
