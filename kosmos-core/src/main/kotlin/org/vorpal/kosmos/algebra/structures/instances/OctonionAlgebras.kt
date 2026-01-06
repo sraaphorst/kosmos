@@ -5,10 +5,12 @@ import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.Quatern
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
+import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionModule
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
@@ -43,6 +45,17 @@ fun octonion(
 
 object OctonionAlgebras {
     private val eqRealApprox = Eqs.realApprox()
+
+    enum class FanoOrientation {
+        CANONICAL,
+        REVERSED
+    }
+
+    data class OctonionConvention(
+        val orientation: FanoOrientation,
+        val perm: IntArray = intArrayOf(0,1,2,3,4,5,6,7), // 1-based mapping of labels
+        val sign: IntArray = intArrayOf(0,1,1,1,1,1,1,1)  // optional ± sign flips per unit
+    )
 
     /**
      * In this case, the most we can say about the Octonions are that they are an [NonAssociativeDivisionAlgebra].
@@ -95,6 +108,14 @@ object OctonionAlgebras {
         }
     )
 
+    object OctonionStarAlgebra:
+        StarAlgebra<Real, Octonion>,
+        NonAssociativeDivisionAlgebra<Octonion> by OctonionDivisionAlgebra,
+        RModule<Real, Octonion> by OctonionModule {
+
+        }
+
+    {}
     /**
      * Embed a quaternion number into an octonion.
      */
