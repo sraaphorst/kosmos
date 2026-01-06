@@ -2,12 +2,7 @@ package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.core.ops.Endo
 
-interface InvolutiveAlgebra<A : Any> : NonAssociativeAlgebra<A> {
-    /**
-     * The involution operator of the algebra, `x ↦ x*`.
-     */
-    val conj: Endo<A>
-
+interface InvolutiveAlgebra<A : Any>: NonAssociativeAlgebra<A>, HasConj<A> {
     companion object {
         fun <A : Any> of(
             add: AbelianGroup<A>,
