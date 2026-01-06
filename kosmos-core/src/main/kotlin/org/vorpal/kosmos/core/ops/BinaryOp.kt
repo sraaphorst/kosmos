@@ -77,7 +77,9 @@ fun <A : Any> BinOp(
     override val symbol: String = symbol
     override fun invoke(a: A, b: A): A = combine(a, b)
 }
-fun <A : Any> BinOp(combine: (A, A) -> A) = BinOp(Symbols.DOT, combine)
+
+fun <A : Any> BinOp(combine: (A, A) -> A): BinOp<A> =
+    BinOp(Symbols.DOT, combine)
 
 fun <R : Any, M : Any> LeftAction(
     symbol: String,

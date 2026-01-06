@@ -15,7 +15,7 @@ interface UnaryOp<A, B> : Op {
      * Member function so callers don't need to import an extension.
      */
     infix fun <C> andThen(other: UnaryOp<B, C>): UnaryOp<A, C> =
-        UnaryOp(this.symbol) { a -> other(this(a)) }
+        UnaryOp("${this.symbol}∘${other.symbol}") { other(this(it)) }
 
     /**
      * Compose on the left: (A -> B) compose (C -> A) = (C -> B).

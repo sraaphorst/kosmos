@@ -39,7 +39,7 @@ val Quaternion.x: Real get() = a.im
 /**
  * The coefficient of the j term of the quaternion.
  */
-val Quaternion.y: Real get() = -b.re
+val Quaternion.y: Real get() = b.re
 
 /**
  * The coefficient of the k term of the quaternion.
@@ -49,7 +49,7 @@ val Quaternion.z: Real get() = b.im
 /**
  * Convenience constructor for a quaternion:
  *
- * `complex(w + x i_c), complex(-y + z i_c)`
+ *    complex(w + x i_c), complex(y + z i_c)
  */
 fun quaternion(
     w: Real,
@@ -58,15 +58,50 @@ fun quaternion(
     z: Real
 ): Quaternion {
     val a = complex(w, x)
-    val b = complex(-y, z)
+    val b = complex(y, z)
     return Quaternion(a, b)
 }
 
 object QuaternionAlgebras {
     private val eqRealApprox = Eqs.realApprox()
 
-    fun Quaternion.normSq(): Real =
-        a.normSq() + b.normSq()
+    enum class Handedness {
+        RIGHT, // i*j =  k
+        LEFT,  // i*j = -k
+    }
+
+    data class QuaternionBasis(
+        val i: Quaternion,
+        val j: Quaternion,
+        val k: Quaternion,
+    )
+
+    fun quaternionBasis(
+        quaternions: QuaternionDivisionRing,
+        handedness: Handedness,
+        eq: Eq<Quaternion> = eqQuaternionStrict
+    ): QuaternionBasis {
+        val i = Quaternion(ComplexField.i, ComplexField.zero)
+        val j = Quaternion(ComplexField.zero, ComplexField.one)
+        val k0 = Quaternion(ComplexField.zero, ComplexField.i)
+
+        val ij = quaternions.mul(i, j)
+
+        val kRight =
+            when {
+                eq(ij, k0) -> k0
+                eq(ij, quaternions.add.inverse(k0)) -> quaternions.add.inverse(k0)
+                else -> error("Sanity failed: i*j not equal to ±k0. CD convention mismatch.")
+            }
+
+        val k =
+            when (handedness) {
+                Handedness.RIGHT -> kRight
+                Handedness.LEFT -> quaternions.add.inverse(kRight)
+            }
+
+        return QuaternionBasis(i, j, k)
+    }
 
     object QuaternionDivisionRing :
         DivisionRing<Quaternion>,
@@ -84,7 +119,7 @@ object QuaternionAlgebras {
         )
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
-            val n2 = q.normSq()
+            val n2 = normSq(q)
             require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_H}." }
 
             val qc = conj(q)
@@ -99,14 +134,14 @@ object QuaternionAlgebras {
         override val conj = base.conj
 
         override val normSq: UnaryOp<Quaternion, Real> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL){ it.normSq() }
+            UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
 
         // Disambiguate zero.
         override val zero = base.add.identity
         override val one: Quaternion
             get() = mul.identity
         val i = Quaternion(ComplexField.i, ComplexField.zero)
-        val j = Quaternion(ComplexField.zero, ComplexField.negOne)
+        val j = Quaternion(ComplexField.zero, ComplexField.one)
         val k = Quaternion(ComplexField.zero, ComplexField.i)
     }
 
@@ -145,7 +180,7 @@ object QuaternionAlgebras {
         group = QuaternionDivisionRing.add,
         leftAction = LeftAction { c, q ->
             // Embed c into ℍ as (c, 0) and then multiply on the left.
-            QuaternionDivisionRing.mul.op(c.asQuaternion(), q)
+            QuaternionDivisionRing.mul(c.asQuaternion(), q)
         }
     )
 
@@ -163,20 +198,26 @@ val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)
 
 
 fun main() {
-    val H = QuaternionAlgebras.QuaternionDivisionRing
-    val one = H.one
-    val negOne = H.add.inverse(one)
+    val quaternions = QuaternionAlgebras.QuaternionDivisionRing
+    val handedness = QuaternionAlgebras.Handedness.RIGHT
+    val basis = QuaternionAlgebras.quaternionBasis(quaternions, handedness)
+
+    val one = quaternions.one
+    val negOne = quaternions.add.inverse(one)
     val eq = eqQuaternionStrict
 
-    val i = QuaternionAlgebras.QuaternionDivisionRing.i
-    val j = QuaternionAlgebras.QuaternionDivisionRing.j
-    val k = QuaternionAlgebras.QuaternionDivisionRing.k
+    check(eq(quaternions.mul(basis.i, basis.i), negOne))
+    check(eq(quaternions.mul(basis.j, basis.j), negOne))
+    check(eq(quaternions.mul(basis.k, basis.k), negOne))
 
-    check(eq(H.mul.op(i, i), negOne))
-    check(eq(H.mul.op(j, j), negOne))
-    check(eq(H.mul.op(k, k), negOne))
-
-    val ij = H.mul.op(i, j)
-    check(eq(ij, k))          // depending on your handedness, this might be == k or == -k
-    check(eq(H.mul.op(j, i), H.add.inverse(k))) // should be the opposite sign
+    when (handedness) {
+        QuaternionAlgebras.Handedness.RIGHT -> {
+            check(eq(quaternions.mul(basis.i, basis.j), basis.k))
+            check(eq(quaternions.mul(basis.j, basis.i), quaternions.add.inverse(basis.k)))
+        }
+        QuaternionAlgebras.Handedness.LEFT -> {
+            check(eq(quaternions.mul(basis.i, basis.j), quaternions.add.inverse(basis.k)))
+            check(eq(quaternions.mul(basis.j, basis.i), basis.k))
+        }
+    }
 }
