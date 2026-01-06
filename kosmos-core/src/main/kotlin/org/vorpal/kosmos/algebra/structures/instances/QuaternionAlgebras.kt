@@ -5,14 +5,13 @@ import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexMod
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
-import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
+import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.normSq
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -108,7 +107,7 @@ object QuaternionAlgebras {
         InvolutiveRing<Quaternion>,
         NormedDivisionAlgebra<Quaternion> {
 
-        private val base: InvolutiveAlgebra<Quaternion> =
+        private val base: NonAssociativeInvolutiveRing<Quaternion> =
             CayleyDickson(ComplexField)
 
         override val add = base.add

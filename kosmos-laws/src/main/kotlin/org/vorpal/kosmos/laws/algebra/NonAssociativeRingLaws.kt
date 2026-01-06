@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
+import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
@@ -10,13 +10,13 @@ import org.vorpal.kosmos.laws.property.DistributivityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
- * [NonAssociativeAlgebra] laws:
+ * [NonAssociativeRing] laws:
  * - [AbelianGroupLaws] on addition (full)
  * - [NonAssociativeMonoidLaws] on multiplication (full)
  * - [DistributivityLaw] of multiplication over addition
  */
-class NonAssociativeAlgebraLaws<A : Any>(
-    private val algebra: NonAssociativeAlgebra<A>,
+class NonAssociativeRingLaws<A : Any>(
+    private val algebra: NonAssociativeRing<A>,
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()

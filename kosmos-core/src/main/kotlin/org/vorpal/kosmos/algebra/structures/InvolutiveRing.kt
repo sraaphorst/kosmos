@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.ops.Endo
  * 4. `1* = 1`
  * 5. `0* = 0` (follows from additivity)
  */
-interface InvolutiveRing<A : Any> : InvolutiveAlgebra<A>, Ring<A> {
+interface InvolutiveRing<A : Any> : NonAssociativeInvolutiveRing<A>, Ring<A> {
     // We have to disambiguate one since it comes from both InvolutiveAlgebra and Ring.
     override val one: A
 

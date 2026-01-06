@@ -4,7 +4,7 @@ import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
+import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
@@ -34,7 +34,7 @@ object ComplexAlgebras {
         Field<Complex>,
         InvolutiveRing<Complex>,
         NormedDivisionAlgebra<Complex> {
-        private val base: InvolutiveAlgebra<Complex> =
+        private val base: NonAssociativeInvolutiveRing<Complex> =
             CayleyDickson(RealAlgebras.RealStarField)
 
         override val add = base.add

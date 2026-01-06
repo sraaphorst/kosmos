@@ -4,13 +4,12 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRing
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
-import org.vorpal.kosmos.algebra.structures.InvolutiveAlgebra
-import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
+import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
-import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionModule
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
@@ -60,7 +59,7 @@ object OctonionAlgebras {
     /**
      * In this case, the most we can say about the Octonions are that they are an [NonAssociativeDivisionAlgebra].
      *
-     * We get everything but the reciprocal from the [InvolutiveAlgebra] returned by the [CayleyDickson] construction.
+     * We get everything but the reciprocal from the [NonAssociativeInvolutiveRing] returned by the [CayleyDickson] construction.
      */
     object OctonionDivisionAlgebra : NormedDivisionAlgebra<Octonion> {
         private val base = CayleyDickson(QuaternionDivisionRing)
@@ -109,13 +108,10 @@ object OctonionAlgebras {
     )
 
     object OctonionStarAlgebra:
-        StarAlgebra<Real, Octonion>,
+        NonAssociativeStarAlgebra<Real, Octonion>,
         NonAssociativeDivisionAlgebra<Octonion> by OctonionDivisionAlgebra,
-        RModule<Real, Octonion> by OctonionModule {
+        RModule<Real, Octonion> by OctonionModule
 
-        }
-
-    {}
     /**
      * Embed a quaternion number into an octonion.
      */
@@ -198,7 +194,7 @@ fun main() {
     }
 
     // --- 5) Inverse via conjugate: x^{-1} = conj(x)/n(x) and x*x^{-1} = 1 (within tolerance) ---
-//    run {
+    run {
         val x = octonion(0.5, -1.0, 2.0, 0.25, -0.75, 1.5, -2.5, 3.0)
         val nx = normSq(x)
         check(eqR.neqv(nx, 0.0))
@@ -211,7 +207,7 @@ fun main() {
         // but numerics might drift: compare to 1 with tolerance on components.
         check(isOneApprox(left)) { "x^{-1}x expected 1, got $left" }
         check(isOneApprox(right)) { "xx^{-1} expected 1, got $right" }
-//    }
+    }
 
     // --- 6) Alternativity sanity checks (these SHOULD hold): (xx)y = x(xy), and y(xx) = (yx)x ---
     run {
