@@ -29,9 +29,9 @@ data class CD<A : Any>(val a: A, val b: A) {
  * We include `sigma` here to be able to use the Cayley-Dickson process to build the split versions.
  */
 class CayleyDickson<A : Any>(
-    private val base: InvolutiveAlgebra<A>,
+    private val base: NonAssociativeInvolutiveRing<A>,
     private val sigma: A = base.mul.identity
-) : InvolutiveAlgebra<CD<A>> {
+) : NonAssociativeInvolutiveRing<CD<A>> {
 
     override val add: AbelianGroup<CD<A>> = AbelianGroup.of<CD<A>>(
         identity = CD(base.add.identity, base.add.identity),

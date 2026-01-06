@@ -5,7 +5,12 @@ package org.vorpal.kosmos.algebra.structures
  * - An [AbelianGroup] for addition.
  * - A [Monoid] for multiplication.
  * with multiplication being distributive over addition. */
-interface Ring<A : Any>: Semiring<A>, Rng<A>, HasFromBigInt<A> {
+interface Ring<A : Any>:
+    NonAssociativeRing<A>,
+    Semiring<A>,
+    Rng<A>,
+    HasFromBigInt<A> {
+
     // Not needed, but specified for clarity.
     override val add: AbelianGroup<A>
     override val mul: Monoid<A>

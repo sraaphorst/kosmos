@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.core.ops.Endo
 
-interface NonAssociativeDivisionAlgebra<A : Any> : InvolutiveAlgebra<A>, HasReciprocal<A> {
+interface NonAssociativeDivisionAlgebra<A : Any> : NonAssociativeInvolutiveRing<A>, HasReciprocal<A> {
     override val zero: A
         get() = add.identity
 
