@@ -9,8 +9,8 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.RModule
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionModule
+import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -67,6 +67,8 @@ object OctonionAlgebras {
         override val mul: NonAssociativeMonoid<Octonion> = base.mul
         override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
         override val conj: Endo<Octonion> = base.conj
+
+        // The only thing that makes octonions invertible is that their norm is a composition norm.
         override val reciprocal: Endo<Octonion> = Endo(Symbols.SLASH) { o ->
             val n2: Real = normSq(o)
             require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "$n2 has no multiplicative inverse in ${Symbols.BB_O}."}
@@ -77,8 +79,8 @@ object OctonionAlgebras {
             // Use the QuaternionModule's action to scale.
             // We could use OctonionModule, but we fall back to QuaternionModule to avoid circular dependencies.
             Octonion(
-                QuaternionModule.leftAction(scale, oc.a),
-                QuaternionModule.leftAction(scale, oc.b)
+                QuaternionVectorSpace.leftAction(scale, oc.a),
+                QuaternionVectorSpace.leftAction(scale, oc.b)
             )
         }
         override val one = mul.identity                                                             // quaternion 1 in "a"
@@ -98,10 +100,10 @@ object OctonionAlgebras {
      * This is the only module from the Cayley-Dickson tower we can define for the octonions, since
      * the reals lie in the center, so scalar multiplication is safe.
      */
-    val OctonionModule: RModule<Real, Octonion> = RModule.of(
-        scalars = RealField,
-        group = OctonionDivisionAlgebra.add,
-        leftAction = LeftAction { r, o -> octonion(
+    val OctonionVectorSpace: VectorSpace<Real, Octonion> = VectorSpace.of(
+        RealField,
+        OctonionDivisionAlgebra.add,
+        LeftAction { r, o -> octonion(
             r * o.w, r * o.x, r * o.y, r * o.z,
             r * o.u, r * o.v, r * o.s, r * o.t)
         }
@@ -110,7 +112,7 @@ object OctonionAlgebras {
     object OctonionStarAlgebra:
         NonAssociativeStarAlgebra<Real, Octonion>,
         NonAssociativeDivisionAlgebra<Octonion> by OctonionDivisionAlgebra,
-        RModule<Real, Octonion> by OctonionModule
+        VectorSpace<Real, Octonion> by OctonionVectorSpace
 
     /**
      * Embed a quaternion number into an octonion.
