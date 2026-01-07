@@ -12,6 +12,7 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
+import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -145,10 +146,10 @@ object QuaternionAlgebras {
     }
 
     // Scalars: Real, act componentwise on (a, b)
-    val QuaternionModule: RModule<Real, Quaternion> = RModule.of(
-        scalars = RealField,
-        group = QuaternionDivisionRing.add,
-        leftAction = LeftAction { r, q ->
+    val QuaternionVectorSpace: VectorSpace<Real, Quaternion> = VectorSpace.of(
+        RealField,
+        QuaternionDivisionRing.add,
+        LeftAction { r, q ->
             Quaternion(
                 ComplexModule.leftAction(r, q.a),
                 ComplexModule.leftAction(r, q.b)
@@ -186,9 +187,7 @@ object QuaternionAlgebras {
     object QuaternionStarAlgebra:
         StarAlgebra<Real, Quaternion>,
         InvolutiveRing<Quaternion> by QuaternionDivisionRing,
-        RModule<Real, Quaternion> by QuaternionModule {
-            override val one = QuaternionDivisionRing.one
-        }
+        VectorSpace<Real, Quaternion> by QuaternionVectorSpace
 }
 
 
