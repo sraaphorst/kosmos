@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.combinatorics.numbersystems
 
 import org.vorpal.kosmos.combinatorics.Factorial
-import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**

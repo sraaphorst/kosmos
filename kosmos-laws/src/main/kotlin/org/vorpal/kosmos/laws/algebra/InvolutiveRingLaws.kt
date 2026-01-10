@@ -6,12 +6,13 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [InvolutiveRing] laws:
- * - [RingLaws]
- * - [ConjugationLaws]
+ * - [NonAssociativeInvolutiveRingLaws]
+ * - [AssociativityLaw]
  */
 class InvolutiveRingLaws<A : Any>(
     ring: InvolutiveRing<A>,
@@ -27,12 +28,17 @@ class InvolutiveRingLaws<A : Any>(
         ring.conj.symbol
     )
 
-    private val ringLaws = RingLaws(ring, arb, eq, pr)
-    private val conjugationLaws = ConjugationLaws(ring.conj, ring.add, ring.mul, arb, eq, pr)
+    private val nonAssociativeInvolutiveRingLaws = NonAssociativeInvolutiveRingLaws(
+        ring, arb, eq, pr
+    )
+
+    private val structureLaws: List<TestingLaw> = listOf(
+        AssociativityLaw(ring.mul.op, arb, eq, pr)
+    )
 
     override fun laws(): List<TestingLaw> =
-        ringLaws.laws() + conjugationLaws.laws()
+        nonAssociativeInvolutiveRingLaws.laws() + structureLaws
 
     override fun fullLaws(): List<TestingLaw> =
-        ringLaws.fullLaws() + conjugationLaws.fullLaws()
+        nonAssociativeInvolutiveRingLaws.fullLaws() + structureLaws
 }

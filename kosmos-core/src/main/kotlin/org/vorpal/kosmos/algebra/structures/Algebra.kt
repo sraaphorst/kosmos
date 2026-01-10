@@ -26,7 +26,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
  *
  *  Another simple example: C is an algebra over R.
  */
-interface Algebra<R : Any, A : Any> : RModule<R, A>, Ring<A> {
+interface Algebra<R : Any, A : Any> : NonAssociativeAlgebra<R, A>, Ring<A> {
     override val scalars: CommutativeRing<R>
 
     companion object {

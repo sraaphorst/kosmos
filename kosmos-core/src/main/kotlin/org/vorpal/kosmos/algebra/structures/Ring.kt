@@ -15,9 +15,6 @@ interface Ring<A : Any>:
     override val add: AbelianGroup<A>
     override val mul: Monoid<A>
 
-    override val one: A
-        get() = mul.identity
-
     companion object {
         fun <A : Any> of(
             add: AbelianGroup<A>,
