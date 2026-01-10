@@ -10,7 +10,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.VectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionVectorSpace
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionRealVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -50,6 +50,25 @@ object OctonionAlgebras {
         REVERSED
     }
 
+    private val fanoCycles: List<Triple<Int, Int, Int>> = listOf(
+        Triple(1, 2, 3),
+        Triple(1, 4, 5),
+        Triple(1, 7, 6),
+        Triple(2, 4, 6),
+        Triple(2, 5, 7),
+        Triple(3, 4, 7),
+        Triple(3, 6, 5)
+    )
+
+    private val orientedProduct: Map<Pair<Int, Int>, Int> =
+        buildMap {
+            for ((a, b, c) in fanoCycles) {
+                put(a to b, c)
+                put(b to c, a)
+                put(c to a, b)
+            }
+        }
+
     data class OctonionConvention(
         val orientation: FanoOrientation,
         val perm: IntArray = intArrayOf(0,1,2,3,4,5,6,7), // 1-based mapping of labels
@@ -79,8 +98,8 @@ object OctonionAlgebras {
             // Use the QuaternionModule's action to scale.
             // We could use OctonionModule, but we fall back to QuaternionModule to avoid circular dependencies.
             Octonion(
-                QuaternionVectorSpace.leftAction(scale, oc.a),
-                QuaternionVectorSpace.leftAction(scale, oc.b)
+                QuaternionRealVectorSpace.leftAction(scale, oc.a),
+                QuaternionRealVectorSpace.leftAction(scale, oc.b)
             )
         }
         override val one = mul.identity                                                             // quaternion 1 in "a"
@@ -112,7 +131,10 @@ object OctonionAlgebras {
     object OctonionStarAlgebra:
         NonAssociativeStarAlgebra<Real, Octonion>,
         NonAssociativeDivisionAlgebra<Octonion> by OctonionDivisionAlgebra,
-        VectorSpace<Real, Octonion> by OctonionVectorSpace
+        VectorSpace<Real, Octonion> by OctonionVectorSpace {
+            // Disambiguate zero.
+            override val zero = OctonionDivisionAlgebra.zero
+        }
 
     /**
      * Embed a quaternion number into an octonion.

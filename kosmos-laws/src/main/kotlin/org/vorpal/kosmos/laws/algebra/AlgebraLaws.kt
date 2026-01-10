@@ -6,14 +6,13 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [Algebra] laws:
- * - [CommutativeRingLaws] (full)
- * - [RingLaws]
- * - [RModuleLaws]
- * - [algebraMulBilinearityLaws] (avoids distributivity retesting that would happen with BilinearityLaws)
+ * - [NonAssociativeAlgebraLaws]
+ * - [AssociativityLaw]
  */
 class AlgebraLaws<R : Any, A : Any>(
     algebra: Algebra<R, A>,
@@ -38,31 +37,19 @@ class AlgebraLaws<R : Any, A : Any>(
         algebraDescription
     )
 
-    private val scalarRingLaws: CommutativeRingLaws<R> by lazy {
-        CommutativeRingLaws(algebra.scalars, scalarArb, eqR, prR)
-    }
-    private val ringLaws = RingLaws(algebra, algebraArb, eqA, prA)
-    private val moduleLaws = RModuleLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
+    private val nonAssociativeAlgebraLaws = NonAssociativeAlgebraLaws(
+        algebra, scalarArb, algebraArb, eqR, eqA, prR, prA
+    )
 
-    private val structureLaws: List<TestingLaw> =
-        algebraMulBilinearityLaws(
-            act = algebra.leftAction,
-            mulA = algebra.mul.op,
-            arbR = scalarArb,
-            arbA = algebraArb,
-            eqA = eqA,
-            prR = prR,
-            prA = prA
+    private val structureLaws: List<TestingLaw> = listOf(
+        AssociativityLaw(
+            algebra.mul.op, algebraArb, eqA, prA
         )
+    )
 
     override fun laws(): List<TestingLaw> =
-        ringLaws.laws() +
-            moduleLaws.laws() +
-            structureLaws
+        nonAssociativeAlgebraLaws.laws() + structureLaws
 
     override fun fullLaws(): List<TestingLaw> =
-        scalarRingLaws.fullLaws() +
-            ringLaws.fullLaws() +
-            moduleLaws.laws() +
-            structureLaws
+        nonAssociativeAlgebraLaws.fullLaws() + structureLaws
 }

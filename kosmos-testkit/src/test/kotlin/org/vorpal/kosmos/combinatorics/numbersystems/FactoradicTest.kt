@@ -3,22 +3,25 @@ package org.vorpal.kosmos.combinatorics.numbersystems
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.*
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.combinatorics.numbersystems.render.FactoradicPrinter
+import org.vorpal.kosmos.combinatorics.numbersystems.render.FactoradicPrintable
 import java.math.BigInteger
 
 class FactoradicTest : FunSpec({
 
     // Generator for non-negative BigIntegers
     val nonNegativeBigInt = arbitrary { rs ->
-        val numBytes = rs.random.nextInt(0, 13) // 0-12 bytes for reasonable sizes
+        val numBytes = rs.random.nextInt(0, 13)
+
         if (numBytes == 0) {
             BigInteger.ZERO
         } else {
-            val bytes = ByteArray(numBytes) { rs.random.nextInt().toByte() }
-            BigInteger(1, bytes) // signum = 1 ensures non-negative
+            val bytes = ByteArray(numBytes)
+            rs.random.nextBytes(bytes)
+            BigInteger(1, bytes)
         }
     }
 
@@ -77,17 +80,23 @@ class FactoradicTest : FunSpec({
 
     context("canonical form properties") {
         test("encoded representations have no trailing zeros") {
-            //checkAll(1000, nonNegativeBigInt.filter { it > BigInteger.ZERO }) { n ->
             checkAll(1000, nonNegativeBigInt) { n ->
                 val encoded = Factoradic.encode(n)
-                encoded.digits.isNotEmpty() && encoded.digits.last() != 0
+
+                if (n == BigInteger.ZERO) {
+                    encoded shouldBe Factoradic.ZERO
+                    encoded.digits.isEmpty() shouldBe true
+                } else {
+                    encoded.digits.isNotEmpty() shouldBe true
+                    encoded.digits.last() shouldNotBe 0
+                }
             }
         }
 
         test("encoded digit at position i satisfies 0 ≤ digit ≤ i") {
             checkAll(1000, nonNegativeBigInt) { n ->
                 val encoded = Factoradic.encode(n)
-                encoded.digits.withIndex().all { (idx, digit) -> digit in 0..idx }
+                encoded.digits.withIndex().all { (idx, digit) -> digit in 0..idx } shouldBe true
             }
         }
 
@@ -245,8 +254,8 @@ class FactoradicTest : FunSpec({
     }
 
     test("FactoradicPrintable produces expected results") {
-        FactoradicPrinter(Factoradic.fromDigitsLs(listOf(0, 1, 0, 3, 2))) shouldBe "(2 3 0 1 0)_!"
-        FactoradicPrinter(Factoradic.ZERO) shouldBe "()_!"
-        FactoradicPrinter(Factoradic.ONE) shouldBe "(1 0)_!"
+        FactoradicPrintable(Factoradic.fromDigitsLs(listOf(0, 1, 0, 3, 2))) shouldBe "(2 3 0 1 0)_!"
+        FactoradicPrintable(Factoradic.ZERO) shouldBe "()_!"
+        FactoradicPrintable(Factoradic.ONE) shouldBe "(1 0)_!"
     }
 })

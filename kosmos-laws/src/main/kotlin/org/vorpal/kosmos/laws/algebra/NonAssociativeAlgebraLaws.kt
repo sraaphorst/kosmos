@@ -1,0 +1,112 @@
+package org.vorpal.kosmos.laws.algebra
+
+import io.kotest.property.Arb
+import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
+import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.suiteName
+
+/**
+ * [NonAssociativeAlgebra] laws:
+ * - [CommutativeRingLaws] (full)
+ * - [NonAssociativeRingLaws]
+ * - [RModuleLaws]
+ * - [algebraMulBilinearityLaws] (avoids distributivity retesting that would happen with BilinearityLaws)
+ */
+class NonAssociativeAlgebraLaws<R : Any, A : Any>(
+    algebra: NonAssociativeAlgebra<R, A>,
+    scalarArb: Arb<R>,
+    algebraArb: Arb<A>,
+    eqR: Eq<R> = Eq.default(),
+    eqA: Eq<A> = Eq.default(),
+    prR: Printable<R> = Printable.default(),
+    prA: Printable<A> = Printable.default(),
+) : LawSuite {
+
+    private val scalarDescription =
+        "R[${algebra.scalars.add.op.symbol}${algebra.scalars.mul.op.symbol}]"
+
+    private val algebraDescription =
+        "NA[${algebra.add.op.symbol}${algebra.mul.op.symbol}]"
+
+    override val name = suiteName(
+        "NonAssociativeAlgebra",
+        scalarDescription,
+        algebra.leftAction.symbol,
+        algebraDescription
+    )
+
+    private val scalarRingLaws: CommutativeRingLaws<R> by lazy {
+        CommutativeRingLaws(algebra.scalars, scalarArb, eqR, prR)
+    }
+    private val ringLaws = NonAssociativeRingLaws(algebra, algebraArb, eqA, prA)
+    private val moduleLaws = RModuleLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
+
+    private val structureLaws: List<TestingLaw> =
+        algebraMulBilinearityLaws(
+            act = algebra.leftAction,
+            mulA = algebra.mul.op,
+            arbR = scalarArb,
+            arbA = algebraArb,
+            eqA = eqA,
+            prR = prR,
+            prA = prA
+        )
+
+    private val derivedLaws: List<TestingLaw> = listOf(
+        scalarActsAsLeftMultiplicationLaw(
+            act = algebra.leftAction,
+            mulA = algebra.mul.op,
+            oneA = algebra.one,
+            arbR = scalarArb,
+            arbA = algebraArb,
+            eqA = eqA,
+            prR = prR,
+            prA = prA
+        ),
+        scalarActsAsRightMultiplicationLaw(
+            act = algebra.leftAction,
+            mulA = algebra.mul.op,
+            oneA = algebra.one,
+            arbR = scalarArb,
+            arbA = algebraArb,
+            eqA = eqA,
+            prR = prR,
+            prA = prA
+        ),
+        scalarElementCommutesWithAllLaw(
+            act = algebra.leftAction,
+            mulA = algebra.mul.op,
+            oneA = algebra.one,
+            arbR = scalarArb,
+            arbA = algebraArb,
+            eqA = eqA,
+            prR = prR,
+            prA = prA
+        ),
+        scalarEmbeddingMultiplicativeDerivedLaw(
+            act = algebra.leftAction,
+            mulR = algebra.scalars.mul.op,
+            mulA = algebra.mul.op,
+            oneA = algebra.one,
+            arbR = scalarArb,
+            eqA = eqA,
+            prR = prR,
+            prA = prA
+        ),
+    )
+
+    override fun laws(): List<TestingLaw> =
+        ringLaws.laws() +
+            moduleLaws.laws() +
+            structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        scalarRingLaws.fullLaws() +
+            ringLaws.fullLaws() +
+            moduleLaws.fullLaws() +
+            structureLaws +
+            derivedLaws
+}

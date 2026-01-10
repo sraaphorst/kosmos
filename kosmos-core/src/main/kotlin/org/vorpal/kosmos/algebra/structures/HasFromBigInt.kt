@@ -3,7 +3,11 @@ package org.vorpal.kosmos.algebra.structures
 import java.math.BigInteger
 
 interface HasFromBigInt<A : Any> {
+    // Assume add is an additive group.
     val add: AbelianGroup<A>
+
+    // Thus, one is not the identity of add: it must be defined externally to be used as the
+    // identity of a (supposedly) multiplicative group.
     val one: A
 
     /**
@@ -19,7 +23,7 @@ interface HasFromBigInt<A : Any> {
                 BigInteger.ZERO -> acc
                 else -> aux(
                     rem - BigInteger.ONE,
-                    add.op(acc, one)
+                    add(acc, one)
                 )
             }
 
