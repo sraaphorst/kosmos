@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
+import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.Endo
@@ -24,7 +25,7 @@ import org.vorpal.kosmos.laws.suiteName
  */
 class ConjugationLaws<A : Any>(
     private val conj: Endo<A>,
-    private val add: NonAssociativeMonoid<A>,
+    private val add: Monoid<A>,
     private val mul: NonAssociativeMonoid<A>,
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
