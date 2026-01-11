@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [NonAssociativeDivisionAlgebra] laws:
- * - [InvolutiveAlgebraLaws]
+ * - [NonAssociativeInvolutiveRingLaws]
  * - [InvertibilityLaw]
  */
 class NonAssociativeDivisionAlgebraLaws<A : Any>(
@@ -31,8 +31,8 @@ class NonAssociativeDivisionAlgebraLaws<A : Any>(
         algebra.reciprocal.symbol
     )
 
-    private val involutiveAlgebraLaws: InvolutiveAlgebraLaws<A> by lazy {
-        InvolutiveAlgebraLaws(algebra, arb, eq, pr)
+    private val nonAssociativeInvolutiveRingLaws: NonAssociativeInvolutiveRingLaws<A> by lazy {
+        NonAssociativeInvolutiveRingLaws(algebra, arb, eq, pr)
     }
 
     private val reciprocalOrNull: UnaryOp<A, A?> =
@@ -54,8 +54,8 @@ class NonAssociativeDivisionAlgebraLaws<A : Any>(
         )
 
     override fun laws(): List<TestingLaw> =
-        involutiveAlgebraLaws.laws() + structureLaws
+        nonAssociativeInvolutiveRingLaws.laws() + structureLaws
 
     override fun fullLaws(): List<TestingLaw> =
-        involutiveAlgebraLaws.fullLaws() + structureLaws
+        nonAssociativeInvolutiveRingLaws.fullLaws() + structureLaws
 }

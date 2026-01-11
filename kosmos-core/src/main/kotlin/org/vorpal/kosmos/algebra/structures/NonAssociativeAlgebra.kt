@@ -1,25 +1,26 @@
 package org.vorpal.kosmos.algebra.structures
 
-/**
- * NonAssociativeAlgebra is an algebra with an:
- * - additive abelian group
- * - multiplicative nonassociative monoid
- */
-interface NonAssociativeAlgebra<A : Any>: HasFromBigInt<A> {
-    // Unnecessary, but specified for clarity.
-    override val add: AbelianGroup<A>
-    val mul: NonAssociativeMonoid<A>
+import org.vorpal.kosmos.core.ops.LeftAction
 
-    override val one: A
-        get() = mul.identity
+/**
+ * A non-associative algebra is a non-associative ring acted on by a commutative ring of scalars.
+ */
+interface NonAssociativeAlgebra<R : Any, A : Any> :
+    RModule<R, A>,
+    NonAssociativeRing<A> {
+    override val scalars: CommutativeRing<R>
 
     companion object {
-        fun <A : Any> of(
-            add: AbelianGroup<A>,
-            mul: NonAssociativeMonoid<A>
-        ): NonAssociativeAlgebra<A> = object : NonAssociativeAlgebra<A> {
-            override val add: AbelianGroup<A> = add
-            override val mul: NonAssociativeMonoid<A> = mul
+        fun <R : Any, A : Any> of(
+            scalars: CommutativeRing<R>,
+            algebraRing: NonAssociativeRing<A>,
+            leftAction: LeftAction<R, A>
+        ): NonAssociativeAlgebra<R, A> = object : NonAssociativeAlgebra<R, A> {
+            override val scalars = scalars
+            override val group = algebraRing.add
+            override val add = algebraRing.add
+            override val mul = algebraRing.mul
+            override val leftAction = leftAction
         }
     }
 }

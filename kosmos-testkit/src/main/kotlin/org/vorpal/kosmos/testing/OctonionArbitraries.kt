@@ -5,10 +5,11 @@ import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
 import org.vorpal.kosmos.algebra.structures.instances.Octonion
-import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.normSq
+import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.octonion
 
 object OctonionArbitraries {
+    private val octonions = OctonionAlgebras.OctonionDivisionAlgebra
 
     val octonion: Arb<Octonion> =
         Arb.bind(
@@ -26,7 +27,7 @@ object OctonionArbitraries {
 
     val reciprocalSafeOctonion: Arb<Octonion> =
         octonion.filter { o ->
-            val n2 = o.normSq()
+            val n2 = octonions.normSq(o)
             n2 in 0.01..10_000.0
         }
 

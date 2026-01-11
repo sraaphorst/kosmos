@@ -6,13 +6,13 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [StarAlgebra] laws:
- * - [AlgebraLaws]
- * - [ConjugationLaws]
- * - star commutes with scalar action: (r ⊳ a)* = r ⊳ (a*)
+ * - [NonAssociativeStarAlgebraLaws]
+ * - [AssociativityLaw]
  */
 class StarAlgebraLaws<R : Any, A : Any>(
     algebra: StarAlgebra<R, A>,
@@ -32,40 +32,19 @@ class StarAlgebraLaws<R : Any, A : Any>(
         algebra.conj.symbol
     )
 
-    private val algebraLaws: AlgebraLaws<R, A> by lazy {
-        AlgebraLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
+    private val algebraStarLaws: NonAssociativeStarAlgebraLaws<R, A> by lazy {
+        NonAssociativeStarAlgebraLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
     }
 
-    private val conjugationLaws: ConjugationLaws<A> by lazy {
-        ConjugationLaws(
-            conj = algebra.conj,
-            add = algebra.add,
-            mul = algebra.mul,
-            arb = algebraArb,
-            eq = eqA,
-            pr = prA
-        )
+    private val associativityLaw: TestingLaw by lazy {
+        AssociativityLaw(algebra.mul.op, algebraArb, eqA, prA)
     }
-
-    private val structureLaws: List<TestingLaw> = listOf(
-        starCommutesWithScalarActionLaw(
-            act = algebra.leftAction,
-            star = algebra.conj,
-            arbR = scalarArb,
-            arbA = algebraArb,
-            eqA = eqA,
-            prR = prR,
-            prA = prA
-        )
-    )
 
     override fun laws(): List<TestingLaw> =
-        algebraLaws.laws() +
-            conjugationLaws.laws() +
-            structureLaws
+        algebraStarLaws.laws() +
+            associativityLaw
 
     override fun fullLaws(): List<TestingLaw> =
-        algebraLaws.fullLaws() +
-            conjugationLaws.laws() +
-            structureLaws
+        algebraStarLaws.fullLaws() +
+            associativityLaw
 }

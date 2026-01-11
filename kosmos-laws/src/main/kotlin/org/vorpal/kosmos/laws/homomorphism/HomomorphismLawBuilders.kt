@@ -109,7 +109,7 @@ fun <A : Any> antiPreservesBinaryOpLaw(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
-    label: String = "endoomorphism: anti-preserves op"
+    label: String = "endomorphism: anti-preserves op"
 ) = antiPreservesBinaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
 
 /**
