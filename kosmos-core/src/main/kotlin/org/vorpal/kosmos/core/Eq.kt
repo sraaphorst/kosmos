@@ -130,7 +130,16 @@ object Eqs {
     /** Reals / Floats: factories for strict, epsilon, ULPs... */
 
     /** Strict IEEE equality (NaN != NaN), mostly for low-level cases. */
-    val realStrict: Eq<Real> = Eq { a, b -> a == b }
+    private fun canon0(x: Real): Real =
+        if (x == 0.0) 0.0 else x
+
+    val realStrict: Eq<Real> = Eq { a, b ->
+        canon0(a) == canon0(b)
+    }
+
+    private fun canon0(x: Float): Float =
+        if (x == 0.0f) 0.0f else x
+
     val floatStrict: Eq<Float> = Eq { a, b -> a == b }
 
     /**
