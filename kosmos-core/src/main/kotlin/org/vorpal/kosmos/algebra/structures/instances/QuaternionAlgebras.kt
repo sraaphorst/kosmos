@@ -88,7 +88,7 @@ object QuaternionAlgebras {
             val scale = 1.0 / n2
 
             // Use the ComplexRealVectorSpace's action to scale.
-            // We could use QuaternionModule, but we fall back to ComplexModule to avoid circular dependencies.
+            // We could use QuaternionModule, but we fall back to ComplexRealVectorSpace to avoid circular dependencies.
             Quaternion(
                 ComplexRealVectorSpace.leftAction(scale, qc.a),
                 ComplexRealVectorSpace.leftAction(scale, qc.b))
@@ -205,18 +205,13 @@ data class QuaternionBasis(
 )
 
 object QuaternionBases {
-    /**
-     * RIGHT: ij = k, LEFT: ij = -k.
-     */
-    enum class Handedness { RIGHT, LEFT }
-
     val cdI: Quaternion = Quaternion(ComplexField.i, ComplexField.zero)
     val cdJ: Quaternion = Quaternion(ComplexField.zero, ComplexField.one)
     val cdK: Quaternion = Quaternion(ComplexField.zero, ComplexField.i)
 
     fun basis(
         quaternions: DivisionRing<Quaternion>,
-        handedness: Handedness,
+        handedness: HyperComplex.Handedness,
         eq: Eq<Quaternion> = eqQuaternionStrict
     ): QuaternionBasis {
         val i = cdI
@@ -225,23 +220,22 @@ object QuaternionBases {
 
         val ij = quaternions.mul(i, j)
 
-        val kRight =
-            when {
-                eq(ij, k0) -> k0
-                eq(ij, quaternions.add.inverse(k0)) -> quaternions.add.inverse(k0)
-                else -> error("Sanity failed: i*j not equal to ±k0. CD convention mismatch.")
-            }
+        val kRight = when {
+            eq(ij, k0) -> k0
+            eq(ij, quaternions.add.inverse(k0)) -> quaternions.add.inverse(k0)
+            else -> error("Sanity failed: i*j not equal to ±k0. CD convention mismatch.")
+        }
 
         val k = when (handedness) {
-            Handedness.RIGHT -> kRight
-            Handedness.LEFT -> quaternions.add.inverse(kRight)
+            HyperComplex.Handedness.RIGHT -> kRight
+            HyperComplex.Handedness.LEFT -> quaternions.add.inverse(kRight)
         }
 
         return QuaternionBasis(i, j, k)
     }
 
     fun quaternionBasisPrintable(
-        handedness: Handedness,
+        handedness: HyperComplex.Handedness,
         prQ: Printable<Quaternion>
     ): Printable<QuaternionBasis> = Printable { b ->
         "⟨i=${prQ(b.i)}, j=${prQ(b.j)}, k=${prQ(b.k)}; handedness=$handedness⟩"
@@ -253,7 +247,7 @@ val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)
 
 fun main() {
     val quaternions = QuaternionAlgebras.QuaternionDivisionRing
-    val handedness = QuaternionBases.Handedness.RIGHT
+    val handedness = HyperComplex.Handedness.RIGHT
     val basis = QuaternionBases.basis(quaternions, handedness)
 
     val one = quaternions.one
@@ -265,11 +259,11 @@ fun main() {
     check(eq(quaternions.mul(basis.k, basis.k), negOne))
 
     when (handedness) {
-        QuaternionBases.Handedness.RIGHT -> {
+        HyperComplex.Handedness.RIGHT -> {
             check(eq(quaternions.mul(basis.i, basis.j), basis.k))
             check(eq(quaternions.mul(basis.j, basis.i), quaternions.add.inverse(basis.k)))
         }
-        QuaternionBases.Handedness.LEFT -> {
+        HyperComplex.Handedness.LEFT -> {
             check(eq(quaternions.mul(basis.i, basis.j), quaternions.add.inverse(basis.k)))
             check(eq(quaternions.mul(basis.j, basis.i), basis.k))
         }
