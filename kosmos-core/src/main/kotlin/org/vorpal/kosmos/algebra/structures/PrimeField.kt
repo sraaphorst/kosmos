@@ -9,10 +9,12 @@ import java.math.BigInteger
 /**
  * Prime fields 𝔽_p.
  */
-data class PrimeField(val p: BigInteger) : Field<BigInteger> {
+data class PrimeField(val p: BigInteger) : Field<BigInteger>, HasCharacteristic {
     init {
         require(p.isProbablePrime(PRIME_CHECKING)) { "$p is not a probable prime" }
     }
+
+    override val characteristic: BigInteger = p
 
     override val reciprocal: Endo<BigInteger> =
         Endo(Symbols.SLASH) { a ->

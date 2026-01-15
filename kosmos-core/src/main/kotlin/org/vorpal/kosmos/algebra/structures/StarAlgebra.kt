@@ -19,8 +19,7 @@ interface StarAlgebra<R : Any, A : Any>:
             leftAction: LeftAction<R, A>
         ): StarAlgebra<R, A> = object : StarAlgebra<R, A> {
             override val scalars = scalars
-            override val group = involutiveRing.add
-            override val add = group
+            override val add = involutiveRing.add
             override val mul = involutiveRing.mul
             override val conj = involutiveRing.conj
             override val leftAction = leftAction

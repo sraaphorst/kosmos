@@ -30,13 +30,13 @@ object DualModules {
         // Dual<F> is a commutative *ring*, not a field → RModule, not VectorSpace.
         override val scalars: CommutativeRing<DualOf<F>> = dual
 
-        val zero = base.group.identity
-        override val group: AbelianGroup<Pair<V, V>> = AbelianGroup.of(
+        val zero = base.add.identity
+        override val add: AbelianGroup<Pair<V, V>> = AbelianGroup.of(
             identity = zero to zero,
             op = BinOp(Symbols.PLUS) { (x1, x2), (y1, y2) ->
-                base.group.op(x1, y1) to base.group.op(x2, y2)
+                base.add.op(x1, y1) to base.add.op(x2, y2)
             },
-            inverse = Endo(Symbols.INVERSE) { (x, y) -> base.group.inverse(x) to base.group.inverse(y) }
+            inverse = Endo(Symbols.INVERSE) { (x, y) -> base.add.inverse(x) to base.add.inverse(y) }
         )
 
         override val leftAction: LeftAction<DualOf<F>, Pair<V, V>> =
@@ -46,7 +46,7 @@ object DualModules {
                 val ax = base.leftAction(a, x)
                 val ay = base.leftAction(a, y)
                 val bx = base.leftAction(b, x)
-                ax to base.group.op(ay, bx) // (a x, a y + b x)
+                ax to base.add.op(ay, bx) // (a x, a y + b x)
             }
     }
 

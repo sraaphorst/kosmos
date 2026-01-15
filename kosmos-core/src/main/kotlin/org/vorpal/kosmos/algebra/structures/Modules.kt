@@ -13,19 +13,18 @@ import org.vorpal.kosmos.core.ops.RightAction
  *    (r · s) ⊳ x = r ⊳ (s ⊳ x)
  *    1 ⊳ x = x
  */
-interface LeftRModule<R : Any, M : Any> {
-    val leftScalars: Ring<R>
-    val group: AbelianGroup<M>
-    val leftAction: LeftAction<R, M>
+interface LeftRModule<R : Any, M : Any> : LeftRSemimodule<R, M> {
+    override val leftScalars: Ring<R>
+    override val add: AbelianGroup<M>
 
     companion object {
         fun <R : Any, M : Any> of(
             leftScalars: Ring<R>,
-            group: AbelianGroup<M>,
+            add: AbelianGroup<M>,
             leftAction: LeftAction<R, M>,
         ): LeftRModule<R, M> = object : LeftRModule<R, M> {
             override val leftScalars = leftScalars
-            override val group = group
+            override val add = add
             override val leftAction = leftAction
         }
     }
@@ -41,19 +40,18 @@ interface LeftRModule<R : Any, M : Any> {
  *    x ⊲ (r · s) = (x ⊲ r) ⊲ s
  *    x ⊲ 1 = x
  */
-interface RightRModule<M : Any, S : Any> {
-    val rightScalars: Ring<S>
-    val group: AbelianGroup<M>
-    val rightAction: RightAction<M, S>
+interface RightRModule<M : Any, S : Any> : RightRSemimodule<M, S> {
+    override val rightScalars: Ring<S>
+    override val add: AbelianGroup<M>
 
     companion object {
         fun <M : Any, S : Any> of(
             rightScalars: Ring<S>,
-            group: AbelianGroup<M>,
+            add: AbelianGroup<M>,
             rightAction: RightAction<M, S>,
         ): RightRModule<M, S> = object : RightRModule<M, S> {
             override val rightScalars = rightScalars
-            override val group = group
+            override val add = add
             override val rightAction = rightAction
         }
     }
@@ -65,18 +63,22 @@ interface RightRModule<M : Any, S : Any> {
  *
  *    (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)
  */
-interface RSBiModule<R : Any, M : Any, S : Any> : LeftRModule<R, M>, RightRModule<M, S> {
+interface RSBiModule<R : Any, M : Any, S : Any> :
+    LeftRModule<R, M>,
+    RightRModule<M, S>,
+    RSBiSemimodule<R, M, S> {
+
     companion object {
         fun <R : Any, M : Any, S : Any> of(
             leftScalars: Ring<R>,
             rightScalars: Ring<S>,
-            group: AbelianGroup<M>,
+            add: AbelianGroup<M>,
             leftAction: LeftAction<R, M>,
             rightAction: RightAction<M, S>
         ): RSBiModule<R, M, S> = object : RSBiModule<R, M, S> {
             override val leftScalars = leftScalars
             override val rightScalars = rightScalars
-            override val group = group
+            override val add = add
             override val leftAction = leftAction
             override val rightAction = rightAction
         }
@@ -88,13 +90,17 @@ interface RSBiModule<R : Any, M : Any, S : Any> : LeftRModule<R, M>, RightRModul
  *
  * We model it as a left module; a canonical right action is derived by commutativity.
  */
-interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<M, R> {
-    val scalars: CommutativeRing<R>
+interface RModule<R : Any, M : Any> :
+    LeftRModule<R, M>,
+    RightRModule<M, R>,
+    Semimodule<R, M> {
 
-    override val leftScalars: Ring<R>
+    override val scalars: CommutativeRing<R>
+
+    override val leftScalars: CommutativeRing<R>
         get() = scalars
 
-    override val rightScalars: Ring<R>
+    override val rightScalars: CommutativeRing<R>
         get() = scalars
 
     override val rightAction: RightAction<M, R>
@@ -103,11 +109,11 @@ interface RModule<R : Any, M : Any> : LeftRModule<R, M>, RightRModule<M, R> {
     companion object {
         fun <R : Any, M : Any> of(
             scalars: CommutativeRing<R>,
-            group: AbelianGroup<M>,
+            add: AbelianGroup<M>,
             leftAction: LeftAction<R, M>
         ): RModule<R, M> = object : RModule<R, M> {
             override val scalars = scalars
-            override val group = group
+            override val add = add
             override val leftAction = leftAction
         }
     }

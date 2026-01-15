@@ -20,7 +20,7 @@ data class CD<A : Any>(val a: A, val b: A) {
 /**
  * The generic doubling step.
  *
- * It always gives (at least) an InvolutiveRing<CD<A>>.
+ * It always gives (at least) an NonAssociativeInvolutiveRing<CD<A>>.
  *
  * It doesn't try to decide "this is a Field, this is only a Ring, etc."
  * We will do tha that per stage when we know the algebraic facts by wrapping
@@ -28,9 +28,9 @@ data class CD<A : Any>(val a: A, val b: A) {
  *
  * We include `sigma` here to be able to use the Cayley-Dickson process to build the split versions.
  */
-class CayleyDickson<A : Any>(
+class CayleyDickson<A : Any> private constructor(
     private val base: NonAssociativeInvolutiveRing<A>,
-    private val sigma: A = base.mul.identity
+    val sigma: A
 ) : NonAssociativeInvolutiveRing<CD<A>> {
 
     override val add: AbelianGroup<CD<A>> = AbelianGroup.of<CD<A>>(
@@ -69,7 +69,36 @@ class CayleyDickson<A : Any>(
     override fun fromBigInt(n: BigInteger): CD<A> =
         CD(base.fromBigInt(n), base.add.identity)
 
-    override val conj = Endo<CD<A>>("conj") { (a, b) ->
+    override val conj = Endo<CD<A>>(Symbols.CONJ) { (a, b) ->
         CD(base.conj(a), base.add.inverse(b))
+    }
+
+    companion object {
+        /**
+         * Constructor for the Cayley–Dickson doubling step.
+         *
+         * - `usual` uses σ = 1 (the multiplicative identity)
+         * - `split` uses σ = -1 (the additive inverse of 1)
+         *
+         * These names correspond to the usual vs split forms over ℝ and many other bases.
+         */
+        fun <A : Any> withSigma(
+            base: NonAssociativeInvolutiveRing<A>,
+            sigma: A
+        ): CayleyDickson<A> = CayleyDickson(
+            base = base,
+            sigma = sigma
+        )
+
+        fun <A: Any> usual(
+            base: NonAssociativeInvolutiveRing<A>,
+        ): CayleyDickson<A> = withSigma(base, base.mul.identity)
+
+        fun <A: Any> split(
+            base: NonAssociativeInvolutiveRing<A>
+        ): CayleyDickson<A> {
+            val negOne = base.add.inverse(base.mul.identity)
+            return withSigma(base, negOne)
+        }
     }
 }

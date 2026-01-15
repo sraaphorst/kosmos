@@ -29,7 +29,7 @@ interface VectorField<F: Any, V: Any> {
  * operator to combine the vectors.
  */
 operator fun <F: Any, V: Any> VectorField<F, V>.plus(other: VectorField<F, V>): VectorField<F, V> =
-    VectorFields.of(space) { p -> space.group(this(p), other(p)) }
+    VectorFields.of(space) { p -> space.add(this(p), other(p)) }
 
 /**
  * Create a new [VectorField] by scaling the values of this vector space through a
@@ -43,7 +43,7 @@ operator fun <F: Any, V: Any> VectorField<F, V>.times(scalar: F): VectorField<F,
  * i.e. multiply vector assignments of VectorField by -1_F.
  */
 operator fun <F: Any, V: Any> VectorField<F, V>.unaryMinus(): VectorField<F, V> =
-    VectorFields.of(space) { p -> space.group.inverse(this(p)) }
+    VectorFields.of(space) { p -> space.add.inverse(this(p)) }
 
 /**
  * Apply a transformation φ: V -> V.
@@ -106,6 +106,6 @@ object VectorFields {
      * the zero vector.
      */
     fun <F: Any, V: Any> zero(space: VectorSpace<F, V>): VectorField<F, V> =
-        constant(space, space.group.identity)
+        constant(space, space.add.identity)
 }
 

@@ -12,12 +12,12 @@ interface VectorSpace<F : Any, V : Any> : RModule<F, V> {
 
     companion object {
         fun <F : Any, V : Any> of(
-            field: Field<F>,
-            vectorGroup: AbelianGroup<V>,
+            scalars: Field<F>,
+            add: AbelianGroup<V>,
             leftAction: LeftAction<F, V>
         ): VectorSpace<F, V> = object : VectorSpace<F, V> {
-            override val scalars = field
-            override val group = vectorGroup
+            override val scalars = scalars
+            override val add = add
             override val leftAction = leftAction
         }
     }
@@ -26,5 +26,23 @@ interface VectorSpace<F : Any, V : Any> : RModule<F, V> {
 /**
  * A vector space which has a non-zero, well-defined, finite dimensionality.
  */
-interface FiniteVectorSpace<F: Any, V: Any> : VectorSpace<F, V>, Dimensionality
+interface FiniteVectorSpace<F: Any, V: Any> : VectorSpace<F, V>, Dimensionality {
+    companion object {
+        fun <F : Any, V : Any> of(
+            scalars: Field<F>,
+            add: AbelianGroup<V>,
+            dimension: Int,
+            leftAction: LeftAction<F, V>
+        ): FiniteVectorSpace<F, V> {
+            require(dimension >= 0) { "dimension must be nonnegative, got $dimension" }
+
+            return object : FiniteVectorSpace<F, V> {
+                override val scalars = scalars
+                override val add = add
+                override val leftAction = leftAction
+                override val dimension = dimension
+            }
+        }
+    }
+}
 
