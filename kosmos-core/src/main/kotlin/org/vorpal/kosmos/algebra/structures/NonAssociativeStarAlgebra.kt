@@ -13,7 +13,6 @@ interface NonAssociativeStarAlgebra<R : Any, A : Any> :
             leftAction: LeftAction<R, A>
         ): NonAssociativeStarAlgebra<R, A> = object : NonAssociativeStarAlgebra<R, A> {
             override val scalars = scalars
-            override val group = involutiveRing.add
             override val add = involutiveRing.add
             override val mul = involutiveRing.mul
             override val conj = involutiveRing.conj

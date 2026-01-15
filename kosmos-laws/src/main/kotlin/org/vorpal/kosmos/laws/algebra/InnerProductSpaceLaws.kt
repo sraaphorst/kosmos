@@ -30,7 +30,7 @@ class InnerProductSpaceLaws<V : Any>(
         "InnerProductSpace",
         "R[${space.scalars.add.op.symbol}${space.scalars.mul.op.symbol}]",
         space.leftAction.symbol,
-        "V[${space.group.op.symbol}]",
+        "V[${space.add.op.symbol}]",
         "⟨·,·⟩"
     )
 
@@ -43,7 +43,7 @@ class InnerProductSpaceLaws<V : Any>(
             addAll(
                 realInnerBilinearityLaws(
                     inner = space.inner,
-                    addV = space.group.op,
+                    addV = space.add.op,
                     addR = space.scalars.add.op,
                     mulR = space.scalars.mul.op,
                     act = space.leftAction,
@@ -68,7 +68,7 @@ class InnerProductSpaceLaws<V : Any>(
             add(
                 realPositiveDefiniteLaw(
                     inner = org.vorpal.kosmos.core.ops.UnaryOp("⟨v,v⟩") { v -> space.inner(v, v) },
-                    zeroVector = space.group.identity,
+                    zeroVector = space.add.identity,
                     vectorArb = vectorArb,
                     vectorEq = eqV,
                     vectorPr = prV,

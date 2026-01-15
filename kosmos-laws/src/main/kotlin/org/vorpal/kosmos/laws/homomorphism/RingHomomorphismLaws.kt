@@ -24,7 +24,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
     ) : LawSuite {
-
+O
     override val name =
         "ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
 

@@ -17,7 +17,6 @@ interface NonAssociativeAlgebra<R : Any, A : Any> :
             leftAction: LeftAction<R, A>
         ): NonAssociativeAlgebra<R, A> = object : NonAssociativeAlgebra<R, A> {
             override val scalars = scalars
-            override val group = algebraRing.add
             override val add = algebraRing.add
             override val mul = algebraRing.mul
             override val leftAction = leftAction

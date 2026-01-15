@@ -53,8 +53,8 @@ object Derivative {
         val add = field.add
         val mul = field.mul
 
-        val pForward = space.group(p, space.leftAction(h, v))
-        val pBackward = space.group(p, space.leftAction(add.inverse(h), v))
+        val pForward = space.add(p, space.leftAction(h, v))
+        val pBackward = space.add(p, space.leftAction(add.inverse(h), v))
 
         val fForward = f(pForward)
         val fBackward = f(pBackward)
@@ -83,8 +83,8 @@ object Derivative {
         v: V,
         h: Real = 1e-6
     ): Real {
-        val pForward = space.group(p, space.leftAction(h, v))
-        val pBackward = space.group(p, space.leftAction(-h, v))
+        val pForward = space.add(p, space.leftAction(h, v))
+        val pBackward = space.add(p, space.leftAction(-h, v))
         return (f(pForward) - f(pBackward)) / (2.0 * h)
     }
 

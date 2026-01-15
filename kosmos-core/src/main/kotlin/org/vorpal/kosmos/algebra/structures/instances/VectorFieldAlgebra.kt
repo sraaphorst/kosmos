@@ -33,7 +33,7 @@ object VectorFieldAlgebra {
         op = BinOp(Symbols.PLUS) { vf1, vf2 -> vf1 + vf2 },
         inverse = Endo(Symbols.MINUS){ vf ->
             VectorFields.of(space) {
-                space.group.inverse(vf(it))
+                space.add.inverse(vf(it))
             }
         }
     )
@@ -48,7 +48,7 @@ object VectorFieldAlgebra {
         space: VectorSpace<F, V>
     ): RModule<ScalarField<F, V>, VectorField<F, V>> = RModule.of(
         scalars = ScalarFieldAlgebra.commutativeRing(space),
-        group = additiveAbelianGroup(space),
+        add = additiveAbelianGroup(space),
         leftAction = LeftAction { sf, vf -> sf actOn vf }
     )
 }

@@ -17,8 +17,6 @@ interface AbelianGroup<A : Any> : Group<A>, CommutativeMonoid<A> {
             override val identity = identity
             override val op = op
             override val inverse = inverse
-            override val leftDiv: BinOp<A> = BinOp(Symbols.DIV_LEFT) { a, b -> op(inverse(a), b) }
-            override val rightDiv: BinOp<A> = BinOp(Symbols.DIV_RIGHT) { a, b -> op(b, inverse(a))}
         }
     }
 }
