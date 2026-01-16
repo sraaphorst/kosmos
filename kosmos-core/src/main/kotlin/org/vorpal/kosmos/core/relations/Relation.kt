@@ -6,7 +6,7 @@ import org.vorpal.kosmos.core.ops.Op
 /**
  * A named binary relation on A. The [symbol] is for pretty-printing and law output.
  */
-data class Relation<A>(
+data class Relation<A : Any>(
     override val symbol: String = Symbols.REL,
     val rel: (A, A) -> Boolean
 ) : Op {
@@ -27,36 +27,36 @@ data class Relation<A>(
         Relation("(${symbol} ∨ ${other.symbol})") { a, b -> this(a, b) || other(a, b) }
 
     /** Precompose both arguments by f (contravariant in both slots). */
-    fun <B> contramap(f: (B) -> A): Relation<B> =
+    fun <B : Any> contramap(f: (B) -> A): Relation<B> =
         Relation(symbol) { x, y -> rel(f(x), f(y)) }
 }
 
 /* ---------- Current-relation carriers (no capitalized property names) ---------- */
 
-interface HasRelation<A>       { val relation: Relation<A> }       // usually “≤”
-interface HasStrictRelation<A> { val strictRelation: Relation<A> } // usually “<”
+interface HasRelation<A : Any>       { val relation: Relation<A> }       // usually “≤”
+interface HasStrictRelation<A : Any> { val strictRelation: Relation<A> } // usually “<”
 
 /* ---------- Law markers (checked elsewhere; declarative only) ---------- */
 
 // Non-strict (≤) properties
-interface Reflexive<A>     : HasRelation<A>
-interface Symmetric<A>     : HasRelation<A>
-interface Antisymmetric<A> : HasRelation<A>
-interface Transitive<A>    : HasRelation<A>
-interface Connex<A>        : HasRelation<A>   // total/connected: ∀a,b R(a,b) ∨ R(b,a)
+interface Reflexive<A : Any>     : HasRelation<A>
+interface Symmetric<A : Any>     : HasRelation<A>
+interface Antisymmetric<A : Any> : HasRelation<A>
+interface Transitive<A : Any>    : HasRelation<A>
+interface Connex<A : Any>        : HasRelation<A>   // total/connected: ∀a,b R(a,b) ∨ R(b,a)
 
 // Strict (<) properties
-interface Irreflexive<A>       : HasStrictRelation<A>
-interface Asymmetric<A>        : HasStrictRelation<A>
-interface TransitiveStrict<A>  : HasStrictRelation<A>
+interface Irreflexive<A : Any>       : HasStrictRelation<A>
+interface Asymmetric<A : Any>        : HasStrictRelation<A>
+interface TransitiveStrict<A : Any>  : HasStrictRelation<A>
 
 /** Totality on inequality: ∀a≠b. lt(a,b) ∨ lt(b,a). */
-interface TotalOnInequality<A> : HasStrictRelation<A>
+interface TotalOnInequality<A : Any> : HasStrictRelation<A>
 
 /* ---------- Concrete structures around a chosen relation ---------- */
 
 /** Preorder: reflexive + transitive. */
-interface Preorder<A> : Reflexive<A>, Transitive<A>, HasRelation<A> {
+interface Preorder<A : Any> : Reflexive<A>, Transitive<A>, HasRelation<A> {
     val le: Relation<A>
     override val relation: Relation<A> get() = le
 
@@ -66,7 +66,7 @@ interface Preorder<A> : Reflexive<A>, Transitive<A>, HasRelation<A> {
 }
 
 /** Poset: preorder + antisymmetry. */
-interface Poset<A> : Preorder<A>, Antisymmetric<A> {
+interface Poset<A : Any> : Preorder<A>, Antisymmetric<A> {
     val ge: Relation<A> get() = le.converse()
     /** Strict part: a < b  :⇔  a ≤ b ∧ ¬(b ≤ a). */
     val lt: Relation<A> get() = Relation(Symbols.LESS_THAN) { a, b -> le(a, b) && !le(b, a) }
@@ -76,16 +76,16 @@ interface Poset<A> : Preorder<A>, Antisymmetric<A> {
 }
 
 /** Equivalence relation given directly. */
-interface Equivalence<A> : Reflexive<A>, Symmetric<A>, Transitive<A>, HasRelation<A> {
+interface Equivalence<A : Any> : Reflexive<A>, Symmetric<A>, Transitive<A>, HasRelation<A> {
     val eq: Relation<A>
     override val relation: Relation<A> get() = eq
 }
 
 /** Total (linear) order: poset + connex (law). */
-interface TotalOrder<A> : Poset<A>
+interface TotalOrder<A : Any> : Poset<A>
 
 /** Strict order carried by `<`. */
-interface StrictOrder<A> : HasStrictRelation<A>, TransitiveStrict<A> {
+interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A> {
     val lt: Relation<A>
     override val strictRelation: Relation<A> get() = lt
 
@@ -95,35 +95,35 @@ interface StrictOrder<A> : HasStrictRelation<A>, TransitiveStrict<A> {
 }
 
 /** Total strict order (trichotomy is a law). */
-interface TotalStrictOrder<A> : StrictOrder<A>, TotalOnInequality<A>
+interface TotalStrictOrder<A : Any> : StrictOrder<A>, TotalOnInequality<A>
 
 /* ---------- Lightweight builders ---------- */
 
 object Preorders {
-    fun <A> of(le: Relation<A>): Preorder<A> = object : Preorder<A> { override val le = le }
+    fun <A : Any> of(le: Relation<A>): Preorder<A> = object : Preorder<A> { override val le = le }
 }
 
 object Posets {
-    fun <A> of(le: Relation<A>): Poset<A> = object : Poset<A> { override val le = le }
-    fun <A> totalOf(le: Relation<A>): TotalOrder<A> = object : TotalOrder<A> { override val le = le }
+    fun <A : Any> of(le: Relation<A>): Poset<A> = object : Poset<A> { override val le = le }
+    fun <A : Any> totalOf(le: Relation<A>): TotalOrder<A> = object : TotalOrder<A> { override val le = le }
 }
 
 object Equivalences {
-    fun <A> of(eq: Relation<A>): Equivalence<A> = object : Equivalence<A> { override val eq = eq }
+    fun <A : Any> of(eq: Relation<A>): Equivalence<A> = object : Equivalence<A> { override val eq = eq }
 }
 
 /* ---------- Bridges between ≤ and < ---------- */
 
 object StrictOrders {
     /** From a poset ≤, the canonical strict part: a < b :⇔ a ≤ b ∧ ¬(b ≤ a). */
-    fun <A> fromPoset(poset: Poset<A>): StrictOrder<A> =
+    fun <A : Any> fromPoset(poset: Poset<A>): StrictOrder<A> =
         object : StrictOrder<A> {
             override val lt: Relation<A> =
                 Relation(Symbols.LESS_THAN) { a, b -> poset.le(a, b) && !poset.le(b, a) }
         }
 
     /** From a total order ≤, produce a total strict order. */
-    fun <A> fromTotalOrder(total: TotalOrder<A>): TotalStrictOrder<A> =
+    fun <A : Any> fromTotalOrder(total: TotalOrder<A>): TotalStrictOrder<A> =
         object : TotalStrictOrder<A> {
             override val lt: Relation<A> =
                 Relation(Symbols.LESS_THAN) { a, b -> total.le(a, b) && !total.le(b, a) }
@@ -133,10 +133,10 @@ object StrictOrders {
      * From a strict order `<` and an equivalence `eq`, build a poset with
      *   a ≤ b :⇔ a < b ∨ a ≡ b.
      */
-    fun <A> toPoset(strict: StrictOrder<A>, eq: Relation<A>): Poset<A> =
+    fun <A : Any> toPoset(strict: StrictOrder<A>, eq: Relation<A>): Poset<A> =
         Posets.of(strict.leFrom(eq))
 
     /** Same bridge but asserting totality in laws. */
-    fun <A> toTotalOrder(strict: TotalStrictOrder<A>, eq: Relation<A>): TotalOrder<A> =
+    fun <A : Any> toTotalOrder(strict: TotalStrictOrder<A>, eq: Relation<A>): TotalOrder<A> =
         Posets.totalOf(strict.leFrom(eq))
 }
