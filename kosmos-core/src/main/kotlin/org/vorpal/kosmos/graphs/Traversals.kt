@@ -3,6 +3,56 @@ package org.vorpal.kosmos.graphs
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.functional.datastructures.Either
 
+/**
+ * This leverages the Csr-Graph performance boost by not requiring the generation of a FiniteSet of the neighbors
+ * before iterating over them.
+ */
+@Suppress("UNCHECKED_CAST")
+private fun <V : Any> UndirectedGraph<V>.forEachNeighborCompat(
+    of: V,
+    action: (V) -> Unit
+) {
+    val g = this
+    if (g is FastNeighbors<*>) {
+        (g as FastNeighbors<V>).forEachNeighbor(of, action)
+    } else {
+        for (w in neighbors(of)) action(w)
+    }
+}
+
+/**
+ * This leverages the Csr-Graph performance boost by not requiring the generation of a FiniteSet of the neighbors
+ * before iterating over them.
+ */
+@Suppress("UNCHECKED_CAST")
+private fun <V : Any> DirectedGraph<V>.forEachOutNeighborCompat(
+    of: V,
+    action: (V) -> Unit
+) {
+    val g = this
+    if (g is FastOutNeighbors<*>) {
+        (g as FastOutNeighbors<V>).forEachOutNeighbor(of, action)
+    } else {
+        for (w in outNeighbors(of)) action(w)
+    }
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun <V : Any> UndirectedGraph<V>.forEachNeighborCompatUntil(
+    of: V,
+    f: (V) -> Boolean
+) {
+    val g = this
+    if (g is FastNeighborsStop<*>) {
+        (g as FastNeighborsStop<V>).forEachNeighborUntil(of, f)
+        return
+    }
+
+    for (w in neighbors(of)) {
+        if (!f(w)) return
+    }
+}
+
 /** Early‑stop signal used only by the *Stop* variants. */
 sealed interface FoldStep<out S, out R> {
     data class Continue<S>(val state: S) : FoldStep<S, Nothing>
@@ -33,7 +83,7 @@ fun <V: Any, S> UndirectedGraph<V>.bfsFoldFrom(
 
     while (q.isNotEmpty()) {
         val v = q.removeFirst()
-        for (w in neighbors(v)) {
+        forEachNeighborCompat(v) { w ->
             val tree = visited.add(w)
             s = onEdge(s, v, w, tree)
             if (tree) {
@@ -63,7 +113,7 @@ fun <V: Any, S> UndirectedGraph<V>.bfsFoldComponents(
 
         while (q.isNotEmpty()) {
             val v = q.removeFirst()
-            for (w in neighbors(v)) {
+            forEachNeighborCompat(v) { w ->
                 val tree = visited.add(w)
                 s = onEdge(s, v, w, tree)
                 if (tree) {
@@ -92,13 +142,19 @@ fun <V: Any, S, R> UndirectedGraph<V>.bfsFoldComponentsStop(
     fun stepDiscover(v: V): Either<R, Unit> =
         when (val k = onDiscover(s, v)) {
             is FoldStep.Stop -> Either.left(k.result)
-            is FoldStep.Continue -> { s = k.state; Either.right(Unit) }
+            is FoldStep.Continue -> {
+                s = k.state
+                Either.right(Unit)
+            }
         }
 
     fun stepEdge(v: V, w: V, tree: Boolean): Either<R, Unit> =
         when (val k = onEdge(s, v, w, tree)) {
             is FoldStep.Stop -> Either.left(k.result)
-            is FoldStep.Continue -> { s = k.state; Either.right(Unit) }
+            is FoldStep.Continue -> {
+                s = k.state
+                Either.right(Unit)
+            }
         }
 
     for (root in vertices) {
@@ -113,20 +169,34 @@ fun <V: Any, S, R> UndirectedGraph<V>.bfsFoldComponentsStop(
 
         while (q.isNotEmpty()) {
             val v = q.removeFirst()
-            for (w in neighbors(v)) {
+
+            var stop: Either<R, S>? = null
+
+            forEachNeighborCompatUntil(v) { w ->
                 val tree = visited.add(w)
+
                 when (val e = stepEdge(v, w, tree)) {
-                    is Either.Left -> return e
+                    is Either.Left -> {
+                        stop = Either.left(e.value)
+                        return@forEachNeighborCompatUntil false
+                    }
                     is Either.Right -> {}
                 }
+
                 if (tree) {
                     q.add(w)
                     when (val d = stepDiscover(w)) {
-                        is Either.Left -> return d
+                        is Either.Left -> {
+                            stop = Either.left(d.value)
+                            return@forEachNeighborCompatUntil false
+                        }
                         is Either.Right -> {}
                     }
                 }
+                true
             }
+
+            if (stop != null) return stop
         }
     }
     return Either.right(s)
