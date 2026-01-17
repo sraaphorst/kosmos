@@ -19,7 +19,7 @@ import org.vorpal.kosmos.core.linear.values.VecLike
  */
 internal object DenseMatKernel {
     fun <A : Any> checkSize(
-        x: DenseMat<A>,
+        x: MatLike<A>,
         rows: Int,
         cols: Int
     ) {
@@ -147,5 +147,128 @@ internal object DenseMatKernel {
         }
 
         return DenseVec.fromArrayUnsafe(out)
+    }
+
+    /**
+     * Hadamard product: A ⊙ B
+     *
+     * Given two matrices of the same size `m×n`, calculate their Hadamard product, i.e, their pointwise product.
+     *
+     * This simply requires a multiplication: we take a [Semiring].
+     */
+    fun <R : Any> hadamard(
+        semiring: Semiring<R>,
+        mat1: MatLike<R>,
+        mat2: MatLike<R>
+    ): DenseMat<R> {
+        require(mat1.rows == mat2.rows && mat1.cols == mat2.cols) {
+            "Matrices must have same shape, got: ${mat1.rows}${Symbols.TIMES}${mat1.cols} and ${mat2.rows}$Symbols.TIMES}${mat2.cols}"
+        }
+        val m = mat1.rows
+        val n = mat1.cols
+        val out = arrayOfNulls<Any?>(m * n)
+
+        var r = 0
+        while (r < m) {
+            var c = 0
+            while (c < n) {
+                out[r * m + c] = semiring.mul(mat1[r, c], mat2[r, c])
+                c += 1
+            }
+            r += 1
+        }
+        return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    /**
+     * Kronecker product A⊗B: given two matrices
+     * - `A` which is `m×n` over [R]
+     * - `B` which is `p×q` over [R]
+     * for a [Semiring] over [R], calculate an `(mp)×(nq)` matrix such that:
+     *
+     *
+     *    A⊗B[ip + r, jq + c] = A[i,j] * B[r,c]
+     *
+     */
+    fun <R : Any> kronecker(
+        semiring: Semiring<R>,
+        mat1: MatLike<R>,
+        mat2: MatLike<R>
+    ): DenseMat<R> {
+        val m = mat1.rows
+        val n = mat1.cols
+        val p = mat2.rows
+        val q = mat2.cols
+
+        val outRows = m * p
+        val outCols = n * q
+        val out = arrayOfNulls<Any?>(outRows * outCols)
+
+        var i = 0
+        while (i < m) {
+            var j = 0
+            while (j < n) {
+                val aij = mat1[i, j]
+
+                var r = 0
+                while (r < p) {
+                    var c = 0
+                    while (c < q) {
+                        val row = i * p + r
+                        val col = j * q + c
+                        val dest = row * outCols + col
+                        out[dest] = semiring.mul(aij, mat2[r, c])
+                        c += 1
+                    }
+                    r += 1
+                }
+                j += 1
+            }
+            i += 1
+        }
+        return DenseMat.fromArrayUnsafe(outRows, outCols, out)
+    }
+
+    /**
+     * Given a matrix, flatten it from a `r×c` matrix to a vector of length `rc` along the rows.
+     */
+    fun <A : Any> flattenRowMajor(
+        x: MatLike<A>,
+    ): DenseVec<A> {
+        val rows = x.rows
+        val cols = x.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            var c = 0
+            while (c < cols) {
+                out[r * cols + c] = x[r, c]
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    /**
+     * Given a vector of length `rc`, unflatten it to a matrix of size `r×c`.
+     */
+    fun <A : Any> unflattenRowMajor(
+        x: VecLike<A>,
+        rows: Int,
+        cols: Int,
+    ): DenseMat<A> {
+        DenseKernel.requireSize(x.size, rows * cols)
+
+        val out = arrayOfNulls<Any?>(rows * cols)
+        var i = 0
+        while (i < rows * cols) {
+            out[i] = x[i]
+            i += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
 }

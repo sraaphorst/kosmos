@@ -135,7 +135,9 @@ object Symbols {
     const val COMPOSE = OPEN_CIRCLE
     const val DIV_LEFT = BACKSLASH
     const val DIV_RIGHT = SLASH
+    const val HADAMARD = O_DOT
     const val INJECTION = MAPS_INTO
+    const val KRONECKER = O_TIMES
     const val LEXICOGRAPHIC = BIG_DOT
     const val RADICAL = SQRT
     const val SET_MINUS = BACKSLASH

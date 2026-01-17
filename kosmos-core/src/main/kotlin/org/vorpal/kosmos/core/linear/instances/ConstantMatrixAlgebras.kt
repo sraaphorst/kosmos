@@ -265,7 +265,7 @@ object ConstantMatrixAlgebras {
     /**
      * Replace the data vector [x] by its sample mean.
      */
-    fun <F: Any> meanProject(
+    fun <F : Any> meanProject(
         field: Field<F>,
         x: DenseVec<F>
     ): DenseVec<F> {
