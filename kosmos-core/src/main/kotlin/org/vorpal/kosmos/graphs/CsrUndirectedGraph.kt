@@ -40,14 +40,14 @@ class CsrUndirectedGraph private constructor(
         }
     }
 
-    override fun forEachNeighborUntil(of: Int, f: (Int) -> Boolean) {
+    override fun forEachNeighborUntil(of: Int, action: (Int) -> Boolean) {
         require(of in 0 until adj.vertexCount)
         val start = adj.offsets[of]
         val end = adj.offsets[of + 1]
 
         var i = start
         while (i < end) {
-            if (!f(adj.neighbors[i])) return
+            if (!action(adj.neighbors[i])) return
             i += 1
         }
     }
