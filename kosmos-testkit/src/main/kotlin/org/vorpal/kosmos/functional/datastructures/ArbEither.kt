@@ -7,7 +7,7 @@ import io.kotest.property.arbitrary.map
 /**
  * Arbitraries for property-based testing
  */
-object EitherArb {
+object ArbEither {
     fun <L, R> either(arbL: Arb<L>, arbR: Arb<R>): Arb<Either<L, R>> =
         arbitrary { rs ->
             if (rs.random.nextBoolean()) {

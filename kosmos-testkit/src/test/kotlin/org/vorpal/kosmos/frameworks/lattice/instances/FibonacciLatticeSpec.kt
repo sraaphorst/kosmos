@@ -8,25 +8,24 @@ import org.vorpal.kosmos.laws.core.IndexFunctionLaws
 import org.vorpal.kosmos.laws.core.IndexableLaws
 import java.math.BigInteger
 
-private fun bi(n: Int) = BigInteger.valueOf(n.toLong())
-
 class FibonacciLatticeSpec : StringSpec({
 
     // --- Smoke ---
     "FibonacciLattice basic smoke tests" {
-        FibonacciLattice.index(1) shouldBe bi(1)
-        FibonacciLattice.index(2) shouldBe bi(1)
-        FibonacciLattice.index(3) shouldBe bi(2)
+        FibonacciLattice.index(1) shouldBe BigInteger.ONE
+        FibonacciLattice.index(2) shouldBe BigInteger.ONE
+        FibonacciLattice.index(3) shouldBe BigInteger.TWO
     }
 
     // --- Sequence values ---
     "first 11 Fibonacci numbers via lattice index (1-based)" {
         val got = (1..10).map(FibonacciLattice::index)
-        val exp = listOf(1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(::bi)
+        val exp = listOf(1, 1, 2, 3, 5, 8, 13, 21, 34, 55).map(Int::toBigInteger)
         got shouldContainExactly exp
     }
 
     "FibonacciLattice satisfies IndexableLaws" {
+        // Warning reported here regarding type inference, but removing type causes compilation error.
         val lawsCtx = IndexFunctionLaws.Context<
                 LatticeIndexFunction<RecurrenceLattice<BigInteger>>
                 >(

@@ -45,8 +45,5 @@ object RealAlgebras {
         // Disambiguate HasReciprocal.zero:
         override val zero: Real
             get() = RealField.zero
-
-        override val one: Real
-            get() = RealField.one
     }
 }

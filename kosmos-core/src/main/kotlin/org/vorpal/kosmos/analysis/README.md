@@ -111,13 +111,13 @@ In shorthand:
 ## Code Example
 
 ```kotlin
-val f = ScalarFields.of(RealVectorSpace2D) { v -> v.x * v.x + v.y * v.y }
+val f = ScalarField.of(RealVectorSpace2D) { v -> v.x * v.x + v.y * v.y }
 
-val df = CovectorFields.of(RealVectorSpace2D) { p ->
-    Covectors.of(RealVectorSpace2D) { v -> 2 * p.x * v.x + 2 * p.y * v.y }
+val df = CovectorField.of(RealVectorSpace2D) { p ->
+    Covector.of(RealVectorSpace2D) { v -> 2 * p.x * v.x + 2 * p.y * v.y }
 }
 
-val X = VectorFields.of(RealVectorSpace2D) { v -> Vec2R(-v.y, v.x) }
+val X = VectorField.of(RealVectorSpace2D) { v -> Vec2R(-v.y, v.x) }
 
 // Evaluate ⟨df, X⟩ at a point:
 val value = df(Vec2R(1.0, 2.0))(X(Vec2R(1.0, 2.0))) // directional derivative
@@ -141,7 +141,7 @@ val value = df(Vec2R(1.0, 2.0))(X(Vec2R(1.0, 2.0))) // directional derivative
 
 ---
 
-**Kosmos Analysis** — bringing algebraic precision to geometric intuition.
+**Kosmos Analysis** - bringing algebraic precision to geometric intuition.
 
 
 # Scalar, Vector, and Covector Fields in Kosmos
@@ -208,7 +208,7 @@ fun <F : Any, V : InnerProductSpace<F, V>> gradient(
     }
 ```
 
-This is the most elegant formulation—used when the geometry (metric) is intrinsic to the vector space.
+This is the most elegant formulation, used when the geometry (metric) is intrinsic to the vector space.
 
 ---
 
@@ -241,9 +241,9 @@ This version allows dynamic or curved metrics (e.g. Riemannian manifolds).
 val df = differential(f, finiteDifferenceDerivative2D())
 val gradF = gradient(f, finiteDifferenceDerivative2D())
 
-val omega: CovectorField<Double, Vec2R> = df
-val X: VectorField<Double, Vec2R> = gradF
-val scalar: ScalarField<Double, Vec2R> = omega(X)
+val omega: CovectorField<Real, Vec2R> = df
+val X: VectorField<Real, Vec2R> = gradF
+val scalar: ScalarField<Real, Vec2R> = omega(X)
 ```
 
 ---

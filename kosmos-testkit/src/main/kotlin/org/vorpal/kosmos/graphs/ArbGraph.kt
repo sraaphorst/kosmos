@@ -20,7 +20,7 @@ import kotlin.math.min
  * You typically provide a vertex Arb (e.g., `Arb.int()` or `Arb.string()`) and a size range.
  * These generators will draw a fresh vertex set (no duplicates) and then add edges/arcs accordingly.
  */
-object GraphArbs {
+object ArbGraph {
 
     /* ============================
      *  Undirected: Erdős–Rényi G(n,p)

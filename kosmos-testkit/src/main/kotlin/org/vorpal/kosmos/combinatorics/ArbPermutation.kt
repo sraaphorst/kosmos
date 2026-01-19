@@ -112,7 +112,7 @@ fun <A: Any> generateArbPermutationPair(
 /**
  * Specialized generators for common types.
  */
-object PermutationArbs {
+object ArbPermutation {
 
     fun arbIntPermutation(
         lowerBound: Int = 2,

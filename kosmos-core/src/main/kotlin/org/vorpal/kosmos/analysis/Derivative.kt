@@ -1,128 +1,100 @@
 package org.vorpal.kosmos.analysis
 
-import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.math.Real
+import java.math.BigInteger
 
 /**
  * Provides generic finite-difference directional derivatives and differentials
- * for [ScalarField]s over arbitrary [Field]s and [VectorSpace]s.
+ * for [ScalarField]s over arbitrary fields and [VectorSpace]s.
  *
  * A **directional derivative** measures how a scalar field `f : V → F`
  * changes along a direction vector `v ∈ V` at a point `p ∈ V`:
- *
  * ```
- * D_v f(p) = limₕ→0 ( f(p + h·v) − f(p − h·v) ) / (2h)
+ * D_v f(p) = lim (h → 0) (f(p + h·v) − f(p − h·v)) / (2h)
  * ```
+ * The code that approximates this using a small, finite step `h`:
+ * 1. Move forward: `pForward = p + h·v`
+ * 2. Move backward: `pBackward = p − h·v`
+ * 3. Take the difference between the two: `fForward - fBackward`
+ * 4. Divide by `2h`
  *
  * In Kosmos, this derivative is approximated numerically (via central difference)
  * but is expressed generically in terms of the algebraic operations defined
- * by [Field] and [VectorSpace].  It can therefore be applied to both numeric
+ * by field and [VectorSpace].  It can therefore be applied to both numeric
  * and abstract field types.
  *
  * The resulting structure `df` is a [CovectorField] — a smooth mapping
  * that associates to each point `p` a [Covector] acting on tangent vectors
  * (directions) to yield the directional derivative.
+ *
+ * In simple terms: wiggle the point in direction `v`, measure how the scalar changes, and normalize by
+ * the distance of the wiggle.
  */
 object Derivative {
 
     /**
-     * Generic central-difference directional derivative.
-     *
+     * Generic central-difference directional derivative:
+     * ```
+     * D_v f(p) ≈ (f(p + h·v) - f(p - h·v)) / (2h)
+     * ```
      * This version is fully generic and depends only on the field’s additive
-     * and multiplicative [org.vorpal.kosmos.algebra.structures.AbelianGroup]
-     * structure.  It assumes that `two` and `h` are provided as field elements.
+     * and multiplicative AbelianGroup structure.
      *
-     * @param space the [VectorSpace] structure defining addition and scalar action
-     * @param f the scalar-valued function to differentiate
-     * @param p the evaluation point
-     * @param v the direction vector along which to differentiate
-     * @param h the infinitesimal step as a field element
-     * @param two the element representing 2 in the same field
+     * @param space     the [VectorSpace] structure defining addition and scalar action
+     * @param f         the scalar-valued function to differentiate
+     * @param point     the evaluation point (`p`)
+     * @param direction the direction vector along which to differentiate (`v`)
+     * @param step      the infinitesimal step as a field element (`h`)
      * @return the approximate directional derivative Dᵥf(p)
      */
     fun <F : Any, V : Any> derivativeAt(
         space: VectorSpace<F, V>,
         f: (V) -> F,
-        p: V,
-        v: V,
-        h: F,
-        two: F,
+        point: V,
+        direction: V,
+        step: F
     ): F {
         val field = space.field
-        val add = field.add
-        val mul = field.mul
 
-        val pForward = space.add(p, space.leftAction(h, v))
-        val pBackward = space.add(p, space.leftAction(add.inverse(h), v))
+        // f(p + h·v)
+        val forwardPoint = space.add(point, space.leftAction(step, direction))
+        val forwardValue = f(forwardPoint)
 
-        val fForward = f(pForward)
-        val fBackward = f(pBackward)
+        // f(p - h·v)
+        val backwardPoint = space.add(point, space.leftAction(field.add.inverse(step), direction))
+        val backwardValue = f(backwardPoint)
 
-        val numerator = add(fForward, add.inverse(fBackward))
-        val denominator = mul(two, h)
-        val denominatorInv = field.reciprocal(denominator)
+        // f(p + h·v) - f(p - h·v)
+        val numerator = field.add(forwardValue, field.add.inverse(backwardValue))
 
-        return mul.op(numerator, denominatorInv)
+        // 2h
+        val two = field.fromBigInt(BigInteger.TWO)
+        val denominator = field.mul(two, step)
+
+        // D_v f(p)
+        return field.mul(numerator, field.reciprocal(denominator))
     }
 
     /**
-     * Specialized overload for real vector spaces (ℝⁿ).
-     * Uses [Real] arithmetic and the standard central-difference formula.
-     *
-     * @param space the real [VectorSpace]
-     * @param f the scalar-valued function to differentiate
-     * @param p the evaluation point
-     * @param v the direction vector along which to differentiate
-     * @param h the finite step (default 1e-6)
-     */
-    fun <V : Any> derivativeAt(
-        space: VectorSpace<Real, V>,
-        f: (V) -> Real,
-        p: V,
-        v: V,
-        h: Real = 1e-6
-    ): Real {
-        val pForward = space.add(p, space.leftAction(h, v))
-        val pBackward = space.add(p, space.leftAction(-h, v))
-        return (f(pForward) - f(pBackward)) / (2.0 * h)
-    }
-
-    /**
-     * Extension producing the **differential** (covector field) of a scalar field
-     * using a provided [derivativeAt] function.
-     *
-     * The resulting [CovectorField] maps each point `p` to a [Covector]
-     * that evaluates the directional derivative in any direction `v`.
-     *
-     * @param derivativeAt the derivative operator to use
-     * @param h the finite step (field element)
-     * @param two the field element representing 2
+     * Differential of a scalar field (a covector field):
+     * ```
+     * (df)_p(v) = D_v f(p)
+     * ```
      */
     fun <F : Any, V : Any> ScalarField<F, V>.d(
-        derivativeAt: (VectorSpace<F, V>, (V) -> F, V, V, F, F) -> F,
-        h: F,
-        two: F
+        step: F
     ): CovectorField<F, V> =
-        CovectorFields.of(space) { p ->
-            Covectors.of(space) { v ->
-                derivativeAt(space, this@d::invoke, p, v, h, two)
+        CovectorField.of(space) { point ->
+            Covector.of(space) { direction ->
+                derivativeAt(space, this@d::invoke, point, direction, step)
             }
         }
 
     /**
-     * Convenience extension for real scalar fields.
-     *
-     * Computes the differential df using standard Real arithmetic.
-     *
-     * @param h finite step size (default 1e-6)
+     * Convenience for [Real] scalar fields.
      */
     fun <V : Any> ScalarField<Real, V>.dReal(
-        h: Real = 1e-6
-    ): CovectorField<Real, V> =
-        CovectorFields.of(space) { p ->
-            Covectors.of(space) { v ->
-                derivativeAt(space, this@dReal::invoke, p, v, h)
-            }
-        }
+        step: Real = 1e-6
+    ): CovectorField<Real, V> = d(step)
 }
