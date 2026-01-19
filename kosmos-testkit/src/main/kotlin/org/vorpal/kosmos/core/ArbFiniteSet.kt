@@ -130,7 +130,7 @@ fun <A> generateArbOrderedFiniteSetFromMultiple(
 /**
  * Specialized generators for common types
  */
-object FiniteSetArbs {
+object ArbFiniteSet {
 
     // Common integer sets
     fun arbSmallIntSet(

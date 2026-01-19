@@ -1,7 +1,5 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.analysis.Covector
-import org.vorpal.kosmos.analysis.Covectors
 import org.vorpal.kosmos.core.ops.BilinearForm
 
 /**
@@ -45,18 +43,24 @@ interface InnerProductSpace<F : Any, V : Any> : VectorSpace<F, V> {
 
     /**
      * "Flat" / musical isomorphism: v ↦ v♭, where
-     *   v♭ : w ↦ ⟨v, w⟩.
+     * ```
+     * v♭ : w ↦ ⟨v, w⟩
+     * ```
+     * Note: returned a Covector<F, V>, but we don't want a circular dependency with the analysis package.
+     *
      */
-    fun flat(v: V): Covector<F, V> =
-        Covectors.of(this) { w -> inner(v, w) }
+    fun flat(v: V): (V) -> F =
+        { w -> inner(v, w) }
 
     /**
      * "Sharp": φ ↦ φ♯, if the inner product is nondegenerate (Riesz isomorphism).
      *
      * Default is unimplemented; concrete spaces can override when they know
      * how to invert the Gram operator.
+     *
+     * Note: phi was a Covector<F, V>, but we don't want a circular dependency with the analysis package.
      */
-    fun sharp(phi: Covector<F, V>): V =
+    fun sharp(phi: (F) -> V): V =
         throw UnsupportedOperationException(
             "Default sharp not implemented; override in your concrete space."
         )

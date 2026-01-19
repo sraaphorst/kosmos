@@ -2,15 +2,15 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eqs
-import org.vorpal.kosmos.core.linear.instances.FixedVectorSpaces
-import org.vorpal.kosmos.core.linear.values.Vec2
+import org.vorpal.kosmos.linear.instances.FixedVectorSpaces
+import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.core.math.Real
 
 fun realCheck() {
-    val a = Vec2(1.0, 2.0)
-    val b = Vec2(3.0, 4.0)
-    with (FixedVectorSpaces.vec2(RealField)) {
-        val expected = Vec2(11.0, 16.0)
+    val a = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(1.0, 2.0)
+    val b = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(3.0, 4.0)
+    with (_root_ide_package_.org.vorpal.kosmos.linear.instances.FixedVectorSpaces.vec2(RealField)) {
+        val expected = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(11.0, 16.0)
         val result = add(leftAction(2.0, a), leftAction(3.0, b))
         check(result == expected) { "Incorrect: expected $expected, but got $result" }
     }

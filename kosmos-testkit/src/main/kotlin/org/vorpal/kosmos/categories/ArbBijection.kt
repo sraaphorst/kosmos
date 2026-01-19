@@ -179,7 +179,7 @@ fun <A> generateArbInvolutionBijection(
 /**
  * Specialized generators for common types.
  */
-object BijectionArbs {
+object ArbBijection {
 
     fun arbIntBijection(
         lowerBound: Int = 2,

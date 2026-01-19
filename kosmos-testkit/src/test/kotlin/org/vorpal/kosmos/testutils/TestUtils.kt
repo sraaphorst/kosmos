@@ -2,9 +2,9 @@ package org.vorpal.kosmos.testutils
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import org.vorpal.kosmos.algebra.extensions.DualRing
+import org.vorpal.kosmos.algebra.extensions.Dual
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.linear.Vec2R
+import org.vorpal.kosmos.linear.values.Vec2
 import kotlin.math.abs
 
 /**
@@ -34,12 +34,12 @@ fun Real.shouldBeZero() {
 }
 
 // Helper to compare Vec2D with tolerance
-infix fun Vec2R.shouldBeApproximately(other: Vec2R) {
+infix fun Vec2<Real>.shouldBeApproximately(other: Vec2<Real>) {
     this.x.shouldBeApproximately(other.x)
     this.y.shouldBeApproximately(other.y)
 }
 
-fun Vec2R.shouldBeZero() {
+fun Vec2<Real>.shouldBeZero() {
     x.shouldBeZero()
     y.shouldBeZero()
 }
@@ -47,7 +47,7 @@ fun Vec2R.shouldBeZero() {
 /**
  * Compare two dual numbers with tolerance.
  */
-infix fun DualRing<Real>.Dual.shouldBeApproximately(other: DualRing<Real>.Dual) {
+infix fun Dual<Real>.shouldBeApproximately(other: Dual<Real>) {
     a shouldBeApproximately other.a
     b shouldBeApproximately other.b
 }
