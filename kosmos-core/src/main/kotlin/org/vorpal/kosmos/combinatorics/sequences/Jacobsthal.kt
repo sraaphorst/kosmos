@@ -1,12 +1,12 @@
 package org.vorpal.kosmos.combinatorics.sequences
 
+import org.vorpal.kosmos.core.math.bigIntSgn
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
 import org.vorpal.kosmos.frameworks.sequence.CachedLinearRecurrenceImplementation
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
-import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
 /**

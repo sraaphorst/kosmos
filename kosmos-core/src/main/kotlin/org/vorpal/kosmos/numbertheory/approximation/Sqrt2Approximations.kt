@@ -2,7 +2,7 @@ package org.vorpal.kosmos.numbertheory.approximation
 
 import org.vorpal.kosmos.combinatorics.sequences.Pell
 import org.vorpal.kosmos.combinatorics.sequences.PellLucas
-import org.vorpal.kosmos.std.Rational
+import org.vorpal.kosmos.core.Rational
 
 /**
  * Approximations to √2 derived from the convergents of its continued fraction expansion:

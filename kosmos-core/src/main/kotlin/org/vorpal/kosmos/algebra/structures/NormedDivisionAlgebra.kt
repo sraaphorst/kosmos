@@ -7,29 +7,41 @@ import kotlin.math.max
 import kotlin.math.sqrt
 
 /**
- * A real normed division *-algebra:
+ * A normed division *-algebra with squared norm landing in N.
  *
- *  - an involutive algebra (`add`, `mul`, `conj`),
- *  - with multiplicative inverses for all nonzero elements,
- *  - equipped with a squared norm `N: A → ℝ` satisfying:
- *```
- *      N(a) ≥ 0
- *      N(a) = 0  ⇔  a = 0
- *      N(a * b) = N(a) * N(b)
- *```
- * In Kosmos, the canonical examples are:
- *   ℝ, ℂ, ℍ, 𝕆.
+ * Typical cases:
+ * - N = Real for ℝ, ℂ, ℍ, 𝕆 (composition algebras)
+ * - N = Rational for ℚ(i), quaternion algebras over ℚ, etc.
  */
-interface NormedDivisionAlgebra<A : Any>: NonAssociativeDivisionAlgebra<A> {
-    /**
-     * Squared norm N(a) (so we avoid a sqrt).
-     */
-    val normSq: UnaryOp<A, Real>
+interface NormedDivisionAlgebra<N : Any, A : Any> : NonAssociativeDivisionAlgebra<A> {
+    val normSq: UnaryOp<A, N>
 
-    /**
-     * Convenience of actual norm if needed.
-     */
-    fun norm(a: A): Real = sqrt(max(0.0, normSq(a)))
+    companion object {
+        fun <N : Any, A : Any> of(
+            add: AbelianGroup<A>,
+            mul: NonAssociativeMonoid<A>,
+            reciprocal: Endo<A>,
+            conj: Endo<A>,
+            normSq: UnaryOp<A, N>
+        ): NormedDivisionAlgebra<N, A> = object : NormedDivisionAlgebra<N, A> {
+            override val zero: A = add.identity
+            override val add = add
+            override val mul = mul
+            override val reciprocal = reciprocal
+            override val conj = conj
+            override val normSq = normSq
+        }
+    }
+}
+
+/**
+ * A real normed division *-algebra: squared norm lands in ℝ, so we can define `norm` via sqrt.
+ *
+ * Canonical examples: ℝ, ℂ, ℍ, 𝕆.
+ */
+interface RealNormedDivisionAlgebra<A : Any> : NormedDivisionAlgebra<Real, A> {
+    fun norm(a: A): Real =
+        sqrt(max(0.0, normSq(a)))
 
     companion object {
         fun <A : Any> of(
@@ -38,7 +50,7 @@ interface NormedDivisionAlgebra<A : Any>: NonAssociativeDivisionAlgebra<A> {
             reciprocal: Endo<A>,
             conj: Endo<A>,
             normSq: UnaryOp<A, Real>
-        ): NormedDivisionAlgebra<A> = object : NormedDivisionAlgebra<A> {
+        ): RealNormedDivisionAlgebra<A> = object : RealNormedDivisionAlgebra<A> {
             override val zero: A = add.identity
             override val add = add
             override val mul = mul

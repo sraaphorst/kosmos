@@ -25,7 +25,7 @@ object ArbQuaternion {
      */
     val reciprocalSafeQuaternion: Arb<Quaternion> =
         quaternion.filter { q ->
-            val n2 = QuaternionAlgebras.QuaternionDivisionRing.normSq(q)
+            val n2 = QuaternionAlgebras.QuaternionDivisionRingReal.normSq(q)
             n2 in 0.01..10_000.0
         }
 

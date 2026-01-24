@@ -7,7 +7,7 @@ import org.vorpal.kosmos.core.Symbols
  *
  * This type is an immutable value container. It does not store algebraic structure
  * (no ring/field). Algebraic operations are provided by structure instances built
- * in `org.vorpal.kosmos.algebra.instances`.
+ * in `org.vorpal.kosmos.linear.instances`.
  *
  * ### Implementation note:
  *

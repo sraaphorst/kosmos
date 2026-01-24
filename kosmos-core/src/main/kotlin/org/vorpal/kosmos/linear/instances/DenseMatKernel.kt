@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.linear.instances
 
+import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.linear.values.DenseMat
@@ -9,11 +10,14 @@ import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
 
 /**
- * This comprises private code shared by:
- * - [DenseMatGroups]
- * - [DenseMatAlgebra]
- * - [DenseMatSemiring]
- * and also isolates the non-FP code to be contained in this file. We opt for standard
+ * Note that this file contains functions that accept [MatLike] objects but return results as [DenseMat]: hense,
+ * we keep them in [DenseMatKernel].
+ */
+
+/**
+ * This comprises private code shared by the classes in [DenseMatAlgebras].
+ *
+ * It also isolates the non-FP code to be contained in this file. We opt for standard
  * looping instead of using ranges since then no lambdas or [IntRange]s get created: using
  * a functional programming approach instead typically results in runtimes between 2 - 10x
  * longer that the loop-based approach.
@@ -47,8 +51,9 @@ internal object DenseMatKernel {
     fun <R: Any> pointInflation(
         baseMatrix: DenseMat<R>,
         blockSize: Int,
-        one: R
     ): DenseMat<R> {
+        require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
+
         // Each entry gets replicated into a blockSize × blockSize block
         return DenseMat.tabulate(
             baseMatrix.rows * blockSize,
@@ -64,7 +69,7 @@ internal object DenseMatKernel {
      *
      * Return the element comprising the matrix elements.
      */
-    fun <A : Any> checkConstNonemptyMat(x: DenseMat<A>, zero: A? = null): A {
+    fun <A : Any> checkConstNonemptyMat(x: MatLike<A>, zero: A? = null): A {
         require(x.rows != 0 && x.cols != 0) { "Matrix cannot be empty." }
         val elem = x[0, 0]
         require(elem != zero) { "Expected constant nonzero matrix, but got: $zero" }
@@ -144,7 +149,11 @@ internal object DenseMatKernel {
      * Given a matrix of shape `m×n` and a vector of length `n` all over [A], multiply them together to
      * get a vector of length `m`.
      */
-    fun <A : Any> matVec(semiring: Semiring<A>, mat: MatLike<A>, vec: VecLike<A>): DenseVec<A> {
+    fun <A : Any> matVec(
+        semiring: Semiring<A>,
+        mat: MatLike<A>,
+        vec: VecLike<A>
+    ): DenseVec<A> {
         val m = mat.rows
         val n = mat.cols
         DenseKernel.requireSize(vec.size, n)
@@ -181,7 +190,7 @@ internal object DenseMatKernel {
         mat2: MatLike<R>
     ): DenseMat<R> {
         require(mat1.rows == mat2.rows && mat1.cols == mat2.cols) {
-            "Matrices must have same shape, got: ${mat1.rows}${Symbols.TIMES}${mat1.cols} and ${mat2.rows}$Symbols.TIMES}${mat2.cols}"
+            "Matrices must have same shape, got: ${mat1.rows}${Symbols.TIMES}${mat1.cols} and ${mat2.rows}${Symbols.TIMES}${mat2.cols}"
         }
         val m = mat1.rows
         val n = mat1.cols
@@ -197,6 +206,25 @@ internal object DenseMatKernel {
             r += 1
         }
         return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    /**
+     * Determine if a matrix is a unit under the Hadamard operation.
+     */
+    fun <A : Any> isHadamardUnit(
+        field: Field<A>,
+        x: MatLike<A>,
+    ): Boolean {
+        var r = 0
+        while (r < x.rows) {
+            var c = 0
+            while (c < x.cols) {
+                if (x[r, c] == field.zero) return false
+                c += 1
+            }
+            r += 1
+        }
+        return true
     }
 
     /**
@@ -295,7 +323,8 @@ internal object DenseMatKernel {
      *
      * This computes the inner products of the **columns** of [m].
      *
-     * The resulting matrix is symmetric with dimensions `c×c` (where `c` is the number of columns in [m]).
+     * If the semiring’s multiplication is commutative, the result is symmetric.
+     * The resulting matrix has dimensions `c×c` (where `c` is the number of columns in [m]).
      *
      * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
      * (rows are points, columns are blocks), this calculates the **concurrence matrix** (or block intersection matrix).
@@ -317,7 +346,8 @@ internal object DenseMatKernel {
      *
      * This computes the inner products of the **rows** of [m].
      *
-     * The resulting matrix is symmetric with dimensions $r \times r$ (where $r$ is the number of rows in [m]).
+     * If the semiring’s multiplication is commutative, the result is symmetric.
+     * The resulting matrix has dimensions $r×r$ (where $r$ is the number of rows in [m]).
      *
      * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
      * (rows are points, columns are blocks), this calculates the point-connectivity.

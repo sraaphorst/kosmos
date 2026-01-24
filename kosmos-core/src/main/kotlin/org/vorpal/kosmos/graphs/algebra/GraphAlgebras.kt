@@ -12,7 +12,6 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.relations.Poset
-import org.vorpal.kosmos.core.relations.Posets
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.graphs.AdjacencySetDirectedGraph
 import org.vorpal.kosmos.graphs.AdjacencySetUndirectedGraph
@@ -92,13 +91,13 @@ object GraphAlgebras {
     }
 
     object Orders {
-        fun <V : Any> undirectedGraphSubsetPoset(): Poset<UndirectedGraph<V>> = Posets.of(
+        fun <V : Any> undirectedGraphSubsetPoset(): Poset<UndirectedGraph<V>> = Poset.of(
             Relation { x, y ->
                 x.vertices.all { it in y.vertices } && x.edges.all { it in y.edges }
             }
         )
 
-        fun <V : Any> directedGraphSubsetPoset(): Poset<DirectedGraph<V>> = Posets.of(
+        fun <V : Any> directedGraphSubsetPoset(): Poset<DirectedGraph<V>> = Poset.of(
             Relation { x, y ->
                 x.vertices.all { it in y.vertices } && x.edges.all { it in y.edges }
             }

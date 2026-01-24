@@ -2,22 +2,22 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eqs
-import org.vorpal.kosmos.linear.instances.FixedVectorSpaces
-import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.values.Vec2
 
 fun realCheck() {
-    val a = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(1.0, 2.0)
-    val b = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(3.0, 4.0)
-    with (_root_ide_package_.org.vorpal.kosmos.linear.instances.FixedVectorSpaces.vec2(RealField)) {
-        val expected = _root_ide_package_.org.vorpal.kosmos.linear.values.Vec2(11.0, 16.0)
+    val a = Vec2(1.0, 2.0)
+    val b = Vec2(3.0, 4.0)
+    with (FixedTupleAlgebras.vec2Space(RealField)) {
+        val expected = Vec2(11.0, 16.0)
         val result = add(leftAction(2.0, a), leftAction(3.0, b))
         check(result == expected) { "Incorrect: expected $expected, but got $result" }
     }
 }
 
 fun quaternionCheck() {
-    val quaternions = QuaternionAlgebras.QuaternionDivisionRing
+    val quaternions = QuaternionAlgebras.QuaternionDivisionRingReal
     val handedness = HyperComplex.Handedness.RIGHT
     val basis = QuaternionBases.basis(quaternions, handedness)
 
@@ -42,7 +42,7 @@ fun quaternionCheck() {
 }
 
 fun octonionCheck() {
-    val octonions = OctonionAlgebras.OctonionDivisionAlgebra
+    val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal
     val add = octonions.add
     val mul = octonions.mul
     val conj = octonions.conj

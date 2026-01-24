@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.std
+package org.vorpal.kosmos.core
 
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal

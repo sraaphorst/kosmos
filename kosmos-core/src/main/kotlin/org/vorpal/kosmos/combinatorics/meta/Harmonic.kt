@@ -2,12 +2,12 @@ package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.combinatorics.Factorial
 import org.vorpal.kosmos.combinatorics.arrays.StirlingFirst
+import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.math.bigIntSgn
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
-import org.vorpal.kosmos.std.Rational
-import org.vorpal.kosmos.std.bigIntSgn
 
 /**
  * **Harmonic numbers** Hₙ:

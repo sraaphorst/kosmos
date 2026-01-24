@@ -76,3 +76,22 @@ infix fun BigInteger.modPositive(mod: BigInteger): BigInteger =
 
 fun Real.degToRad(): Real = this / 180.0 * PI
 fun Real.radToDeg(): Real = this * 180.0 / PI
+
+
+/**
+ * Calculates (-1).pow(n).
+ */
+fun intSgn(n: Int): Int =
+    if (n and 1 == 0) 1 else -1
+
+/**
+ * Calculates (-1L).pow(n).
+ */
+fun longSgn(n: Int): Long =
+    if (n and 1 == 0) 1L else -1L
+
+/**
+ * Calculates (-BigInteger.ONE).pow(n).
+ */
+fun bigIntSgn(n: Int): BigInteger =
+    if (n and 1 == 0) BigInteger.ONE else -BigInteger.ONE
