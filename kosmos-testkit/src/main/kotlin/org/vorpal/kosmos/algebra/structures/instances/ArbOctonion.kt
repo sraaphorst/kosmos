@@ -6,7 +6,7 @@ import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
 
 object ArbOctonion {
-    private val octonions = OctonionAlgebras.OctonionDivisionAlgebra
+    private val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal
 
     val octonion: Arb<Octonion> =
         Arb.bind(

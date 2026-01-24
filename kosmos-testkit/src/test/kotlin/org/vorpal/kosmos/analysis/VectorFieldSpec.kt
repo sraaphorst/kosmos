@@ -7,7 +7,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.analysis.instances.VectorFieldAlgebras
 import org.vorpal.kosmos.core.Identity
-import org.vorpal.kosmos.linear.instances.FixedVectorSpaces
+import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
 import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
@@ -371,8 +371,8 @@ class VectorFieldSpec : FunSpec({
         }
 
         test("andThen: rejects different VectorSpace witnesses") {
-            val s1 = FixedVectorSpaces.vec2(RealAlgebras.RealField)
-            val s2 = FixedVectorSpaces.vec2(RealAlgebras.RealField) // different instance on purpose
+            val s1 = FixedTupleAlgebras.vec2Space(RealAlgebras.RealField)
+            val s2 = FixedTupleAlgebras.vec2Space(RealAlgebras.RealField) // different instance on purpose
 
             val f = VectorField.of(s1) { it }
             val g = VectorField.of(s2) { it }

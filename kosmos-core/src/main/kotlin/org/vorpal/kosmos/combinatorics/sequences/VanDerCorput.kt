@@ -5,8 +5,8 @@ import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
 import org.vorpal.kosmos.numerical.quasirandom.HaltonSequence
-import org.vorpal.kosmos.std.Rational
-import org.vorpal.kosmos.std.toRational
+import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.toRational
 
 /**
  * **Van der Corput sequence** in a fixed integer base.

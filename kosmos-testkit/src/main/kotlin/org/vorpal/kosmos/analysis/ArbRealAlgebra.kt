@@ -6,14 +6,14 @@ import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.linear.instances.FixedVectorSpaces
+import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
 import org.vorpal.kosmos.linear.values.Vec2
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.sin
 
 // We need to use the same space to avoid throwing when checking space compatibility.
-val vec2Space = FixedVectorSpaces.vec2(RealAlgebras.RealField)
+val vec2Space = FixedTupleAlgebras.vec2Space(RealAlgebras.RealField)
 
 /**
  * Arbitrary for finite, non-NaN Reals suitable for field operations.

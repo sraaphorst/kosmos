@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRing
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRingReal
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -10,7 +10,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionRealVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
@@ -51,10 +51,10 @@ object OctonionAlgebras {
      *
      * We get everything but the reciprocal from the [NonAssociativeInvolutiveRing] returned by the [CayleyDickson] construction.
      */
-    object OctonionDivisionAlgebra : NormedDivisionAlgebra<Octonion> {
+    object OctonionDivisionAlgebraReal : RealNormedDivisionAlgebra<Octonion> {
 
         private val base: NonAssociativeInvolutiveRing<Octonion> =
-            CayleyDickson.usual(QuaternionDivisionRing)
+            CayleyDickson.usual(QuaternionDivisionRingReal)
 
         override val add: AbelianGroup<Octonion> = base.add
 
@@ -99,7 +99,7 @@ object OctonionAlgebras {
      */
     val OctonionVectorSpace: FiniteVectorSpace<Real, Octonion> = FiniteVectorSpace.of(
         scalars = RealField,
-        add = OctonionDivisionAlgebra.add,
+        add = OctonionDivisionAlgebraReal.add,
         dimension = 8,
         leftAction = LeftAction { r, o -> octonion(
             r * o.w, r * o.x, r * o.y, r * o.z,
@@ -109,7 +109,7 @@ object OctonionAlgebras {
 
     val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
         scalars = RealField,
-        involutiveRing = OctonionDivisionAlgebra,
+        involutiveRing = OctonionDivisionAlgebraReal,
         leftAction = OctonionVectorSpace.leftAction,
     )
 
@@ -198,7 +198,7 @@ object OctonionAlgebras {
         // Find the image of k.
         val kIndex = (setOf(line.a, line.b, line.c) - setOf(iIndex, jIndex)).first()
 
-        val oda = OctonionDivisionAlgebra
+        val oda = OctonionDivisionAlgebraReal
         val one = oda.one
         val ei = oda.basisMap.getValue(iIndex)
         val di = when (handedness) {
@@ -229,8 +229,8 @@ object OctonionAlgebras {
         val spec = Spec(iIndex, jIndex, kIndex, handedness, kSign)
         val ovs = OctonionVectorSpace
         return spec to NonAssociativeRingHomomorphism.of(
-            QuaternionDivisionRing,
-            OctonionDivisionAlgebra)
+            QuaternionDivisionRingReal,
+            OctonionDivisionAlgebraReal)
             { q ->
                 val t1 = oda.add(ovs.leftAction(q.w, one), ovs.leftAction(q.x, di))
                 val t2 = oda.add(ovs.leftAction(q.y, dj), ovs.leftAction(q.z, dk))

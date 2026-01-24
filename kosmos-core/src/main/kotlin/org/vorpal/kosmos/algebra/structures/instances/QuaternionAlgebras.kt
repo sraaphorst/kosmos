@@ -9,7 +9,7 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexRealVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
@@ -65,10 +65,10 @@ fun quaternion(
 object QuaternionAlgebras {
     private val eqRealApprox = Eqs.realApprox()
 
-    object QuaternionDivisionRing :
+    object QuaternionDivisionRingReal :
         DivisionRing<Quaternion>,
         InvolutiveRing<Quaternion>,
-        NormedDivisionAlgebra<Quaternion> {
+        RealNormedDivisionAlgebra<Quaternion> {
 
         private val base: NonAssociativeInvolutiveRing<Quaternion> =
             CayleyDickson.usual(ComplexField)
@@ -108,7 +108,7 @@ object QuaternionAlgebras {
     // Scalars: Real, act componentwise on (a, b)
     val QuaternionRealVectorSpace: FiniteVectorSpace<Real, Quaternion> = FiniteVectorSpace.of(
         scalars = RealField,
-        add = QuaternionDivisionRing.add,
+        add = QuaternionDivisionRingReal.add,
         dimension = 4,
         leftAction = LeftAction { r, q ->
             Quaternion(
@@ -128,7 +128,7 @@ object QuaternionAlgebras {
     val embedCAlongI: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(c.re, c.im, 0.0, 0.0)
         }
@@ -144,7 +144,7 @@ object QuaternionAlgebras {
     val embedCAlongJ: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(w = c.re, x = 0.0, y = c.im, z = 0.0)
         }
@@ -160,7 +160,7 @@ object QuaternionAlgebras {
     val embedCAlongK: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(w = c.re, x = 0.0, y = 0.0, z = c.im)
         }
@@ -180,9 +180,9 @@ object QuaternionAlgebras {
     fun quaternionLeftComplexVectorSpace(embed: RingHomomorphism<Complex, Quaternion>): FiniteVectorSpace<Complex, Quaternion> =
         FiniteVectorSpace.of(
             scalars = ComplexField,
-            add = QuaternionDivisionRing.add,
+            add = QuaternionDivisionRingReal.add,
             dimension = 2,
-            LeftAction { c, q -> QuaternionDivisionRing.mul(embed(c), q) }
+            LeftAction { c, q -> QuaternionDivisionRingReal.mul(embed(c), q) }
         )
 
     val QuaternionLeftComplexVectorSpaceAlongI: FiniteVectorSpace<Complex, Quaternion> =
@@ -196,7 +196,7 @@ object QuaternionAlgebras {
 
     val QuaternionStarAlgebra: StarAlgebra<Real, Quaternion> = StarAlgebra.of(
         scalars = RealField,
-        involutiveRing = QuaternionDivisionRing,
+        involutiveRing = QuaternionDivisionRingReal,
         leftAction = QuaternionRealVectorSpace.leftAction
     )
 }

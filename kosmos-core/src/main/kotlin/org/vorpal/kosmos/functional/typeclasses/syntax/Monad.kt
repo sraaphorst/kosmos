@@ -15,3 +15,11 @@ fun <F, A, B> Monad<F>.andThen(
     fa: Kind<F, A>,
     fb: Kind<F, B>
 ): Kind<F, B> = flatMap(fa) { _ -> fb }
+
+/**
+ * Compose is just the opposite order of andThen, so perform fb and then fa.
+ */
+fun <F, A, B> Monad<F>.compose(
+    fa: Kind<F, A>,
+    fb: Kind<F, B>
+): Kind<F, A> = andThen(fb, fa)

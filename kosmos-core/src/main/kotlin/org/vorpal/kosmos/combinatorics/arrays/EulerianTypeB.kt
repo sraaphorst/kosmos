@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.combinatorics.arrays
 
 import org.vorpal.kosmos.combinatorics.Binomial
+import org.vorpal.kosmos.core.math.bigIntSgn
 import org.vorpal.kosmos.frameworks.array.CachedBivariateArray
-import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
 /**

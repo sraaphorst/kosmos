@@ -7,7 +7,7 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
@@ -30,7 +30,7 @@ object ComplexAlgebras {
     object ComplexField:
         Field<Complex>,
         InvolutiveRing<Complex>,
-        NormedDivisionAlgebra<Complex> {
+        RealNormedDivisionAlgebra<Complex> {
         private val base: NonAssociativeInvolutiveRing<Complex> =
             CayleyDickson.usual(RealAlgebras.RealStarField)
 

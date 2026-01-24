@@ -4,7 +4,7 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
@@ -34,7 +34,7 @@ object RealAlgebras {
     object RealStarField:
         Field<Real> by RealField,
         InvolutiveRing<Real>,
-        NormedDivisionAlgebra<Real> {
+        RealNormedDivisionAlgebra<Real> {
 
         override val conj: Endo<Real> =
             Endo(Symbols.CONJ, Identity())
