@@ -1,21 +1,24 @@
 package org.vorpal.kosmos.linear.instances
 
+import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
-import org.vorpal.kosmos.linear.views.transposeView
+import kotlin.math.min
 
 /**
- * Note that this file contains functions that accept [MatLike] objects but return results as [DenseMat]: hense,
+ * Note that this file contains functions that accept [MatLike] objects but return results as [DenseMat]: hence,
  * we keep them in [DenseMatKernel].
  */
 
 /**
- * This comprises private code shared by the classes in [DenseMatAlgebras].
+ * This comprises private code shared by the classes in [DenseMatAlgebras] and DenseMatOps.
  *
  * It also isolates the non-FP code to be contained in this file. We opt for standard
  * looping instead of using ranges since then no lambdas or [IntRange]s get created: using
@@ -24,12 +27,12 @@ import org.vorpal.kosmos.linear.views.transposeView
  */
 internal object DenseMatKernel {
     fun <A : Any> checkSize(
-        x: MatLike<A>,
+        mat: MatLike<A>,
         rows: Int,
         cols: Int
     ) {
-        require(x.rows == rows && x.cols == cols) {
-            "Expected matrix of shape ${rows}${Symbols.TIMES}${cols}, got: ${x.rows}${Symbols.TIMES}${x.cols}"
+        require(mat.rows == rows && mat.cols == cols) {
+            "Expected matrix of shape ${rows}${Symbols.TIMES}${cols}, got: ${mat.rows}${Symbols.TIMES}${mat.cols}"
         }
     }
 
@@ -44,24 +47,6 @@ internal object DenseMatKernel {
     ): DenseMat<A> =
         DenseMat.tabulate(rows, cols) { _, _ -> a }
 
-    /**
-     * Instead of a separate `BlockConstraintMatrix` class, we can blow up points using this [pointInflation] function.
-     * This is what is needed for a GDD (group divisible design) construction.
-     */
-    fun <R: Any> pointInflation(
-        baseMatrix: DenseMat<R>,
-        blockSize: Int,
-    ): DenseMat<R> {
-        require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
-
-        // Each entry gets replicated into a blockSize × blockSize block
-        return DenseMat.tabulate(
-            baseMatrix.rows * blockSize,
-            baseMatrix.cols * blockSize
-        ) { i, j ->
-            baseMatrix[i / blockSize, j / blockSize]
-        }
-    }
 
     /**
      * Check to make sure a matrix is nonempty and consists of constant entries.
@@ -69,16 +54,19 @@ internal object DenseMatKernel {
      *
      * Return the element comprising the matrix elements.
      */
-    fun <A : Any> checkConstNonemptyMat(x: MatLike<A>, zero: A? = null): A {
-        require(x.rows != 0 && x.cols != 0) { "Matrix cannot be empty." }
-        val elem = x[0, 0]
+    fun <A : Any> checkConstNonemptyMat(
+        mat: MatLike<A>,
+        zero: A? = null
+    ): A {
+        require(mat.rows != 0 && mat.cols != 0) { "Matrix cannot be empty." }
+        val elem = mat[0, 0]
         require(elem != zero) { "Expected constant nonzero matrix, but got: $zero" }
         var r = 0
-        while (r < x.rows) {
+        while (r < mat.rows) {
             var c = 0
-            while (c < x.cols) {
-                require(x[r, c] == elem) {
-                    "Expected constant ${x.rows}${Symbols.TIMES}${x.cols} matrix of $elem, but found ${x[r, c]}."}
+            while (c < mat.cols) {
+                require(mat[r, c] == elem) {
+                    "Expected constant ${mat.rows}${Symbols.TIMES}${mat.cols} matrix of $elem, but found ${mat[r, c]}."}
                 c += 1
             }
             r += 1
@@ -86,7 +74,7 @@ internal object DenseMatKernel {
         return elem
     }
 
-    fun <A: Any> identity(
+    fun <A : Any> identity(
         zero: A,
         one: A,
         n: Int
@@ -101,36 +89,58 @@ internal object DenseMatKernel {
     ): DenseMat<A> =
         identity(semiring.add.identity, semiring.mul.identity, n)
 
+
     /**
      * Given:
-     * - A matrix of shape `m×n` over [A]
-     * - A matrix of shape `n×p` over [A]
-     * multiply them together to get a matrix of shape `m×p` over [A].
-     *
-     * While using var hurts terribly, apparently, the functional implementation (i.e. using forEach on a range)
-     * creates many temporary objects and as a result, is typically 2-10 times slower than this version.
-     * Thus, we swallow our pride and just allow these hot loops to happen in the name of performance.
+     * - A matrix [mat1] of shape `m×n` over [A]
+     * - A matrix [mat2] of shape `m×n` over [A]
+     * combine them together entrywise to get a matrix of shape `m×n` over [A].
      */
+    fun <A : Any> entrywise(
+        semigroup: Semigroup<A>,
+        mat1: MatLike<A>,
+        mat2: MatLike<A>
+    ): DenseMat<A> {
+        val rows = mat1.rows
+        val cols = mat1.cols
+        checkSize(mat2, rows, cols)
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            var c = 0
+            while (c < cols) {
+                out[r * cols + c] = semigroup(mat1[r, c], mat2[r, c])
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
+    }
+
+
     fun <A : Any> matMul(
         semiring: Semiring<A>,
         mat1: MatLike<A>,
         mat2: MatLike<A>
     ): DenseMat<A> {
-        val m = mat1.rows
-        val n = mat1.cols
-        DenseKernel.requireSize(mat2.rows, n)
+        val rows = mat1.rows
+        val cols = mat1.cols
+        DenseKernel.checkNonnegative(rows, cols)
+        DenseKernel.requireSize(mat2.rows, cols)
         val p = mat2.cols
 
-        val out = arrayOfNulls<Any?>(m * p)
+        val out = arrayOfNulls<Any?>(rows * p)
 
         var r = 0
-        while (r < m) {
+        while (r < rows) {
             var j = 0
             while (j < p) {
                 var acc = semiring.add.identity
 
                 var k = 0
-                while (k < n) {
+                while (k < cols) {
                     val term = semiring.mul(mat1[r, k], mat2[k, j])
                     acc = semiring.add(acc, term)
                     k += 1
@@ -142,30 +152,27 @@ internal object DenseMatKernel {
             r += 1
         }
 
-        return DenseMat.fromArrayUnsafe(m, p, out)
+        return DenseMat.fromArrayUnsafe(rows, p, out)
     }
 
-    /**
-     * Given a matrix of shape `m×n` and a vector of length `n` all over [A], multiply them together to
-     * get a vector of length `m`.
-     */
+
     fun <A : Any> matVec(
         semiring: Semiring<A>,
         mat: MatLike<A>,
         vec: VecLike<A>
     ): DenseVec<A> {
-        val m = mat.rows
-        val n = mat.cols
-        DenseKernel.requireSize(vec.size, n)
+        val rows = mat.rows
+        val cols = mat.cols
+        DenseKernel.requireSize(vec.size, cols)
 
-        val out = arrayOfNulls<Any?>(m)
+        val out = arrayOfNulls<Any?>(rows)
 
         var r = 0
-        while (r < m) {
+        while (r < rows) {
             var acc = semiring.add.identity
 
             var c = 0
-            while (c < n) {
+            while (c < cols) {
                 val term = semiring.mul(mat[r, c], vec[c])
                 acc = semiring.add(acc, term)
                 c += 1
@@ -177,49 +184,16 @@ internal object DenseMatKernel {
         return DenseVec.fromArrayUnsafe(out)
     }
 
-    /**
-     * Hadamard product: A ⊙ B
-     *
-     * Given two matrices of the same size `m×n`, calculate their Hadamard product, i.e, their pointwise product.
-     *
-     * This simply requires a multiplication: we take a [Semiring].
-     */
-    fun <R : Any> hadamard(
-        semiring: Semiring<R>,
-        mat1: MatLike<R>,
-        mat2: MatLike<R>
-    ): DenseMat<R> {
-        require(mat1.rows == mat2.rows && mat1.cols == mat2.cols) {
-            "Matrices must have same shape, got: ${mat1.rows}${Symbols.TIMES}${mat1.cols} and ${mat2.rows}${Symbols.TIMES}${mat2.cols}"
-        }
-        val m = mat1.rows
-        val n = mat1.cols
-        val out = arrayOfNulls<Any?>(m * n)
 
-        var r = 0
-        while (r < m) {
-            var c = 0
-            while (c < n) {
-                out[r * n + c] = semiring.mul(mat1[r, c], mat2[r, c])
-                c += 1
-            }
-            r += 1
-        }
-        return DenseMat.fromArrayUnsafe(m, n, out)
-    }
-
-    /**
-     * Determine if a matrix is a unit under the Hadamard operation.
-     */
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
-        x: MatLike<A>,
+        mat: MatLike<A>,
     ): Boolean {
         var r = 0
-        while (r < x.rows) {
+        while (r < mat.rows) {
             var c = 0
-            while (c < x.cols) {
-                if (x[r, c] == field.zero) return false
+            while (c < mat.cols) {
+                if (mat[r, c] == field.zero) return false
                 c += 1
             }
             r += 1
@@ -227,15 +201,7 @@ internal object DenseMatKernel {
         return true
     }
 
-    /**
-     * Kronecker product A⊗B: given two matrices
-     * - `A` which is `m×n` over [R]
-     * - `B` which is `p×q` over [R]
-     * for a [Semiring] over [R], calculate an `(mp)×(nq)` matrix such that:
-     * ```
-     * A⊗B[ip + r, jq + c] = A[i,j] * B[r,c]
-     * ```
-     */
+
     fun <R : Any> kronecker(
         semiring: Semiring<R>,
         mat1: MatLike<R>,
@@ -276,20 +242,45 @@ internal object DenseMatKernel {
     }
 
     /**
-     * Given a matrix, flatten it from a `r×c` matrix to a vector of length `rc` along the rows.
+     * Negate a matrix over [A] by negating each entry using the additive [AbelianGroup] over [A].
      */
-    fun <A : Any> flattenRowMajor(
-        x: MatLike<A>
-    ): DenseVec<A> {
-        val rows = x.rows
-        val cols = x.cols
+    fun <A : Any> negateEntries(
+        group: AbelianGroup<A>,
+        mat: MatLike<A>
+    ): DenseMat<A> {
+        val rows = mat.rows
+        val cols = mat.cols
         val out = arrayOfNulls<Any?>(rows * cols)
 
         var r = 0
         while (r < rows) {
             var c = 0
             while (c < cols) {
-                out[r * cols + c] = x[r, c]
+                out[r * cols + c] = group.inverse(mat[r, c])
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
+    }
+
+
+    /**
+     * Given a matrix, flatten it from a `r×c` matrix to a vector of length `rc` along the rows.
+     */
+    fun <A : Any> flattenRowMajor(
+        mat: MatLike<A>
+    ): DenseVec<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            var c = 0
+            while (c < cols) {
+                out[r * cols + c] = mat[r, c]
                 c += 1
             }
             r += 1
@@ -318,49 +309,207 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
 
-    /**
-     * Calculates the Gram matrix `G = M^T M`.
-     *
-     * This computes the inner products of the **columns** of [m].
-     *
-     * If the semiring’s multiplication is commutative, the result is symmetric.
-     * The resulting matrix has dimensions `c×c` (where `c` is the number of columns in [m]).
-     *
-     * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
-     * (rows are points, columns are blocks), this calculates the **concurrence matrix** (or block intersection matrix).
-     * - Entry `(i, j)` represents the size of the intersection between block `i` and block `j` (`|B_i ∩ B_j|`).
-     * - Diagonal entries represent the block sizes (`k`).
-     *
-     * @param semiring The semiring definition for the multiplication and addition operations.
-     * @param m The source matrix.
-     * @return A `c×c` matrix where `G_ij = ⟨col_i, col_j⟩`.
-     */
-    fun <A : Any> gramMatrix(
-        semiring: Semiring<A>,
-        m: MatLike<A>
-    ): DenseMat<A> =
-        matMul(semiring, m.transposeView(), m)
 
-    /**
-     * Calculates the intersection matrix `B = M M^T`.
-     *
-     * This computes the inner products of the **rows** of [m].
-     *
-     * If the semiring’s multiplication is commutative, the result is symmetric.
-     * The resulting matrix has dimensions $r×r$ (where $r$ is the number of rows in [m]).
-     *
-     * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
-     * (rows are points, columns are blocks), this calculates the point-connectivity.
-     * - Entry `(i, j)` represents the number of blocks containing both point `i` and point `j` (`λ_ij`).
-     * - Diagonal entries represent the replication numbers (`r`) for each point.
-     *
-     * @param semiring The semiring definition for the multiplication and addition operations.
-     * @param m The source matrix.
-     * @return An `r×r` matrix where `B_ij = ⟨row_i, row_j⟩`.
-     */
-    fun <A: Any> intersectionMatrix(
+    fun <R : Any> pointInflation(
+        mat: DenseMat<R>,
+        blockSize: Int,
+    ): DenseMat<R> {
+        require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
+
+        // Each entry gets replicated into a blockSize × blockSize block.
+        return DenseMat.tabulate(
+            mat.rows * blockSize,
+            mat.cols * blockSize
+        ) { i, j ->
+            mat[i / blockSize, j / blockSize]
+        }
+    }
+
+    fun <A : Any> trace(
         semiring: Semiring<A>,
-        m: MatLike<A>
-    ): DenseMat<A> =
-        matMul(semiring, m, m.transposeView())
+        mat: MatLike<A>,
+    ): A {
+        require(isSquare(mat)) {
+            "Cannot calculate trace for non-square mat ${mat.rows}${Symbols.TIMES}${mat.cols}."
+        }
+
+        val n = mat.rows
+        var t = semiring.add.identity
+        var i = 0
+        while (i < n) {
+            t = semiring.add(t, mat[i, i])
+            i += 1
+        }
+        return t
+    }
+
+    fun <A : Any> traceRect(
+        semiring: Semiring<A>,
+        mat: MatLike<A>,
+    ): A {
+        val n = min(mat.rows, mat.cols)
+        var t = semiring.add.identity
+        var i = 0
+        while (i < n) {
+            t = semiring.add(t, mat[i, i])
+            i += 1
+        }
+        return t
+    }
+
+    fun <A : Any> generateTranspose(
+        mat: MatLike<A>
+    ): DenseMat<A> {
+        val outRows = mat.cols
+        val outCols = mat.rows
+        val out = arrayOfNulls<Any?>(outRows * outCols)
+
+        var r = 0
+        while (r < mat.rows) {
+            var c = 0
+            while (c < mat.cols) {
+                out[c * outCols + r] = mat[r, c]
+                c += 1
+            }
+            r += 1
+        }
+        return DenseMat.fromArrayUnsafe(outRows, outCols, out)
+    }
+
+    fun <A: Any> rowSums(
+        semiring: Semiring<A>,
+        mat: MatLike<A>
+    ): DenseVec<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val out = arrayOfNulls<Any?>(rows)
+
+        var r = 0
+        while (r < rows) {
+            var rowSum = semiring.add.identity
+
+            var c = 0
+            while (c < cols) {
+                rowSum = semiring.add(rowSum, mat[r, c])
+                c += 1
+            }
+            out[r] = rowSum
+            r += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A : Any> colSums(
+        semiring: Semiring<A>,
+        mat: MatLike<A>
+    ): DenseVec<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val out = arrayOfNulls<Any?>(cols)
+
+        var c = 0
+        while (c < cols) {
+            var colSum = semiring.add.identity
+
+            var r = 0
+            while (r < rows) {
+                colSum = semiring.add(colSum, mat[r, c])
+                r += 1
+            }
+            out[c] = colSum
+            c += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A: Any> scale(
+        semiring: Semiring<A>,
+        s: A,
+        mat: MatLike<A>
+    ): DenseMat<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            var c = 0
+            while (c < cols) {
+                out[r * cols + c] = semiring.mul(s, mat[r, c])
+                c += 1
+            }
+            r += 1
+        }
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
+    }
+
+    fun isSquare(
+        mat: MatLike<*>
+    ): Boolean =
+        mat.rows == mat.cols
+
+    fun <A : Any> isDiagonal(
+        mat: MatLike<A>,
+        zero: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        if (!isSquare(mat)) {
+            return false
+        }
+
+        val n = mat.rows
+        var r = 0
+        while (r < n) {
+            var c = 0
+            while (c < n) {
+                if (r != c && !eq(mat[r, c], zero)) {
+                    return false
+                }
+                c += 1
+            }
+            r += 1
+        }
+        return true
+    }
+
+    fun <A : Any> diagonal(
+        mat: MatLike<A>,
+    ): DenseVec<A> {
+        require(isSquare(mat)) {
+            "Matrix must be square to find diagonal, got: ${mat.rows}${Symbols.TIMES}${mat.cols}"
+        }
+        val n = mat.rows
+        val out = arrayOfNulls<Any?>(n)
+        var i = 0
+        while (i < n) {
+            out[i] = mat[i, i]
+            i += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A : Any> power(
+        semiring: Semiring<A>,
+        mat: MatLike<A>,
+        pow: Int
+    ): DenseMat<A> {
+        DenseKernel.checkNonnegative(pow, "pow")
+        require(isSquare(mat)) {
+            "Matrix must be square to exponentiate, got: ${mat.rows}${Symbols.TIMES}${mat.cols}"
+        }
+        val n = mat.rows
+        var result = identity(semiring, n)
+        var base = mat
+        var exp = pow
+
+        while (exp > 0) {
+            if (exp and 1 == 1) {
+                result = matMul(semiring, result, base)
+            }
+            base = matMul(semiring, base, base)
+            exp = exp shr 1
+        }
+
+        return result
+    }
 }

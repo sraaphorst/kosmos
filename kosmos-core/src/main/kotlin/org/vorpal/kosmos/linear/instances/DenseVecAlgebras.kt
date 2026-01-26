@@ -6,7 +6,6 @@ import org.vorpal.kosmos.algebra.structures.Dimensionality
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -58,6 +57,16 @@ object DenseVecAlgebras {
         }
     }
 
+    private fun <A : Any> hadamardOp(
+        mul: Monoid<A>,
+        size: Int
+    ): BinOp<DenseVec<A>> =
+        BinOp(Symbols.HADAMARD) { x, y ->
+            DenseKernel.requireSize(x.size, size)
+            DenseKernel.requireSize(y.size, size)
+            DenseVecKernel.hadamard(mul, x, y)
+        }
+
 
     fun <A : Any> hadamardMonoid(
         monoid: Monoid<A>,
@@ -72,7 +81,7 @@ object DenseVecAlgebras {
     )
 
 
-    fun <A : Any> commutativeHadamardMonoid(
+    fun <A : Any> hadamardMonoid(
         commutativeMonoid: CommutativeMonoid<A>,
         dimension: Int
     ): CommutativeMonoid<DenseVec<A>> = CommutativeMonoid.of(
@@ -80,7 +89,7 @@ object DenseVecAlgebras {
         op = BinOp(Symbols.HADAMARD) { u, v ->
             DenseKernel.requireSize(u.size, dimension)
             DenseKernel.requireSize(v.size, dimension)
-            DenseVecKernel.commutativeHadamard(commutativeMonoid, u, v)
+            DenseVecKernel.hadamard(commutativeMonoid, u, v)
         }
     )
 
@@ -116,9 +125,11 @@ object DenseVecAlgebras {
         }
 
         override val op = BinOp(Symbols.HADAMARD) { x: DenseVec<A>, y: DenseVec<A> ->
-            requireUnit(x)
-            requireUnit(y)
-            x.zipWith(y) { a, b -> field.mul(a, b) }
+            DenseKernel.requireSize(x.size, dimension)
+            DenseKernel.requireSize(y.size, dimension)
+            require(DenseVecKernel.isHadamardUnit(field, x)) { "Vector is not Hadamard-invertible." }
+            require(DenseVecKernel.isHadamardUnit(field, y)) { "Vector is not Hadamard-invertible." }
+            DenseVecKernel.hadamard(field.mul, x, y)
         }
 
         override val inverse = Endo(Symbols.INVERSE) { x: DenseVec<A> ->
@@ -126,18 +137,4 @@ object DenseVecAlgebras {
             DenseVec.tabulate(dimension) { i -> field.reciprocal(x[i]) }
         }
     }
-}
-
-fun main() {
-    val field = RealAlgebras.RealField
-    val space = DenseVecAlgebras.DenseVectorSpace(field, 3)
-
-    val a = DenseVec.of(1.0, 2.0, 3.0)
-    val b = DenseVec.of(4.0, 5.0, 6.0)
-
-    val left = space.leftAction(2.0, a)
-    val right = space.leftAction(3.0, b)
-    val result = space.add(left, right)
-    val expected = DenseVec.of(14.0, 19.0, 24.0)
-    check(result == expected) { "expected $expected but got $result" }
 }
