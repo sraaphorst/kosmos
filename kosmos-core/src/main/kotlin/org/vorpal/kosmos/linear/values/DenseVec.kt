@@ -19,7 +19,7 @@ package org.vorpal.kosmos.linear.values
  */
 class DenseVec<A : Any> private constructor(
     private val data: Array<Any?>
-): VecLike<A> {
+): VecLike<A>, Iterable<A> {
     /**
      * The number of elements in this vector.
      */
@@ -55,7 +55,7 @@ class DenseVec<A : Any> private constructor(
     fun <B : Any> map(f: (A) -> B): DenseVec<B> =
         tabulate(size) { f(get(it)) }
 
-    operator fun iterator(): Iterator<A> =
+    override operator fun iterator(): Iterator<A> =
         object : Iterator<A> {
             private var i = 0
 

@@ -26,7 +26,7 @@ object DenseMatAlgebras {
     // ------------------------------------
 
     /**
-     * Given a [Monoid] over [A], create the additive [BinOp] for `m x n` [DenseMat] over [A].
+     * Given a [Monoid] over [A], create the additive [BinOp] for `m×n` [DenseMat] over [A].
      */
     private fun <A : Any> addOp(
         monoid: Monoid<A>,
@@ -35,11 +35,12 @@ object DenseMatAlgebras {
     ): BinOp<DenseMat<A>> = BinOp(Symbols.PLUS) { x, y ->
         DenseMatKernel.checkSize(x, rows, cols)
         DenseMatKernel.checkSize(y, rows, cols)
-        x.zipWith(y, monoid::invoke)
+        DenseMatKernel.entrywise(monoid, x, y)
     }
 
+
     /**
-     * Given a [Semiring] over [A], create the multiplicative [BinOp] for `n x n` [DenseMat] over [A].
+     * Given a [Semiring] over [A], create the multiplicative [BinOp] for `n×n` [DenseMat]s over [A].
      */
     private fun <A : Any> mulOp(
         semiring: Semiring<A>,
@@ -51,12 +52,25 @@ object DenseMatAlgebras {
     }
 
 
+    /**
+     * Given an [AbelianGroup] over [A], create the inverse [Endo] for `n×n` [DenseMat]s over [A].
+     */
+    private fun <A : Any> negativeOp(
+        group: AbelianGroup<A>,
+        rows: Int,
+        cols: Int
+    ): Endo<DenseMat<A>> = Endo(Symbols.MINUS) { x ->
+        DenseMatKernel.checkSize(x, rows, cols)
+        DenseMatKernel.negateEntries(group, x)
+    }
+
+
     // -------------------------------------------
     // ---------- One operator creators ----------
     // -------------------------------------------
 
     /**
-     * Given an [AbelianGroup] over [A], create an additive [AbelianGroup] of `m x n` [DenseMat] over [A].
+     * Given an [AbelianGroup] over [A], create an additive [AbelianGroup] of `m×n` [DenseMat] over [A].
      */
     fun <A : Any> additiveAbelianGroup(
         group: AbelianGroup<A>,
@@ -64,23 +78,15 @@ object DenseMatAlgebras {
         cols: Int
     ): AbelianGroup<DenseMat<A>> {
         DenseKernel.checkNonnegative(rows, cols)
-
-        val zero = DenseMatKernel.constMat(group.identity, rows, cols)
-        val add = addOp(group, rows, cols)
-        val neg = Endo(Symbols.MINUS) { x: DenseMat<A> ->
-            DenseMatKernel.checkSize(x, rows, cols)
-            x.map(group.inverse::invoke)
-        }
-
         return AbelianGroup.of(
-            identity = zero,
-            op = add,
-            inverse = neg
+            identity = DenseMatKernel.constMat(group.identity, rows, cols),
+            op = addOp(group, rows, cols),
+            inverse = negativeOp(group, rows, cols)
         )
     }
 
     /**
-     * Given a [CommutativeMonoid] over [A], create an additive [CommutativeMonoid] of `m x n` [DenseMat] over [A].
+     * Given a [CommutativeMonoid] over [A], create an additive [CommutativeMonoid] of `m×n` [DenseMat] over [A].
      */
     fun <A : Any> additiveCommutativeMonoid(
         monoid: CommutativeMonoid<A>,
@@ -88,19 +94,15 @@ object DenseMatAlgebras {
         cols: Int
     ): CommutativeMonoid<DenseMat<A>> {
         DenseKernel.checkNonnegative(rows, cols)
-
-        val zero = DenseMatKernel.constMat(monoid.identity, rows, cols)
-        val add = addOp(monoid, rows, cols)
-
         return CommutativeMonoid.of(
-            identity = zero,
-            op = add
+            identity = DenseMatKernel.constMat(monoid.identity, rows, cols),
+            op = addOp(monoid, rows, cols)
         )
     }
 
 
     /**
-     * Given a [Semiring] over [A], create a multiplicative [Monoid] of `n x n` [DenseMat] over [A].
+     * Given a [Semiring] over [A], create a multiplicative [Monoid] of `n×n` [DenseMat] over [A].
      */
     fun <A : Any> multiplicativeMonoid(
         semiring: Semiring<A>,
@@ -119,7 +121,7 @@ object DenseMatAlgebras {
     // -------------------------------------------
 
     /**
-     * Given a [Semiring] over [A], create a [Semiring] of `n x n` [DenseMat] over [A] consisting of:
+     * Given a [Semiring] over [A], create a [Semiring] of `n×n` [DenseMat] over [A] consisting of:
      * - An additive [CommutativeMonoid]
      * - A multiplicative [Monoid].
      */
@@ -183,7 +185,7 @@ object DenseMatAlgebras {
     // --------------------------------------
 
     /**
-     * Given a [CommutativeSemiring] over [R] of [scalars], create an R-[Semialgebra] of `n x n` [DenseMat] over [R]
+     * Given a [CommutativeSemiring] over [R] of [scalars], create an R-[Semialgebra] of `n×n` [DenseMat] over [R]
      * consisting of:
      * - An additive [CommutativeMonoid]
      * - A multiplicative [Monoid]
@@ -264,36 +266,47 @@ object DenseMatAlgebras {
     // ---------- Hadamard Structures ----------
     // -----------------------------------------
 
-    // -------------------------------------------
-    // ---------- One operator creators ----------
-    // -------------------------------------------
-
-    /**
-     * Given an [AbelianGroup] over [A], create a multiplicative [AbelianGroup] of `m x n` [DenseMat] over [A].
-     */
-    private fun <A : Any> hadamardAbelianGroup(
-        add: AbelianGroup<A>,
+    private fun <A : Any> hadamardOp(
+        mul: Monoid<A>,
         rows: Int,
-        cols: Int,
-    ): AbelianGroup<DenseMat<A>> = AbelianGroup.of(
-        identity = DenseMatKernel.constMat(add.identity, rows, cols),
-        op = BinOp(Symbols.PLUS) { x, y ->
+        cols: Int
+    ): BinOp<DenseMat<A>> =
+        BinOp(Symbols.HADAMARD) { x, y ->
             DenseMatKernel.checkSize(x, rows, cols)
             DenseMatKernel.checkSize(y, rows, cols)
-            x.zipWith(y, add::invoke)
-        },
-        inverse = Endo(Symbols.MINUS) { x ->
-            DenseMatKernel.checkSize(x, rows, cols)
-            x.map(add.inverse::invoke)
+            DenseMatKernel.entrywise(mul, x, y)
         }
+
+    /**
+     * Pointwise multiplication using a [Monoid].
+     */
+    private fun <A : Any> hadamardMonoid(
+        mul: Monoid<A>,
+        rows: Int,
+        cols: Int
+    ): Monoid<DenseMat<A>> = Monoid.of(
+        identity = DenseMatKernel.constMat(mul.identity, rows, cols),
+        op = hadamardOp(mul, rows, cols)
     )
 
 
     /**
-     * The semiring structure on `r×c` matrices over a base semiring [A]
-     * using:
-     * - addition = entrywise addition
-     * - multiplication = Hadamard (entrywise) multiplication
+     * Pointwise multiplication using a [CommutativeMonoid].
+     */
+    private fun <A : Any> hadamardMonoid(
+        mul: CommutativeMonoid<A>,
+        rows: Int,
+        cols: Int
+    ): CommutativeMonoid<DenseMat<A>> = CommutativeMonoid.of(
+        identity = DenseMatKernel.constMat(mul.identity, rows, cols),
+        op = hadamardOp(mul, rows, cols)
+    )
+
+
+    /**
+     * The [Semiring] structure on `r×c` [DenseMat] over a base semiring [A] using:
+     * - an additive [CommutativeMonoid]
+     * - the [hadamardMonoid] entrywise multiplication, which gives a [Monoid].
      *
      * Additive identity is the all-zero matrix.
      * Multiplicative identity is the all-ones matrix.
@@ -311,33 +324,17 @@ object DenseMatAlgebras {
         }
 
         override val add: CommutativeMonoid<DenseMat<A>> =
-            CommutativeMonoid.of(
-                identity = DenseMatKernel.constMat(entries.add.identity, rows, cols),
-                op = BinOp(Symbols.PLUS) { x, y ->
-                    DenseMatKernel.checkSize(x, rows, cols)
-                    DenseMatKernel.checkSize(y, rows, cols)
-                    x.zipWith(y, entries.add::invoke)
-                }
-            )
+            additiveCommutativeMonoid(entries.add, rows, cols)
 
         override val mul: Monoid<DenseMat<A>> =
-            Monoid.of(
-                identity = DenseMatKernel.constMat(entries.mul.identity, rows, cols),
-                op = BinOp(Symbols.HADAMARD) { x, y ->
-                    DenseMatKernel.checkSize(x, rows, cols)
-                    DenseMatKernel.checkSize(y, rows, cols)
-                    x.zipWith(y, entries.mul::invoke)
-                }
-            )
+            hadamardMonoid(entries.mul, rows, cols)
     }
 
 
-
     /**
-     * The ring structure on r×c matrices over a base ring [A]
-     * using:
-     * - addition = entrywise addition (additive abelian group)
-     * - multiplication = Hadamard (entrywise) multiplication
+     * The [Ring] structure on `r×c` [DenseMat] over a base ring [A] using:
+     * - an additive [AbelianGroup]
+     * - the [hadamardMonoid] entrywise multiplication, which gives a [CommutativeMonoid].
      *
      * Additive identity is the all-zero matrix.
      * Multiplicative identity is the all-ones matrix.
@@ -354,19 +351,11 @@ object DenseMatAlgebras {
             DenseKernel.checkNonnegative(rows, cols)
         }
 
-        override val add: AbelianGroup<DenseMat<A>> = hadamardAbelianGroup(
-            entries.add, rows, cols
-        )
+        override val add: AbelianGroup<DenseMat<A>> =
+            additiveAbelianGroup(entries.add, rows, cols)
 
         override val mul: Monoid<DenseMat<A>> =
-            Monoid.of(
-                identity = DenseMatKernel.constMat(entries.mul.identity, rows, cols),
-                op = BinOp(Symbols.HADAMARD) { x, y ->
-                    DenseMatKernel.checkSize(x, rows, cols)
-                    DenseMatKernel.checkSize(y, rows, cols)
-                    x.zipWith(y, entries.mul::invoke)
-                }
-            )
+            hadamardMonoid(entries.mul, rows, cols)
     }
 
 
@@ -377,6 +366,7 @@ object DenseMatAlgebras {
      * - multiplication = Hadamard (entrywise) multiplication
      *
      * Additive identity is the all-zero matrix.
+     *
      * Multiplicative identity is the all-ones matrix.
      *
      * This is the direct-product commutative ring `A^(r*c)`.
@@ -391,18 +381,11 @@ object DenseMatAlgebras {
             DenseKernel.checkNonnegative(rows, cols)
         }
 
-        override val add: AbelianGroup<DenseMat<A>> = hadamardAbelianGroup(
-            entries.add, rows, cols
-        )
+        override val add: AbelianGroup<DenseMat<A>> =
+            additiveAbelianGroup(entries.add, rows, cols)
 
-        override val mul: CommutativeMonoid<DenseMat<A>> = CommutativeMonoid.of(
-            identity = DenseMatKernel.constMat(entries.mul.identity, rows, cols),
-            op = BinOp(Symbols.HADAMARD) { x, y ->
-                DenseMatKernel.checkSize(x, rows, cols)
-                DenseMatKernel.checkSize(y, rows, cols)
-                x.zipWith(y, entries.mul::invoke)
-            }
-        )
+        override val mul: CommutativeMonoid<DenseMat<A>> =
+            hadamardMonoid(entries.mul, rows, cols)
     }
 
 
@@ -432,17 +415,8 @@ object DenseMatAlgebras {
 
         private fun requireUnit(x: DenseMat<A>) {
             DenseMatKernel.checkSize(x, rows, cols)
-
-            var r = 0
-            while (r < rows) {
-                var c = 0
-                while (c < cols) {
-                    require(x[r, c] != field.zero) {
-                        "Hadamard unit required (no zero entries). Found 0 at ($r, $c)."
-                    }
-                    c += 1
-                }
-                r += 1
+            require(DenseMatKernel.isHadamardUnit(field, x)) {
+                "Hadamard unit required (no zero entries allowed)."
             }
         }
 
@@ -450,9 +424,7 @@ object DenseMatAlgebras {
             BinOp(Symbols.HADAMARD) { x, y ->
                 requireUnit(x)
                 requireUnit(y)
-
-                // Product of nonzeros in a field is nonzero, so closure holds.
-                x.zipWith(y, field.mul::invoke)
+                DenseMatKernel.entrywise(field.mul, x, y)
             }
 
         override val inverse: Endo<DenseMat<A>> = Endo(Symbols.INVERSE) { x ->
@@ -489,6 +461,10 @@ object DenseMatAlgebras {
     fun <A: Any> hadamardReciprocal(field: Field<A>, x: MatLike<A>): DenseMat<A> =
         hadamardReciprocal(field, x, x.rows, x.cols)
 
+
+    // ------------------------
+    // ----- Isomorphisms -----
+    // ------------------------
 
     /**
      * An isomorphism between:

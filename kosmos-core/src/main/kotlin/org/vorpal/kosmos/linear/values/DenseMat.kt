@@ -18,7 +18,7 @@ class DenseMat<A : Any> private constructor(
     override val rows: Int,
     override val cols: Int,
     private val data: Array<Any?>
-): MatLike<A> {
+): MatLike<A>, Iterable<A> {
     init {
         val size = rows * cols
         require(rows >= 0) { "rows must be nonnegative: $rows" }
@@ -50,7 +50,7 @@ class DenseMat<A : Any> private constructor(
     fun <B : Any> map(f: (A) -> B): DenseMat<B> =
         tabulate(rows, cols) { r, c -> f(get(r, c)) }
 
-    operator fun iterator(): Iterator<A> =
+    override operator fun iterator(): Iterator<A> =
         object : Iterator<A> {
             private var idx = 0
 

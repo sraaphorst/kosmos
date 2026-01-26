@@ -8,9 +8,9 @@ import org.vorpal.kosmos.linear.values.VecLike
  *
  * No data is copied. Indexing is redirected: (r, c) ↦ base(c, r).
  */
-class TransposeMatView<A : Any>(
+data class TransposeMatView<A : Any>(
     private val base: MatLike<A>
-) : MatLike<A> {
+): MatLike<A> {
     override val rows: Int
         get() = base.cols
 
@@ -26,10 +26,10 @@ class TransposeMatView<A : Any>(
  *
  * No data is copied. Indexing is redirected: i ↦ mat(row, i).
  */
-class RowVecView<A : Any>(
+data class RowVecView<A : Any>(
     private val mat: MatLike<A>,
     private val row: Int,
-) : org.vorpal.kosmos.linear.values.VecLike<A> {
+): VecLike<A> {
     init {
         require(row in 0 until mat.rows) { "row out of bounds: $row" }
     }
@@ -46,10 +46,10 @@ class RowVecView<A : Any>(
  *
  * No data is copied. Indexing is redirected: i ↦ mat(i, col).
  */
-class ColVecView<A : Any>(
+data class ColVecView<A : Any>(
     private val mat: MatLike<A>,
     private val col: Int
-) : VecLike<A> {
+): VecLike<A> {
     init {
         require(col in 0 until mat.cols) { "col out of bounds: $col" }
     }
@@ -64,7 +64,7 @@ class ColVecView<A : Any>(
 /**
  * A lazy view of a row range slice of a matrix.
  */
-class RowSliceMatView<A : Any>(
+data class RowSliceMatView<A : Any>(
     private val mat: MatLike<A>,
     private val rowStart: Int,
     private val rowEndExclusive: Int
@@ -81,14 +81,17 @@ class RowSliceMatView<A : Any>(
     override val cols: Int
         get() = mat.cols
 
-    override operator fun get(r: Int, c: Int): A =
-        mat[rowStart + r, c]
+    override operator fun get(r: Int, c: Int): A {
+        require(r in 0 until rows) { "row out of bounds for slice: $r" }
+        require(c in 0 until cols) { "col out of bounds for slice: $c" }
+        return mat[rowStart + r, c]
+    }
 }
 
 /**
  * A lazy view of a col range slice of a matrix.
  */
-class ColSliceMatView<A : Any>(
+data class ColSliceMatView<A : Any>(
     private val mat: MatLike<A>,
     private val colStart: Int,
     private val colEndExclusive: Int
@@ -105,8 +108,11 @@ class ColSliceMatView<A : Any>(
     override val cols: Int
         get() = colEndExclusive - colStart
 
-    override operator fun get(r: Int, c: Int): A =
-        mat[r, colStart + c]
+    override operator fun get(r: Int, c: Int): A {
+        require(r in 0 until rows) { "row out of bounds for slice: $r" }
+        require(c in 0 until cols) { "col out of bounds for slice: $c" }
+        return mat[r, colStart + c]
+    }
 }
 
 /** Convenience: transpose view (no copy). */
@@ -126,7 +132,7 @@ fun <A : Any> MatLike<A>.rowSliceView(rowStart: Int, rowEndExclusive: Int): MatL
     RowSliceMatView(this, rowStart, rowEndExclusive)
 
 /** Convenience: view col slice as a matrix (no copy). */
-fun <A : Any> MatLike<A>.colSliceView(colStart: Int, colEndExclusive: Int): org.vorpal.kosmos.linear.values.MatLike<A> =
+fun <A : Any> MatLike<A>.colSliceView(colStart: Int, colEndExclusive: Int): MatLike<A> =
     ColSliceMatView(this, colStart, colEndExclusive)
 
 /** Convenience: view submatrix as a matrix (no copy). */
