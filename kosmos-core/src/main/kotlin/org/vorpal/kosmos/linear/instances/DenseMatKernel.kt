@@ -1,15 +1,20 @@
 package org.vorpal.kosmos.linear.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
+import org.vorpal.kosmos.linear.views.opView
+import org.vorpal.kosmos.linear.views.transposeView
 import kotlin.math.min
 
 /**
@@ -66,7 +71,8 @@ internal object DenseMatKernel {
             var c = 0
             while (c < mat.cols) {
                 require(mat[r, c] == elem) {
-                    "Expected constant ${mat.rows}${Symbols.TIMES}${mat.cols} matrix of $elem, but found ${mat[r, c]}."}
+                    "Expected constant ${mat.rows}${Symbols.TIMES}${mat.cols} matrix of $elem, but found ${mat[r, c]}."
+                }
                 c += 1
             }
             r += 1
@@ -376,7 +382,7 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(outRows, outCols, out)
     }
 
-    fun <A: Any> rowSums(
+    fun <A : Any> rowSums(
         semiring: Semiring<A>,
         mat: MatLike<A>
     ): DenseVec<A> {
@@ -402,27 +408,9 @@ internal object DenseMatKernel {
     fun <A : Any> colSums(
         semiring: Semiring<A>,
         mat: MatLike<A>
-    ): DenseVec<A> {
-        val rows = mat.rows
-        val cols = mat.cols
-        val out = arrayOfNulls<Any?>(cols)
+    ): DenseVec<A> = rowSums(semiring, mat.transposeView())
 
-        var c = 0
-        while (c < cols) {
-            var colSum = semiring.add.identity
-
-            var r = 0
-            while (r < rows) {
-                colSum = semiring.add(colSum, mat[r, c])
-                r += 1
-            }
-            out[c] = colSum
-            c += 1
-        }
-        return DenseVec.fromArrayUnsafe(out)
-    }
-
-    fun <A: Any> scale(
+    fun <A : Any> scale(
         semiring: Semiring<A>,
         s: A,
         mat: MatLike<A>
@@ -442,6 +430,32 @@ internal object DenseMatKernel {
         }
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
+
+    fun <A : Any, B : Any> rowReduce(
+        add: CommutativeMonoid<B>,
+        mat: MatLike<A>,
+        f: (A) -> B
+    ): DenseVec<B> {
+        val out = arrayOfNulls<Any?>(mat.rows)
+        var r = 0
+        while (r < mat.rows) {
+            var acc = add.identity
+            var c = 0
+            while (c < mat.cols) {
+                acc = add(acc, f(mat[r, c]))
+                c += 1
+            }
+            out[r] = acc
+            r += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A : Any, B : Any> colReduce(
+        add: CommutativeMonoid<B>,
+        mat: MatLike<A>,
+        f: (A) -> B
+    ): DenseVec<B> = rowReduce(add, mat.transposeView(), f)
 
     fun isSquare(
         mat: MatLike<*>
@@ -511,5 +525,219 @@ internal object DenseMatKernel {
         }
 
         return result
+    }
+
+    /**
+     * Permutation matrix check:
+     * - square
+     * - binary entries {0,1}
+     * - exactly one 1 in each row and each column
+     */
+    fun <A : Any> isPermutationMatrix(
+        mat: MatLike<A>,
+        zero: A,
+        one: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        require(!eq(zero, one)) { "isPermutationMatrix requires zero != one" }
+        fun isBinary(a: A): Boolean =
+            eq(a, zero) || eq(a, one)
+
+        fun checkRowsAllOne(currMat: MatLike<A>): Boolean {
+            var r = 0
+            while (r < currMat.rows) {
+                var ones = 0
+                var c = 0
+                while (c < currMat.cols) {
+                    val entry = currMat[r, c]
+                    if (!isBinary(entry)) return false
+                    if (eq(entry, one)) {
+                        ones += 1
+                        if (ones > 1) return false
+                    }
+                    c += 1
+                }
+                if (ones != 1) return false
+                r += 1
+            }
+            return true
+        }
+
+        if (mat.rows != mat.cols) return false
+        if (!checkRowsAllOne(mat)) return false
+        return checkRowsAllOne(mat.transposeView())
+    }
+
+    fun <A : Any> isPermutationMatrix(
+        semiring: Semiring<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        val zero = semiring.add.identity
+        val one = semiring.mul.identity
+        require(!eq(zero, one)) { "Permutation matrix check requires zero != one." }
+        return isPermutationMatrix(mat, zero, one, eq)
+    }
+
+    fun <A: Any> affineMatVec(
+        semiring: Semiring<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        xVec: VecLike<A>,
+        beta: A,
+        yVec: VecLike<A>
+    ): DenseVec<A> {
+        require(aOp != MatOp.ConjTrans) { "ConjTrans requires an involutive ring." }
+
+        val aV = aMat.opView(aOp) // Normal or Trans
+        val m = aV.rows
+        val n = aV.cols
+
+        DenseKernel.requireSize(xVec.size, n)
+        DenseKernel.requireSize(yVec.size, m)
+
+        // tmp = aV * x
+        val tmp = matVec(semiring, aV, xVec)
+        val out = arrayOfNulls<Any?>(m)
+        var i = 0
+        while (i < m) {
+            val left = semiring.mul(alpha, tmp[i])
+            val right = semiring.mul(beta, yVec[i])
+            out[i] = semiring.add(left, right)
+            i += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A: Any> affineMatVec(
+        ring: InvolutiveRing<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        xVec: VecLike<A>,
+        beta: A,
+        yVec: VecLike<A>
+    ): DenseVec<A> {
+        val aV = aMat.opView(aOp, ring.conj)
+        val m = aV.rows
+        val n = aV.cols
+
+        DenseKernel.requireSize(xVec.size, n)
+        DenseKernel.requireSize(yVec.size, m)
+
+        // tmp = aV * x
+        val tmp = matVec(ring, aV, xVec)
+        val out = arrayOfNulls<Any?>(m)
+        var i = 0
+        while (i < m) {
+            val left = ring.mul(alpha, tmp[i])
+            val right = ring.mul(beta, yVec[i])
+            out[i] = ring.add(left, right)
+            i += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)// Normal/Trans/ConjTrans
+    }
+
+    fun <A : Any> affineMul(
+        semiring: Semiring<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        bOp: MatOp,
+        bMat: MatLike<A>,
+        beta: A,
+        cMat: MatLike<A>,
+    ): DenseMat<A> {
+        require(aOp != MatOp.ConjTrans && bOp != MatOp.ConjTrans) {
+            "ConjTrans requires an involutive ring."
+        }
+
+        val aV = aMat.opView(aOp)
+        val bV = bMat.opView(bOp)
+
+        val m = aV.rows
+        val k = aV.cols
+        require(bV.rows == k) {
+            "Shape mismatch: op(A) is ${m}${Symbols.TIMES}${k}, op(B) is ${bV.rows}${Symbols.TIMES}${bV.cols}"
+        }
+        val n = bV.cols
+        require(cMat.rows == m && cMat.cols == n) {
+            "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
+        }
+
+        val out = arrayOfNulls<Any?>(m * n)
+
+        var r = 0
+        while (r < m) {
+            var j = 0
+            while (j < n) {
+                var acc = semiring.add.identity
+
+                var t = 0
+                while (t < k) {
+                    acc = semiring.add(acc, semiring.mul(aV[r, t], bV[t, j]))
+                    t += 1
+                }
+
+                val scaledProd = semiring.mul(alpha, acc)
+                val scaledC = semiring.mul(beta, cMat[r, j])
+                out[r * n + j] = semiring.add(scaledProd, scaledC)
+
+                j += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    fun <A : Any> affineMul(
+        ring: InvolutiveRing<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        bOp: MatOp,
+        bMat: MatLike<A>,
+        beta: A,
+        cMat: MatLike<A>,
+    ): DenseMat<A> {
+        val aV = aMat.opView(aOp, ring.conj)
+        val bV = bMat.opView(bOp, ring.conj)
+
+        val m = aV.rows
+        val k = aV.cols
+        require(bV.rows == k) {
+            "Shape mismatch: op(A) is ${m}${Symbols.TIMES}${k}, op(B) is ${bV.rows}${Symbols.TIMES}${bV.cols}"
+        }
+        val n = bV.cols
+        require(cMat.rows == m && cMat.cols == n) {
+            "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
+        }
+
+        val out = arrayOfNulls<Any?>(m * n)
+
+        var r = 0
+        while (r < m) {
+            var j = 0
+            while (j < n) {
+                var acc = ring.add.identity
+
+                var t = 0
+                while (t < k) {
+                    acc = ring.add(acc, ring.mul(aV[r, t], bV[t, j]))
+                    t += 1
+                }
+
+                val scaledProd = ring.mul(alpha, acc)
+                val scaledC = ring.mul(beta, cMat[r, j])
+                out[r * n + j] = ring.add(scaledProd, scaledC)
+
+                j += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(m, n, out)
     }
 }
