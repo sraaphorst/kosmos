@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.linear.views
 
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
@@ -19,6 +21,35 @@ data class TransposeMatView<A : Any>(
 
     override fun get(r: Int, c: Int): A =
         base[c, r]
+}
+
+/**
+ * A lazy transpose view of a matrix where each entry is conjugated.
+ */
+class ConjTransposeMatView<A : Any>(
+    private val base: MatLike<A>,
+    private val conj: Endo<A>
+) : MatLike<A> {
+    override val rows: Int
+        get() = base.cols
+
+    override val cols: Int
+        get() = base.rows
+
+    override fun get(r: Int, c: Int): A =
+        conj(base[c, r])
+}
+
+fun <A : Any> MatLike<A>.opView(op: MatOp): MatLike<A> = when (op) {
+    MatOp.Normal -> this
+    MatOp.Trans -> this.transposeView()
+    MatOp.ConjTrans -> error("ConjTrans requires a conjugation Endo.")
+}
+
+fun <A : Any> MatLike<A>.opView(op: MatOp, conj: Endo<A>): MatLike<A> = when (op) {
+    MatOp.Normal -> this
+    MatOp.Trans -> this.transposeView()
+    MatOp.ConjTrans -> ConjTransposeMatView(this, conj)
 }
 
 /**

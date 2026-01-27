@@ -2,13 +2,16 @@ package org.vorpal.kosmos.linear.instances
 
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
+import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
 /**
@@ -103,14 +106,57 @@ internal object DenseVecKernel {
             acc = semiring.add(acc, semiring.mul(x[i], y[i]))
             i += 1
         }
+        return acc
+    }
 
+    /**
+     * Dot product over an [InvolutiveRing] where `x` is conjugated.
+     */
+    fun <A : Any> dotConjX(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): A {
+        val n = x.size
+        DenseKernel.requireSize(n, y.size)
+        var acc = involutiveRing.add.identity
+
+        var i = 0
+        while (i < n) {
+            val xc = involutiveRing.conj(x[i])
+            val entry = involutiveRing.mul(xc, y[i])
+            acc = involutiveRing.add(acc, entry)
+            i += 1
+        }
+        return acc
+    }
+
+    /**
+     * Dot product over an [InvolutiveRing] where `y` is conjugated.
+     */
+    fun <A : Any> dotConjY(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): A {
+        val n = x.size
+        DenseKernel.requireSize(n, y.size)
+        var acc = involutiveRing.add.identity
+
+        var i = 0
+        while (i < n) {
+            val yc = involutiveRing.conj(y[i])
+            val entry = involutiveRing.mul(x[i], yc)
+            acc = involutiveRing.add(acc, entry)
+            i += 1
+        }
         return acc
     }
 
     /**
      * Scale a vector by a scalar:
      * ```
-     * s ⊙ x = (s*xᵢ)
+     * s ⊙ x = (s * xᵢ)
      * ```
      */
     fun <A : Any> scale(
@@ -327,6 +373,89 @@ internal object DenseVecKernel {
         return Option.Some(maxIdx)
     }
 
+    fun <A : Any, B : Any> argminBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        cmp: Comparator<B>
+    ): Option<Int> {
+        if (x.size == 0) return Option.None
+
+        var bestIdx = 0
+        var bestVal = f(x[0])
+
+        var i = 1
+        while (i < x.size) {
+            val vi = f(x[i])
+            if (cmp.compare(vi, bestVal) < 0) {
+                bestIdx = i
+                bestVal = vi
+            }
+            i += 1
+        }
+        return Option.Some(bestIdx)
+    }
+
+    fun <A : Any, B : Any> argmaxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        cmp: Comparator<B>
+    ): Option<Int> {
+        if (x.size == 0) return Option.None
+
+        var bestIdx = 0
+        var bestVal = f(x[0])
+
+        var i = 1
+        while (i < x.size) {
+            val vi = f(x[i])
+            if (cmp.compare(vi, bestVal) > 0) {
+                bestIdx = i
+                bestVal = vi
+            }
+            i += 1
+        }
+        return Option.Some(bestIdx)
+    }
+
+    fun <A : Any, B : Any> argminBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Int> =
+        argminBy(x, f) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    fun <A : Any, B : Any> argmaxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Int> =
+        argmaxBy(x, f) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    private fun <A : Any> conjY(
+        conj: Endo<A>,
+        y: VecLike<A>
+    ): DenseVec<A> {
+        val yConj = arrayOfNulls<Any?>(y.size)
+        var c0 = 0
+        while (c0 < y.size) {
+            yConj[c0] = conj(y[c0])
+            c0 += 1
+        }
+        return DenseVec.fromArrayUnsafe(yConj)
+    }
+
     fun <A : Any> outerProduct(
         semiring: Semiring<A>,
         x: VecLike<A>,
@@ -346,5 +475,95 @@ internal object DenseVecKernel {
             i += 1
         }
         return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    fun <A : Any> outerProductConjY(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): DenseMat<A> {
+        val m = x.size
+        val n = y.size
+        val out = arrayOfNulls<Any?>(m * n)
+
+        val cy = conjY(involutiveRing.conj, y)
+        var i = 0
+        while (i < m) {
+            var j = 0
+            while (j < n) {
+                out[i * n + j] = involutiveRing.mul(x[i], cy[j])
+                j += 1
+            }
+            i += 1
+        }
+        return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    fun <A : Any> rank1Update(
+        semiring: Semiring<A>,
+        alpha: A,
+        x: VecLike<A>,
+        y: VecLike<A>,
+        a: MatLike<A>
+    ): DenseMat<A> {
+        DenseMatKernel.checkSize(a, x.size, y.size)
+        val rows = a.rows
+        val cols = a.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            val axr = semiring.mul(alpha, x[r])
+            var c = 0
+            while (c < cols) {
+                val update = semiring.mul(axr, y[c])
+                out[r * cols + c] = semiring.add(a[r, c], update)
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
+    }
+
+    fun <A : Any> rank1UpdateConjY(
+        involutiveRing: InvolutiveRing<A>,
+        alpha: A,
+        x: VecLike<A>,
+        y: VecLike<A>,
+        a: MatLike<A>
+    ): DenseMat<A> {
+        DenseMatKernel.checkSize(a, x.size, y.size)
+        val rows = a.rows
+        val cols = a.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        val cy = conjY(involutiveRing.conj, y)
+        var r = 0
+        while (r < rows) {
+            val axr = involutiveRing.mul(alpha, x[r])
+            var c = 0
+            while (c < cols) {
+                val update = involutiveRing.mul(axr, cy[c])
+                out[r * cols + c] = involutiveRing.add(a[r, c], update)
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
+    }
+
+    fun <A : Any> copy(
+        x: VecLike<A>
+    ): DenseVec<A> {
+        val n = x.size
+        val out = arrayOfNulls<Any?>(n)
+        var i = 0
+        while (i < n) {
+            out[i] = x[i]
+            i += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
     }
 }

@@ -1,6 +1,8 @@
 package org.vorpal.kosmos.linear.ops
 
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.linear.instances.DenseMatKernel
@@ -230,6 +232,26 @@ object DenseMatOps {
     ): Boolean = DenseMatKernel.isDiagonal(mat, zero, eq)
 
     /**
+     * Given an `m×n` matrix [mat], calculate the sum across the rows using the [CommutativeMonoid] and return
+     * the length `m` vector of sums.
+     */
+    fun <A : Any, B : Any> rowReduce(
+        add: CommutativeMonoid<B>,
+        mat: MatLike<A>,
+        f: (A) -> B
+    ): DenseVec<B> = DenseMatKernel.rowReduce(add, mat, f)
+
+    /**
+     * Given an `m×n` matrix [mat], calculate the sum across the cols using the [CommutativeMonoid] and return
+     * the length `n` vector of sums.
+     */
+    fun <A : Any, B : Any> colReduce(
+        add: CommutativeMonoid<B>,
+        mat: MatLike<A>,
+        f: (A) -> B
+    ): DenseVec<B> = DenseMatKernel.colReduce(add, mat, f)
+
+    /**
      * Given a square `n×n` matrix [mat], return the entries on the main diagonal as a vector of size `n`.
      */
     fun <A : Any> diagonal(
@@ -266,4 +288,144 @@ object DenseMatOps {
        mat: MatLike<A>,
        pow: Int
     ): DenseMat<A> = DenseMatKernel.power(semiring, mat, pow)
+
+    /**
+     * Determine is the matrix [mat] is a permutation matrix. This requires:
+     * - [mat] be square (i.e. `n×n`)
+     * - [mat] be a binary matrix (all entries are either zero or one)
+     * - Each row of [mat] sums exactly to one
+     * - Each col of [mat] sums exactly to one
+     */
+    fun <A : Any> isPermutationMatrix(
+        mat: MatLike<A>,
+        zero: A,
+        one: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isPermutationMatrix(mat, zero, one, eq)
+
+    /**
+     * Determine if the matrix [mat] is a permutation matrix. This is identical to the
+     * other [isPermutationMatrix] function, but accepts a [Semiring] to determine what is 0 and what is 1.
+     */
+    fun <A : Any> isPermutationMatrix(
+        semiring: Semiring<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isPermutationMatrix(semiring, mat, eq)
+
+    /**
+     * Given a:
+     * - [Semiring] over [A]
+     * - constant [alpha] in [A]
+     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - `m×n` matrix [aMat] over [A]
+     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is [MatOp.Trans])
+     * - constant [beta] in [A]
+     * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
+     * Let:
+     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
+     * calculate the affine product:
+     * ```
+     * alpha A_p x + beta y
+     * ```
+     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
+     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     */
+    fun <A : Any> affineMatVec(
+        semiring: Semiring<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        xVec: VecLike<A>,
+        beta: A,
+        yVec: VecLike<A>
+    ): DenseVec<A> = DenseMatKernel.affineMatVec(semiring, alpha, aOp, aMat, xVec, beta, yVec)
+
+    /**
+     * Given an:
+     * - [InvolutiveRing] over [A]
+     * - constant [alpha] in [A]
+     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - `m×n` matrix [aMat] over [A]
+     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is otherwise)
+     * - constant [beta] in [A]
+     * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
+     * Let:
+     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
+     * calculate the affine product:
+     * ```
+     * alpha A_p x + beta y
+     * ```
+     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
+     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     */
+    fun <A : Any> affineMatVec(
+        ring: InvolutiveRing<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        xVec: VecLike<A>,
+        beta: A,
+        yVec: VecLike<A>
+    ): DenseVec<A> = DenseMatKernel.affineMatVec(ring, alpha, aOp, aMat, xVec, beta, yVec)
+
+    /**
+     * Given a:
+     * - [Semiring] over [A]
+     * - constant [alpha] in [A]
+     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - `m×n` matrix [aMat] over [A]
+     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
+     * - `m×n` matrix `B` over [A]
+     * - constant [beta] in [A]
+     * - `m×n` matrix `C` over [A]
+     * Let:
+     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
+     * - `B_p` be the matrix [bMat] be adjusted by [bOp]
+     * calculate the affine product:
+     * ```
+     * alpha A_p B_p + beta C
+     * ```
+     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
+     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     */
+    fun <A : Any> affineMul(
+        semiring: Semiring<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        bOp: MatOp,
+        bMat: MatLike<A>,
+        beta: A,
+        cMat: MatLike<A>,
+    ): DenseMat<A> = DenseMatKernel.affineMul(semiring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
+
+    /**
+     * Given an:
+     * - [InvolutiveRing] over [A]
+     * - constant [alpha] in [A]
+     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - `m×n` matrix [aMat] over [A]
+     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
+     * - `m×n` matrix `B` over [A]
+     * - constant [beta] in [A]
+     * - `m×n` matrix `C` over [A]
+     * Let:
+     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
+     * - `B_p` be the matrix [bMat] be adjusted by [bOp]
+     * calculate the affine product:
+     * ```
+     * alpha A_p B_p + beta C
+     * ```
+     */
+    fun <A : Any> affineMul(
+        ring: InvolutiveRing<A>,
+        alpha: A,
+        aOp: MatOp,
+        aMat: MatLike<A>,
+        bOp: MatOp,
+        bMat: MatLike<A>,
+        beta: A,
+        cMat: MatLike<A>,
+    ): DenseMat<A> = DenseMatKernel.affineMul(ring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
 }

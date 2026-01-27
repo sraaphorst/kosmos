@@ -2,13 +2,16 @@ package org.vorpal.kosmos.linear.ops
 
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.map
 import org.vorpal.kosmos.linear.instances.DenseVecKernel
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
+import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
 object DenseVecOps {
@@ -40,15 +43,39 @@ object DenseVecOps {
         vec2: VecLike<A>
     ): DenseVec<A> = DenseVecKernel.add(semiring, vec1, vec2)
 
-    /** Dot product over a semiring. */
+    /**
+     * Dot product over a [Semiring].
+     */
     fun <A : Any> dot(
         semiring: Semiring<A>,
-        vec1: VecLike<A>,
-        vec2: VecLike<A>
-    ): A = DenseVecKernel.dot(semiring, vec1, vec2)
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): A = DenseVecKernel.dot(semiring, x, y)
+
+    /**
+     * Dot product over an [InvolutiveRing] where x is conjugated.
+     */
+    fun <A : Any> dotConjX(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): A = DenseVecKernel.dotConjX(involutiveRing, x, y)
+
+    /**
+     * Dot product over an [InvolutiveRing] where y is conjugated.
+     *
+     * Note: This is not the standard BLAS formulation, which is actually [dotConjX].
+     */
+    fun <A : Any> dotConjY(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): A = DenseVecKernel.dotConjY(involutiveRing, x, y)
 
     /**
      * Using multiplication by a [Semiring], scale a vector [vec] by a scalar [s].
+     *
+     * Also known in BLAS as `scal`.
      */
     fun <A : Any> scale(
         semiring: Semiring<A>,
@@ -211,14 +238,34 @@ object DenseVecOps {
     ): Option<Int> = DenseVecKernel.argmin(x, comparator)
 
     /**
+     * Given a vector [x] over [A] and a [Comparator] over [A], determine the smallest element of [x].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> min(
+        x: VecLike<A>,
+        comparator: Comparator<A>
+    ): Option<A> = argmin(x, comparator).map(x::get)
+
+    /**
      * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the index of the smallest element of [x].
      *
      * If [x] is empty, [Option.None] is returned.
      */
     fun <A : Any> argmin(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>,
+        totalOrder: TotalOrder<A>
     ): Option<Int> = DenseVecKernel.argmin(x, totalOrder)
+
+    /**
+     * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the smallest element of [x].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> min(
+        x: VecLike<A>,
+        totalOrder: TotalOrder<A>
+    ): Option<A> = argmin(x, totalOrder).map(x::get)
 
     /**
      * Given a vector [x] over [A] and a [Comparator] over [A], determine the index of the largest element of [x].
@@ -231,6 +278,16 @@ object DenseVecOps {
     ): Option<Int> = DenseVecKernel.argmax(x, comparator)
 
     /**
+     * Given a vector [x] over [A] and a [Comparator] over [A], determine the largest element of [x].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> max(
+        x: VecLike<A>,
+        comparator: Comparator<A>
+    ): Option<A> = argmax(x, comparator).map(x::get)
+
+    /**
      * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the index of the largest element of [x].
      *
      * If [x] is empty, [Option.None] is returned.
@@ -241,12 +298,212 @@ object DenseVecOps {
     ): Option<Int> = DenseVecKernel.argmax(x, totalOrder)
 
     /**
-     * Given a [Semiring] and two vectors, [x] and [y], create the outer product of [x] and [y], i.e. the
-     * matrix `M` where `M_ij = x[i] * y[j]` in the `Semiring`.
+     * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the largest element of [x].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> max(
+        x: VecLike<A>,
+        totalOrder: TotalOrder<A>
+    ): Option<A> = argmax(x, totalOrder).map(x::get)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argminBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<Int> = DenseVecKernel.argminBy(x, f, comparator)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> minBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<A> = argminBy(x, f, comparator).map(x::get)
+
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argminBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        totalOrder: TotalOrder<B>
+    ): Option<Int> = DenseVecKernel.argminBy(x, f, totalOrder)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> minBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        totalOrder: TotalOrder<B>
+    ): Option<A> = argminBy(x, f, totalOrder).map(x::get)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     * determine the index of the largest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argmaxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<Int> = DenseVecKernel.argmaxBy(x, f, comparator)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     * determine the largest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> maxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<A> = argmaxBy(x, f, comparator).map(x::get)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     * determine the index of the largest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argmaxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        totalOrder: TotalOrder<B>
+    ): Option<Int> = DenseVecKernel.argmaxBy(x, f, totalOrder)
+
+    /**
+     * Given
+     * - a vector [x] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     * determine the largest element of [x] with respect to [B].
+     *
+     * If [x] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> maxBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        totalOrder: TotalOrder<B>
+    ): Option<A> = argmaxBy(x, f, totalOrder).map(x::get)
+
+    /**
+     * Given a:
+     * - [Semiring]
+     * - vector [x]
+     * - vector [y]
+     * create the outer product of [x] and [y], i.e. the matrix `M` where:
+     * ```
+     * M_ij = x[i] * y[j]
+     * ```
+     * in the [Semiring].
      */
     fun <A : Any> outerProduct(
         semiring: Semiring<A>,
         x: VecLike<A>,
         y: VecLike<A>
     ): DenseMat<A> = DenseVecKernel.outerProduct(semiring, x, y)
+
+    /**
+     * Given an:
+     * - [InvolutiveRing]
+     * - vector [x]
+     * - vector [y]
+     * create the outer product of [x] and [y], i.e. the matrix `M` where:
+     * ```
+     * M_ij = x[i] * conj(y[j])
+     * ```
+     * in the [Semiring].
+     */
+    fun <A : Any> outerProductConjY(
+        involutiveRing: InvolutiveRing<A>,
+        x: VecLike<A>,
+        y: VecLike<A>
+    ): DenseMat<A> = DenseVecKernel.outerProductConjY(involutiveRing, x, y)
+
+    /**
+     * Also known as `ger` (general rank-1 update) in BLAS, for a:
+     * - `m×n` matrix `A`
+     * - constant [alpha]
+     * - vector [x] of length `m`
+     * - vector [y] of length `n`
+     * ```
+     * A + alpha x y^T
+     * ```
+     * where `x y^T` is the [outerProduct] of [x] and [y].
+     */
+    fun <A : Any> rank1Update(
+        semiring: Semiring<A>,
+        alpha: A,
+        x: VecLike<A>,
+        y: VecLike<A>,
+        a: MatLike<A>
+    ): DenseMat<A> = DenseVecKernel.rank1Update(semiring, alpha, x, y, a)
+
+    /**
+     * Also known as `gerc` (general rank-1 update) in BLAS, for a:
+     * - `m×n` matrix `A`
+     * - constant [alpha]
+     * - vector [x] of length `m`
+     * - vector [y] of length `n`
+     * ```
+     * A + alpha x conj(y)^T
+     * ```
+     * where `x conj(y)^T` is the [outerProduct] of [x] and [y].
+     */
+    fun <A : Any> rank1UpdateConjY(
+        involutiveRing: InvolutiveRing<A>,
+        alpha: A,
+        x: VecLike<A>,
+        y: VecLike<A>,
+        a: MatLike<A>
+    ): DenseMat<A> = DenseVecKernel.rank1UpdateConjY(involutiveRing, alpha, x, y, a)
+
+    /**
+     * Create a copy of the given vector that is memory-independent from the original vector.
+     */
+    fun <A : Any> copy(
+        x: VecLike<A>
+    ): DenseVec<A> = DenseVecKernel.copy(x)
 }
