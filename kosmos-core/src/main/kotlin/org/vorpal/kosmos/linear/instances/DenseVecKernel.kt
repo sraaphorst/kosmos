@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.relations.TotalOrder
@@ -110,6 +111,14 @@ internal object DenseVecKernel {
     }
 
     /**
+     * normSq over a semiring.
+     */
+    fun <A : Any> normSq(
+        semiring: Semiring<A>,
+        x: VecLike<A>
+    ): A = dot(semiring, x, x)
+
+    /**
      * Dot product over an [InvolutiveRing] where `x` is conjugated.
      */
     fun <A : Any> dotConjX(
@@ -190,17 +199,30 @@ internal object DenseVecKernel {
         return DenseVec.fromArrayUnsafe(out)
     }
 
+    fun <A: Any> zeroVec(
+        semiring: Semiring<A>,
+        n: Int
+    ): DenseVec<A> =
+        constantVec(semiring.add.identity, n)
+
     fun <A : Any> oneVec(
         semiring: Semiring<A>,
         n: Int
     ): DenseVec<A> =
         constantVec(semiring.mul.identity, n)
 
-    fun <A: Any> zeroVec(
-        semiring: Semiring<A>,
-        n: Int
-    ): DenseVec<A> =
-        constantVec(semiring.add.identity, n)
+    fun <A : Any> isAll(
+        x: VecLike<A>,
+        a: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        var i = 0
+        while (i < x.size) {
+            if (!eq(x[i], a)) return false
+            i += 1
+        }
+        return true
+    }
 
     /** Map an arbitrary VecLike into a DenseVec. */
     fun <A : Any, B : Any> map(
@@ -212,6 +234,20 @@ internal object DenseVecKernel {
         var i = 0
         while (i < n) {
             out[i] = f(x[i])
+            i += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
+
+    fun <A : Any, B : Any> mapIndexed(
+        x: VecLike<A>,
+        f: (Int, A) -> B
+    ): DenseVec<B> {
+        val n = x.size
+        val out = arrayOfNulls<Any?>(n)
+        var i = 0
+        while (i < n) {
+            out[i] = f(i, x[i])
             i += 1
         }
         return DenseVec.fromArrayUnsafe(out)
@@ -327,13 +363,13 @@ internal object DenseVecKernel {
 
     fun <A : Any> argmin(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
+        order: TotalOrder<A>
     ): Option<Int> {
         if (x.size == 0) return Option.None
         var minIdx = 0
         var idx = 1
         while (idx < x.size) {
-            if (totalOrder.lt(x[idx], x[minIdx])) {
+            if (order.lt(x[idx], x[minIdx])) {
                 minIdx = idx
             }
             idx += 1
@@ -359,13 +395,13 @@ internal object DenseVecKernel {
 
     fun <A : Any> argmax(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
+        order: TotalOrder<A>
     ): Option<Int> {
         if (x.size == 0) return Option.None
         var maxIdx = 0
         var idx = 1
         while (idx < x.size) {
-            if (totalOrder.gt(x[idx], x[maxIdx])) {
+            if (order.gt(x[idx], x[maxIdx])) {
                 maxIdx = idx
             }
             idx += 1
@@ -395,6 +431,19 @@ internal object DenseVecKernel {
         return Option.Some(bestIdx)
     }
 
+    fun <A : Any, B : Any> argminBy(
+        x: VecLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Int> =
+        argminBy(x, f) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
     fun <A : Any, B : Any> argmaxBy(
         x: VecLike<A>,
         f: (A) -> B,
@@ -416,19 +465,6 @@ internal object DenseVecKernel {
         }
         return Option.Some(bestIdx)
     }
-
-    fun <A : Any, B : Any> argminBy(
-        x: VecLike<A>,
-        f: (A) -> B,
-        order: TotalOrder<B>
-    ): Option<Int> =
-        argminBy(x, f) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
-        }
 
     fun <A : Any, B : Any> argmaxBy(
         x: VecLike<A>,
@@ -506,7 +542,7 @@ internal object DenseVecKernel {
         y: VecLike<A>,
         a: MatLike<A>
     ): DenseMat<A> {
-        DenseMatKernel.checkSize(a, x.size, y.size)
+        DenseMatKernel.requireSize(a, x.size, y.size)
         val rows = a.rows
         val cols = a.cols
         val out = arrayOfNulls<Any?>(rows * cols)
@@ -533,7 +569,7 @@ internal object DenseVecKernel {
         y: VecLike<A>,
         a: MatLike<A>
     ): DenseMat<A> {
-        DenseMatKernel.checkSize(a, x.size, y.size)
+        DenseMatKernel.requireSize(a, x.size, y.size)
         val rows = a.rows
         val cols = a.cols
         val out = arrayOfNulls<Any?>(rows * cols)

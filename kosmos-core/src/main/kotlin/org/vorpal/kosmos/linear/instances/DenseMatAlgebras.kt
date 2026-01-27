@@ -33,8 +33,8 @@ object DenseMatAlgebras {
         rows: Int,
         cols: Int
     ): BinOp<DenseMat<A>> = BinOp(Symbols.PLUS) { x, y ->
-        DenseMatKernel.checkSize(x, rows, cols)
-        DenseMatKernel.checkSize(y, rows, cols)
+        DenseMatKernel.requireSize(x, rows, cols)
+        DenseMatKernel.requireSize(y, rows, cols)
         DenseMatKernel.entrywise(monoid, x, y)
     }
 
@@ -46,8 +46,8 @@ object DenseMatAlgebras {
         semiring: Semiring<A>,
         n: Int
     ): BinOp<DenseMat<A>> = BinOp(Symbols.ASTERISK) { x, y ->
-        DenseMatKernel.checkSize(x, n, n)
-        DenseMatKernel.checkSize(y, n, n)
+        DenseMatKernel.requireSize(x, n, n)
+        DenseMatKernel.requireSize(y, n, n)
         DenseMatKernel.matMul(semiring, x, y)
     }
 
@@ -60,7 +60,7 @@ object DenseMatAlgebras {
         rows: Int,
         cols: Int
     ): Endo<DenseMat<A>> = Endo(Symbols.MINUS) { x ->
-        DenseMatKernel.checkSize(x, rows, cols)
+        DenseMatKernel.requireSize(x, rows, cols)
         DenseMatKernel.negateEntries(group, x)
     }
 
@@ -219,7 +219,7 @@ object DenseMatAlgebras {
 
         override val leftAction: LeftAction<R, DenseMat<R>> =
             LeftAction { r, m ->
-                DenseMatKernel.checkSize(m, dimension, dimension)
+                DenseMatKernel.requireSize(m, dimension, dimension)
                 m.map { a -> scalars.mul(r, a) }
             }
     }
@@ -256,7 +256,7 @@ object DenseMatAlgebras {
 
         override val leftAction: LeftAction<R, DenseMat<R>> =
             LeftAction { r, m ->
-                DenseMatKernel.checkSize(m, dimension, dimension)
+                DenseMatKernel.requireSize(m, dimension, dimension)
                 m.map { a -> scalars.mul(r, a) }
             }
     }
@@ -272,8 +272,8 @@ object DenseMatAlgebras {
         cols: Int
     ): BinOp<DenseMat<A>> =
         BinOp(Symbols.HADAMARD) { x, y ->
-            DenseMatKernel.checkSize(x, rows, cols)
-            DenseMatKernel.checkSize(y, rows, cols)
+            DenseMatKernel.requireSize(x, rows, cols)
+            DenseMatKernel.requireSize(y, rows, cols)
             DenseMatKernel.entrywise(mul, x, y)
         }
 
@@ -414,7 +414,7 @@ object DenseMatAlgebras {
             DenseMatKernel.constMat(field.mul.identity, rows, cols)
 
         private fun requireUnit(x: DenseMat<A>) {
-            DenseMatKernel.checkSize(x, rows, cols)
+            DenseMatKernel.requireSize(x, rows, cols)
             require(DenseMatKernel.isHadamardUnit(field, x)) {
                 "Hadamard unit required (no zero entries allowed)."
             }
@@ -444,7 +444,7 @@ object DenseMatAlgebras {
         rows: Int,
         cols: Int,
     ): DenseMat<A> {
-        DenseMatKernel.checkSize(x, rows, cols)
+        DenseMatKernel.requireSize(x, rows, cols)
 
         return DenseMat.tabulate(rows, cols) { r, c ->
             val a = x[r, c]

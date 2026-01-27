@@ -4,6 +4,45 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
+import kotlin.math.min
+
+/**
+ * View a vector as an n×1 matrix (a column matrix).
+ */
+data class VecAsColMatView<A : Any>(
+    private val v: VecLike<A>
+) : MatLike<A> {
+    override val rows: Int
+        get() = v.size
+
+    override val cols: Int
+        get() = 1
+
+    override fun get(r: Int, c: Int): A {
+        require(r in 0 until rows) { "row out of bounds: $r" }
+        require(c == 0) { "VecAsColMatView has exactly one column; got c=$c" }
+        return v[r]
+    }
+}
+
+/**
+ * View a vector as a 1×n matrix (a row matrix).
+ */
+data class VecAsRowMatView<A : Any>(
+    private val v: VecLike<A>
+) : MatLike<A> {
+    override val rows: Int
+        get() = 1
+
+    override val cols: Int
+        get() = v.size
+
+    override fun get(r: Int, c: Int): A {
+        require(r == 0) { "VecAsRowMatView has exactly one row; got r=$r" }
+        require(c in 0 until cols) { "col out of bounds: $c" }
+        return v[c]
+    }
+}
 
 /**
  * A lazy transpose view of a matrix.
@@ -50,46 +89,6 @@ fun <A : Any> MatLike<A>.opView(op: MatOp, conj: Endo<A>): MatLike<A> = when (op
     MatOp.Normal -> this
     MatOp.Trans -> this.transposeView()
     MatOp.ConjTrans -> ConjTransposeMatView(this, conj)
-}
-
-/**
- * A lazy view of a single row of a matrix as a vector.
- *
- * No data is copied. Indexing is redirected: i ↦ mat(row, i).
- */
-data class RowVecView<A : Any>(
-    private val mat: MatLike<A>,
-    private val row: Int,
-): VecLike<A> {
-    init {
-        require(row in 0 until mat.rows) { "row out of bounds: $row" }
-    }
-
-    override val size: Int
-        get() = mat.cols
-
-    override fun get(i: Int): A =
-        mat[row, i]
-}
-
-/**
- * A lazy view of a single column of a matrix as a vector.
- *
- * No data is copied. Indexing is redirected: i ↦ mat(i, col).
- */
-data class ColVecView<A : Any>(
-    private val mat: MatLike<A>,
-    private val col: Int
-): VecLike<A> {
-    init {
-        require(col in 0 until mat.cols) { "col out of bounds: $col" }
-    }
-
-    override val size: Int
-        get() = mat.rows
-
-    override fun get(i: Int): A =
-        mat[i, col]
 }
 
 /**
@@ -150,13 +149,13 @@ data class ColSliceMatView<A : Any>(
 fun <A : Any> MatLike<A>.transposeView(): MatLike<A> =
     TransposeMatView(this)
 
-/** Convenience: view row [r] as a vector (no copy). */
-fun <A : Any> MatLike<A>.rowView(r: Int): VecLike<A> =
-    RowVecView(this, r)
+/** Convenience: treat a vector as an n×1 matrix. */
+fun <A : Any> VecLike<A>.asColMatView(): MatLike<A> =
+    VecAsColMatView(this)
 
-/** Convenience: view column [c] as a vector (no copy). */
-fun <A : Any> MatLike<A>.colView(c: Int): VecLike<A> =
-    ColVecView(this, c)
+/** Convenience: treat a vector as a 1×n matrix. */
+fun <A : Any> VecLike<A>.asRowMatView(): MatLike<A> =
+    VecAsRowMatView(this)
 
 /** Convenience: view row slice as a matrix (no copy). */
 fun <A : Any> MatLike<A>.rowSliceView(rowStart: Int, rowEndExclusive: Int): MatLike<A> =

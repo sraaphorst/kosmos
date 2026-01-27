@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.map
@@ -51,6 +52,14 @@ object DenseVecOps {
         x: VecLike<A>,
         y: VecLike<A>
     ): A = DenseVecKernel.dot(semiring, x, y)
+
+    /**
+     * normSq of a vector over a [Semiring].
+     */
+    fun <A : Any> normSq(
+        semiring: Semiring<A>,
+        x: VecLike<A>
+    ): A = DenseVecKernel.normSq(semiring, x)
 
     /**
      * Dot product over an [InvolutiveRing] where x is conjugated.
@@ -108,6 +117,15 @@ object DenseVecOps {
     ): DenseVec<A> = DenseVecKernel.oneVec(semiring, n)
 
     /**
+     * Determine if every entry of [x] is [a].
+     */
+    fun <A : Any> isAll(
+        x: VecLike<A>,
+        a: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseVecKernel.isAll(x, a, eq)
+
+    /**
      * Returns true iff x has no zero entries, thus indicating that it is Hadamard-invertible over a [Field].
      */
     fun <A : Any> isHadamardUnit(
@@ -122,6 +140,14 @@ object DenseVecOps {
         x: VecLike<A>,
         f: (A) -> B
     ): DenseVec<B> = DenseVecKernel.map(x, f)
+
+    /**
+     * Given a vector, execute the map [f] on it.
+     */
+    fun <A : Any, B : Any> mapIndexed(
+        x: VecLike<A>,
+        f: (Int, A) -> B
+    ): DenseVec<B> = DenseVecKernel.mapIndexed(x, f)
 
     /**
      * Folds the vector beginning at the left using the function [f] beginning with the value [initial].
@@ -254,8 +280,8 @@ object DenseVecOps {
      */
     fun <A : Any> argmin(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
-    ): Option<Int> = DenseVecKernel.argmin(x, totalOrder)
+        order: TotalOrder<A>
+    ): Option<Int> = DenseVecKernel.argmin(x, order)
 
     /**
      * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the smallest element of [x].
@@ -264,8 +290,8 @@ object DenseVecOps {
      */
     fun <A : Any> min(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
-    ): Option<A> = argmin(x, totalOrder).map(x::get)
+        order: TotalOrder<A>
+    ): Option<A> = argmin(x, order).map(x::get)
 
     /**
      * Given a vector [x] over [A] and a [Comparator] over [A], determine the index of the largest element of [x].
@@ -294,8 +320,8 @@ object DenseVecOps {
      */
     fun <A : Any> argmax(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
-    ): Option<Int> = DenseVecKernel.argmax(x, totalOrder)
+        order: TotalOrder<A>
+    ): Option<Int> = DenseVecKernel.argmax(x, order)
 
     /**
      * Given a vector [x] over [A] and a [TotalOrder] over [A], determine the largest element of [x].
@@ -304,8 +330,8 @@ object DenseVecOps {
      */
     fun <A : Any> max(
         x: VecLike<A>,
-        totalOrder: TotalOrder<A>
-    ): Option<A> = argmax(x, totalOrder).map(x::get)
+        order: TotalOrder<A>
+    ): Option<A> = argmax(x, order).map(x::get)
 
     /**
      * Given
@@ -327,6 +353,7 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [Comparator] over [B]
+     *
      * determine the index of the smallest element of [x] with respect to [B].
      *
      * If [x] is empty, [Option.None] is returned.
@@ -343,6 +370,7 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [TotalOrder] over [B]
+     *
      * determine the index of the smallest element of [x] with respect to [B].
      *
      * If [x] is empty, [Option.None] is returned.
@@ -350,8 +378,8 @@ object DenseVecOps {
     fun <A : Any, B : Any> argminBy(
         x: VecLike<A>,
         f: (A) -> B,
-        totalOrder: TotalOrder<B>
-    ): Option<Int> = DenseVecKernel.argminBy(x, f, totalOrder)
+        order: TotalOrder<B>
+    ): Option<Int> = DenseVecKernel.argminBy(x, f, order)
 
     /**
      * Given
@@ -365,8 +393,8 @@ object DenseVecOps {
     fun <A : Any, B : Any> minBy(
         x: VecLike<A>,
         f: (A) -> B,
-        totalOrder: TotalOrder<B>
-    ): Option<A> = argminBy(x, f, totalOrder).map(x::get)
+        order: TotalOrder<B>
+    ): Option<A> = argminBy(x, f, order).map(x::get)
 
     /**
      * Given
@@ -410,8 +438,8 @@ object DenseVecOps {
     fun <A : Any, B : Any> argmaxBy(
         x: VecLike<A>,
         f: (A) -> B,
-        totalOrder: TotalOrder<B>
-    ): Option<Int> = DenseVecKernel.argmaxBy(x, f, totalOrder)
+        order: TotalOrder<B>
+    ): Option<Int> = DenseVecKernel.argmaxBy(x, f, order)
 
     /**
      * Given
@@ -425,8 +453,8 @@ object DenseVecOps {
     fun <A : Any, B : Any> maxBy(
         x: VecLike<A>,
         f: (A) -> B,
-        totalOrder: TotalOrder<B>
-    ): Option<A> = argmaxBy(x, f, totalOrder).map(x::get)
+        order: TotalOrder<B>
+    ): Option<A> = argmaxBy(x, f, order).map(x::get)
 
     /**
      * Given a:

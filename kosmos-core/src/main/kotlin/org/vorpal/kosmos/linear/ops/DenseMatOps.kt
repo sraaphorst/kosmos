@@ -5,6 +5,9 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.relations.TotalOrder
+import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.map
 import org.vorpal.kosmos.linear.instances.DenseMatKernel
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
@@ -13,6 +16,7 @@ import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
 
 object DenseMatOps {
+
     /**
      * Given
      * - A [Semiring] over [A]
@@ -173,10 +177,232 @@ object DenseMatOps {
      * Instead of a separate `BlockConstraintMatrix` class, we can blow up points using this [pointInflation] function.
      * This is what is needed for a GDD (group divisible design) construction.
      */
-    fun <R: Any> pointInflation(
+    fun <R : Any> pointInflation(
         mat: DenseMat<R>,
         blockSize: Int,
     ): DenseMat<R> = DenseMatKernel.pointInflation(mat, blockSize)
+
+    /**
+     * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
+     * the indices of the smallest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> argmin(
+        mat: MatLike<A>,
+        comparator: Comparator<A>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, comparator)
+
+    /**
+     * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
+     * the smallest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> min(
+        mat: MatLike<A>,
+        comparator: Comparator<A>
+    ): Option<A> = argmin(mat, comparator).map { mat[it.first, it.second] }
+
+    /**
+     * Given a matrix [mat] over [A] and a [TotalOrder] over [A], determine
+     * the indices of the smallest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> argmin(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, order)
+
+    /**
+     * Given a matrix [mat] over [A] and a [TotalOrder] over [A], determine
+     * the smallest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> min(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<A> = argmin(mat, order).map { mat[it.first, it.second] }
+
+    /**
+     * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
+     * the indices of the largest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> argmax(
+        mat: MatLike<A>,
+        comparator: Comparator<A>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, comparator)
+
+    /**
+     * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
+     * the largest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> max(
+        mat: MatLike<A>,
+        comparator: Comparator<A>
+    ): Option<A> = argmax(mat, comparator).map { mat[it.first, it.second] }
+
+    /**
+     * Given a matrix [mat] over [A] and a [TotalOrder] over [A], determine
+     * the indices of the largest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> argmax(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, order)
+
+    /**
+     * Given a matrix [mat] over [A] and a [TotalOrder] over [A], determine
+     * the largest element of [mat].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any> max(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<A> = argmax(mat, order).map { mat[it.first, it.second] }
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     *
+     * determine the indices of the smallest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argminBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, comparator)
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     *
+     * determine the smallest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> minBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<A> = argminBy(mat, f, comparator).map { mat[it.first, it.second] }
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     *
+     * determine the indices of the smallest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argminBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, order)
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     *
+     * determine the smallest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> minBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<A> = argminBy(mat, f, order).map { mat[it.first, it.second] }
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     *
+     * determine the indices of the largest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argmaxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, comparator)
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [Comparator] over [B]
+     *
+     * determine the largest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> maxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        comparator: Comparator<B>
+    ): Option<A> = argmaxBy(mat, f, comparator).map { mat[it.first, it.second] }
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     *
+     * determine the indices of the largest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> argmaxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, order)
+
+    /**
+     * Given
+     * - a matrix [mat] over [A]
+     * - a function [f] from [A] to [B]
+     * - a [TotalOrder] over [B]
+     *
+     * determine the largest element of [mat] with respect to [B].
+     *
+     * If [mat] is empty, [Option.None] is returned.
+     */
+    fun <A : Any, B : Any> maxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<A> = argmaxBy(mat, f, order).map { mat[it.first, it.second] }
+
+    fun <A : Any> isAll(
+        mat: MatLike<A>,
+        a: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isAll(mat, a, eq)
 
     /**
      * Calculate the trace of the square `n×n` matrix [mat], i.e. the sum of the entries on the diagonal
@@ -428,4 +654,34 @@ object DenseMatOps {
         beta: A,
         cMat: MatLike<A>,
     ): DenseMat<A> = DenseMatKernel.affineMul(ring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
+
+    fun <A : Any> isLowerTriangular(
+        mat: MatLike<A>,
+        zero: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isLowerTriangular(mat, zero, eq)
+
+    fun <A : Any> isUpperTriangular(
+        mat: MatLike<A>,
+        zero: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isUpperTriangular(mat, zero, eq)
+
+    fun <A : Any> isSymmetric(
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isSymmetric(mat, eq)
+
+    fun <A : Any> isEqual(
+        mat1: MatLike<A>,
+        mat2: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ) = DenseMatKernel.isEqual(mat1, mat2, eq)
+
+    /**
+     * Make a [DenseMat] copy of [mat].
+     */
+    fun <A : Any> copy(
+        mat: MatLike<A>
+    ): DenseMat<A> = DenseMatKernel.copy(mat)
 }
