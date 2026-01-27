@@ -17,4 +17,14 @@ interface Applicative<F>: Apply<F> {
 
     override fun <A, B> map(fa: Kind<F, A>, f: (A) -> B): Kind<F, B> =
         ap(pure(f), fa)
+
+    fun <A, B> traverse(list: List<A>, f: (A) -> Kind<F, B>): Kind<F, List<B>> {
+        val initial = pure(emptyList<B>())
+        return list.foldRight(initial) { a, acc ->
+            map2(f(a), acc) { head, tail -> listOf(head) + tail }
+        }
+    }
+
+    fun <A> sequence(list: List<Kind<F, A>>): Kind<F, List<A>> =
+        traverse(list) { it }
 }

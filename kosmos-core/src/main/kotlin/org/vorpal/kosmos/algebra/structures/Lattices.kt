@@ -4,7 +4,6 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.Poset
-import org.vorpal.kosmos.core.relations.Posets
 import org.vorpal.kosmos.core.relations.Relation
 
 /**
@@ -136,7 +135,7 @@ fun <A : Any> JoinSemilattice<A>.leFromJoin(eq: Eq<A>, a: A, b: A): Boolean =
 
 /** Join-induced poset (relative to Eq). */
 fun <A : Any> JoinSemilattice<A>.posetFromJoin(eq: Eq<A>): Poset<A> =
-    Posets.of(Relation(Symbols.LESS_THAN_EQ) { a, b -> leFromJoin(eq, a, b) })
+    Poset.of(Relation(Symbols.LESS_THAN_EQ) { a, b -> leFromJoin(eq, a, b) })
 
 /** a ≤_∧ b  ⇔  a ∧ b = a (relative to Eq). */
 fun <A : Any> MeetSemilattice<A>.leFromMeet(eq: Eq<A>, a: A, b: A): Boolean =
@@ -144,4 +143,4 @@ fun <A : Any> MeetSemilattice<A>.leFromMeet(eq: Eq<A>, a: A, b: A): Boolean =
 
 /** Meet-induced poset (relative to Eq). */
 fun <A : Any> MeetSemilattice<A>.posetFromMeet(eq: Eq<A>): Poset<A> =
-    Posets.of(Relation(Symbols.LESS_THAN_EQ) { a, b -> leFromMeet(eq, a, b) })
+    Poset.of(Relation(Symbols.LESS_THAN_EQ) { a, b -> leFromMeet(eq, a, b) })

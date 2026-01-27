@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.combinatorics.sequences
 
+import org.vorpal.kosmos.core.math.bigIntSgn
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
-import org.vorpal.kosmos.std.bigIntSgn
 import java.math.BigInteger
 
 /**

@@ -1,17 +1,17 @@
 package org.vorpal.kosmos.noise
 
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.analysis.ScalarField
-import org.vorpal.kosmos.analysis.ScalarFields
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.linear.Vec2R
+import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.values.Vec2
 
 fun interface RandomField2D {
     fun sample(x: Real, y: Real): Real
 }
 
-fun RandomField2D.asScalarField(): ScalarField<Real, Vec2R> =
-    ScalarFields.of(Vec2RSpace) { v -> sample(v.x, v.y) }
+fun RandomField2D.asScalarField(): ScalarField<Real, Vec2<Real>> =
+    ScalarField.of(FixedTupleAlgebras.vec2Space(RealAlgebras.RealStarField)) { v -> sample(v.x, v.y) }
 
 /**
  * Perlin's 6t^5-15t^4+10t^3.

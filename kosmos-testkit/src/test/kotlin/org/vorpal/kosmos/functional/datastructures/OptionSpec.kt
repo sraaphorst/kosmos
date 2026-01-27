@@ -19,13 +19,13 @@ class OptionSpec : FunSpec({
     context("Functor Laws") {
 
         test("Identity: map(id) == id") {
-            checkAll(arbIntOption) { opt ->
+            checkAll(ArbOption.arbIntOption) { opt ->
                 opt.map { it } shouldBe opt
             }
         }
 
         test("Composition: map(f).map(g) == map(g ∘ f)") {
-            checkAll(arbIntOption, Arb.int(), Arb.int()) { opt, x, y ->
+            checkAll(ArbOption.arbIntOption, Arb.int(), Arb.int()) { opt, x, y ->
                 val f: (Int) -> Int = { it + x }
                 val g: (Int) -> String = { (it * y).toString() }
 
@@ -47,13 +47,13 @@ class OptionSpec : FunSpec({
         }
 
         test("Right Identity: m.flatMap(pure) == m") {
-            checkAll(arbIntOption) { opt ->
+            checkAll(ArbOption.arbIntOption) { opt ->
                 opt.flatMap { Option.Some(it) } shouldBe opt
             }
         }
 
         test("Associativity: m.flatMap(f).flatMap(g) == m.flatMap { f(it).flatMap(g) }") {
-            checkAll(arbIntOption, Arb.int(), Arb.int()) { opt, x, y ->
+            checkAll(ArbOption.arbIntOption, Arb.int(), Arb.int()) { opt, x, y ->
                 val f: (Int) -> Option<Int> = { Option.Some(it + x) }
                 val g: (Int) -> Option<String> = { Option.Some((it * y).toString()) }
 
@@ -125,7 +125,7 @@ class OptionSpec : FunSpec({
         }
 
         test("flatten is equivalent to flatMap(identity)") {
-            checkAll(Arb.option(arbIntOption)) { nested ->
+            checkAll(ArbOption.option(ArbOption.arbIntOption)) { nested ->
                 nested.flatten() shouldBe nested.flatMap { it }
             }
         }
@@ -171,13 +171,13 @@ class OptionSpec : FunSpec({
     context("orElse") {
 
         test("Some(x).orElse(other) == Option.Some(x)") {
-            checkAll(Arb.int(), arbIntOption) { x, other ->
+            checkAll(Arb.int(), ArbOption.arbIntOption) { x, other ->
                 Option.Some(x).orElse(other) shouldBe Option.Some(x)
             }
         }
 
         test("None.orElse(other) == other") {
-            checkAll(arbIntOption) { other ->
+            checkAll(ArbOption.arbIntOption) { other ->
                 Option.None.orElse(other) shouldBe other
             }
         }
@@ -225,20 +225,20 @@ class OptionSpec : FunSpec({
         }
 
         test("filter with always-true predicate is identity") {
-            checkAll(arbIntOption) { opt ->
+            checkAll(ArbOption.arbIntOption) { opt ->
                 opt.filter { true } shouldBe opt
             }
         }
 
         test("filter with always-false predicate yields Option.None") {
-            checkAll(arbIntOption) { opt ->
+            checkAll(ArbOption.arbIntOption) { opt ->
                 val result = opt.filter { false }
                 result shouldBe Option.None
             }
         }
 
         test("filter composition") {
-            checkAll(Arb.some(Arb.int(0..100))) { opt: Option<Int> ->
+            checkAll(ArbOption.some(Arb.int(0..100))) { opt: Option<Int> ->
                 val p1: (Int) -> Boolean = { it > 25 }
                 val p2: (Int) -> Boolean = { it < 75 }
 
@@ -326,7 +326,7 @@ class OptionSpec : FunSpec({
         }
 
         test("empty list -> Option.Some(emptyList)") {
-            sequence(emptyList<Option<Int>>()) shouldBe Option.Some(emptyList<Int>())
+            sequence(emptyList<Option<Int>>()) shouldBe Option.Some(emptyList())
         }
 
         test("list of all Option.None -> Option.None") {
@@ -492,7 +492,7 @@ class OptionSpec : FunSpec({
         }
 
         test("sequence of catches - one fails") {
-            val computations = listOf<() -> Int>(
+            val computations = listOf(
                 { 1 },
                 { throw Exception("fail") },
                 { 3 }

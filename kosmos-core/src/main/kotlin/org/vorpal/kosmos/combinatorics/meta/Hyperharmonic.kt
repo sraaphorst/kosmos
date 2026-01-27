@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.combinatorics.Binomial
 import org.vorpal.kosmos.frameworks.array.CachedBivariateArray
-import org.vorpal.kosmos.std.Rational
+import org.vorpal.kosmos.core.Rational
 
 /**
  * **Hyperharmonic numbers** Hₙ^(r):
@@ -22,6 +22,7 @@ import org.vorpal.kosmos.std.Rational
  *
  * OEIS A001008 (r = 2), general family A175037
  */
+@Suppress("PARAMETER_NAME_CHANGED_ON_OVERRIDE")
 object Hyperharmonic : CachedBivariateArray<Rational>() {
     override fun recursiveCalculator(n: Int, r: Int): Rational = when {
         n <= 0 -> Rational.ZERO

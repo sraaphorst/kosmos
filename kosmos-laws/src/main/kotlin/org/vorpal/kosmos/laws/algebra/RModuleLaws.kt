@@ -30,7 +30,7 @@ class RModuleLaws<R : Any, M : Any>(
     prM: Printable<M> = Printable.default()
 ): LawSuite {
     private val leftScalarDescription = "R[${module.leftScalars.add.op.symbol}${module.leftScalars.mul.op.symbol}]"
-    private val moduleDescription = "M[${module.group.op.symbol}]"
+    private val moduleDescription = "M[${module.add.op.symbol}]"
     override val name = suiteName(
         "RModule",
         leftScalarDescription,
@@ -42,7 +42,7 @@ class RModuleLaws<R : Any, M : Any>(
         CommutativeRingLaws(module.scalars, scalarArb, eqR, prR)
     }
     private val groupLaws: AbelianGroupLaws<M> by lazy {
-        AbelianGroupLaws(module.group, vectorArb, eqM, prM)
+        AbelianGroupLaws(module.add, vectorArb, eqM, prM)
     }
     private val structureLaws: List<TestingLaw> =
         leftRModuleLaws(module, scalarArb, vectorArb, eqM, prR, prM)

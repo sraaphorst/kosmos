@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.combinatorics.Binomial
-import org.vorpal.kosmos.std.Rational
-import org.vorpal.kosmos.std.bigIntSgn
+import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.math.bigIntSgn
 
 /**
  * **Roman harmonic numbers** Cₙ^(k):

@@ -1,5 +1,127 @@
 # org.vorpal.kosmos.analysis
 
+The **analysis** package in **Kosmos** provides coordinate-free (but code-friendly) abstractions for
+
+- **Scalar fields**: functions \(f: V \to F\)
+- **Vector fields**: functions \(X: V \to V\)
+- **Covectors** (intended linear maps): \(\omega: V \to F\)
+- **Covector fields** (1-forms): \(\omega: V \to V^*\)
+
+All concepts carry a `VectorSpace<F, V>` witness from `org.vorpal.kosmos.algebra.structures`. Carriers (vectors/matrices) are **dumb values**; algebra lives in the witnesses.
+
+---
+
+## Core concepts
+
+| Concept | Math | Kotlin | Notes |
+|---|---|---|---|
+| Scalar field | \(f: V \to F\) | `ScalarField<F, V>` | Pointwise addition/multiplication form a commutative ring. |
+| Vector field | \(X: V \to V\) | `VectorField<F, V>` | Pointwise addition makes an abelian group. Scalar fields act on vector fields pointwise. |
+| Covector | \(\omega: V \to F\) | `Covector<F, V>` | Intended to be linear; linearity is not enforced by the type. |
+| Covector field | \(\omega: V \to V^*\) | `CovectorField<F, V>` | A field of covectors (1-forms). |
+
+---
+
+## The key relationships
+
+### Differential
+Given a scalar field \(f\), its **differential** is a covector field \(df\) such that
+
+\[
+(df)_p(v) = D_v f(p)
+\]
+
+In Kosmos (currently), `Derivative` computes this via central differences.
+
+### Pairing
+A covector field \(\omega\) can be applied to a vector field \(X\) to produce a scalar field:
+
+\[
+\langle \omega, X \rangle(p) = \omega(p)(X(p))
+\]
+
+In code this is the operator: `omega(X) : ScalarField`.
+
+---
+
+## Relationships diagram
+
+```
+ScalarField f : V -> F
+        |
+        |  Differential (df)
+        v
+CovectorField df : V -> V*
+        |
+        |  Pairing with VectorField X
+        v
+ScalarField <df, X> : V -> F
+```
+
+---
+
+## Code example (DenseVec + DenseVectorSpace)
+
+This example uses the canonical "Rn" carrier in Kosmos: `DenseVec<Real>`.
+
+```kotlin
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.analysis.*
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.linear.instances.DenseVectorSpace
+import org.vorpal.kosmos.core.linear.values.DenseVec
+
+val field = RealAlgebras.RealField
+val space = DenseVectorSpace(field, 2)
+
+// f(x, y) = x^2 + y^2
+val f: ScalarField<Real, DenseVec<Real>> =
+    ScalarField.of(space) { p ->
+        val x = p[0]
+        val y = p[1]
+        x * x + y * y
+    }
+
+// Vector field X(x, y) = (-y, x)
+val X: VectorField<Real, DenseVec<Real>> =
+    VectorField.of(space) { p ->
+        val x = p[0]
+        val y = p[1]
+        DenseVec.of(-y, x)
+    }
+
+// df via finite differences (central difference)
+val df: CovectorField<Real, DenseVec<Real>> =
+    with(Derivative) { f.dReal(1e-6) }
+
+// Pairing <df, X> is a scalar field
+val g: ScalarField<Real, DenseVec<Real>> = df(X)
+
+val p = DenseVec.of(1.0, 2.0)
+val value = g(p)
+println(value)
+```
+
+---
+
+## Notes on Covectors
+
+- Mathematically, a covector is an element of the **linear dual** \(V^* = \mathrm{Hom}_F(V, F)\).
+- In code, representing a covector as a function `V -> F` is the most faithful coordinate-free model.
+- Representing \(V^*\) as coefficient vectors \(F^n\) requires extra structure (finite dimension + chosen coordinates/basis). Kosmos can add that later when gradients/Jacobians/Hessians become a focus.
+
+---
+
+## Status
+
+- `gradient` is intentionally not implemented yet: it requires a metric (inner product) and a way to invert it (a `sharp` map), which in practice needs finite-dimensional coordinates or a linear solver.
+
+
+Here is the former version of this file, some of which is salvageable and useful for moving forward:
+
+
+# org.vorpal.kosmos.analysis
+
 The **analysis** package in **Kosmos** provides algebraic and geometric abstractions for fields and differential structures — including **scalar fields**, **vector fields**, **covectors**, and **covector fields**.  
 It bridges algebraic structures (`Field`, `VectorSpace`) with differential geometry (gradients, differentials, and flows).
 
@@ -59,10 +181,10 @@ This defines the relationship:
 
 ## Geometric Intuition
 
-- **Vector:** an arrow — direction and magnitude.  
-- **Covector:** a measuring plane — assigns a value to each direction.  
-- **Scalar field:** a height map — assigns a number to each point.  
-- **Covector field:** a field of measuring planes — how the scalar field changes in each direction.  
+- **Vector:** an arrow — direction and magnitude.
+- **Covector:** a measuring plane — assigns a value to each direction.
+- **Scalar field:** a height map — assigns a number to each point.
+- **Covector field:** a field of measuring planes — how the scalar field changes in each direction.
 - **Vector field:** a field of arrows — describes motion, flow, or direction at each point.
 
 ---
@@ -111,13 +233,13 @@ In shorthand:
 ## Code Example
 
 ```kotlin
-val f = ScalarFields.of(RealVectorSpace2D) { v -> v.x * v.x + v.y * v.y }
+val f = ScalarField.of(RealVectorSpace2D) { v -> v.x * v.x + v.y * v.y }
 
-val df = CovectorFields.of(RealVectorSpace2D) { p ->
-    Covectors.of(RealVectorSpace2D) { v -> 2 * p.x * v.x + 2 * p.y * v.y }
+val df = CovectorField.of(RealVectorSpace2D) { p ->
+    Covector.of(RealVectorSpace2D) { v -> 2 * p.x * v.x + 2 * p.y * v.y }
 }
 
-val X = VectorFields.of(RealVectorSpace2D) { v -> Vec2R(-v.y, v.x) }
+val X = VectorField.of(RealVectorSpace2D) { v -> Vec2R(-v.y, v.x) }
 
 // Evaluate ⟨df, X⟩ at a point:
 val value = df(Vec2R(1.0, 2.0))(X(Vec2R(1.0, 2.0))) // directional derivative
@@ -127,21 +249,21 @@ val value = df(Vec2R(1.0, 2.0))(X(Vec2R(1.0, 2.0))) // directional derivative
 
 ## Further Reading
 
-- Spivak, *Calculus on Manifolds*  
-- Lee, *Introduction to Smooth Manifolds*  
+- Spivak, *Calculus on Manifolds*
+- Lee, *Introduction to Smooth Manifolds*
 - Warner, *Foundations of Differentiable Manifolds and Lie Groups*
 
 ---
 
-**In summary:**  
-- A ScalarField maps points to numbers.  
-- Its differential is a CovectorField (a field of linear functionals).  
-- A VectorField maps points to vectors.  
+**In summary:**
+- A ScalarField maps points to numbers.
+- Its differential is a CovectorField (a field of linear functionals).
+- A VectorField maps points to vectors.
 - Covectors and vectors live in dual spaces, connected by the dual pairing ⟨ω, v⟩.
 
 ---
 
-**Kosmos Analysis** — bringing algebraic precision to geometric intuition.
+**Kosmos Analysis** - bringing algebraic precision to geometric intuition.
 
 
 # Scalar, Vector, and Covector Fields in Kosmos
@@ -208,7 +330,7 @@ fun <F : Any, V : InnerProductSpace<F, V>> gradient(
     }
 ```
 
-This is the most elegant formulation—used when the geometry (metric) is intrinsic to the vector space.
+This is the most elegant formulation, used when the geometry (metric) is intrinsic to the vector space.
 
 ---
 
@@ -241,9 +363,9 @@ This version allows dynamic or curved metrics (e.g. Riemannian manifolds).
 val df = differential(f, finiteDifferenceDerivative2D())
 val gradF = gradient(f, finiteDifferenceDerivative2D())
 
-val omega: CovectorField<Double, Vec2R> = df
-val X: VectorField<Double, Vec2R> = gradF
-val scalar: ScalarField<Double, Vec2R> = omega(X)
+val omega: CovectorField<Real, Vec2R> = df
+val X: VectorField<Real, Vec2R> = gradF
+val scalar: ScalarField<Real, Vec2R> = omega(X)
 ```
 
 ---

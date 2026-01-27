@@ -42,7 +42,7 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
     prS: Printable<S> = Printable.default()
 ): LawSuite {
     private val leftScalarDescription = "R[${module.leftScalars.add.op.symbol}${module.leftScalars.mul.op.symbol}]"
-    private val moduleDescription = "M[${module.group.op.symbol}]"
+    private val moduleDescription = "M[${module.add.op.symbol}]"
     private val rightScalarDescription = "S[${module.rightScalars.add.op.symbol}${module.rightScalars.mul.op.symbol}]"
     override val name = suiteName("RSBiModule",
         leftScalarDescription,
@@ -61,7 +61,7 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
         RingLaws(module.rightScalars, rightScalarArb, eqS, prS)
     }
     private val groupLaws: AbelianGroupLaws<M> by lazy {
-        AbelianGroupLaws(module.group, vectorArb, eqM, prM)
+        AbelianGroupLaws(module.add, vectorArb, eqM, prM)
     }
 
     private val structureLaws: List<TestingLaw> =

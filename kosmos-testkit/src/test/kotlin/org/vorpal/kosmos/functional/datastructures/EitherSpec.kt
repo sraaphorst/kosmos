@@ -62,14 +62,14 @@ class EitherSpec : FreeSpec({
 
     "Functor Laws" - {
         "Identity: map(id) == id" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 either.map { it } shouldBe either
             }
         }
 
         "Composition: map(f).map(g) == map(g ∘ f)" {
             checkAll(
-                EitherArb.either(Arb.string(), Arb.int()),
+                ArbEither.either(Arb.string(), Arb.int()),
                 Arb.int(1..100),
                 Arb.int(1..100)
             ) { either, n, m ->
@@ -104,13 +104,13 @@ class EitherSpec : FreeSpec({
         }
 
         "Right identity: m.flatMap(right) == m" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 either.flatMap { Either.right(it) } shouldBe either
             }
         }
 
         "Associativity: m.flatMap(f).flatMap(g) == m.flatMap { x -> f(x).flatMap(g) }" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 val f: (Int) -> Either<String, Int> = { Either.Right(it + 1) }
                 val g: (Int) -> Either<String, Int> = { Either.Right(it * 2) }
 
@@ -173,7 +173,7 @@ class EitherSpec : FreeSpec({
 
     "bimap" - {
         "transforms both sides" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 val leftF: (String) -> Int = { it.length }
                 val rightF: (Int) -> String = { it.toString() }
 
@@ -187,7 +187,7 @@ class EitherSpec : FreeSpec({
         }
 
         "bimap identity is identity" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 either.bimap({ it }, { it }) shouldBe either
             }
         }
@@ -433,7 +433,7 @@ class EitherSpec : FreeSpec({
         }
 
         "tap executes on both" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 var executed = false
                 val result = either.tap { executed = true }
 
@@ -459,7 +459,7 @@ class EitherSpec : FreeSpec({
         }
 
         "swap is involutive (swap twice is identity)" {
-            checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+            checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
                 either.swap().swap() shouldBe either
             }
         }
@@ -868,14 +868,14 @@ class EitherSpec : FreeSpec({
     }
 
     "Property: map preserves structure" {
-        checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+        checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
             either.map { it }.isLeft() shouldBe either.isLeft()
             either.map { it }.isRight() shouldBe either.isRight()
         }
     }
 
     "Property: flatMap with Right identity doesn't change structure" {
-        checkAll(EitherArb.either(Arb.string(), Arb.int())) { either ->
+        checkAll(ArbEither.either(Arb.string(), Arb.int())) { either ->
             val result = either.flatMap { Either.Right(it) }
             result.isLeft() shouldBe either.isLeft()
             result.isRight() shouldBe either.isRight()

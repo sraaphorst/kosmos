@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.ops.RightAction
 
 /**
  * An Algebra A over a commutative ring R is:
@@ -26,8 +27,18 @@ import org.vorpal.kosmos.core.ops.LeftAction
  *
  *  Another simple example: C is an algebra over R.
  */
-interface Algebra<R : Any, A : Any> : NonAssociativeAlgebra<R, A>, Ring<A> {
+interface Algebra<R : Any, A : Any> :
+    NonAssociativeAlgebra<R, A>,
+    Semialgebra<R, A>,
+    Ring<A> {
     override val scalars: CommutativeRing<R>
+
+    override val leftScalars: CommutativeRing<R>
+        get() = scalars
+    override val rightScalars: CommutativeRing<R>
+        get() = scalars
+    override val rightAction: RightAction<A, R>
+        get() = leftAction.toRightAction()
 
     companion object {
         fun <R : Any, A : Any> of(
@@ -36,7 +47,6 @@ interface Algebra<R : Any, A : Any> : NonAssociativeAlgebra<R, A>, Ring<A> {
             leftAction: LeftAction<R, A>
         ): Algebra<R, A> = object : Algebra<R, A> {
             override val scalars = scalars
-            override val group = algebraRing.add
             override val add = algebraRing.add
             override val mul = algebraRing.mul
             override val leftAction = leftAction

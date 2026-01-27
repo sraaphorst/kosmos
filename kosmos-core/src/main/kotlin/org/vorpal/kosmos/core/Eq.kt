@@ -2,7 +2,6 @@ package org.vorpal.kosmos.core
 
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.std.Rational
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.*
