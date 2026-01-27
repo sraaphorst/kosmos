@@ -8,6 +8,8 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.relations.TotalOrder
+import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
@@ -31,8 +33,8 @@ import kotlin.math.min
  * longer that the loop-based approach.
  */
 internal object DenseMatKernel {
-    fun <A : Any> checkSize(
-        mat: MatLike<A>,
+    fun requireSize(
+        mat: MatLike<*>,
         rows: Int,
         cols: Int
     ) {
@@ -51,7 +53,6 @@ internal object DenseMatKernel {
         cols: Int
     ): DenseMat<A> =
         DenseMat.tabulate(rows, cols) { _, _ -> a }
-
 
     /**
      * Check to make sure a matrix is nonempty and consists of constant entries.
@@ -109,7 +110,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat1.rows
         val cols = mat1.cols
-        checkSize(mat2, rows, cols)
+        requireSize(mat2, rows, cols)
         val out = arrayOfNulls<Any?>(rows * cols)
 
         var r = 0
@@ -124,7 +125,6 @@ internal object DenseMatKernel {
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
-
 
     fun <A : Any> matMul(
         semiring: Semiring<A>,
@@ -161,7 +161,6 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(rows, p, out)
     }
 
-
     fun <A : Any> matVec(
         semiring: Semiring<A>,
         mat: MatLike<A>,
@@ -190,7 +189,6 @@ internal object DenseMatKernel {
         return DenseVec.fromArrayUnsafe(out)
     }
 
-
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
         mat: MatLike<A>,
@@ -206,7 +204,6 @@ internal object DenseMatKernel {
         }
         return true
     }
-
 
     fun <R : Any> kronecker(
         semiring: Semiring<R>,
@@ -271,7 +268,6 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
 
-
     /**
      * Given a matrix, flatten it from a `r×c` matrix to a vector of length `rc` along the rows.
      */
@@ -315,11 +311,10 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
 
-
-    fun <R : Any> pointInflation(
-        mat: DenseMat<R>,
+    fun <A : Any> pointInflation(
+        mat: DenseMat<A>,
         blockSize: Int,
-    ): DenseMat<R> {
+    ): DenseMat<A> {
         require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
 
         // Each entry gets replicated into a blockSize × blockSize block.
@@ -329,6 +324,175 @@ internal object DenseMatKernel {
         ) { i, j ->
             mat[i / blockSize, j / blockSize]
         }
+    }
+
+    fun <A : Any> argmin(
+        mat: MatLike<A>,
+        cmp: Comparator<A>
+    ): Option<Pair<Int, Int>> {
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
+        var minRow = 0
+        var minCol = 0
+
+        var i = 0
+        while (i < mat.rows) {
+            var j = 0
+            while (j < mat.cols) {
+                if (cmp.compare(mat[i, j], mat[minRow, minCol]) < 0) {
+                    minRow = i
+                    minCol = j
+                }
+                j += 1
+            }
+            i += 1
+        }
+        return Option.Some(minRow to minCol)
+    }
+
+    fun <A : Any> argmin(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<Pair<Int, Int>> =
+        argmin(mat) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    fun <A : Any> argmax(
+        mat: MatLike<A>,
+        cmp: Comparator<A>
+    ): Option<Pair<Int, Int>> {
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
+        var maxRow = 0
+        var maxCol = 0
+
+        var i = 0
+        while (i < mat.rows) {
+            var j = 0
+            while (j < mat.cols) {
+                if (cmp.compare(mat[i, j], mat[maxRow, maxCol]) > 0) {
+                    maxRow = i
+                    maxCol = j
+                }
+                j += 1
+            }
+            i += 1
+        }
+        return Option.Some(maxRow to maxCol)
+    }
+
+    fun <A : Any> argmax(
+        mat: MatLike<A>,
+        order: TotalOrder<A>
+    ): Option<Pair<Int, Int>> =
+        argmax(mat) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    fun <A : Any, B : Any> argminBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        cmp: Comparator<B>
+    ): Option<Pair<Int, Int>> {
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
+
+        var minRow = 0
+        var minCol = 0
+        var minVal = f(mat[0, 0])
+
+        var i = 0
+        while (i < mat.rows) {
+            var j = 0
+            while (j < mat.cols) {
+                val vij = f(mat[i, j])
+                if (cmp.compare(vij, minVal) < 0) {
+                    minRow = i
+                    minCol = j
+                    minVal = vij
+                }
+                j += 1
+            }
+            i += 1
+        }
+        return Option.Some(minRow to minCol)
+    }
+
+    fun <A : Any, B : Any> argminBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Pair<Int, Int>> =
+        argminBy(mat, f) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    fun <A : Any, B : Any> argmaxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        cmp: Comparator<B>
+    ): Option<Pair<Int, Int>> {
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
+
+        var maxRow = 0
+        var maxCol = 0
+        var maxVal = f(mat[0, 0])
+
+        var i = 0
+        while (i < mat.rows) {
+            var j = 0
+            while (j < mat.cols) {
+                val vij = f(mat[i, j])
+                if (cmp.compare(vij, maxVal) > 0) {
+                    maxRow = i
+                    maxCol = j
+                    maxVal = vij
+                }
+                j += 1
+            }
+            i += 1
+        }
+        return Option.Some(maxRow to maxCol)
+    }
+
+    fun <A : Any, B : Any> argmaxBy(
+        mat: MatLike<A>,
+        f: (A) -> B,
+        order: TotalOrder<B>
+    ): Option<Pair<Int, Int>> =
+        argmaxBy(mat, f) { u, v ->
+            when {
+                order.lt(u, v) -> -1
+                order.lt(v, u) -> 1
+                else -> 0
+            }
+        }
+
+    fun <A : Any> isAll(
+        mat: MatLike<A>,
+        a: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        var i = 0
+        while (i < mat.rows) {
+            var j = 0
+            while (j < mat.cols) {
+                if (!eq(mat[i, j], a)) return false
+                j += 1
+            }
+            i += 1
+        }
+        return true
     }
 
     fun <A : Any> trace(
@@ -513,7 +677,9 @@ internal object DenseMatKernel {
         }
         val n = mat.rows
         var result = identity(semiring, n)
-        var base = mat
+
+        // Make a copy of mat so that we can make sure we are not working with a view and can use fast path assumptions.
+        var base = copy(mat)
         var exp = pow
 
         while (exp > 0) {
@@ -739,5 +905,77 @@ internal object DenseMatKernel {
         }
 
         return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    fun <A : Any> isLowerTriangular(
+        mat: MatLike<A>,
+        zero: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        if (mat.rows != mat.cols) return false
+        val n = mat.rows
+
+        var i = 0
+        while (i < n) {
+            var j = i + 1
+            while (j < n) {
+                if (!eq(mat[i, j], zero)) return false
+                j += 1
+            }
+            i += 1
+        }
+        return true
+    }
+
+    fun <A : Any> isUpperTriangular(
+        mat: MatLike<A>,
+        zero: A,
+        eq: Eq<A> = Eq.default()
+    ): Boolean = isLowerTriangular(mat.transposeView(), zero, eq)
+
+    fun <A : Any> isEqual(
+        mat1: MatLike<A>,
+        mat2: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Boolean {
+        if (mat1.rows != mat2.rows || mat1.cols != mat2.cols) return false
+        val rows = mat1.rows
+        val cols = mat1.cols
+
+        var i = 0
+        while (i < rows) {
+            var j = 0
+            while (j < cols) {
+                if (!eq(mat1[i, j], mat2[i, j])) return false
+                j += 1
+            }
+            i += 1
+        }
+        return true
+    }
+
+    fun <A : Any> isSymmetric(
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ) = isEqual(mat, mat.transposeView(), eq)
+
+    fun <A : Any> copy(
+        mat: MatLike<A>
+    ): DenseMat<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val out = arrayOfNulls<Any?>(rows * cols)
+
+        var r = 0
+        while (r < rows) {
+            var c = 0
+            while (c < cols) {
+                out[r * cols + c] = mat[r, c]
+                c += 1
+            }
+            r += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
 }

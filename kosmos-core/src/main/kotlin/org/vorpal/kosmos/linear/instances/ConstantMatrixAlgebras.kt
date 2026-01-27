@@ -51,8 +51,8 @@ object ConstantMatrixAlgebras {
         override val identity: DenseMat<F> = DenseMatKernel.constMat(nInv, n, n)
 
         override val op = BinOp(Symbols.ASTERISK) { x: DenseMat<F>, y: DenseMat<F> ->
-            DenseMatKernel.checkSize(x, n, n)
-            DenseMatKernel.checkSize(y, n, n)
+            DenseMatKernel.requireSize(x, n, n)
+            DenseMatKernel.requireSize(y, n, n)
             val a = DenseMatKernel.checkConstNonemptyMat(x, base.zero)
             val b = DenseMatKernel.checkConstNonemptyMat(y, base.zero)
 
@@ -62,7 +62,7 @@ object ConstantMatrixAlgebras {
         }
 
         override val inverse = Endo(Symbols.INVERSE) { x: DenseMat<F> ->
-            DenseMatKernel.checkSize(x, n, n)
+            DenseMatKernel.requireSize(x, n, n)
             val a = DenseMatKernel.checkConstNonemptyMat(x, base.zero) // forbid a = 0
             val denom = base.mul(n2, a)
             val inv = base.reciprocal(denom)
@@ -125,7 +125,7 @@ object ConstantMatrixAlgebras {
          * Extract the scalar element from a constant matrix.
          */
         internal fun extractScalar(m: DenseMat<F>): F {
-            DenseMatKernel.checkSize(m, n, n)
+            DenseMatKernel.requireSize(m, n, n)
             return DenseMatKernel.checkConstNonemptyMat(m)
         }
 
