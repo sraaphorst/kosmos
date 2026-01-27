@@ -3,7 +3,11 @@ package org.vorpal.kosmos.algebra.structures
 /**
  * A [Ring] where the multiplicative operator is commutative.
  */
-interface CommutativeRing<A : Any> : Ring<A>, CommutativeRng<A> {
+interface CommutativeRing<A : Any> :
+    Ring<A>,
+    CommutativeRng<A>,
+    CommutativeSemiring<A> {
+
     override val mul: CommutativeMonoid<A>
 
     companion object {

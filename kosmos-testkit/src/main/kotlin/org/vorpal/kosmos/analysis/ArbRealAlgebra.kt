@@ -4,12 +4,16 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.Vec2RSpace
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.linear.Vec2R
+import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.values.Vec2
 import kotlin.math.abs
 import kotlin.math.exp
 import kotlin.math.sin
+
+// We need to use the same space to avoid throwing when checking space compatibility.
+val vec2Space = FixedTupleAlgebras.vec2Space(RealAlgebras.RealField)
 
 /**
  * Arbitrary for finite, non-NaN Reals suitable for field operations.
@@ -25,35 +29,35 @@ fun arbNonZeroReal(): Arb<Real> =
     arbFieldReal().filter { abs(it) > 1e-6 }
 
 /**
- * Arbitrary for Vec2R vectors.
+ * Arbitrary for Vec2<Real> vectors.
  */
-fun arbVec2R(): Arb<Vec2R> = arbitrary {
+fun arbVec2Real(): Arb<Vec2<Real>> = arbitrary {
     val x = arbFieldReal().filter { abs(it) > 1e-300 }.bind()
     val y = arbFieldReal().filter { abs(it) > 1e-300 }.bind()
-    Vec2R(x, y)
+    Vec2(x, y)
 }
 
 /**
  * Arbitrary for scalar fields over Vec2D.
  */
-fun arbScalarField(): Arb<ScalarField<Real, Vec2R>> = arbitrary {
+fun arbScalarField(): Arb<ScalarField<Real, Vec2<Real>>> = arbitrary {
     val a = arbFieldReal().bind()
     val b = arbFieldReal().bind()
     val c = arbFieldReal().bind()
 
     // Create linear scalar field: f(x, y) = a*x + b*y + c
-    ScalarFields.of(Vec2RSpace) { v -> a * v.x + b * v.y + c }
+    ScalarField.of(vec2Space) { v -> a * v.x + b * v.y + c }
 }
 
 /**
  * Arbitrary for non-zero scalar fields (for division tests).
  */
-fun arbNonZeroScalarField(): Arb<ScalarField<Real, Vec2R>> = arbitrary {
+fun arbNonZeroScalarField(): Arb<ScalarField<Real, Vec2<Real>>> = arbitrary {
     val a = arbNonZeroReal().bind()
     val offset = arbNonZeroReal().bind()
 
     // Create field that's always non-zero: f(x, y) = a*(x² + y² + 1) + offset
-    ScalarFields.of(Vec2RSpace) { v ->
+    ScalarField.of(vec2Space) { v ->
         a * (v.x * v.x + v.y * v.y + 1.0) + offset
     }
 }
@@ -75,10 +79,12 @@ fun arbRealFunction(): Arb<(Real) -> Real> = arbitrary {
 }
 
 /**
- * Arbitrary for vector fields over Vec2R.
+ * Arbitrary for vector fields over Vec2<Real>.
  * Creates linear vector fields: F(x, y) = (ax + by + c, dx + ey + f)
  */
-fun arbVectorField(): Arb<VectorField<Real, Vec2R>> = arbitrary {
+
+
+fun arbVectorField(): Arb<VectorField<Real, Vec2<Real>>> = arbitrary {
     val a = arbFieldReal().bind()
     val b = arbFieldReal().bind()
     val c = arbFieldReal().bind()
@@ -86,8 +92,8 @@ fun arbVectorField(): Arb<VectorField<Real, Vec2R>> = arbitrary {
     val e = arbFieldReal().bind()
     val f = arbFieldReal().bind()
 
-    VectorFields.of(Vec2RSpace) { v ->
-        Vec2R(
+    VectorField.of(vec2Space) { v ->
+        Vec2(
             x = a * v.x + b * v.y + c,
             y = d * v.x + e * v.y + f
         )
@@ -98,26 +104,23 @@ fun arbVectorField(): Arb<VectorField<Real, Vec2R>> = arbitrary {
  * Arbitrary for rotation vector fields (useful for testing composition).
  * Creates fields like F(x, y) = (-y, x) scaled by a factor.
  */
-fun arbRotationVectorField(): Arb<VectorField<Real, Vec2R>> = arbitrary {
+fun arbRotationVectorField(): Arb<VectorField<Real, Vec2<Real>>> = arbitrary {
     val scale = arbFieldReal().bind()
 
-    VectorFields.of(Vec2RSpace) { v ->
-        Vec2R(
-            x = -v.y * scale,
-            y = v.x * scale
-        )
+    VectorField.of(vec2Space) { v ->
+        Vec2(x = -v.y * scale, y = v.x * scale)
     }
 }
 
 /**
  * Arbitrary for vector-to-vector transformations.
  */
-fun arbVectorTransform(): Arb<(Vec2R) -> Vec2R> = arbitrary {
-    listOf<(Vec2R) -> Vec2R>(
-        { v -> Vec2R(v.x * 2.0, v.y * 2.0) },
-        { v -> Vec2R(v.x + 1.0, v.y + 1.0) },
-        { v -> Vec2R(-v.y, v.x) },
-        { v -> Vec2R(v.x, -v.y) },
-        { v -> Vec2R(v.y, v.x) }
+fun arbVectorTransform(): Arb<(Vec2<Real>) -> Vec2<Real>> = arbitrary {
+    listOf<(Vec2<Real>) -> Vec2<Real>>(
+        { v -> Vec2(v.x * 2.0, v.y * 2.0) },
+        { v -> Vec2(v.x + 1.0, v.y + 1.0) },
+        { v -> Vec2(-v.y, v.x) },
+        { v -> Vec2(v.x, -v.y) },
+        { v -> Vec2(v.y, v.x) }
     ).random()
 }

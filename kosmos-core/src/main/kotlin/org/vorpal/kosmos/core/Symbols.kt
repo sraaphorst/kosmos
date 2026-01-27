@@ -38,6 +38,7 @@ object Symbols {
     const val BB_Y = "𝕐"
     const val BB_Z = "ℤ"
     const val BECAUSE = "∵"
+    const val BEND = "☡"
     const val BIG_DOT = "•"
     const val BILINEAR = "B(·,·)"
     const val BOWTIE = "⋈"
@@ -45,6 +46,7 @@ object Symbols {
     const val BOX_TIMES = "⊠"
     const val COLON_EQUALS = "≔"
     const val CONJ = "¯"
+    const val CUBE_ROOT = "∛"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
     const val DIVISION = "÷"
@@ -53,6 +55,7 @@ object Symbols {
     const val DOTS_HORIZONTAL = "⋯"
     const val DOTS_SLASH = "⋰"
     const val DOTS_VERTICAL = "⋮"
+    const val DUAL = "⋀"
     const val ENTAILS = "⊨"
     const val ENTAILS_NOT = "⊭"
     const val EQUALS = "="
@@ -60,8 +63,10 @@ object Symbols {
     const val EXISTS = "∃"
     const val EXISTS_NOT = "∄"
     const val FALSE = "⊥"
+    const val FLAT = "♭"
     const val FORCES = "⊩"
     const val FORALL = "∀"
+    const val FOURTH_ROOT = "∜"
     const val GREATER_THAN = ">"
     const val GREATER_THAN_EQ = "≥"
     const val IFF = "↔"
@@ -75,6 +80,7 @@ object Symbols {
     const val INTEGRAL_TRIPLE = "∭"
     const val INVERSE = "⁻¹"
     const val ISOMORPHIC = "≅"
+    const val LAMBDA = "λ"
     const val LESS_THAN = "<"
     const val LESS_THAN_EQ = "≤"
     const val MAPS_INTO = "↪"
@@ -82,6 +88,9 @@ object Symbols {
     const val MAPS_TO = "↦"
     const val MINUS = "-"
     const val MINUS_PLUS = "∓"
+    const val MINUS_SUB = "₋"
+    const val MINUS_SUPER = "⁻"
+    const val NABLA = "∇"
     const val NOT = "¬"
     const val NOTHING = ""
     const val O_DOT = "⊙"
@@ -89,14 +98,21 @@ object Symbols {
     const val O_PLUS_BIG = "⨁"
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
+    const val OMEGA = "ω"
     const val OPEN_CIRCLE = "∘"
+    const val PARTIAL = "∂"
     const val PHI = "φ"
     const val PLUS = "+"
     const val PLUS_MINUS = "±"
+    const val PLUS_SUB = "₊"
+    const val PLUS_SUPER = "⁺"
     const val PROD = "∏"
     const val PROVES = "⊢"
     const val PROVES_NOT = "⊬"
     const val PSI = "ψ"
+    const val QED = "∎"
+    const val QED_SOLID = ""
+    const val RADICAL = "⎷"
     const val REL = "R"
     const val SET_COMPLEMENT_PRE = "~"
     const val SET_COMPLEMENT_POST = "ᶜ"
@@ -113,6 +129,7 @@ object Symbols {
     const val SET_SYMM_DIFF = "Δ"
     const val SET_UNION = "∪"
     const val SET_UNION_DISJOINT = "⊔"
+    const val SHARP = "♯"
     const val SLASH = "/"
     const val SQRT = "√"
     const val SQUARE = "²"
@@ -120,6 +137,7 @@ object Symbols {
     const val TENSOR = "⊗"
     const val THEREFORE = "∴"
     const val TIMES = "×"
+    const val TOMBSTONE = "▯"
     const val TRIANGLE_RIGHT = "⊳"
     const val TRIANGLE_LEFT = "⊲"
     const val TRIPLE_BARS = "≡"
@@ -135,9 +153,10 @@ object Symbols {
     const val COMPOSE = OPEN_CIRCLE
     const val DIV_LEFT = BACKSLASH
     const val DIV_RIGHT = SLASH
+    const val HADAMARD = O_DOT
     const val INJECTION = MAPS_INTO
+    const val KRONECKER = O_TIMES
     const val LEXICOGRAPHIC = BIG_DOT
-    const val RADICAL = SQRT
     const val SET_MINUS = BACKSLASH
     const val SIGMA = SUM
     const val SQUARED_TIMES = BOX_TIMES

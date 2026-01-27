@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.analysis
 
+import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 
 /**
@@ -23,67 +24,54 @@ import org.vorpal.kosmos.algebra.structures.VectorSpace
  */
 interface CovectorField<F: Any, V: Any> {
     val space: VectorSpace<F, V>
+    val field: Field<F>
+        get() = space.field
+
     operator fun invoke(point: V): Covector<F, V>
+
+    companion object {
+        /**
+         * Create a [CovectorField] from a function mapping each point to a [Covector].
+         */
+        fun <F : Any, V : Any> of(
+            space: VectorSpace<F, V>,
+            f: (V) -> Covector<F, V>
+        ): CovectorField<F, V> = object : CovectorField<F, V> {
+            override val space = space
+            override fun invoke(point: V): Covector<F, V> = f(point)
+        }
+
+        /**
+         * Create a constant [CovectorField] (same [Covector] everywhere).
+         */
+        fun <F : Any, V : Any> constant(
+            space: VectorSpace<F, V>,
+            covector: Covector<F, V>
+        ): CovectorField<F, V> {
+            requireSameSpace(space, covector.space)
+            return of(space) { covector }
+        }
+
+        /**
+         * The zero [CovectorField], mapping every point to the zero [Covector].
+         */
+        fun <F : Any, V : Any> zero(space: VectorSpace<F, V>): CovectorField<F, V> =
+            of(space) { Covector.zero(space) }
+    }
+}
+
+private fun <F : Any, V : Any> requireSameSpace(
+    actual: VectorSpace<F, V>,
+    expected: VectorSpace<F, V>,
+) {
+    require(actual === expected) { "Covectors must be over the same VectorSpace instance." }
 }
 
 /**
  * Apply a [CovectorField] ω to a [VectorField] X, producing a [ScalarField]:
  *     (ω(X))(p) = ω(p)(X(p))
  */
-operator fun <F : Any, V : Any> CovectorField<F, V>.invoke(vf: VectorField<F, V>): ScalarField<F, V> =
-    ScalarFields.of(space) { p -> this(p)(vf(p)) }
-
-/**
- * Differential of a [ScalarField], yielding a [CovectorField]:
- *
- * (df)_p(v) = Df(p)[v]
- *
- * The [derivative] parameter determines how to compute directional derivatives.
- * For now, it can be a finite-difference placeholder until we plug in an AD system.
- */
-fun <F : Any, V : Any> differential(f: ScalarField<F, V>, derivative: (V, (V) -> F) -> Covector<F, V>): CovectorField<F, V> =
-    CovectorFields.of(f.space) { p -> derivative(p, f::invoke) }
-
-/**
- * If you have an inner product ⟨·,·⟩, you can identify vectors and covectors via the musical isomorphisms
- * flat and sharp.
- */
-fun <F : Any, V : Any> gradient(
-    f: ScalarField<F, V>,
-    metric: (V) -> (V, V) -> F
-): VectorField<F, V> =
-    VectorFields.of(f.space) { p ->
-        metric(p)
-        differential(f) { point, func ->
-            // Build Covector<F, V> at point using the local derivative of f
-            TODO("Implement derivative")
-        }
-        // Map covector to vector via metric inverse (sharp)
-        TODO("Implement sharp isomorphism")
-    }
-
-/**
- * Factory and utility functions for constructing [CovectorField]s.
- */
-object CovectorFields {
-    /**
-     * Create a [CovectorField] from a function mapping each point to a [Covector].
-     */
-    fun <F : Any, V : Any> of(space: VectorSpace<F, V>, f: (V) -> Covector<F, V>): CovectorField<F, V> =
-        object : CovectorField<F, V> {
-            override val space = space
-            override fun invoke(point: V): Covector<F, V> = f(point)
-        }
-
-    /**
-     * Create a constant [CovectorField] (same [Covector] everywhere).
-     */
-    fun <F : Any, V : Any> constant(space: VectorSpace<F, V>, covector: Covector<F, V>): CovectorField<F, V> =
-        of(space) { covector }
-
-    /**
-     * The zero [CovectorField], mapping every point to the zero [Covector].
-     */
-    fun <F : Any, V : Any> zero(space: VectorSpace<F, V>): CovectorField<F, V> =
-        of(space) { Covectors.zero(space) }
+operator fun <F : Any, V : Any> CovectorField<F, V>.invoke(vf: VectorField<F, V>): ScalarField<F, V> {
+    requireSameSpace(vf.space, space)
+    return ScalarField.of(space) { p -> this(p)(vf(p)) }
 }

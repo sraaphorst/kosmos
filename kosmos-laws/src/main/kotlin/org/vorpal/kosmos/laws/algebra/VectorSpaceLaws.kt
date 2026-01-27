@@ -30,7 +30,7 @@ class VectorSpaceLaws<F : Any, V : Any>(
         "F[${space.scalars.add.op.symbol}${space.scalars.mul.op.symbol}]"
 
     private val vectorDescription =
-        "V[${space.group.op.symbol}]"
+        "V[${space.add.op.symbol}]"
 
     override val name = suiteName(
         "VectorSpace",
@@ -43,7 +43,7 @@ class VectorSpaceLaws<F : Any, V : Any>(
         FieldLaws(space.scalars, scalarArb, eqF, prF)
     }
     private val groupLaws: AbelianGroupLaws<V> by lazy {
-        AbelianGroupLaws(space.group, vectorArb, eqV, prV)
+        AbelianGroupLaws(space.add, vectorArb, eqV, prV)
     }
 
     private val structureLaws: List<TestingLaw> =

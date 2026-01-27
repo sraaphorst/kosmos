@@ -9,6 +9,7 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.core.Rational
 import java.math.BigInteger
 
 class RationalSpec : StringSpec({

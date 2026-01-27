@@ -4,12 +4,11 @@ import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.RModule
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
@@ -31,9 +30,9 @@ object ComplexAlgebras {
     object ComplexField:
         Field<Complex>,
         InvolutiveRing<Complex>,
-        NormedDivisionAlgebra<Complex> {
+        RealNormedDivisionAlgebra<Complex> {
         private val base: NonAssociativeInvolutiveRing<Complex> =
-            CayleyDickson(RealAlgebras.RealStarField)
+            CayleyDickson.usual(RealAlgebras.RealStarField)
 
         override val add = base.add
 
@@ -51,7 +50,7 @@ object ComplexAlgebras {
         override val conj = base.conj
 
         override val normSq: UnaryOp<Complex, Real> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL){ c -> mul.op(c, conj(c)).re }
+            UnaryOp(Symbols.NORM_SQ_SYMBOL){ c -> mul(c, conj(c)).re }
 
         // Disambiguate zero.
         override val zero = base.add.identity
@@ -60,18 +59,18 @@ object ComplexAlgebras {
     }
 
     // Scalars: Real, act componentwise on (a, b)
-    val ComplexRealVectorSpace : VectorSpace<Real, Complex> = VectorSpace.of(
-        RealField,
-        ComplexField.add,
+    val ComplexRealVectorSpace : FiniteVectorSpace<Real, Complex> = FiniteVectorSpace.of(
+        scalars = RealField,
+        add = ComplexField.add,
+        dimension = 2,
         leftAction = LeftAction { r, (a, b) -> complex(r * a, r * b) }
     )
 
-    object ComplexStarAlgebra:
-        StarAlgebra<Real, Complex>,
-        InvolutiveRing<Complex> by ComplexField,
-        RModule<Real, Complex> by ComplexRealVectorSpace {
-            override val one = ComplexField.one
-        }
+    val ComplexStarAlgebra: StarAlgebra<Real, Complex> = StarAlgebra.of(
+        scalars = RealField,
+        involutiveRing = ComplexField,
+        leftAction = ComplexRealVectorSpace.leftAction
+    )
 }
 
 val eqComplexStrict: Eq<Complex> = CD.eq(Eqs.realStrict)

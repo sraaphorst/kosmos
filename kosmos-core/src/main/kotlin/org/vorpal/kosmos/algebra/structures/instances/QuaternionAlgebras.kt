@@ -5,12 +5,12 @@ import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexFie
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
+import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexRealVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
@@ -65,13 +65,13 @@ fun quaternion(
 object QuaternionAlgebras {
     private val eqRealApprox = Eqs.realApprox()
 
-    object QuaternionDivisionRing :
+    object QuaternionDivisionRingReal :
         DivisionRing<Quaternion>,
         InvolutiveRing<Quaternion>,
-        NormedDivisionAlgebra<Quaternion> {
+        RealNormedDivisionAlgebra<Quaternion> {
 
         private val base: NonAssociativeInvolutiveRing<Quaternion> =
-            CayleyDickson(ComplexField)
+            CayleyDickson.usual(ComplexField)
 
         override val add = base.add
 
@@ -106,10 +106,11 @@ object QuaternionAlgebras {
     }
 
     // Scalars: Real, act componentwise on (a, b)
-    val QuaternionRealVectorSpace: VectorSpace<Real, Quaternion> = VectorSpace.of(
-        RealField,
-        QuaternionDivisionRing.add,
-        LeftAction { r, q ->
+    val QuaternionRealVectorSpace: FiniteVectorSpace<Real, Quaternion> = FiniteVectorSpace.of(
+        scalars = RealField,
+        add = QuaternionDivisionRingReal.add,
+        dimension = 4,
+        leftAction = LeftAction { r, q ->
             Quaternion(
                 ComplexRealVectorSpace.leftAction(r, q.a),
                 ComplexRealVectorSpace.leftAction(r, q.b)
@@ -127,7 +128,7 @@ object QuaternionAlgebras {
     val embedCAlongI: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(c.re, c.im, 0.0, 0.0)
         }
@@ -143,7 +144,7 @@ object QuaternionAlgebras {
     val embedCAlongJ: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(w = c.re, x = 0.0, y = c.im, z = 0.0)
         }
@@ -159,7 +160,7 @@ object QuaternionAlgebras {
     val embedCAlongK: RingHomomorphism<Complex, Quaternion> =
         RingHomomorphism.of(
             domain = ComplexField,
-            codomain = QuaternionDivisionRing,
+            codomain = QuaternionDivisionRingReal,
         ) { c ->
             quaternion(w = c.re, x = 0.0, y = 0.0, z = c.im)
         }
@@ -176,26 +177,28 @@ object QuaternionAlgebras {
      *    (λ μ) · q = λ · (μ · q)
      *    1 · q = q
      */
-    fun quaternionLeftComplexVectorSpace(embed: RingHomomorphism<Complex, Quaternion>): VectorSpace<Complex, Quaternion> =
-        VectorSpace.of(
-            ComplexField,
-            QuaternionDivisionRing.add,
-            LeftAction { c, q -> QuaternionDivisionRing.mul(embed(c), q) }
+    fun quaternionLeftComplexVectorSpace(embed: RingHomomorphism<Complex, Quaternion>): FiniteVectorSpace<Complex, Quaternion> =
+        FiniteVectorSpace.of(
+            scalars = ComplexField,
+            add = QuaternionDivisionRingReal.add,
+            dimension = 2,
+            LeftAction { c, q -> QuaternionDivisionRingReal.mul(embed(c), q) }
         )
 
-    val QuaternionLeftComplexVectorSpaceAlongI: VectorSpace<Complex, Quaternion> =
+    val QuaternionLeftComplexVectorSpaceAlongI: FiniteVectorSpace<Complex, Quaternion> =
         quaternionLeftComplexVectorSpace(embedCAlongI)
 
-    val QuaternionLeftComplexVectorSpaceAlongJ: VectorSpace<Complex, Quaternion> =
+    val QuaternionLeftComplexVectorSpaceAlongJ: FiniteVectorSpace<Complex, Quaternion> =
         quaternionLeftComplexVectorSpace(embedCAlongJ)
 
-    val QuaternionLeftComplexVectorSpaceAlongK: VectorSpace<Complex, Quaternion> =
+    val QuaternionLeftComplexVectorSpaceAlongK: FiniteVectorSpace<Complex, Quaternion> =
         quaternionLeftComplexVectorSpace(embedCAlongK)
 
-    object QuaternionStarAlgebra:
-        StarAlgebra<Real, Quaternion>,
-        InvolutiveRing<Quaternion> by QuaternionDivisionRing,
-        VectorSpace<Real, Quaternion> by QuaternionRealVectorSpace
+    val QuaternionStarAlgebra: StarAlgebra<Real, Quaternion> = StarAlgebra.of(
+        scalars = RealField,
+        involutiveRing = QuaternionDivisionRingReal,
+        leftAction = QuaternionRealVectorSpace.leftAction
+    )
 }
 
 data class QuaternionBasis(
@@ -244,28 +247,3 @@ object QuaternionBases {
 
 val eqQuaternionStrict: Eq<Quaternion> = CD.eq(eqComplexStrict)
 val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)
-
-fun main() {
-    val quaternions = QuaternionAlgebras.QuaternionDivisionRing
-    val handedness = HyperComplex.Handedness.RIGHT
-    val basis = QuaternionBases.basis(quaternions, handedness)
-
-    val one = quaternions.one
-    val negOne = quaternions.add.inverse(one)
-    val eq = eqQuaternionStrict
-
-    check(eq(quaternions.mul(basis.i, basis.i), negOne))
-    check(eq(quaternions.mul(basis.j, basis.j), negOne))
-    check(eq(quaternions.mul(basis.k, basis.k), negOne))
-
-    when (handedness) {
-        HyperComplex.Handedness.RIGHT -> {
-            check(eq(quaternions.mul(basis.i, basis.j), basis.k))
-            check(eq(quaternions.mul(basis.j, basis.i), quaternions.add.inverse(basis.k)))
-        }
-        HyperComplex.Handedness.LEFT -> {
-            check(eq(quaternions.mul(basis.i, basis.j), quaternions.add.inverse(basis.k)))
-            check(eq(quaternions.mul(basis.j, basis.i), basis.k))
-        }
-    }
-}

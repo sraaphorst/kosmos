@@ -13,6 +13,12 @@ import org.vorpal.kosmos.core.ops.Endo
 interface Group<A : Any> : Monoid<A>, Loop<A> {
     val inverse: Endo<A>
 
+    // Artifacts to be taken care of since we inherit from Quasigroup through Loop.
+    override val leftDiv: BinOp<A>
+        get() = BinOp(Symbols.DIV_LEFT) { a, b -> op(inverse(a), b) }
+    override val rightDiv: BinOp<A>
+        get() = BinOp(Symbols.DIV_RIGHT) { a, b -> op(b, inverse(a)) }
+
     companion object {
         fun <A : Any> of(
             identity: A,
@@ -22,8 +28,6 @@ interface Group<A : Any> : Monoid<A>, Loop<A> {
             override val identity = identity
             override val op = op
             override val inverse = inverse
-            override val leftDiv: BinOp<A> = BinOp(Symbols.DIV_LEFT) { a, b -> op(inverse(a), b) }
-            override val rightDiv: BinOp<A> = BinOp(Symbols.DIV_RIGHT) { a, b -> op(b, inverse(a))}
         }
     }
 }

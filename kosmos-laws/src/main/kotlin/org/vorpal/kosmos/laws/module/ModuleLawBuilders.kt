@@ -376,7 +376,7 @@ fun <R : Any, M : Any> leftRModuleLaws(
     prM: Printable<M> = Printable.default()
 ): List<TestingLaw> = listOf(
     leftActionDistributesOverAdditionLaw(
-        addM = module.group.op,
+        addM = module.add.op,
         act = module.leftAction,
         arbR = scalarArb,
         arbM = vectorArb,
@@ -386,7 +386,7 @@ fun <R : Any, M : Any> leftRModuleLaws(
     ),
     leftActionRespectsScalarAdditionLaw(
         addR = module.leftScalars.add.op,
-        addM = module.group.op,
+        addM = module.add.op,
         act = module.leftAction,
         arbR = scalarArb,
         arbM = vectorArb,
@@ -426,7 +426,7 @@ fun <M : Any, S : Any> rightRModuleLaws(
 ): List<TestingLaw> = listOf(
     rightActionDistributesOverAdditionLaw(
         act = module.rightAction,
-        addM = module.group.op,
+        addM = module.add.op,
         arbM = vectorArb,
         arbR = scalarArb,
         eqM = eqM,
@@ -436,7 +436,7 @@ fun <M : Any, S : Any> rightRModuleLaws(
     rightActionRespectsScalarAdditionLaw(
         addR = module.rightScalars.add.op,
         act = module.rightAction,
-        addM = module.group.op,
+        addM = module.add.op,
         arbM = vectorArb,
         arbR = scalarArb,
         eqM = eqM,

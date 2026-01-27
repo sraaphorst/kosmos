@@ -21,7 +21,6 @@ typealias FiniteSetOf<A> = Kind<ForFiniteSet, A>
  *
  * Use only when you *know* the [Kind] originated from [FiniteSet] (the type system enforces this).
  */
-@Suppress("UNCHECKED_CAST")
 fun <A> FiniteSetOf<A>.fix(): FiniteSet<A> = this as FiniteSet<A>
 
 
@@ -250,7 +249,7 @@ sealed interface FiniteSet<A>: FiniteSetOf<A>, Iterable<A> {
         /**
          * Get a sublist as an Ordered FiniteSet.
          */
-        fun subSet(fromIndex: Int, toIndex: Int): Ordered<A> {
+        fun subset(fromIndex: Int, toIndex: Int): Ordered<A> {
             val subList = order.subList(fromIndex, toIndex)
             return Ordered(subList.toSet(), subList)
         }
@@ -304,10 +303,11 @@ sealed interface FiniteSet<A>: FiniteSetOf<A>, Iterable<A> {
         /**
          * Zip with indices.
          */
-        fun zipWithIndex(): Ordered<Pair<A, Int>> {
-            val count = ordered(0 until size)
-            return ordered(order.zip(count))
-        }
+        fun withIndex(): Iterable<IndexedValue<A>> =
+            order.withIndex()
+
+        fun indexedPairs(): Ordered<Pair<A, Int>> =
+            ordered(order.mapIndexed { i, a -> a to i })
 
         /**
          * Window operations.
@@ -434,4 +434,19 @@ inline fun <A, B> FiniteSet<A>.bind(transform: (A) -> FiniteSet<B>): FiniteSet<B
         FiniteSet.ordered(order.flatMap { transform(it).order })
     is FiniteSet.Unordered ->
         FiniteSet.unordered( backing.flatMap { transform(it).backing })
+}
+
+// Add to FiniteSet
+fun <A> FiniteSet<A>.powerSet(): Set<FiniteSet.Unordered<A>> {
+    val backing = this.backing
+    return backing.subsets().map { FiniteSet.unordered(it) }.toSet()
+}
+
+// Helper to generate all subsets
+private fun <A> Set<A>.subsets(): Set<Set<A>> {
+    if (isEmpty()) return setOf(emptySet())
+    val elem = first()
+    val rest = this - elem
+    val restSubsets = rest.subsets()
+    return restSubsets + restSubsets.map { it + elem }
 }

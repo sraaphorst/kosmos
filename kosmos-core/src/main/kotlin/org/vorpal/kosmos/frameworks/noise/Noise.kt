@@ -1,11 +1,11 @@
 package org.vorpal.kosmos.frameworks.noise
 
 import org.vorpal.kosmos.analysis.ScalarField
+import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.core.math.Real
 // TODO: SHOULD BE VEC3R.
-import org.vorpal.kosmos.linear.Vec2R
 
-typealias NoiseField = ScalarField<Real, Vec2R>
+typealias NoiseField = ScalarField<Real, org.vorpal.kosmos.linear.values.Vec2<Real>>
 /**
  * General noise generator.
  * Implementations can be treated as instances of a functor from R^n -> R.
