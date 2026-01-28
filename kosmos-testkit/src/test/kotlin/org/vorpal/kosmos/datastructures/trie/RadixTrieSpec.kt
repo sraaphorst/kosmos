@@ -12,7 +12,7 @@ import io.kotest.property.checkAll
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class RadixTrieTest : FunSpec({
+class RadixTrieSpec : FunSpec({
 
     context("Basic Operations") {
         test("empty trie should be empty") {

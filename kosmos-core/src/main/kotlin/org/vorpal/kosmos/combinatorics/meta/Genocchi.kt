@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedForm
 import org.vorpal.kosmos.frameworks.sequence.CachedClosedFormImplementation
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 
 /**
  * **Genocchi numbers** Gₙ — OEIS A001469.

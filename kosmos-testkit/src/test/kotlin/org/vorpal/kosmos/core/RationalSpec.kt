@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.std
+package org.vorpal.kosmos.core
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
@@ -9,7 +9,11 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.plus
+import org.vorpal.kosmos.core.rational.times
+import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.std.arbRational
 import java.math.BigInteger
 
 class RationalSpec : StringSpec({

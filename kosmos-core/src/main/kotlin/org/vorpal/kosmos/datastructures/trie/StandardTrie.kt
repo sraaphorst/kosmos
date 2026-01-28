@@ -48,7 +48,7 @@ open class MutableStandardTrieNode internal constructor(override var isTerminal:
 
     override fun subTrie(prefix: String): Trie {
         var current = this
-        for (c in prefix) current = current.children.get(c) ?: return Trie.Companion.EMPTY
+        for (c in prefix) current = current.children.get(c) ?: return Trie.EMPTY
         return current
     }
 

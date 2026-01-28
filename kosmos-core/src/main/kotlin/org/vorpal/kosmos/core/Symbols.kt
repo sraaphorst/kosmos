@@ -58,6 +58,7 @@ object Symbols {
     const val DUAL = "⋀"
     const val ENTAILS = "⊨"
     const val ENTAILS_NOT = "⊭"
+    const val EPSILON = "ε"
     const val EQUALS = "="
     const val EQUALS_NOT = "≠"
     const val EXISTS = "∃"

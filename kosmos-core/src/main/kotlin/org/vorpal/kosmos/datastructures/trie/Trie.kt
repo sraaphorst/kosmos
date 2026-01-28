@@ -79,7 +79,7 @@ sealed interface Trie {
         /**
          * An immutable and empty trie.
          */
-        object EMPTY : Trie {
+        private object EmptyTrieImpl : Trie {
             override operator fun contains(word: String): Boolean = false
             override fun toSequence(): Sequence<String> = emptySequence()
             override fun toList(): List<String> = emptyList()
@@ -97,6 +97,9 @@ sealed interface Trie {
             override fun longestCommonPrefix(): String = ""
             override fun filter(predicate: (String) -> Boolean): Trie = this
         }
+
+        val EMPTY: Trie = EmptyTrieImpl
+
     }
 }
 
