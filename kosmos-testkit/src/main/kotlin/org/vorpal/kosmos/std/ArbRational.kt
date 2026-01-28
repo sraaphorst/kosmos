@@ -4,7 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bigInt
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 import java.math.BigInteger
 
 val arbRational: Arb<Rational> =

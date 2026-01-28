@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.combinatorics.meta
 
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 
 /**
  * **Faulhaber’s formula** — closed-form power sums.

@@ -13,7 +13,7 @@ import org.vorpal.kosmos.core.math.toReal
  * Integration tests that verify consistent behavior across different Trie implementations
  * and test cross-cutting concerns.
  */
-class TrieIntegrationTest : FunSpec({
+class TrieIntegrationSpec : FunSpec({
 
     context("Cross-Implementation Consistency") {
         test("standard and radix produce identical word lists") {

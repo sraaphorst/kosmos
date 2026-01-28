@@ -11,7 +11,7 @@ import io.kotest.property.checkAll
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
-class StandardTrieTest : FunSpec({
+class StandardTrieSpec : FunSpec({
 
     context("Basic Operations") {
         test("empty trie should be empty") {
