@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.core.relations.instances
 
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.relations.StrictOrder

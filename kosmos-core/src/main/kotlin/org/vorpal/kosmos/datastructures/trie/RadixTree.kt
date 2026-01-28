@@ -98,7 +98,7 @@ open class MutableRadixTrieNode internal constructor(override var isTerminal: Bo
         if (prefix.isEmpty()) return this
 
         val (edge, child) = children.entries.find { prefix.startsWith(it.key) || it.key.startsWith(prefix) }
-            ?: return Trie.Companion.EMPTY
+            ?: return Trie.EMPTY
 
         return when {
             // Exact edge match: continue searching in that subtree
@@ -112,7 +112,7 @@ open class MutableRadixTrieNode internal constructor(override var isTerminal: Bo
             }
             // Edge is shorter than the prefix: recurse deeper into child
             prefix.startsWith(edge) -> child.subTrie(prefix.drop(edge.length))
-            else -> Trie.Companion.EMPTY
+            else -> Trie.EMPTY
         }
     }
 

@@ -411,9 +411,9 @@ class FiniteSetSpec : StringSpec({
 
     "zipWithIndex creates indexed pairs" {
         checkAll(arbSmallOrderedSet) { set ->
-            val indexed = set.zipWithIndex()
-            indexed.size shouldBe set.size
-            indexed.order.forEachIndexed { i, (element, index) ->
+            val indexed = set.withIndex()
+            indexed.toList().size shouldBe set.size
+            indexed.forEachIndexed { i, (index, element) ->
                 element shouldBe set.order[i]
                 index shouldBe i
             }

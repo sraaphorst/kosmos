@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
+import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 
 /**
@@ -17,7 +18,7 @@ fun arbDualReal(): Arb<Real> =
  * Arbitrary for non-zero Reals (exactly non-zero, matching Dual invertibility tests).
  */
 fun arbNonZeroDualReal(): Arb<Real> =
-    arbDualReal().filter { it != 0.0 }
+    arbDualReal().filter { Eqs.realApprox().neqv(it, 0.0) }
 
 /**
  * Arbitrary for dual numbers over Real.

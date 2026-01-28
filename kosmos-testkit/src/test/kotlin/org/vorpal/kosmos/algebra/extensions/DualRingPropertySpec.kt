@@ -4,16 +4,26 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.extensions.render.DualPrintables
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.core.render.Printables
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 import org.vorpal.kosmos.testutils.shouldBeZero
 
-class DualRingPropertyTest : FunSpec({
+class DualRingPropertySpec : FunSpec({
 
     val dualRing = RealField.dual()
     val add = dualRing.add
     val mul = dualRing.mul
+    val dualPr: Printable<Dual<Real>> = DualPrintables.dualSigned(Printables.real)
+    val dualPrCompact: Printable<Dual<Real>> = DualPrintables.compactSigned(
+        Printables.real, RealField, Eqs.realApprox()
+    )
 
     fun dual(a: Real, b: Real): Dual<Real> =
         Dual(a, b)
@@ -793,26 +803,37 @@ class DualRingPropertyTest : FunSpec({
     // String Representation
     // ------------------------------------------------------------------------
 
-    context("String representation") {
+    context("String representations") {
+        val eps = Symbols.EPSILON
 
-        test("toString format") {
+        test("Printable format, positive") {
             val d = dual(3.0, 4.0)
-            d.toString() shouldBe "3.0 + 4.0ε"
+            dualPr(d) shouldBe "3.0 + 4.0$eps"
+            dualPrCompact(d) shouldBe "3.0 + 4.0$eps"
+        }
+
+        test("Printable format, negative") {
+            val d = dual(-3.0, -4.0)
+            dualPr(d) shouldBe "-3.0 - 4.0$eps"
+            dualPrCompact(d) shouldBe "-3.0 - 4.0$eps"
         }
 
         test("zero dual toString") {
             val zero = add.identity
-            zero.toString() shouldBe "0.0 + 0.0ε"
+            dualPr(zero) shouldBe "0.0 + 0.0$eps"
+            dualPrCompact(zero) shouldBe "0.0"
         }
 
         test("one dual toString") {
             val one = mul.identity
-            one.toString() shouldBe "1.0 + 0.0ε"
+            dualPr(one) shouldBe "1.0 + 0.0ε"
+            dualPrCompact(one) shouldBe "1.0"
         }
 
         test("epsilon toString") {
             val e = dualRing.epsOne
-            e.toString() shouldBe "0.0 + 1.0ε"
+            dualPr(e) shouldBe "0.0 + 1.0ε"
+            dualPrCompact(e) shouldBe eps
         }
     }
 })
