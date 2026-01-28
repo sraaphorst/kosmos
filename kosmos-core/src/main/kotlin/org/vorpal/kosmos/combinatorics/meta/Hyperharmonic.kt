@@ -2,7 +2,7 @@ package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.combinatorics.Binomial
 import org.vorpal.kosmos.frameworks.array.CachedBivariateArray
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 
 /**
  * **Hyperharmonic numbers** Hₙ^(r):

@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.combinatorics.meta
 
 import org.vorpal.kosmos.combinatorics.Binomial
-import org.vorpal.kosmos.core.Rational
+import org.vorpal.kosmos.core.rational.Rational
 import java.util.concurrent.ConcurrentHashMap
 
 /**
