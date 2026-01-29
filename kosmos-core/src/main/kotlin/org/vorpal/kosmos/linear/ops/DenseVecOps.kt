@@ -534,4 +534,28 @@ object DenseVecOps {
     fun <A : Any> copy(
         x: VecLike<A>
     ): DenseVec<A> = DenseVecKernel.copy(x)
+
+    /**
+     * Concatenate a variable number of vectors to make a larger vector.
+     *
+     * Example:
+     * ```
+     * concat([1, 2], [3, 4, 5]) = [1, 2, 3, 4, 5]
+     * ```
+     */
+    fun <A : Any> concat(
+        vararg vectors: VecLike<A>,
+    ): DenseVec<A> = DenseVecKernel.concat(vectors.asList())
+
+    /**
+     * Concatenate a list of vectors to make a larger vector.
+     *
+     * Example:
+     * ```
+     * concat([[1, 2], [3, 4, 5]]) = [1, 2, 3, 4, 5]
+     * ```
+     */
+    fun <A : Any> concat(
+        vectors: List<VecLike<A>>
+    ): DenseVec<A> = DenseVecKernel.concat(vectors)
 }

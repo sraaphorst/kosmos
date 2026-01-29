@@ -907,6 +907,59 @@ internal object DenseMatKernel {
         return DenseMat.fromArrayUnsafe(m, n, out)
     }
 
+    fun <A : Any> concatDiagonal(
+        matrices: List<MatLike<A>>,
+        zero: A
+    ): DenseMat<A> {
+        // Get the number of rows and columns in the final matrix.
+        val totalRows = matrices.sumOf(MatLike<A>::rows)
+        val totalCols = matrices.sumOf(MatLike<A>::cols)
+        val out = arrayOfNulls<Any?>(totalRows * totalCols)
+
+        // The index of the row we are filling in out.
+        var outRowIdx = 0
+
+        // The index of the matrix in matrices we are processing.
+        var matIdx = 0
+
+        // The starting row and column where matrices[matIdx] is being copied.
+        var startRowIdx = 0
+        var startColIdx = 0
+
+        while (matIdx < matrices.size) {
+            // We start copying matrix at startRowIdx and startColIdx
+            val matrix = matrices[matIdx]
+            val endRowIdx = startRowIdx + matrix.rows
+            val endColIdx = startColIdx + matrix.cols
+
+            // Fill in the row of out's outRowIdx, which contains matrix matIdx's matrixRow.
+            while (outRowIdx < endRowIdx) {
+                var outColIdx = 0
+
+                val matrixRow = outRowIdx - startRowIdx
+                val inRange = startColIdx..<endColIdx
+                while (outColIdx < totalCols) {
+                    if (outColIdx in inRange) {
+                        val matrixCol = outColIdx - startColIdx
+                        out[outRowIdx * totalCols + outColIdx] = matrix[matrixRow, matrixCol]
+                    } else {
+                        out[outRowIdx * totalCols + outColIdx] = zero
+                    }
+                    outColIdx += 1
+                }
+                outRowIdx += 1
+            }
+
+            // We have finished copying the rows corresponding to matrix matIdx.
+            // Advance the row index and column index to where the next matrix will be copied.
+            startRowIdx = endRowIdx
+            startColIdx = endColIdx
+            matIdx += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(totalRows, totalCols, out)
+    }
+
     fun <A : Any> isLowerTriangular(
         mat: MatLike<A>,
         zero: A,

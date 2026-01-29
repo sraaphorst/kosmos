@@ -602,4 +602,25 @@ internal object DenseVecKernel {
         }
         return DenseVec.fromArrayUnsafe(out)
     }
+
+    fun <A : Any> concat(
+        vectors: List<VecLike<A>>
+    ): DenseVec<A> {
+        val size = vectors.sumOf(VecLike<A>::size)
+        val out = arrayOfNulls<Any?>(size)
+
+        var outIdx = 0
+        var vectorIdx = 0
+        while (vectorIdx < vectors.size) {
+            val vector = vectors[vectorIdx]
+            var j = 0
+            while (j < vector.size) {
+                out[outIdx] = vector[j]
+                j += 1
+                outIdx += 1
+            }
+            vectorIdx += 1
+        }
+        return DenseVec.fromArrayUnsafe(out)
+    }
 }
