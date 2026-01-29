@@ -655,23 +655,74 @@ object DenseMatOps {
         cMat: MatLike<A>,
     ): DenseMat<A> = DenseMatKernel.affineMul(ring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
 
+    /**
+     * Concatenate a variable list of matrices diagonal to one another.
+     *
+     * For example, concat with the following arguments:
+     * [[1, 2, 3], [4, 5, 6]]
+     * [[7], [8]]
+     * [[9, 10]]
+     * Gives:
+     * 1 2 3 0 0 0
+     * 4 5 6 0 0 0
+     * 0 0 0 7 0 0
+     * 0 0 0 8 0 0
+     * 0 0 0 0 9 10
+     */
+    fun <A : Any> concatDiagonal(
+        vararg matrices: MatLike<A>,
+        zero: A,
+    ) = DenseMatKernel.concatDiagonal(matrices.asList(), zero)
+
+    /**
+     * Concatenate a list of matrices diagonal to one another.
+     *
+     * For example, concat with the following arguments:
+     * [[1, 2, 3], [4, 5, 6]]
+     * [[7], [8]]
+     * [[9, 10]]
+     * Gives:
+     * 1 2 3 0 0 0
+     * 4 5 6 0 0 0
+     * 0 0 0 7 0 0
+     * 0 0 0 8 0 0
+     * 0 0 0 0 9 10
+     */
+    fun <A : Any> concatDiagonal(
+        matrices: List<MatLike<A>>,
+        zero: A
+    ): DenseMat<A> = DenseMatKernel.concatDiagonal(matrices, zero)
+
+    /**
+     * Return true iff for all j > i, m_ij = 0.
+     */
     fun <A : Any> isLowerTriangular(
         mat: MatLike<A>,
         zero: A,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isLowerTriangular(mat, zero, eq)
 
+    /**
+     * Return true iff for all j < i, m_ij = 0.
+     */
     fun <A : Any> isUpperTriangular(
         mat: MatLike<A>,
         zero: A,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isUpperTriangular(mat, zero, eq)
 
+    /**
+     * Return true iff for all i, j, m_ij = m_ji.
+     */
     fun <A : Any> isSymmetric(
         mat: MatLike<A>,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isSymmetric(mat, eq)
 
+    /**
+     * Return true iff mat1 and mat2 have the same size and their entries are
+     * pairwise equal.
+     */
     fun <A : Any> isEqual(
         mat1: MatLike<A>,
         mat2: MatLike<A>,
