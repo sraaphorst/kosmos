@@ -499,7 +499,7 @@ internal object DenseVecKernel {
     ): DenseMat<A> {
         val m = x.size
         val n = y.size
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = DenseMatKernel.allocateMatrix(m, n)
 
         var i = 0
         while (i < m) {
@@ -520,7 +520,7 @@ internal object DenseVecKernel {
     ): DenseMat<A> {
         val m = x.size
         val n = y.size
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = DenseMatKernel.allocateMatrix(m, n)
 
         val cy = conjY(involutiveRing.conj, y)
         var i = 0
@@ -545,7 +545,7 @@ internal object DenseVecKernel {
         DenseMatKernel.requireSize(a, x.size, y.size)
         val rows = a.rows
         val cols = a.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = DenseMatKernel.allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -572,7 +572,7 @@ internal object DenseVecKernel {
         DenseMatKernel.requireSize(a, x.size, y.size)
         val rows = a.rows
         val cols = a.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = DenseMatKernel.allocateMatrix(rows, cols)
 
         val cy = conjY(involutiveRing.conj, y)
         var r = 0
@@ -606,7 +606,7 @@ internal object DenseVecKernel {
     fun <A : Any> concat(
         vectors: List<VecLike<A>>
     ): DenseVec<A> {
-        val size = vectors.sumOf(VecLike<A>::size)
+        val size = vectors.fold(0) { size, vector -> Math.addExact(size, vector.size) }
         val out = arrayOfNulls<Any?>(size)
 
         var outIdx = 0

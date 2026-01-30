@@ -480,30 +480,43 @@ object DenseMatOps {
     /**
      * Given a square `n×n` matrix [mat], return the entries on the main diagonal as a vector of size `n`.
      */
-    fun <A : Any> diagonal(
+    fun <A : Any> extractDiagonal(
         mat: MatLike<A>,
-    ): DenseVec<A> = DenseMatKernel.diagonal(mat)
+    ): DenseVec<A> = DenseMatKernel.extractDiagonal(mat)
 
     /**
      * Given a [zero] element, a size [n], and a function [f], create a square `n×n` matrix with:
      * - `f(i)` in position `mat[i, i]`
      * - `zero` in all other positions.
      */
-    fun <A: Any> toDiagonal(
+    fun <A: Any> fromDiagonal(
         zero : A,
         n : Int,
         f: (Int) -> A
-    ): DenseMat<A> = DenseMat.tabulate(n, n) { r, c -> if (r == c) f(r) else zero }
+    ): DenseMat<A> = fromDiagonal(zero, n, n, f)
+
+    /**
+     * Given a [zero] element, sizes [m] and [n], and a function [f], create a rectangular `m×n` matrix
+     * with:
+     * - `f(i)` in position `mat[i, i]`
+     * - `zero` in all other positions.
+     */
+    fun <A : Any> fromDiagonal(
+        zero : A,
+        m: Int,
+        n: Int,
+        f: (Int) -> A
+    ): DenseMat<A> = DenseMat.tabulate(m, n) { r, c -> if (r == c) f(r) else zero }
 
     /**
      * Given a [zero] element and a vector [vec] of length `n`, create a square `n×n` matrix with:
      * - `vec[i]` in position `mat[i, i]`
      * - `zero` in all other positions.
      */
-    fun <A : Any> toDiagonal(
+    fun <A : Any> fromDiagonal(
         zero : A,
         vec: VecLike<A>
-    ): DenseMat<A> = DenseMat.tabulate(vec.size, vec.size) { r, c -> if (r == c) vec[r] else zero }
+    ): DenseMat<A> = fromDiagonal(zero, vec.size, vec.size, vec::get)
 
     /**
      * Given a square `n×n` matrix [mat], calculate its [pow] power using the given [Semiring] through repeated
@@ -656,7 +669,7 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.affineMul(ring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
 
     /**
-     * Concatenate a variable list of matrices diagonal to one another.
+     * Concatenate a variable list of matrices diagonal to one another, inserting [zero] in other positions.
      *
      * For example, concat with the following arguments:
      * [[1, 2, 3], [4, 5, 6]]
@@ -670,12 +683,12 @@ object DenseMatOps {
      * 0 0 0 0 9 10
      */
     fun <A : Any> concatDiagonal(
-        vararg matrices: MatLike<A>,
         zero: A,
+        vararg matrices: MatLike<A>
     ) = DenseMatKernel.concatDiagonal(matrices.asList(), zero)
 
     /**
-     * Concatenate a list of matrices diagonal to one another.
+     * Concatenate a list of matrices diagonal to one another, inserting [zero] in other positions.
      *
      * For example, concat with the following arguments:
      * [[1, 2, 3], [4, 5, 6]]
@@ -689,8 +702,8 @@ object DenseMatOps {
      * 0 0 0 0 9 10
      */
     fun <A : Any> concatDiagonal(
+        zero: A,
         matrices: List<MatLike<A>>,
-        zero: A
     ): DenseMat<A> = DenseMatKernel.concatDiagonal(matrices, zero)
 
     /**
