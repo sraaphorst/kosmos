@@ -33,6 +33,22 @@ import kotlin.math.min
  * longer that the loop-based approach.
  */
 internal object DenseMatKernel {
+    /**
+     * Allocator for a new matrix that ensures that rows * cols does not overflow an Int.
+     *
+     * If it overflows an int, [ArithmeticException] is thrown.
+     */
+    fun allocateMatrix(rows: Int, cols: Int): Array<Any?> {
+        require(rows >= 0) { "rows must be nonnegative: $rows" }
+        require(cols >= 0) { "cols must be nonnegative: $cols" }
+        return arrayOfNulls(Math.multiplyExact(rows, cols))
+    }
+
+    /**
+     * Calls require to make sure the size of `mat` is `rows×cols`.
+     *
+     * Throws an [IllegalArgumentException] if the check fails.
+     */
     fun requireSize(
         mat: MatLike<*>,
         rows: Int,
@@ -111,7 +127,7 @@ internal object DenseMatKernel {
         val rows = mat1.rows
         val cols = mat1.cols
         requireSize(mat2, rows, cols)
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -137,7 +153,7 @@ internal object DenseMatKernel {
         DenseKernel.requireSize(mat2.rows, cols)
         val p = mat2.cols
 
-        val out = arrayOfNulls<Any?>(rows * p)
+        val out = allocateMatrix(rows, p)
 
         var r = 0
         while (r < rows) {
@@ -215,9 +231,9 @@ internal object DenseMatKernel {
         val p = mat2.rows
         val q = mat2.cols
 
-        val outRows = m * p
-        val outCols = n * q
-        val out = arrayOfNulls<Any?>(outRows * outCols)
+        val outRows = Math.multiplyExact(m, p)
+        val outCols = Math.multiplyExact(n, q)
+        val out = allocateMatrix(outRows, outCols)
 
         var i = 0
         while (i < m) {
@@ -253,7 +269,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -276,7 +292,7 @@ internal object DenseMatKernel {
     ): DenseVec<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -299,11 +315,12 @@ internal object DenseMatKernel {
         rows: Int,
         cols: Int
     ): DenseMat<A> {
-        DenseKernel.requireSize(x.size, rows * cols)
+        val size = Math.multiplyExact(rows, cols)
+        DenseKernel.requireSize(x.size, size)
+        val out = allocateMatrix(rows, cols)
 
-        val out = arrayOfNulls<Any?>(rows * cols)
         var i = 0
-        while (i < rows * cols) {
+        while (i < size) {
             out[i] = x[i]
             i += 1
         }
@@ -318,10 +335,9 @@ internal object DenseMatKernel {
         require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
 
         // Each entry gets replicated into a blockSize × blockSize block.
-        return DenseMat.tabulate(
-            mat.rows * blockSize,
-            mat.cols * blockSize
-        ) { i, j ->
+        val outRows = Math.multiplyExact(mat.rows, blockSize)
+        val outCols = Math.multiplyExact(mat.cols, blockSize)
+        return DenseMat.tabulate(outRows, outCols) { i, j ->
             mat[i / blockSize, j / blockSize]
         }
     }
@@ -532,7 +548,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val outRows = mat.cols
         val outCols = mat.rows
-        val out = arrayOfNulls<Any?>(outRows * outCols)
+        val out = allocateMatrix(outRows, outCols)
 
         var r = 0
         while (r < mat.rows) {
@@ -581,7 +597,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -650,7 +666,7 @@ internal object DenseMatKernel {
         return true
     }
 
-    fun <A : Any> diagonal(
+    fun <A : Any> extractDiagonal(
         mat: MatLike<A>,
     ): DenseVec<A> {
         require(isSquare(mat)) {
@@ -832,7 +848,7 @@ internal object DenseMatKernel {
             "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
         }
 
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = allocateMatrix(m, n)
 
         var r = 0
         while (r < m) {
@@ -881,7 +897,7 @@ internal object DenseMatKernel {
             "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
         }
 
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = allocateMatrix(m, n)
 
         var r = 0
         while (r < m) {
@@ -912,9 +928,9 @@ internal object DenseMatKernel {
         zero: A
     ): DenseMat<A> {
         // Get the number of rows and columns in the final matrix.
-        val totalRows = matrices.sumOf(MatLike<A>::rows)
-        val totalCols = matrices.sumOf(MatLike<A>::cols)
-        val out = arrayOfNulls<Any?>(totalRows * totalCols)
+        val totalRows = matrices.fold(0) { size, mat -> Math.addExact(size, mat.rows )}
+        val totalCols = matrices.fold(0) { size, mat -> Math.addExact(size, mat.cols )}
+        val out = allocateMatrix(totalRows, totalCols)
 
         // The index of the row we are filling in out.
         var outRowIdx = 0
@@ -1017,7 +1033,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
