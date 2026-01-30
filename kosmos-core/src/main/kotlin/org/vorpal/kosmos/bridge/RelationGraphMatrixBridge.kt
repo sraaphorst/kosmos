@@ -47,11 +47,11 @@ object RelationGraphMatrixBridge {
         Relation { u, v -> v in this.neighbors(u) }
 
     /** DirectedGraph → DenseMat(𝔽₂) adjacency matrix, using an ordering of vertices. */
-    fun <V : Any> DirectedGraph<V>.toMatrix(): org.vorpal.kosmos.linear.values.DenseMat<BigInteger> {
+    fun <V : Any> DirectedGraph<V>.toMatrix(): DenseMat<BigInteger> {
         val ordered = vertices.toOrderedFiniteSet()
         val n = ordered.size
 
-        return _root_ide_package_.org.vorpal.kosmos.linear.values.DenseMat.tabulate(n, n) { i, j ->
+        return DenseMat.tabulate(n, n) { i, j ->
             if (i == j) {
                 ZERO
             } else {
@@ -65,7 +65,7 @@ object RelationGraphMatrixBridge {
     private fun isF2Entry(a: BigInteger): Boolean =
         a == ZERO || a == ONE
 
-    fun org.vorpal.kosmos.linear.values.DenseMat<BigInteger>.toRelationalGraphF2(): DirectedGraph<Int> {
+    fun DenseMat<BigInteger>.toRelationalGraphF2(): DirectedGraph<Int> {
         require(rows == cols) { "Matrix must be square, but has dimensions $rows${Symbols.TIMES}$cols" }
         require((0 until rows).all { i ->
             (0 until cols).all { j ->
@@ -86,7 +86,7 @@ object RelationGraphMatrixBridge {
     }
 
     /** DenseMat(𝔽₂) → Relation<Int>. Requires square and entries in {0,1}. Diagonal allowed in relation. */
-    fun org.vorpal.kosmos.linear.values.DenseMat<BigInteger>.toRelationF2(): Relation<Int> {
+    fun DenseMat<BigInteger>.toRelationF2(): Relation<Int> {
         require(rows == cols) { "Matrix must be square, but has dimensions $rows${Symbols.TIMES}$cols" }
         require((0 until rows).all { i ->
             (0 until cols).all { j ->
@@ -98,11 +98,11 @@ object RelationGraphMatrixBridge {
     }
 
     /** Relation → DenseMat(𝔽₂) adjacency matrix (diagonal included if relation has it). */
-    fun <V : Any> Relation<V>.toMatrix(elements: FiniteSet<V>): org.vorpal.kosmos.linear.values.DenseMat<BigInteger> {
+    fun <V : Any> Relation<V>.toMatrix(elements: FiniteSet<V>): DenseMat<BigInteger> {
         val ordered = elements.toOrderedFiniteSet()
         val n = ordered.size
 
-        return _root_ide_package_.org.vorpal.kosmos.linear.values.DenseMat.tabulate(n, n) { i, j ->
+        return DenseMat.tabulate(n, n) { i, j ->
             if (rel(ordered[i], ordered[j])) ONE else ZERO
         }
     }
