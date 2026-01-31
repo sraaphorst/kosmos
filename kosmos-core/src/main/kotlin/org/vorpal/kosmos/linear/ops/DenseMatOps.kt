@@ -740,7 +740,81 @@ object DenseMatOps {
         mat1: MatLike<A>,
         mat2: MatLike<A>,
         eq: Eq<A> = Eq.default()
-    ) = DenseMatKernel.isEqual(mat1, mat2, eq)
+    ): Boolean = DenseMatKernel.isEqual(mat1, mat2, eq)
+
+    /**
+     * Determine if the square matrix is row diagonally dominant.
+     *
+     * If strict is false, this means that:
+     * ```
+     * mag(m_ii) >= sum_{i ≠ j} mag(m_ij)
+     * ```
+     * If strict is true, this means that:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ij)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isRowDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = DenseMatKernel.isRowDiagonallyDominant(mat, mag, add, order, strict)
+
+    /**
+     * Determine if the square matrix is strictly row diagonally dominant, i.e.:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ij)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isRowDiagonallyDominantStrict(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>
+    ): Boolean = DenseMatKernel.isRowDiagonallyDominant(mat, mag, add, order, true)
+
+    /**
+     * Determine if the square matrix is col diagonally dominant.
+     *
+     * If strict is false, this means that:
+     * ```
+     * mag(m_ii) >= sum_{i ≠ j} mag(m_ji)
+     * ```
+     * If strict is true, this means that:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ji)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isColDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = DenseMatKernel.isColDiagonallyDominant(mat, mag, add, order, strict)
+
+    /**
+     * Determine if the square matrix is strictly col diagonally dominant, i.e.:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ji)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isColDiagonallyDominantStrict(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>
+    ): Boolean = DenseMatKernel.isColDiagonallyDominant(mat, mag, add, order, true)
 
     /**
      * Make a [DenseMat] copy of [mat].
