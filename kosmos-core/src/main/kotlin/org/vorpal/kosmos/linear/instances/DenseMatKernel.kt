@@ -1047,4 +1047,43 @@ internal object DenseMatKernel {
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
+
+    fun <A : Any, M : Any> isRowDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean {
+        require(mat.rows == mat.cols) {
+            "Diagonal dominance is defined for square matrices, got ${mat.rows}${Symbols.TIMES}${mat.cols}"
+        }
+
+        var row = 0
+        while (row < mat.rows) {
+            var total = add.identity
+            var col = 0
+            while (col < mat.cols) {
+                if (col != row) total = add(total, mag(mat[row, col]))
+                col += 1
+            }
+
+            val diag = mag(mat[row, row])
+            if (strict) {
+                if (!order.lt(total, diag)) return false
+            } else {
+                if (order.lt(diag, total)) return false
+            }
+            row += 1
+        }
+        return true
+    }
+
+    fun <A : Any, M : Any> isColDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = isRowDiagonallyDominant(mat.transposeView(), mag, add, order, strict)
 }
