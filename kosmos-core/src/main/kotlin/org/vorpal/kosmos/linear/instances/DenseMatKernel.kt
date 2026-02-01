@@ -344,42 +344,30 @@ internal object DenseMatKernel {
 
     fun <A : Any> argmin(
         mat: MatLike<A>,
-        cmp: Comparator<A>
-    ): Option<Pair<Int, Int>> {
-        if (mat.rows == 0 || mat.cols == 0) return Option.None
-        var minRow = 0
-        var minCol = 0
-
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
-                if (cmp.compare(mat[i, j], mat[minRow, minCol]) < 0) {
-                    minRow = i
-                    minCol = j
-                }
-                j += 1
-            }
-            i += 1
-        }
-        return Option.Some(minRow to minCol)
-    }
-
-    fun <A : Any> argmin(
-        mat: MatLike<A>,
         order: TotalOrder<A>
-    ): Option<Pair<Int, Int>> =
-        argmin(mat) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
+    ): Option<Pair<Int, Int>> {
+            if (mat.rows == 0 || mat.cols == 0) return Option.None
+            var minRow = 0
+            var minCol = 0
+
+            var i = 0
+            while (i < mat.rows) {
+                var j = 0
+                while (j < mat.cols) {
+                    if (order.lt(mat[i, j], mat[minRow, minCol])) {
+                        minRow = i
+                        minCol = j
+                    }
+                    j += 1
+                }
+                i += 1
             }
+            return Option.Some(minRow to minCol)
         }
 
     fun <A : Any> argmax(
         mat: MatLike<A>,
-        cmp: Comparator<A>
+        order: TotalOrder<A>
     ): Option<Pair<Int, Int>> {
         if (mat.rows == 0 || mat.cols == 0) return Option.None
         var maxRow = 0
@@ -389,7 +377,7 @@ internal object DenseMatKernel {
         while (i < mat.rows) {
             var j = 0
             while (j < mat.cols) {
-                if (cmp.compare(mat[i, j], mat[maxRow, maxCol]) > 0) {
+                if (order.gt(mat[i, j], mat[maxRow, maxCol])) {
                     maxRow = i
                     maxCol = j
                 }
@@ -400,22 +388,10 @@ internal object DenseMatKernel {
         return Option.Some(maxRow to maxCol)
     }
 
-    fun <A : Any> argmax(
-        mat: MatLike<A>,
-        order: TotalOrder<A>
-    ): Option<Pair<Int, Int>> =
-        argmax(mat) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
-        }
-
     fun <A : Any, B : Any> argminBy(
         mat: MatLike<A>,
         f: (A) -> B,
-        cmp: Comparator<B>
+        order: TotalOrder<B>
     ): Option<Pair<Int, Int>> {
         if (mat.rows == 0 || mat.cols == 0) return Option.None
 
@@ -428,7 +404,7 @@ internal object DenseMatKernel {
             var j = 0
             while (j < mat.cols) {
                 val vij = f(mat[i, j])
-                if (cmp.compare(vij, minVal) < 0) {
+                if (order.lt(vij, minVal)) {
                     minRow = i
                     minCol = j
                     minVal = vij
@@ -440,58 +416,32 @@ internal object DenseMatKernel {
         return Option.Some(minRow to minCol)
     }
 
-    fun <A : Any, B : Any> argminBy(
-        mat: MatLike<A>,
-        f: (A) -> B,
-        order: TotalOrder<B>
-    ): Option<Pair<Int, Int>> =
-        argminBy(mat, f) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
-        }
-
     fun <A : Any, B : Any> argmaxBy(
         mat: MatLike<A>,
         f: (A) -> B,
-        cmp: Comparator<B>
+        order: TotalOrder<B>
     ): Option<Pair<Int, Int>> {
-        if (mat.rows == 0 || mat.cols == 0) return Option.None
+            if (mat.rows == 0 || mat.cols == 0) return Option.None
 
-        var maxRow = 0
-        var maxCol = 0
-        var maxVal = f(mat[0, 0])
+            var maxRow = 0
+            var maxCol = 0
+            var maxVal = f(mat[0, 0])
 
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
-                val vij = f(mat[i, j])
-                if (cmp.compare(vij, maxVal) > 0) {
-                    maxRow = i
-                    maxCol = j
-                    maxVal = vij
+            var i = 0
+            while (i < mat.rows) {
+                var j = 0
+                while (j < mat.cols) {
+                    val vij = f(mat[i, j])
+                    if (order.gt(vij, maxVal)) {
+                        maxRow = i
+                        maxCol = j
+                        maxVal = vij
+                    }
+                    j += 1
                 }
-                j += 1
+                i += 1
             }
-            i += 1
-        }
-        return Option.Some(maxRow to maxCol)
-    }
-
-    fun <A : Any, B : Any> argmaxBy(
-        mat: MatLike<A>,
-        f: (A) -> B,
-        order: TotalOrder<B>
-    ): Option<Pair<Int, Int>> =
-        argmaxBy(mat, f) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
+            return Option.Some(maxRow to maxCol)
         }
 
     fun <A : Any> isAll(

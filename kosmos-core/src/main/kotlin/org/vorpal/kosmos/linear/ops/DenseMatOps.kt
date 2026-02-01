@@ -191,7 +191,7 @@ object DenseMatOps {
     fun <A : Any> argmin(
         mat: MatLike<A>,
         comparator: Comparator<A>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, TotalOrder.of(comparator))
 
     /**
      * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
@@ -235,7 +235,7 @@ object DenseMatOps {
     fun <A : Any> argmax(
         mat: MatLike<A>,
         comparator: Comparator<A>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, TotalOrder.of(comparator))
 
     /**
      * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
@@ -284,7 +284,7 @@ object DenseMatOps {
         mat: MatLike<A>,
         f: (A) -> B,
         comparator: Comparator<B>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, TotalOrder.of(comparator))
 
     /**
      * Given
@@ -348,7 +348,7 @@ object DenseMatOps {
         mat: MatLike<A>,
         f: (A) -> B,
         comparator: Comparator<B>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, TotalOrder.of(comparator))
 
     /**
      * Given
