@@ -33,6 +33,22 @@ import kotlin.math.min
  * longer that the loop-based approach.
  */
 internal object DenseMatKernel {
+    /**
+     * Allocator for a new matrix that ensures that rows * cols does not overflow an Int.
+     *
+     * If it overflows an int, [ArithmeticException] is thrown.
+     */
+    fun allocateMatrix(rows: Int, cols: Int): Array<Any?> {
+        require(rows >= 0) { "rows must be nonnegative: $rows" }
+        require(cols >= 0) { "cols must be nonnegative: $cols" }
+        return arrayOfNulls(Math.multiplyExact(rows, cols))
+    }
+
+    /**
+     * Calls require to make sure the size of `mat` is `rows×cols`.
+     *
+     * Throws an [IllegalArgumentException] if the check fails.
+     */
     fun requireSize(
         mat: MatLike<*>,
         rows: Int,
@@ -111,7 +127,7 @@ internal object DenseMatKernel {
         val rows = mat1.rows
         val cols = mat1.cols
         requireSize(mat2, rows, cols)
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -137,7 +153,7 @@ internal object DenseMatKernel {
         DenseKernel.requireSize(mat2.rows, cols)
         val p = mat2.cols
 
-        val out = arrayOfNulls<Any?>(rows * p)
+        val out = allocateMatrix(rows, p)
 
         var r = 0
         while (r < rows) {
@@ -215,9 +231,9 @@ internal object DenseMatKernel {
         val p = mat2.rows
         val q = mat2.cols
 
-        val outRows = m * p
-        val outCols = n * q
-        val out = arrayOfNulls<Any?>(outRows * outCols)
+        val outRows = Math.multiplyExact(m, p)
+        val outCols = Math.multiplyExact(n, q)
+        val out = allocateMatrix(outRows, outCols)
 
         var i = 0
         while (i < m) {
@@ -253,7 +269,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -276,7 +292,7 @@ internal object DenseMatKernel {
     ): DenseVec<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -299,11 +315,12 @@ internal object DenseMatKernel {
         rows: Int,
         cols: Int
     ): DenseMat<A> {
-        DenseKernel.requireSize(x.size, rows * cols)
+        val size = Math.multiplyExact(rows, cols)
+        DenseKernel.requireSize(x.size, size)
+        val out = allocateMatrix(rows, cols)
 
-        val out = arrayOfNulls<Any?>(rows * cols)
         var i = 0
-        while (i < rows * cols) {
+        while (i < size) {
             out[i] = x[i]
             i += 1
         }
@@ -318,52 +335,39 @@ internal object DenseMatKernel {
         require(blockSize > 0) { "Block size must be positive, but got: $blockSize" }
 
         // Each entry gets replicated into a blockSize × blockSize block.
-        return DenseMat.tabulate(
-            mat.rows * blockSize,
-            mat.cols * blockSize
-        ) { i, j ->
+        val outRows = Math.multiplyExact(mat.rows, blockSize)
+        val outCols = Math.multiplyExact(mat.cols, blockSize)
+        return DenseMat.tabulate(outRows, outCols) { i, j ->
             mat[i / blockSize, j / blockSize]
         }
     }
 
     fun <A : Any> argmin(
         mat: MatLike<A>,
-        cmp: Comparator<A>
-    ): Option<Pair<Int, Int>> {
-        if (mat.rows == 0 || mat.cols == 0) return Option.None
-        var minRow = 0
-        var minCol = 0
-
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
-                if (cmp.compare(mat[i, j], mat[minRow, minCol]) < 0) {
-                    minRow = i
-                    minCol = j
-                }
-                j += 1
-            }
-            i += 1
-        }
-        return Option.Some(minRow to minCol)
-    }
-
-    fun <A : Any> argmin(
-        mat: MatLike<A>,
         order: TotalOrder<A>
-    ): Option<Pair<Int, Int>> =
-        argmin(mat) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
+    ): Option<Pair<Int, Int>> {
+            if (mat.rows == 0 || mat.cols == 0) return Option.None
+            var minRow = 0
+            var minCol = 0
+
+            var i = 0
+            while (i < mat.rows) {
+                var j = 0
+                while (j < mat.cols) {
+                    if (order.lt(mat[i, j], mat[minRow, minCol])) {
+                        minRow = i
+                        minCol = j
+                    }
+                    j += 1
+                }
+                i += 1
             }
+            return Option.Some(minRow to minCol)
         }
 
     fun <A : Any> argmax(
         mat: MatLike<A>,
-        cmp: Comparator<A>
+        order: TotalOrder<A>
     ): Option<Pair<Int, Int>> {
         if (mat.rows == 0 || mat.cols == 0) return Option.None
         var maxRow = 0
@@ -373,7 +377,7 @@ internal object DenseMatKernel {
         while (i < mat.rows) {
             var j = 0
             while (j < mat.cols) {
-                if (cmp.compare(mat[i, j], mat[maxRow, maxCol]) > 0) {
+                if (order.gt(mat[i, j], mat[maxRow, maxCol])) {
                     maxRow = i
                     maxCol = j
                 }
@@ -384,22 +388,10 @@ internal object DenseMatKernel {
         return Option.Some(maxRow to maxCol)
     }
 
-    fun <A : Any> argmax(
-        mat: MatLike<A>,
-        order: TotalOrder<A>
-    ): Option<Pair<Int, Int>> =
-        argmax(mat) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
-        }
-
     fun <A : Any, B : Any> argminBy(
         mat: MatLike<A>,
         f: (A) -> B,
-        cmp: Comparator<B>
+        order: TotalOrder<B>
     ): Option<Pair<Int, Int>> {
         if (mat.rows == 0 || mat.cols == 0) return Option.None
 
@@ -412,7 +404,7 @@ internal object DenseMatKernel {
             var j = 0
             while (j < mat.cols) {
                 val vij = f(mat[i, j])
-                if (cmp.compare(vij, minVal) < 0) {
+                if (order.lt(vij, minVal)) {
                     minRow = i
                     minCol = j
                     minVal = vij
@@ -424,58 +416,32 @@ internal object DenseMatKernel {
         return Option.Some(minRow to minCol)
     }
 
-    fun <A : Any, B : Any> argminBy(
-        mat: MatLike<A>,
-        f: (A) -> B,
-        order: TotalOrder<B>
-    ): Option<Pair<Int, Int>> =
-        argminBy(mat, f) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
-        }
-
     fun <A : Any, B : Any> argmaxBy(
         mat: MatLike<A>,
         f: (A) -> B,
-        cmp: Comparator<B>
+        order: TotalOrder<B>
     ): Option<Pair<Int, Int>> {
-        if (mat.rows == 0 || mat.cols == 0) return Option.None
+            if (mat.rows == 0 || mat.cols == 0) return Option.None
 
-        var maxRow = 0
-        var maxCol = 0
-        var maxVal = f(mat[0, 0])
+            var maxRow = 0
+            var maxCol = 0
+            var maxVal = f(mat[0, 0])
 
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
-                val vij = f(mat[i, j])
-                if (cmp.compare(vij, maxVal) > 0) {
-                    maxRow = i
-                    maxCol = j
-                    maxVal = vij
+            var i = 0
+            while (i < mat.rows) {
+                var j = 0
+                while (j < mat.cols) {
+                    val vij = f(mat[i, j])
+                    if (order.gt(vij, maxVal)) {
+                        maxRow = i
+                        maxCol = j
+                        maxVal = vij
+                    }
+                    j += 1
                 }
-                j += 1
+                i += 1
             }
-            i += 1
-        }
-        return Option.Some(maxRow to maxCol)
-    }
-
-    fun <A : Any, B : Any> argmaxBy(
-        mat: MatLike<A>,
-        f: (A) -> B,
-        order: TotalOrder<B>
-    ): Option<Pair<Int, Int>> =
-        argmaxBy(mat, f) { u, v ->
-            when {
-                order.lt(u, v) -> -1
-                order.lt(v, u) -> 1
-                else -> 0
-            }
+            return Option.Some(maxRow to maxCol)
         }
 
     fun <A : Any> isAll(
@@ -532,7 +498,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val outRows = mat.cols
         val outCols = mat.rows
-        val out = arrayOfNulls<Any?>(outRows * outCols)
+        val out = allocateMatrix(outRows, outCols)
 
         var r = 0
         while (r < mat.rows) {
@@ -581,7 +547,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -650,7 +616,7 @@ internal object DenseMatKernel {
         return true
     }
 
-    fun <A : Any> diagonal(
+    fun <A : Any> extractDiagonal(
         mat: MatLike<A>,
     ): DenseVec<A> {
         require(isSquare(mat)) {
@@ -832,7 +798,7 @@ internal object DenseMatKernel {
             "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
         }
 
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = allocateMatrix(m, n)
 
         var r = 0
         while (r < m) {
@@ -881,7 +847,7 @@ internal object DenseMatKernel {
             "Shape mismatch: C is ${cMat.rows}${Symbols.TIMES}${cMat.cols}, expected ${m}${Symbols.TIMES}${n}"
         }
 
-        val out = arrayOfNulls<Any?>(m * n)
+        val out = allocateMatrix(m, n)
 
         var r = 0
         while (r < m) {
@@ -905,6 +871,59 @@ internal object DenseMatKernel {
         }
 
         return DenseMat.fromArrayUnsafe(m, n, out)
+    }
+
+    fun <A : Any> concatDiagonal(
+        matrices: List<MatLike<A>>,
+        zero: A
+    ): DenseMat<A> {
+        // Get the number of rows and columns in the final matrix.
+        val totalRows = matrices.fold(0) { size, mat -> Math.addExact(size, mat.rows )}
+        val totalCols = matrices.fold(0) { size, mat -> Math.addExact(size, mat.cols )}
+        val out = allocateMatrix(totalRows, totalCols)
+
+        // The index of the row we are filling in out.
+        var outRowIdx = 0
+
+        // The index of the matrix in matrices we are processing.
+        var matIdx = 0
+
+        // The starting row and column where matrices[matIdx] is being copied.
+        var startRowIdx = 0
+        var startColIdx = 0
+
+        while (matIdx < matrices.size) {
+            // We start copying matrix at startRowIdx and startColIdx
+            val matrix = matrices[matIdx]
+            val endRowIdx = startRowIdx + matrix.rows
+            val endColIdx = startColIdx + matrix.cols
+
+            // Fill in the row of out's outRowIdx, which contains matrix matIdx's matrixRow.
+            while (outRowIdx < endRowIdx) {
+                var outColIdx = 0
+
+                val matrixRow = outRowIdx - startRowIdx
+                val inRange = startColIdx..<endColIdx
+                while (outColIdx < totalCols) {
+                    if (outColIdx in inRange) {
+                        val matrixCol = outColIdx - startColIdx
+                        out[outRowIdx * totalCols + outColIdx] = matrix[matrixRow, matrixCol]
+                    } else {
+                        out[outRowIdx * totalCols + outColIdx] = zero
+                    }
+                    outColIdx += 1
+                }
+                outRowIdx += 1
+            }
+
+            // We have finished copying the rows corresponding to matrix matIdx.
+            // Advance the row index and column index to where the next matrix will be copied.
+            startRowIdx = endRowIdx
+            startColIdx = endColIdx
+            matIdx += 1
+        }
+
+        return DenseMat.fromArrayUnsafe(totalRows, totalCols, out)
     }
 
     fun <A : Any> isLowerTriangular(
@@ -964,7 +983,7 @@ internal object DenseMatKernel {
     ): DenseMat<A> {
         val rows = mat.rows
         val cols = mat.cols
-        val out = arrayOfNulls<Any?>(rows * cols)
+        val out = allocateMatrix(rows, cols)
 
         var r = 0
         while (r < rows) {
@@ -978,4 +997,43 @@ internal object DenseMatKernel {
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
+
+    fun <A : Any, M : Any> isRowDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean {
+        require(isSquare(mat)) {
+            "Diagonal dominance is defined for square matrices, got ${mat.rows}${Symbols.TIMES}${mat.cols}"
+        }
+
+        var row = 0
+        while (row < mat.rows) {
+            var total = add.identity
+            var col = 0
+            while (col < mat.cols) {
+                if (col != row) total = add(total, mag(mat[row, col]))
+                col += 1
+            }
+
+            val diag = mag(mat[row, row])
+            if (strict) {
+                if (!order.lt(total, diag)) return false
+            } else {
+                if (order.lt(diag, total)) return false
+            }
+            row += 1
+        }
+        return true
+    }
+
+    fun <A : Any, M : Any> isColDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = isRowDiagonallyDominant(mat.transposeView(), mag, add, order, strict)
 }
