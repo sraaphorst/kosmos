@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.linear.values
 
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.linear.instances.DenseMatKernel
 
 /**
  * A dense matrix with [rows] x [cols] entries stored flat in row-major order.
@@ -74,12 +75,7 @@ class DenseMat<A : Any> private constructor(
         require(rows == other.rows && cols == other.cols) {
             "shape mismatch: ${rows}${Symbols.TIMES}${cols} versus ${other.rows}${Symbols.TIMES}${other.cols}"
         }
-        return tabulate(rows, cols) { r, c ->
-            f(
-                get(r, c),
-                other[r, c]
-            )
-        }
+        return tabulate(rows, cols) { r, c -> f(get(r, c), other[r, c]) }
     }
 
     override fun equals(other: Any?): Boolean {
@@ -124,8 +120,7 @@ class DenseMat<A : Any> private constructor(
             require(rows >= 0) { "rows must be nonnegative: $rows" }
             require(cols >= 0) { "cols must be nonnegative: $cols" }
 
-            val size = rows * cols
-            val data = arrayOfNulls<Any?>(size)
+            val data = DenseMatKernel.allocateMatrix(rows, cols)
             data.indices.forEach { idx ->
                 val row = idx / cols
                 val col = idx % cols

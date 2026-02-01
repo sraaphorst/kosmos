@@ -50,8 +50,11 @@ interface Irreflexive<A : Any>       : HasStrictRelation<A>
 interface Asymmetric<A : Any>        : HasStrictRelation<A>
 interface TransitiveStrict<A : Any>  : HasStrictRelation<A>
 
-/** Totality on inequality (Trichotomy): ∀a≠b. lt(a,b) ∨ lt(b,a). */
-interface TotalOnInequality<A : Any> : HasStrictRelation<A>
+/**
+ * Strict totality (trichotomy as checked by the law suite):
+ * for all a,b with a ≉ b (according to the law suite's Eq<A>), lt(a,b) ∨ lt(b,a).
+ */
+interface ConnexStrict<A : Any> : HasStrictRelation<A>
 
 /* ---------- Concrete structures around a chosen relation ---------- */
 
@@ -124,16 +127,30 @@ interface TotalOrder<A : Any> : Poset<A>, Connex<A> {
     fun toTotalStrictOrder(): TotalStrictOrder<A> =
         TotalStrictOrder.of(lt)
 
+    /**
+     * Turn the total order on [A] into a [Comparator] on [A].
+     */
+    fun toComparator(): Comparator<A> = Comparator { u, v ->
+        when {
+            lt(u, v) -> -1
+            lt(v, u) -> 1
+            else -> 0
+        }
+    }
+
     companion object {
         fun <A : Any> of(le: Relation<A>): TotalOrder<A> =
             object : TotalOrder<A> {
                 override val le = le
             }
+
+        fun <A : Any> of(comparator: Comparator<A>): TotalOrder<A> =
+            of(comparator.leRelation())
     }
 }
 
 /** Strict order carried by `<`. */
-interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A> {
+interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A>, Irreflexive<A> {
     val lt: Relation<A>
     override val strictRelation: Relation<A>
         get() = lt
@@ -144,12 +161,6 @@ interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A> {
      */
     fun leFrom(eq: Relation<A>): Relation<A> =
         Relation(Symbols.LESS_THAN_EQ) { a, b -> lt(a, b) || eq(a, b) }
-
-    /**
-     * Recover a non-strict ≤ using intrinsic equality (Any.equals).
-     */
-    fun leDefault(): Relation<A> =
-        leFrom(Relation("=") { a, b -> a == b })
 
     /**
      * From a strict order `<` and an equivalence `eq`, build a poset with
@@ -167,13 +178,35 @@ interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A> {
 }
 
 /** Total strict order (trichotomy is a law). */
-interface TotalStrictOrder<A : Any> : StrictOrder<A>, TotalOnInequality<A> {
+interface TotalStrictOrder<A : Any> : StrictOrder<A>, ConnexStrict<A> {
     /**
-     * From a total strict order `<` and an equivalence `eq`, build a poset with
-     * a ≤ b :⇔ a < b ∨ a ≡ b.
+     * Make this TotalStrictOrder into a Comparator on [A].
+     * Uses the strict relation < directly (no intermediate ≤ construction).
      */
-    fun toTotalOrder(eq: Relation<A>): TotalOrder<A> =
-        TotalOrder.of(leFrom(eq))
+    fun toComparator(): Comparator<A> = Comparator { u, v ->
+        when {
+            lt(u, v) -> -1
+            lt(v, u) -> 1
+            else -> 0
+        }
+    }
+
+    /**
+     * Construct the canonical non-strict [TotalOrder] induced by this strict total order.
+     *
+     * The induced relation is defined by:
+     *   a ≤ b  :⇔  ¬(b < a)
+     *
+     * This does not require an external equality/equivalence relation:
+     * the induced equivalence is exactly the "tie" relation of `<`
+     * (neither a < b nor b < a).
+     *
+     * Useful for reusing APIs defined in terms of [TotalOrder] when starting from `<`.
+     */
+    fun toTotalOrderCanonical(): TotalOrder<A> {
+        val le = Relation<A>(Symbols.LESS_THAN_EQ) { a, b -> !lt(b, a) }
+        return TotalOrder.of(le)
+    }
 
     companion object {
         fun <A : Any> of(lt: Relation<A>): TotalStrictOrder<A> =
@@ -200,13 +233,14 @@ fun <A : Any, B : Any> productPoset(pA: Poset<A>, pB: Poset<B>): Poset<Pair<A, B
 
 /**
  * Creates the Lexicographical Order of two Total Orders.
- * (a1, b1) ≤ (a2, b2) iff a1 < a2 OR (a1 == a2 AND b1 ≤ b2).
+ * (a1, b1) ≤ (a2, b2) iff a1 < a2 OR (a1 ≡ a2 AND b1 ≤ b2)
+ * where ≡ is the equivalence induced by oA.le.
  *
  * Note: Uses strict inequality from A to resolve the first component.
  */
 fun <A : Any, B : Any> lexTotalOrder(oA: TotalOrder<A>, oB: TotalOrder<B>): TotalOrder<Pair<A, B>> {
     val ltA = oA.lt
-    val eqA = oA.eq
+    val equivA = oA.eq
     val leB = oB.le
 
     val leLex = Relation<Pair<A, B>>("(${oA.le.symbol}ₗₑₓ${oB.le.symbol})") { p1, p2 ->
@@ -214,7 +248,7 @@ fun <A : Any, B : Any> lexTotalOrder(oA: TotalOrder<A>, oB: TotalOrder<B>): Tota
         val (a2, b2) = p2
         // a1 < a2 implies ≤
         // a1 == a2 implies we check b
-        ltA(a1, a2) || (eqA(a1, a2) && leB(b1, b2))
+        ltA(a1, a2) || (equivA(a1, a2) && leB(b1, b2))
     }
     return TotalOrder.of(leLex)
 }
@@ -226,7 +260,7 @@ fun <A : Any, B : Any> lexTotalOrder(oA: TotalOrder<A>, oB: TotalOrder<B>): Tota
  *
  * We can then do things like this to make a [TotalOrder] on [A].
  * ```
- * val realTotalOrder: TotalOrder<Real> = Posets.totalOf(RealComparator.leRelation())
+ * val realTotalOrder: TotalOrder<Real> = TotalOrder<Real>.of(RealComparator.leRelation())
  * ```
  */
 fun <A : Any> Comparator<A>.leRelation(symbol: String = Symbols.LESS_THAN_EQ): Relation<A> =

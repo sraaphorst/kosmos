@@ -191,7 +191,7 @@ object DenseMatOps {
     fun <A : Any> argmin(
         mat: MatLike<A>,
         comparator: Comparator<A>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmin(mat, TotalOrder.of(comparator))
 
     /**
      * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
@@ -235,7 +235,7 @@ object DenseMatOps {
     fun <A : Any> argmax(
         mat: MatLike<A>,
         comparator: Comparator<A>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmax(mat, TotalOrder.of(comparator))
 
     /**
      * Given a matrix [mat] over [A] and a [Comparator] over [A], determine
@@ -284,7 +284,7 @@ object DenseMatOps {
         mat: MatLike<A>,
         f: (A) -> B,
         comparator: Comparator<B>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argminBy(mat, f, TotalOrder.of(comparator))
 
     /**
      * Given
@@ -348,7 +348,7 @@ object DenseMatOps {
         mat: MatLike<A>,
         f: (A) -> B,
         comparator: Comparator<B>
-    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, comparator)
+    ): Option<Pair<Int, Int>> = DenseMatKernel.argmaxBy(mat, f, TotalOrder.of(comparator))
 
     /**
      * Given
@@ -480,30 +480,43 @@ object DenseMatOps {
     /**
      * Given a square `n×n` matrix [mat], return the entries on the main diagonal as a vector of size `n`.
      */
-    fun <A : Any> diagonal(
+    fun <A : Any> extractDiagonal(
         mat: MatLike<A>,
-    ): DenseVec<A> = DenseMatKernel.diagonal(mat)
+    ): DenseVec<A> = DenseMatKernel.extractDiagonal(mat)
 
     /**
      * Given a [zero] element, a size [n], and a function [f], create a square `n×n` matrix with:
      * - `f(i)` in position `mat[i, i]`
      * - `zero` in all other positions.
      */
-    fun <A: Any> toDiagonal(
+    fun <A: Any> fromDiagonal(
         zero : A,
         n : Int,
         f: (Int) -> A
-    ): DenseMat<A> = DenseMat.tabulate(n, n) { r, c -> if (r == c) f(r) else zero }
+    ): DenseMat<A> = fromDiagonal(zero, n, n, f)
+
+    /**
+     * Given a [zero] element, sizes [m] and [n], and a function [f], create a rectangular `m×n` matrix
+     * with:
+     * - `f(i)` in position `mat[i, i]`
+     * - `zero` in all other positions.
+     */
+    fun <A : Any> fromDiagonal(
+        zero : A,
+        m: Int,
+        n: Int,
+        f: (Int) -> A
+    ): DenseMat<A> = DenseMat.tabulate(m, n) { r, c -> if (r == c) f(r) else zero }
 
     /**
      * Given a [zero] element and a vector [vec] of length `n`, create a square `n×n` matrix with:
      * - `vec[i]` in position `mat[i, i]`
      * - `zero` in all other positions.
      */
-    fun <A : Any> toDiagonal(
+    fun <A : Any> fromDiagonal(
         zero : A,
         vec: VecLike<A>
-    ): DenseMat<A> = DenseMat.tabulate(vec.size, vec.size) { r, c -> if (r == c) vec[r] else zero }
+    ): DenseMat<A> = fromDiagonal(zero, vec.size, vec.size, vec::get)
 
     /**
      * Given a square `n×n` matrix [mat], calculate its [pow] power using the given [Semiring] through repeated
@@ -655,28 +668,153 @@ object DenseMatOps {
         cMat: MatLike<A>,
     ): DenseMat<A> = DenseMatKernel.affineMul(ring, alpha, aOp, aMat, bOp, bMat, beta, cMat)
 
+    /**
+     * Concatenate a variable list of matrices diagonal to one another, inserting [zero] in other positions.
+     *
+     * For example, concat with the following arguments:
+     * [[1, 2, 3], [4, 5, 6]]
+     * [[7], [8]]
+     * [[9, 10]]
+     * Gives:
+     * 1 2 3 0 0 0
+     * 4 5 6 0 0 0
+     * 0 0 0 7 0 0
+     * 0 0 0 8 0 0
+     * 0 0 0 0 9 10
+     */
+    fun <A : Any> concatDiagonal(
+        zero: A,
+        vararg matrices: MatLike<A>
+    ) = DenseMatKernel.concatDiagonal(matrices.asList(), zero)
+
+    /**
+     * Concatenate a list of matrices diagonal to one another, inserting [zero] in other positions.
+     *
+     * For example, concat with the following arguments:
+     * [[1, 2, 3], [4, 5, 6]]
+     * [[7], [8]]
+     * [[9, 10]]
+     * Gives:
+     * 1 2 3 0 0 0
+     * 4 5 6 0 0 0
+     * 0 0 0 7 0 0
+     * 0 0 0 8 0 0
+     * 0 0 0 0 9 10
+     */
+    fun <A : Any> concatDiagonal(
+        zero: A,
+        matrices: List<MatLike<A>>,
+    ): DenseMat<A> = DenseMatKernel.concatDiagonal(matrices, zero)
+
+    /**
+     * Return true iff for all j > i, m_ij = 0.
+     */
     fun <A : Any> isLowerTriangular(
         mat: MatLike<A>,
         zero: A,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isLowerTriangular(mat, zero, eq)
 
+    /**
+     * Return true iff for all j < i, m_ij = 0.
+     */
     fun <A : Any> isUpperTriangular(
         mat: MatLike<A>,
         zero: A,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isUpperTriangular(mat, zero, eq)
 
+    /**
+     * Return true iff for all i, j, m_ij = m_ji.
+     */
     fun <A : Any> isSymmetric(
         mat: MatLike<A>,
         eq: Eq<A> = Eq.default()
     ): Boolean = DenseMatKernel.isSymmetric(mat, eq)
 
+    /**
+     * Return true iff mat1 and mat2 have the same size and their entries are
+     * pairwise equal.
+     */
     fun <A : Any> isEqual(
         mat1: MatLike<A>,
         mat2: MatLike<A>,
         eq: Eq<A> = Eq.default()
-    ) = DenseMatKernel.isEqual(mat1, mat2, eq)
+    ): Boolean = DenseMatKernel.isEqual(mat1, mat2, eq)
+
+    /**
+     * Determine if the square matrix is row diagonally dominant.
+     *
+     * If strict is false, this means that:
+     * ```
+     * mag(m_ii) >= sum_{i ≠ j} mag(m_ij)
+     * ```
+     * If strict is true, this means that:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ij)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isRowDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = DenseMatKernel.isRowDiagonallyDominant(mat, mag, add, order, strict)
+
+    /**
+     * Determine if the square matrix is strictly row diagonally dominant, i.e.:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ij)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isRowDiagonallyDominantStrict(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>
+    ): Boolean = DenseMatKernel.isRowDiagonallyDominant(mat, mag, add, order, true)
+
+    /**
+     * Determine if the square matrix is col diagonally dominant.
+     *
+     * If strict is false, this means that:
+     * ```
+     * mag(m_ii) >= sum_{i ≠ j} mag(m_ji)
+     * ```
+     * If strict is true, this means that:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ji)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isColDiagonallyDominant(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>,
+        strict: Boolean = false
+    ): Boolean = DenseMatKernel.isColDiagonallyDominant(mat, mag, add, order, strict)
+
+    /**
+     * Determine if the square matrix is strictly col diagonally dominant, i.e.:
+     * ```
+     * mag(m_ii) > sum_{i ≠ j} mag(m_ji)
+     * ```
+     * When mag is a norm / absolute value compatible with the scalar structure (e.g. real / complex modulus),
+     * strict diagonal dominance implies the matrix is invertible.
+     */
+    fun <A : Any, M : Any> isColDiagonallyDominantStrict(
+        mat: MatLike<A>,
+        mag: (A) -> M,
+        add: CommutativeMonoid<M>,
+        order: TotalOrder<M>
+    ): Boolean = DenseMatKernel.isColDiagonallyDominant(mat, mag, add, order, true)
 
     /**
      * Make a [DenseMat] copy of [mat].
