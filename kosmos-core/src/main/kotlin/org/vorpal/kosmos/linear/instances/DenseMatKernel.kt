@@ -1005,7 +1005,7 @@ internal object DenseMatKernel {
         order: TotalOrder<M>,
         strict: Boolean = false
     ): Boolean {
-        require(mat.rows == mat.cols) {
+        require(isSquare(mat)) {
             "Diagonal dominance is defined for square matrices, got ${mat.rows}${Symbols.TIMES}${mat.cols}"
         }
 
