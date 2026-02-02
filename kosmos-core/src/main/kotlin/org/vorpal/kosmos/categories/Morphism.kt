@@ -172,33 +172,3 @@ fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> 
 
     return cycles
 }
-
-
-
-// TODO: *** REMOVE THESE EXAMPLES ***
-val intAutoGroup: Group<Automorphism<Int>> = Group.of(
-    identity = Automorphism.id(),
-    op = BinOp(Symbols.COMPOSE, Automorphism<Int>::andThen),
-    inverse = Endo(Symbols.INVERSE, Automorphism<Int>::inverse)
-)
-
-object CategoryOfMorphisms {
-    fun <A> id(): Morphism<A, A> = Morphism.id()
-    fun <A, B, C> compose(f: Morphism<B, C>, g: Morphism<A, B>): Morphism<A, C> =
-        g andThen f
-}
-
-class OneObjectCategory<A>(
-    private val group: Group<Automorphism<A>>,
-    private val obj: A
-) : Category<A, Automorphism<A>> {
-    override val compose: (Automorphism<A>, Automorphism<A>) -> Automorphism<A> = {f, g -> f andThen g}
-    override val id: (A) -> Automorphism<A> = { Automorphism.id() }
-    override fun toString(): String = "Category(Obj=$obj, Morphisms=Automorphisms($obj))"
-}
-
-fun main() {
-    val autInt = Automorphism.of<Int>({it + 3}, {it - 3})
-    println(autInt.apply(10))
-    println(autInt.inverse().apply(10))
-}
