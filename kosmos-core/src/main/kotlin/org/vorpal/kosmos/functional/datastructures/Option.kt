@@ -46,6 +46,11 @@ inline fun <A, B> Option<A>.fold(onNone: () -> B, onSome: (A) -> B): B = when (t
 fun <A, B> Option<A>.zip(other: Option<B>): Option<Pair<A, B>> =
     flatMap { a -> other.map { b -> a to b } }
 
+fun <A> Option<A>.getOrElse(default: A): A = when (this) {
+    is Option.Some -> value
+    is Option.None -> default
+}
+
 fun <A> Option<A>.getOrElse(default: () -> A): A = when (this) {
     is Option.Some -> value
     is Option.None -> default()
