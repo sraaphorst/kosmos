@@ -9,6 +9,9 @@ package org.vorpal.kosmos.algebra.structures
 interface Semiring<A : Any>: Hemiring<A> {
     override val mul: Monoid<A>
 
+    val one: A
+        get() = mul.identity
+
     companion object {
         fun <A : Any> of(
             add: CommutativeMonoid<A>,

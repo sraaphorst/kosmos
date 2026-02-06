@@ -1,7 +1,5 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-
 /**
  * NonAssociativeAlgebra is an algebra with an:
  * - additive abelian group
