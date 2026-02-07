@@ -2,7 +2,6 @@ package org.vorpal.kosmos.algebra.structures
 
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
-import java.math.BigInteger
 
 /**
  * An [AbelianGroup] is both a [Group] and a [CommutativeMonoid].
