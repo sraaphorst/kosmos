@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.algebra.structures
 
-import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 
