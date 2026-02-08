@@ -11,6 +11,9 @@ interface Hemiring<A : Any> {
     val add: CommutativeMonoid<A>
     val mul: Semigroup<A>
 
+    val zero: A
+        get() = add.identity
+
     companion object {
         fun <A : Any> of(
             add: CommutativeMonoid<A>,

@@ -3,7 +3,6 @@ package org.vorpal.kosmos.algebra.structures
 import java.math.BigInteger
 
 interface HasFromBigInt<A : Any> {
-    // Assume add is an additive group.
     val add: AbelianGroup<A>
 
     // Thus, one is not the identity of add: it must be defined externally to be used as the
@@ -11,25 +10,20 @@ interface HasFromBigInt<A : Any> {
     val one: A
 
     /**
-     * The canonical additive-group homomorphism `ℤ → (A, +)` sending `1 ↦ 1_A` (the multiplicative identity),
-     * i.e. `n ↦ n·1_A` via repeated addition.
+     * The canonical additive-group homomorphism `ℤ → (A, +)` sending `1 ↦ one`,
+     * i.e. `n ↦ n · one` via repeated addition (doubling, O(log |n|)).
      *
-     * Note: this map is injective iff the algebra has characteristic 0 (or, more generally,
-     * if `n·1_A = 0` implies `n = 0`).
+     * This map is injective iff `one` has infinite additive order, i.e.
+     * `n · one = 0` implies `n = 0`.
      */
-    fun fromBigInt(n: BigInteger): A {
-        tailrec fun aux(rem: BigInteger, acc: A): A =
-            when (rem) {
-                BigInteger.ZERO -> acc
-                else -> aux(
-                    rem - BigInteger.ONE,
-                    add(acc, one)
-                )
-            }
+    fun fromBigInt(n: BigInteger): A  =
+        add.zTimes(n, one)
 
-        val pos = aux(n.abs(), add.identity)
-        return if (n.signum() == -1) add.inverse(pos) else pos
-    }
+    fun fromInt(n: Int): A =
+        fromBigInt(n.toBigInteger())
+
+    fun fromLong(n: Long): A =
+        fromBigInt(n.toBigInteger())
 
     /**
      * Convenience function to get the negation of the multiplicative identity.
