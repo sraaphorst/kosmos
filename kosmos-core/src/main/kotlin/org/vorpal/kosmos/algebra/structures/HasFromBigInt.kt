@@ -10,34 +10,14 @@ interface HasFromBigInt<A : Any> {
     val one: A
 
     /**
-     * The canonical additive-group homomorphism `ℤ → (A, +)` sending `1 ↦ 1_A` (the multiplicative identity),
-     * i.e. `n ↦ n·1_A` via repeated addition (implemented with doubling for efficiency).
+     * The canonical additive-group homomorphism `ℤ → (A, +)` sending `1 ↦ one`,
+     * i.e. `n ↦ n · one` via repeated addition (doubling, O(log |n|)).
      *
-     * Note: this map is injective iff the algebra has characteristic 0 (or, more generally,
-     * if `n·1_A = 0` implies `n = 0`).
+     * This map is injective iff `one` has infinite additive order, i.e.
+     * `n · one = 0` implies `n = 0`.
      */
-    fun fromBigInt(n: BigInteger): A {
-        fun natTimes(k: BigInteger): A {
-            var rem = k
-            var acc = add.identity
-            var cur = one
-
-            while (rem.signum() > 0) {
-                if (rem.testBit(0)) {
-                    acc = add(acc, cur)
-                }
-                cur = add(cur, cur)
-                rem = rem.shiftRight(1)
-            }
-
-            return acc
-        }
-
-        val sign = n.signum()
-        if (sign == 0) return add.identity
-        val pos = natTimes(n.abs())
-        return if (sign < 0) add.inverse(pos) else pos
-    }
+    fun fromBigInt(n: BigInteger): A  =
+        add.zTimes(n, one)
 
     fun fromInt(n: Int): A =
         fromBigInt(n.toBigInteger())
