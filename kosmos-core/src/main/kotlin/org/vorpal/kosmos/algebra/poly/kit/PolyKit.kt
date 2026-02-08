@@ -32,6 +32,9 @@ class PolyKit<A : Any> internal constructor(
     val varNames: List<String>,
     val gens: List<Poly<A>>
 ) {
+    val vars: List<Poly<A>>
+        get() = gens
+
     val zeroA: A
         get() = coeff.zero
 

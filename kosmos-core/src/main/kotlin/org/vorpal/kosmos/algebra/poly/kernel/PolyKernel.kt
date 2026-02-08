@@ -124,7 +124,7 @@ internal object PolyKernel {
             }
         }
 
-        return normalize(Poly.ofUnsafe(out.toList()), eqA, zeroA)
+        return normalize(Poly.ofUnsafe(out), eqA, zeroA)
     }
 
     /**
