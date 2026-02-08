@@ -1,11 +1,6 @@
 package org.vorpal.kosmos.core.rational
 
-import org.vorpal.kosmos.core.rational.div
-import org.vorpal.kosmos.core.rational.minus
-import org.vorpal.kosmos.core.rational.plus
-import org.vorpal.kosmos.core.rational.times
 import java.math.BigInteger
-
 
 /** Parse rational from string formats like "3/4", "5", "-2/7" */
 fun String.toRational(): Rational {

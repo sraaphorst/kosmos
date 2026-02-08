@@ -142,4 +142,74 @@ internal object PolyKernel {
         val out = cs.map(negA::invoke)
         return normalize(Poly.ofUnsafe(out), eqA, zeroA)
     }
+
+    /**
+     * Implementation of Horner algorithm to evaluate a polynomial.
+     */
+    fun <A : Any> eval(
+        p: Poly<A>,
+        x: A,
+        addA: BinOp<A>,
+        mulA: BinOp<A>,
+        zeroA: A
+    ): A {
+        var acc = zeroA
+        var i = p.coeffs.size - 1
+
+        while (i >= 0) {
+            acc = addA(mulA(acc, x), p.coeffs[i])
+            i -= 1
+        }
+
+        return acc
+    }
+
+    /**
+     * Univariate substitution: Horner acc becomes a polynomial.
+     */
+    fun <A: Any> subst(
+        p: Poly<A>,
+        q: Poly<A>,
+        addA: BinOp<A>,
+        mulA: BinOp<A>,
+        eqA: Eq<A>,
+        zeroA: A
+    ): Poly<A> {
+        var acc = Poly.zero<A>()
+        var i = p.coeffs.size - 1
+
+        while (i >= 0) {
+            acc = addPoly(
+                mulPoly(acc, q, addA, mulA, eqA, zeroA),
+                constant(p.coeffs[i], eqA, zeroA),
+                addA, eqA, zeroA
+            )
+            i -= 1
+        }
+
+        return normalize(acc, eqA, zeroA)
+    }
+
+    /**
+     * Derivative: only needs multiplication by small integers.
+     * Then in a PolyRingScope or a PolyIntLiteralScope, you can provide d(p) or p.derivative().
+     */
+    fun <A : Any> derivative(
+        p: Poly<A>,
+        addA: BinOp<A>,
+        mulA: BinOp<A>,
+        fromInt: (Int) -> A,
+        eqA: Eq<A>,
+        zeroA: A
+    ): Poly<A> {
+        val cs = p.coeffs
+        if (cs.size <= 1) return Poly.zero()
+
+        val out = (1 until cs.size).map { k ->
+            val kA = fromInt(k)
+            mulA(kA, cs[k])
+        }
+
+        return normalize(Poly.ofUnsafe(out), eqA, zeroA)
+    }
 }

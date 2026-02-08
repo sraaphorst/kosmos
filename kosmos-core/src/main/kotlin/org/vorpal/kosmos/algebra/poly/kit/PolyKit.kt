@@ -132,6 +132,12 @@ class PolyKit<A : Any> internal constructor(
         )
     }
 
+    fun eval(p: Poly<A>, x: A): A =
+        PolyKernel.eval(p, x, coeff.add.op, coeff.mul.op, zeroA)
+
+    fun subst(p: Poly<A>, q: Poly<A>): Poly<A> =
+        PolyKernel.subst(p, q, coeff.add.op, coeff.mul.op, eqA, zeroA)
+
     companion object {
         /**
          * Univariate kit from a Semiring.

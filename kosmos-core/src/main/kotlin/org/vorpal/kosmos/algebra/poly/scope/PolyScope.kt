@@ -61,6 +61,12 @@ open class PolyScope<A : Any>(
         a: A
     ): Poly<A> =
         kit.mulP(this, kit.embed(a))
+
+    fun Poly<A>.eval(x: A): A =
+        kit.eval(this, x)
+
+    fun Poly<A>.subst(q: Poly<A>): Poly<A> =
+        kit.subst(this, q)
 }
 
 /**
