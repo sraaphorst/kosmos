@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.extensions.render.DualPrintables
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -16,12 +16,12 @@ import org.vorpal.kosmos.testutils.shouldBeZero
 
 class DualRingPropertySpec : FunSpec({
 
-    val dualRing = RealField.dual()
+    val dualRing = RealAlgebras.RealField.dual()
     val add = dualRing.add
     val mul = dualRing.mul
     val dualPr: Printable<Dual<Real>> = DualPrintables.dualSigned(Printables.real)
     val dualPrCompact: Printable<Dual<Real>> = DualPrintables.compactSigned(
-        Printables.real, RealField, Eqs.realApprox()
+        Printables.real, RealAlgebras.RealField, Eqs.realApprox()
     )
 
     fun dual(a: Real, b: Real): Dual<Real> =
