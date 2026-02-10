@@ -3,7 +3,7 @@ package org.vorpal.kosmos.analysis
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.testutils.shouldBeApproximately

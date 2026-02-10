@@ -3,7 +3,7 @@ package org.vorpal.kosmos.laws.algebra
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real

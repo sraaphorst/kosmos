@@ -1,9 +1,8 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.algebra.structures.instances.base
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
-import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
