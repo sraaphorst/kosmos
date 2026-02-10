@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRingReal
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRing
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -11,8 +11,10 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionRealVectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionVectorSpace
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
@@ -54,7 +56,7 @@ object OctonionAlgebras {
     object OctonionDivisionAlgebraReal : RealNormedDivisionAlgebra<Octonion> {
 
         private val base: NonAssociativeInvolutiveRing<Octonion> =
-            CayleyDickson.usual(QuaternionDivisionRingReal)
+            CayleyDickson.usual(QuaternionDivisionRing)
 
         override val add: AbelianGroup<Octonion> = base.add
 
@@ -75,8 +77,8 @@ object OctonionAlgebras {
             // Use the QuaternionModule's action to scale.
             // We could use OctonionModule, but we fall back to QuaternionModule to avoid circular dependencies.
             Octonion(
-                QuaternionRealVectorSpace.leftAction(scale, oc.a),
-                QuaternionRealVectorSpace.leftAction(scale, oc.b)
+                QuaternionVectorSpace.leftAction(scale, oc.a),
+                QuaternionVectorSpace.leftAction(scale, oc.b)
             )
         }
         override val one = mul.identity                                                             // quaternion 1 in "a"
@@ -229,7 +231,7 @@ object OctonionAlgebras {
         val spec = Spec(iIndex, jIndex, kIndex, handedness, kSign)
         val ovs = OctonionVectorSpace
         return spec to NonAssociativeRingHomomorphism.of(
-            QuaternionDivisionRingReal,
+            QuaternionDivisionRing,
             OctonionDivisionAlgebraReal)
             { q ->
                 val t1 = oda.add(ovs.leftAction(q.w, one), ovs.leftAction(q.x, di))
@@ -265,7 +267,6 @@ object OctonionAlgebras {
             }
         }
 
+    val eqOctonionStrict: Eq<Octonion> = CD.eq(eqQuaternionStrict)
+    val eqOctonion: Eq<Octonion> = CD.eq(eqQuaternion)
 }
-
-val eqOctonionStrict: Eq<Octonion> = CD.eq(eqQuaternionStrict)
-val eqOctonion: Eq<Octonion> = CD.eq(eqQuaternion)

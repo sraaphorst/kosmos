@@ -13,8 +13,9 @@ import kotlin.math.sqrt
  * - N = Real for ℝ, ℂ, ℍ, 𝕆 (composition algebras)
  * - N = Rational for ℚ(i), quaternion algebras over ℚ, etc.
  */
-interface NormedDivisionAlgebra<N : Any, A : Any> : NonAssociativeDivisionAlgebra<A> {
-    val normSq: UnaryOp<A, N>
+interface NormedDivisionAlgebra<N : Any, A : Any> :
+    NonAssociativeDivisionAlgebra<A>,
+    HasNormSq<A, N> {
 
     companion object {
         fun <N : Any, A : Any> of(

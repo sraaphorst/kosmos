@@ -1,6 +1,11 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.eqOctonionStrict
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
+import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
+import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
@@ -16,28 +21,68 @@ fun realCheck() {
     }
 }
 
+
 fun quaternionCheck() {
-    val quaternions = QuaternionAlgebras.QuaternionDivisionRingReal
-    val handedness = HyperComplex.Handedness.RIGHT
-    val basis = QuaternionBases.basis(quaternions, handedness)
+    val quaternionRing = QuaternionAlgebras.QuaternionDivisionRing
+    val eqQ = eqQuaternion
 
-    val one = quaternions.one
-    val negOne = quaternions.add.inverse(one)
-    val eq = eqQuaternionStrict
+    // Canonical Cayley–Dickson basis units for ℍ = CD(ℂ)
+    // 1 = (1,0), I = (i_C,0), J = (0,1), K = (0,i_C)
+    val one = quaternionRing.one
+    val negOne = quaternionRing.add.inverse(one)
 
-    check(eq(quaternions.mul(basis.i, basis.i), negOne))
-    check(eq(quaternions.mul(basis.j, basis.j), negOne))
-    check(eq(quaternions.mul(basis.k, basis.k), negOne))
+    val iC = ComplexField.i
+    val zeroC = ComplexField.zero
+    val oneC = ComplexField.one
 
-    when (handedness) {
-        HyperComplex.Handedness.RIGHT -> {
-            check(eq(quaternions.mul(basis.i, basis.j), basis.k))
-            check(eq(quaternions.mul(basis.j, basis.i), quaternions.add.inverse(basis.k)))
+    val iAxis: Quaternion = Quaternion(iC, zeroC)
+    val jAxis: Quaternion = Quaternion(zeroC, oneC)
+    val kAxis: Quaternion = Quaternion(zeroC, iC)
+
+    // Squares
+    check(eqQ(quaternionRing.mul(iAxis, iAxis), negOne)) { "i^2 != -1" }
+    check(eqQ(quaternionRing.mul(jAxis, jAxis), negOne)) { "j^2 != -1" }
+    check(eqQ(quaternionRing.mul(kAxis, kAxis), negOne)) { "k^2 != -1" }
+
+    // Orientation: I J = K and J I = -K (fixed by the CD convention)
+    check(eqQ(quaternionRing.mul(iAxis, jAxis), kAxis)) { "i * j != k" }
+    check(eqQ(quaternionRing.mul(jAxis, iAxis), quaternionRing.add.inverse(kAxis))) { "j * i != -k" }
+
+    // The rest (optional, but nice sanity)
+    check(eqQ(quaternionRing.mul(jAxis, kAxis), iAxis)) { "j * k != i" }
+    check(eqQ(quaternionRing.mul(kAxis, jAxis), quaternionRing.add.inverse(iAxis))) { "k * j != -i" }
+
+    check(eqQ(quaternionRing.mul(kAxis, iAxis), jAxis)) { "k * i != j" }
+    check(eqQ(quaternionRing.mul(iAxis, kAxis), quaternionRing.add.inverse(jAxis))) { "i * k != -j" }
+}
+
+
+fun quaternionEmbeddingCheck() {
+    val quaternionRing = QuaternionAlgebras.QuaternionDivisionRing
+    val eqQ = eqQuaternionStrict
+
+    val iC = ComplexField.i
+
+    // In ℍ = CD(ℂ), these are the canonical Cayley–Dickson basis units:
+    val iAxis: Quaternion = Quaternion(ComplexField.i, ComplexField.zero)
+    val jAxis: Quaternion = Quaternion(ComplexField.zero, ComplexField.one)
+    val kAxis: Quaternion = Quaternion(ComplexField.zero, ComplexField.i)
+
+    AxisSignEmbeddings.AxisSignEmbedding.all.forEach { embedding ->
+        val embed = QuaternionAlgebras.complexEmbeddingToQuaternion(embedding)
+        val image = embed(iC) // should be ±I/±J/±K depending on spec
+
+        val axisUnit = when (embedding.axis) {
+            AxisSignEmbeddings.ImagAxis.I -> iAxis
+            AxisSignEmbeddings.ImagAxis.J -> jAxis
+            AxisSignEmbeddings.ImagAxis.K -> kAxis
         }
-        HyperComplex.Handedness.LEFT -> {
-            check(eq(quaternions.mul(basis.i, basis.j), quaternions.add.inverse(basis.k)))
-            check(eq(quaternions.mul(basis.j, basis.i), basis.k))
-        }
+
+        val expected =
+            if (embedding.sign == AxisSignEmbeddings.Sign.PLUS) axisUnit
+            else quaternionRing.add.inverse(axisUnit)
+
+        check(eqQ(image, expected)) { "embed(i_C) mismatch for $embedding: got $image expected $expected" }
     }
 }
 

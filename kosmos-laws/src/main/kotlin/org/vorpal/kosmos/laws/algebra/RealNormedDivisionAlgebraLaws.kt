@@ -3,7 +3,7 @@ package org.vorpal.kosmos.laws.algebra
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
@@ -51,7 +51,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
         NormedDivisionAlgebraLaws(
             algebra = algebra,
             arbA = arb,
-            mulN = RealField.mul.op,
+            mulN = RealAlgebras.RealField.mul.op,
             eqA = eqA,
             eqN = eqReal,
             prA = prA,
@@ -73,7 +73,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
             checkAll(arb) { a ->
                 val nSq = algebra.normSq(a)
                 val n = algebra.norm(a)
-                val computed = RealField.mul.op(n, n)
+                val computed = RealAlgebras.RealField.mul.op(n, n)
                 val expected = max(0.0, nSq)
 
                 check(eqReal(computed, expected)) {

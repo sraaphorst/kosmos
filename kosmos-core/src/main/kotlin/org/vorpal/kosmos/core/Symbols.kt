@@ -166,5 +166,6 @@ object Symbols {
     const val TURNSTYLE = PROVES
 
     // Intricate symbols
-    const val NORM_SQ_SYMBOL = "|${Symbols.DOT}|${Symbols.SQUARE}"
+    const val NORM = "||"
+    const val NORM_SQ_SYMBOL = "|${DOT}|${SQUARE}"
 }
