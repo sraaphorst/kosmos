@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.algebra.structures.instances.render
 
-import org.vorpal.kosmos.algebra.structures.instances.Complex
-import org.vorpal.kosmos.algebra.structures.instances.im
-import org.vorpal.kosmos.algebra.structures.instances.re
+import org.vorpal.kosmos.algebra.structures.instances.base.Complex
+import org.vorpal.kosmos.algebra.structures.instances.base.im
+import org.vorpal.kosmos.algebra.structures.instances.base.re
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printable
 

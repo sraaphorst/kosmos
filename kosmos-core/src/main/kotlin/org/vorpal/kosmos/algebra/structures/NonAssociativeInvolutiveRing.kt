@@ -1,8 +1,12 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Endo
 
 interface NonAssociativeInvolutiveRing<A : Any>: NonAssociativeRing<A>, HasConj<A> {
+    val normElement: Endo<A>
+        get() = Endo(Symbols.NORM) { x -> mul(x, conj(x)) }
+
     companion object {
         fun <A : Any> of(
             add: AbelianGroup<A>,

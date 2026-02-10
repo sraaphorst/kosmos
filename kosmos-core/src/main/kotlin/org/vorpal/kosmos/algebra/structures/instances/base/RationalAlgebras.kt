@@ -1,5 +1,6 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.algebra.structures.instances.base
 
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
@@ -12,6 +13,8 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
+import java.math.BigInteger
 
 object RationalAlgebras {
     val RationalField: Field<Rational> = Field.of(
@@ -47,6 +50,15 @@ object RationalAlgebras {
         override val one: Rational
             get() = RationalField.one
     }
+
+    /**
+     * Monomorphism from Z to Rationals.
+     */
+    val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
+        IntegerAlgebras.ZCommutativeRing,
+        RationalField,
+        UnaryOp { z -> z.toRational() }
+    )
 }
 
 val eqRational: Eq<Rational> = Eqs.rational

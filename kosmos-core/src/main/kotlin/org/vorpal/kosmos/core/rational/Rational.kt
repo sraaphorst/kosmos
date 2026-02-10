@@ -2,6 +2,7 @@ package org.vorpal.kosmos.core.rational
 
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
+import org.vorpal.kosmos.functional.datastructures.Option
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -9,26 +10,10 @@ import java.math.RoundingMode
 /** Normalized rational n/d with d > 0 and gcd(n,d) = 1. */
 @ConsistentCopyVisibility
 data class Rational private constructor(val n: BigInteger, val d: BigInteger): Comparable<Rational> {
-    companion object {
-        fun of(n: BigInteger, d: BigInteger): Rational {
-            require(d != BigInteger.ZERO) { "denominator must be nonzero" }
-            // move sign to numerator, make denominator positive
-            val sign = if (d.signum() < 0) BigInteger.valueOf(-1) else BigInteger.ONE
-            val nn = n * sign
-            val dd = d.abs()
-            val g  = nn.gcd(dd)
-            return Rational(nn / g, dd / g)
-        }
-
-        fun of(n: Int, d: Int) = of(n.toBigInteger(), d.toBigInteger())
-        fun of(n: Long, d: Long) = of(n.toBigInteger(), d.toBigInteger())
-        fun of(n: Int) = of(n.toBigInteger(), BigInteger.ONE)
-        fun of(n: Long) = of(n.toBigInteger(), BigInteger.ONE)
-        fun of(n: BigInteger) = of(n, BigInteger.ONE)
-
-        val ZERO = of(0, 1)
-        val ONE  = of(1, 1)
-    }
+    val numerator: BigInteger
+        get() = n
+    val denominator: BigInteger
+        get() = d
 
     // Note: all operators that do not directly call of(...) delegate to ones that do to reduce and normalize.
     operator fun unaryMinus(): Rational = of(n.negate(), d)
@@ -127,4 +112,25 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     operator fun div(other: Int): Rational = this / other.toRational()
     operator fun div(other: Long): Rational = this / other.toRational()
     operator fun div(other: BigInteger): Rational = this / other.toRational()
+
+    companion object {
+        fun of(n: BigInteger, d: BigInteger): Rational {
+            require(d != BigInteger.ZERO) { "denominator must be nonzero" }
+            // move sign to numerator, make denominator positive
+            val sign = if (d.signum() < 0) BigInteger.valueOf(-1) else BigInteger.ONE
+            val nn = n * sign
+            val dd = d.abs()
+            val g  = nn.gcd(dd)
+            return Rational(nn / g, dd / g)
+        }
+
+        fun of(n: Int, d: Int) = of(n.toBigInteger(), d.toBigInteger())
+        fun of(n: Long, d: Long) = of(n.toBigInteger(), d.toBigInteger())
+        fun of(n: Int) = of(n.toBigInteger(), BigInteger.ONE)
+        fun of(n: Long) = of(n.toBigInteger(), BigInteger.ONE)
+        fun of(n: BigInteger) = of(n, BigInteger.ONE)
+
+        val ZERO = of(0, 1)
+        val ONE  = of(1, 1)
+    }
 }
