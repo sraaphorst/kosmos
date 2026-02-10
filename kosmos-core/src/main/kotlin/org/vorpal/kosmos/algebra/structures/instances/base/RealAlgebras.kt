@@ -1,10 +1,11 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.algebra.structures.instances.base
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
@@ -13,8 +14,6 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 
 object RealAlgebras {
-    private val eqRealApprox = Eqs.realApprox()
-
     val RealField: Field<Real> = Field.of(
         add = AbelianGroup.of(
             identity = 0.0,
@@ -42,8 +41,13 @@ object RealAlgebras {
         override val normSq: Endo<Real> =
             Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
-        // Disambiguate HasReciprocal.zero:
+        // Disambiguate zero and one:
         override val zero: Real
             get() = RealField.zero
+        override val one: Real
+            get() = RealField.one
     }
+
+    val eqRealApprox: Eq<Real> = Eqs.realApprox()
+    val eqRealStrict: Eq<Real> = Eq { r1, r2 -> r1 == r2 }
 }

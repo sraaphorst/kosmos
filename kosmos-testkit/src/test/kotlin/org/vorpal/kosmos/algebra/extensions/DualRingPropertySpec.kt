@@ -5,8 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.extensions.render.DualPrintables
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real

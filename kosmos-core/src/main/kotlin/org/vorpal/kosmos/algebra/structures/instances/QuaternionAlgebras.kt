@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexField
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
+import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexField
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
@@ -11,39 +11,29 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexRealVectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.Complex
+import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexRealVectorSpace
+import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.eqComplex
+import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.eqComplexStrict
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.eqRealApprox
+import org.vorpal.kosmos.algebra.structures.instances.base.complex
+import org.vorpal.kosmos.algebra.structures.instances.base.im
+import org.vorpal.kosmos.algebra.structures.instances.base.re
+import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
-import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 import kotlin.isFinite
 
 typealias Quaternion = CD<Complex>
-
-/**
- * The scalar component of the quaternion.
- */
 val Quaternion.w: Real get() = a.re
-
-/**
- * The coefficient of the i term of the quaternion.
- */
 val Quaternion.x: Real get() = a.im
-
-/**
- * The coefficient of the j term of the quaternion.
- */
 val Quaternion.y: Real get() = b.re
-
-/**
- * The coefficient of the k term of the quaternion.
- */
 val Quaternion.z: Real get() = b.im
 
 /**
@@ -51,11 +41,10 @@ val Quaternion.z: Real get() = b.im
  *
  *    complex(w + x i_c), complex(y + z i_c)
  */
-fun quaternion(
-    w: Real,
-    x: Real,
-    y: Real,
-    z: Real
+fun quaternion(w: Real,
+               x: Real,
+               y: Real,
+               z: Real
 ): Quaternion {
     val a = complex(w, x)
     val b = complex(y, z)
@@ -63,9 +52,8 @@ fun quaternion(
 }
 
 object QuaternionAlgebras {
-    private val eqRealApprox = Eqs.realApprox()
 
-    object QuaternionDivisionRingReal :
+    object QuaternionDivisionRing:
         DivisionRing<Quaternion>,
         InvolutiveRing<Quaternion>,
         RealNormedDivisionAlgebra<Quaternion> {
@@ -75,40 +63,45 @@ object QuaternionAlgebras {
 
         override val add = base.add
 
+        // base.mul is a NonAssociativeMonoid: for quaternions, it is actually a monoid and
+        // Ring expects an associative monoid, so we wrap.
         override val mul: Monoid<Quaternion> = Monoid.of(
             identity = base.mul.identity,
             op = base.mul.op
         )
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
-            val n2 = this.normSq(q)
-            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_H}." }
+            val n2 = normSq(q)
+            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) {
+                "Zero has no multiplicative inverse in ${Symbols.BB_H}."
+            }
 
             val qc = conj(q)
             val scale = 1.0 / n2
 
-            // Use the ComplexRealVectorSpace's action to scale.
-            // We could use QuaternionModule, but we fall back to ComplexRealVectorSpace to avoid circular dependencies.
             Quaternion(
                 ComplexRealVectorSpace.leftAction(scale, qc.a),
                 ComplexRealVectorSpace.leftAction(scale, qc.b))
         }
 
-        override fun fromBigInt(n: BigInteger) = base.fromBigInt(n)
-        override val conj = base.conj
+        override fun fromBigInt(n: BigInteger) =
+            base.fromBigInt(n)
+
+        override val conj: Endo<Quaternion> =
+            base.conj
 
         override val normSq: UnaryOp<Quaternion, Real> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
 
         // Disambiguate zero and one.
-        override val zero = base.add.identity
+        override val zero = add.identity
         override val one = mul.identity
     }
 
     // Scalars: Real, act componentwise on (a, b)
-    val QuaternionRealVectorSpace: FiniteVectorSpace<Real, Quaternion> = FiniteVectorSpace.of(
+    val QuaternionVectorSpace: FiniteVectorSpace<Real, Quaternion> = FiniteVectorSpace.of(
         scalars = RealField,
-        add = QuaternionDivisionRingReal.add,
+        add = QuaternionDivisionRing.add,
         dimension = 4,
         leftAction = LeftAction { r, q ->
             Quaternion(
@@ -118,132 +111,79 @@ object QuaternionAlgebras {
         }
     )
 
-    /**
-     * Embed a complex number into ℍ using the subfield ℝ ⊕ ℝ·i.
-     *
-     * * Sends a + b i_C  ↦  a·1 + b·i.
-     *
-     * This embedding is a choice of complex subfield in ℍ (span{1, i}).
-     */
-    val embedCAlongI: RingHomomorphism<Complex, Quaternion> =
-        RingHomomorphism.of(
-            domain = ComplexField,
-            codomain = QuaternionDivisionRingReal,
-        ) { c ->
-            quaternion(c.re, c.im, 0.0, 0.0)
-        }
-    fun Complex.asQuaternionAlongI(): Quaternion = embedCAlongI(this)
+    // -------------------------------------------------------------------------
+    // Complex -> Quaternion embeddings (six unital choices) via ComplexEmbedding
+    // -------------------------------------------------------------------------
+    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
 
     /**
-     * Embed a complex number into ℍ using the subfield ℝ ⊕ ℝ·j.
+     * Return the ring monomorphism embedding ℂ into ℍ determined by [emb].
      *
-     * Sends a + b i_C  ↦  a·1 + b·j.
-     *
-     * This embedding is a choice of complex subfield in ℍ (span{1, j}).
+     * Embed a complex number into ℍ using the subfield `ℝ ⊕ ℝ·i`.
+     * Sends:
+     * ```
+     * a + b i_C  ↦  a·1 + b·u
+     * ```
+     * where u ∈ {±i, ±j, ±k} based on emb.axis and emb.sign.
      */
-    val embedCAlongJ: RingHomomorphism<Complex, Quaternion> =
-        RingHomomorphism.of(
-            domain = ComplexField,
-            codomain = QuaternionDivisionRingReal,
-        ) { c ->
-            quaternion(w = c.re, x = 0.0, y = c.im, z = 0.0)
+    fun complexEmbeddingToQuaternion(
+        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
+        domain = ComplexField,
+        codomain = QuaternionDivisionRing,
+        map = UnaryOp { c ->
+            val a = c.re
+            val b = c.im
+            val s = emb.sign.factor.toDouble()
+
+            when (emb.axis) {
+                AxisSignEmbeddings.ImagAxis.I -> quaternion(a, s * b, 0.0, 0.0)
+                AxisSignEmbeddings.ImagAxis.J -> quaternion(a, 0.0, s * b, 0.0)
+                AxisSignEmbeddings.ImagAxis.K -> quaternion(a, 0.0, 0.0, s * b)
+            }
         }
-    fun Complex.asQuaternionAlongJ(): Quaternion = embedCAlongJ(this)
+    )
 
     /**
-     * Embed a complex number into ℍ using the subfield ℝ ⊕ ℝ·k.
+     * Convenience extension.
      *
-     * Sends a + b i_C  ↦  a·1 + b·k.
-     *
-     * This embedding is a choice of complex subfield in ℍ (span{1, k}).
+     * Canonical default is `i_C ↦ i` (i.e. ComplexEmbedding.CANONICAL).
      */
-    val embedCAlongK: RingHomomorphism<Complex, Quaternion> =
-        RingHomomorphism.of(
-            domain = ComplexField,
-            codomain = QuaternionDivisionRingReal,
-        ) { c ->
-            quaternion(w = c.re, x = 0.0, y = 0.0, z = c.im)
-        }
-    fun Complex.asQuaternionAlongK(): Quaternion = embedCAlongK(this)
+    fun Complex.asQuaternion(
+        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): Quaternion = complexEmbeddingToQuaternion(emb)(this)
 
     /**
-     * The Quaternions can then be a vector space of the Complex numbers using any of the
-     * homomorphisms defined above.
-     *
-     * This satisfies the left-module laws required of vector spaces:
-     *
-     *    (λ + μ) · q = λ · q + μ · q
-     *    λ · (q + r) = λ · q + λ · r
-     *    (λ μ) · q = λ · (μ · q)
-     *    1 · q = q
+     * ℍ as a left ℂ-vector space using the chosen embedding.
      */
-    fun quaternionLeftComplexVectorSpace(embed: RingHomomorphism<Complex, Quaternion>): FiniteVectorSpace<Complex, Quaternion> =
-        FiniteVectorSpace.of(
+    fun quaternionLeftComplexVectorSpace(
+        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): FiniteVectorSpace<Complex, Quaternion> {
+        val embed = complexEmbeddingToQuaternion(emb)
+        return FiniteVectorSpace.of(
             scalars = ComplexField,
-            add = QuaternionDivisionRingReal.add,
+            add = QuaternionDivisionRing.add,
             dimension = 2,
-            LeftAction { c, q -> QuaternionDivisionRingReal.mul(embed(c), q) }
+            leftAction = LeftAction { c, q ->
+                QuaternionDivisionRing.mul(embed(c), q)
+            }
         )
+    }
 
-    val QuaternionLeftComplexVectorSpaceAlongI: FiniteVectorSpace<Complex, Quaternion> =
-        quaternionLeftComplexVectorSpace(embedCAlongI)
+    // Optional convenience vals, replacing the former AlongI/J/K trio.
+    val QuaternionLeftComplexVectorSpaceCanonical: FiniteVectorSpace<Complex, Quaternion> =
+        quaternionLeftComplexVectorSpace(canonicalEmbedding)
 
-    val QuaternionLeftComplexVectorSpaceAlongJ: FiniteVectorSpace<Complex, Quaternion> =
-        quaternionLeftComplexVectorSpace(embedCAlongJ)
-
-    val QuaternionLeftComplexVectorSpaceAlongK: FiniteVectorSpace<Complex, Quaternion> =
-        quaternionLeftComplexVectorSpace(embedCAlongK)
+    // A map from all complex embeddings to the vector space that they generate.
+    val QuaternionLeftComplexVectorSpacesAll: Map<AxisSignEmbeddings.AxisSignEmbedding, FiniteVectorSpace<Complex, Quaternion>> =
+        AxisSignEmbeddings.AxisSignEmbedding.all.associateWith { quaternionLeftComplexVectorSpace(it) }
 
     val QuaternionStarAlgebra: StarAlgebra<Real, Quaternion> = StarAlgebra.of(
         scalars = RealField,
-        involutiveRing = QuaternionDivisionRingReal,
-        leftAction = QuaternionRealVectorSpace.leftAction
+        involutiveRing = QuaternionDivisionRing,
+        leftAction = QuaternionVectorSpace.leftAction
     )
+
+    val eqQuaternionStrict: Eq<Quaternion> = CD.eq(eqComplexStrict)
+    val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)
 }
-
-data class QuaternionBasis(
-    val i: Quaternion,
-    val j: Quaternion,
-    val k: Quaternion
-)
-
-object QuaternionBases {
-    val cdI: Quaternion = Quaternion(ComplexField.i, ComplexField.zero)
-    val cdJ: Quaternion = Quaternion(ComplexField.zero, ComplexField.one)
-    val cdK: Quaternion = Quaternion(ComplexField.zero, ComplexField.i)
-
-    fun basis(
-        quaternions: DivisionRing<Quaternion>,
-        handedness: HyperComplex.Handedness,
-        eq: Eq<Quaternion> = eqQuaternionStrict
-    ): QuaternionBasis {
-        val i = cdI
-        val j = cdJ
-        val k0 = cdK
-
-        val ij = quaternions.mul(i, j)
-
-        val kRight = when {
-            eq(ij, k0) -> k0
-            eq(ij, quaternions.add.inverse(k0)) -> quaternions.add.inverse(k0)
-            else -> error("Sanity failed: i*j not equal to ±k0. CD convention mismatch.")
-        }
-
-        val k = when (handedness) {
-            HyperComplex.Handedness.RIGHT -> kRight
-            HyperComplex.Handedness.LEFT -> quaternions.add.inverse(kRight)
-        }
-
-        return QuaternionBasis(i, j, k)
-    }
-
-    fun quaternionBasisPrintable(
-        handedness: HyperComplex.Handedness,
-        prQ: Printable<Quaternion>
-    ): Printable<QuaternionBasis> = Printable { b ->
-        "⟨i=${prQ(b.i)}, j=${prQ(b.j)}, k=${prQ(b.k)}; handedness=$handedness⟩"
-    }
-}
-
-val eqQuaternionStrict: Eq<Quaternion> = CD.eq(eqComplexStrict)
-val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)

@@ -4,7 +4,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
 import org.vorpal.kosmos.linear.values.Vec2

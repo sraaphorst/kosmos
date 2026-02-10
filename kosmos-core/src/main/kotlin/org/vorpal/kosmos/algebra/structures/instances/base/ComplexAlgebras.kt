@@ -1,5 +1,6 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.algebra.structures.instances.base
 
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
@@ -9,7 +10,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
@@ -25,12 +26,16 @@ val Complex.im: Real get() = b
 fun complex(re: Real, im: Real): Complex = Complex(re, im)
 
 object ComplexAlgebras {
-    private val eqRealApprox = Eqs.realApprox()
-
+    val RealToComplexMonomorphism: RingMonomorphism<Real, Complex> = RingMonomorphism.of(
+        RealField,
+        ComplexField,
+        UnaryOp { r -> complex(r, 0.0 ) }
+    )
     object ComplexField:
         Field<Complex>,
         InvolutiveRing<Complex>,
         RealNormedDivisionAlgebra<Complex> {
+
         private val base: NonAssociativeInvolutiveRing<Complex> =
             CayleyDickson.usual(RealAlgebras.RealStarField)
 
@@ -43,7 +48,7 @@ object ComplexAlgebras {
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
             val n2 = normSq(c)
-            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
+            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
             CD(c.re / n2, -c.im / n2)
         }
 
@@ -71,7 +76,7 @@ object ComplexAlgebras {
         involutiveRing = ComplexField,
         leftAction = ComplexRealVectorSpace.leftAction
     )
-}
 
-val eqComplexStrict: Eq<Complex> = CD.eq(Eqs.realStrict)
-val eqComplex: Eq<Complex> = CD.eq(Eqs.realApprox())
+    val eqComplexStrict: Eq<Complex> = CD.eq(Eqs.realStrict)
+    val eqComplex: Eq<Complex> = CD.eq(Eqs.realApprox())
+}
