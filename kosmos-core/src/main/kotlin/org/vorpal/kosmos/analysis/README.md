@@ -65,7 +65,7 @@ ScalarField <df, X> : V -> F
 This example uses the canonical "Rn" carrier in Kosmos: `DenseVec<Real>`.
 
 ```kotlin
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.analysis.*
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.linear.instances.DenseVectorSpace

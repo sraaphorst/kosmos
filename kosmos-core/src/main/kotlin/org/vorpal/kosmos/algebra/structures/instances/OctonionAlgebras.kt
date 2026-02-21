@@ -14,7 +14,7 @@ import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionVectorSpace
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
@@ -152,11 +152,11 @@ object OctonionAlgebras {
      * - [handedness]: RIGHT uses `φ(i) = e_i`; LEFT uses `φ(i) = -e_i` (flipping orientation).
      * - [kSign]: `+1` if `φ(k) =  e_k`, and `-1` if `φ(k) = -e_k`.
      */
-    data class Spec(val i: Int,
-                    val j: Int,
-                    val k: Int,
-                    val handedness: HyperComplex.Handedness,
-                    val kSign: Int)
+    data class Embedding(val i: Int,
+                         val j: Int,
+                         val k: Int,
+                         val handedness: HyperComplex.Handedness,
+                         val kSign: Int)
 
     /**
      * Construct one of the canonical “basis-unit” embeddings `φ : ℍ ↪ 𝕆` determined by a choice of
@@ -175,7 +175,7 @@ object OctonionAlgebras {
      * {iIndex, jIndex}; the actual image of k is ±e_{kIndex}, where the sign is recorded as [kSign].
      *
      * Returns:
-     * - a [Spec] describing the embedding (including [kSign])
+     * - a [Embedding] describing the embedding (including [kSign])
      * - the corresponding [NonAssociativeRingHomomorphism] ℍ ↪ 𝕆
      *
      * Notes:
@@ -188,7 +188,7 @@ object OctonionAlgebras {
         jIndex: Int,
         handedness: HyperComplex.Handedness,
         eq: Eq<Octonion> = eqOctonionStrict
-    ): Pair<Spec, NonAssociativeRingHomomorphism<Quaternion, Octonion>> {
+    ): Pair<Embedding, NonAssociativeRingHomomorphism<Quaternion, Octonion>> {
         require(iIndex in 1..7) { "iIndex must be in [1, 7], got $iIndex" }
         require(jIndex in 1..7) { "jIndex must be in [1, 7], got $jIndex" }
         require(iIndex != jIndex) { "iIndex and jIndex must be distinct, got $iIndex" }
@@ -228,7 +228,7 @@ object OctonionAlgebras {
             else -> error("Sanity failed: dk is not ±dk")
         }
 
-        val spec = Spec(iIndex, jIndex, kIndex, handedness, kSign)
+        val spec = Embedding(iIndex, jIndex, kIndex, handedness, kSign)
         val ovs = OctonionVectorSpace
         return spec to NonAssociativeRingHomomorphism.of(
             QuaternionDivisionRing,
@@ -250,11 +250,11 @@ object OctonionAlgebras {
      *
      *     Total: 7 * 6 * 2 = 84 embeddings.
      *
-     * The result is keyed by [Spec] so callers can deterministically select an embedding and also
+     * The result is keyed by [Embedding] so callers can deterministically select an embedding and also
      * inspect the induced [kSign]. A duplicate-key check is included as a guard against bugs in
      * enumeration or spec construction.
      */
-    fun allQuaternionEmbeddings(): Map<Spec, NonAssociativeRingHomomorphism<Quaternion, Octonion>> =
+    fun allQuaternionEmbeddings(): Map<Embedding, NonAssociativeRingHomomorphism<Quaternion, Octonion>> =
         buildMap {
             FanoCycles.forEach { line ->
                 line.pairs().forEach { (i, j) ->

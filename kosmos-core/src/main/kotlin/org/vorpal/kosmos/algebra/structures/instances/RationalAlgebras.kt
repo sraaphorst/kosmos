@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.base
+package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
@@ -51,14 +51,11 @@ object RationalAlgebras {
             get() = RationalField.one
     }
 
-    /**
-     * Monomorphism from Z to Rationals.
-     */
     val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
         IntegerAlgebras.ZCommutativeRing,
         RationalField,
         UnaryOp { z -> z.toRational() }
     )
-}
 
-val eqRational: Eq<Rational> = Eqs.rational
+    val eqRational: Eq<Rational> = Eqs.rational
+}

@@ -179,5 +179,8 @@ object HurwitzQuaternionAlgebras {
         }
     )
 
+    val LipschitzToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> =
+        LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToQuaternionMonomorphism
+
     val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq { q1, q2 -> q1 == q2 }
 }

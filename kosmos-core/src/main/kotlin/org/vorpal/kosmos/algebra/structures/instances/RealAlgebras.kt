@@ -1,5 +1,6 @@
-package org.vorpal.kosmos.algebra.structures.instances.base
+package org.vorpal.kosmos.algebra.structures.instances
 
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
@@ -10,9 +11,16 @@ import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
+import java.math.BigInteger
 
+/**
+ * Note: since the map from the Rationals to the Reals is subject to floating point errors,
+ * we do not provide a vector space, monomorphism, or converter.
+ */
 object RealAlgebras {
     val RealField: Field<Real> = Field.of(
         add = AbelianGroup.of(
@@ -47,6 +55,12 @@ object RealAlgebras {
         override val one: Real
             get() = RealField.one
     }
+
+    val ZToRMonomorphism: RingMonomorphism<BigInteger, Real> = RingMonomorphism.of(
+        IntegerAlgebras.ZCommutativeRing,
+        RealField,
+        UnaryOp { z -> z.toReal() }
+    )
 
     val eqRealApprox: Eq<Real> = Eqs.realApprox()
     val eqRealStrict: Eq<Real> = Eq { r1, r2 -> r1 == r2 }

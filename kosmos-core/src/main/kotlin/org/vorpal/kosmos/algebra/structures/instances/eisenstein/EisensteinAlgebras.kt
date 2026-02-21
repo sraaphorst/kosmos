@@ -18,8 +18,8 @@ object EisensteinAlgebras {
         InvolutiveRing<EisensteinInt>,
         HasNormSq<EisensteinInt, BigInteger> {
 
-        override val zero: EisensteinInt = EisensteinInt.zero
-        override val one: EisensteinInt = EisensteinInt.one
+        override val zero: EisensteinInt = EisensteinInt.ZERO
+        override val one: EisensteinInt = EisensteinInt.ONE
 
         override val add: AbelianGroup<EisensteinInt> = AbelianGroup.of(
             identity = zero,

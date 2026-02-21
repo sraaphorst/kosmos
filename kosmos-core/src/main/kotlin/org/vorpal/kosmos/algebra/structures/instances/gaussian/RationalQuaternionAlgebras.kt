@@ -11,14 +11,15 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.Quaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.base.GaussianAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.base.RationalAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.base.eqRational
+import org.vorpal.kosmos.algebra.structures.instances.GaussianAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.eqRational
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.algebra.structures.instances.quaternion
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.gaussian.GaussianInt
 import org.vorpal.kosmos.core.gaussian.GaussianRat
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -109,7 +110,7 @@ object RationalQuaternionAlgebras {
     /**
      * Return the ring monomorphism embedding Gaussian-ℚ into Quaternion-ℚ as determined by [embedding].
      */
-    fun gaussianRatEmbeddingToQuaternion(
+    fun gaussianRatToQuaternionMonomorphism(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
         domain = GaussianAlgebras.GaussianRatField,

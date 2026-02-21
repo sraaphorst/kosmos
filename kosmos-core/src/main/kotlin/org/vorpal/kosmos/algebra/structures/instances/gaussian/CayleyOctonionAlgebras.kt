@@ -1,11 +1,16 @@
 package org.vorpal.kosmos.algebra.structures.instances.gaussian
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
+import org.vorpal.kosmos.algebra.structures.instances.Octonion
+import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.octonion
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
@@ -52,6 +57,21 @@ object CayleyOctonionAlgebras {
                 prod.a.w
             }
     }
+
+    /**
+     * Monomorphism from CayleyOctonions to Octonions.
+     */
+    val CayleyToOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, Octonion> =
+        NonAssociativeRingMonomorphism.of(
+            domain = CayleyOctonionNonAssociativeInvolutiveRing,
+            codomain = OctonionAlgebras.OctonionDivisionAlgebraReal,
+            map = UnaryOp { co ->
+                octonion(
+                    co.w.toReal(),co.x.toReal(),co.y.toReal(),co.z.toReal(),
+                    co.u.toReal(),co.v.toReal(),co.s.toReal(),co.t.toReal()
+                )
+            }
+        )
 
     val eqCayleyOctonion: Eq<CayleyOctonion> = Eq { o1, o2 -> o1 == o2 }
 }

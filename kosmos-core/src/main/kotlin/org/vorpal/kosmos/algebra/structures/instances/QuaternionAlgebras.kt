@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexField
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
@@ -11,15 +10,6 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.base.Complex
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexRealVectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.eqComplex
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.eqComplexStrict
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.eqRealApprox
-import org.vorpal.kosmos.algebra.structures.instances.base.complex
-import org.vorpal.kosmos.algebra.structures.instances.base.im
-import org.vorpal.kosmos.algebra.structures.instances.base.re
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
@@ -59,7 +49,7 @@ object QuaternionAlgebras {
         RealNormedDivisionAlgebra<Quaternion> {
 
         private val base: NonAssociativeInvolutiveRing<Quaternion> =
-            CayleyDickson.usual(ComplexField)
+            CayleyDickson.usual(ComplexAlgebras.ComplexStarAlgebra)
 
         override val add = base.add
 
@@ -72,7 +62,7 @@ object QuaternionAlgebras {
 
         override val reciprocal: Endo<Quaternion> = Endo(Symbols.SLASH) { q ->
             val n2 = normSq(q)
-            require(eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) {
+            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) {
                 "Zero has no multiplicative inverse in ${Symbols.BB_H}."
             }
 
@@ -80,8 +70,8 @@ object QuaternionAlgebras {
             val scale = 1.0 / n2
 
             Quaternion(
-                ComplexRealVectorSpace.leftAction(scale, qc.a),
-                ComplexRealVectorSpace.leftAction(scale, qc.b))
+                ComplexAlgebras.ComplexRealVectorSpace.leftAction(scale, qc.a),
+                ComplexAlgebras.ComplexRealVectorSpace.leftAction(scale, qc.b))
         }
 
         override fun fromBigInt(n: BigInteger) =
@@ -100,20 +90,20 @@ object QuaternionAlgebras {
 
     // Scalars: Real, act componentwise on (a, b)
     val QuaternionVectorSpace: FiniteVectorSpace<Real, Quaternion> = FiniteVectorSpace.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         add = QuaternionDivisionRing.add,
         dimension = 4,
         leftAction = LeftAction { r, q ->
             Quaternion(
-                ComplexRealVectorSpace.leftAction(r, q.a),
-                ComplexRealVectorSpace.leftAction(r, q.b)
+                ComplexAlgebras.ComplexRealVectorSpace.leftAction(r, q.a),
+                ComplexAlgebras.ComplexRealVectorSpace.leftAction(r, q.b)
             )
         }
     )
 
-    // -------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     // Complex -> Quaternion embeddings (six unital choices) via ComplexEmbedding
-    // -------------------------------------------------------------------------
+    // --------------------------------------------------------------------------
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
 
     /**
@@ -129,7 +119,7 @@ object QuaternionAlgebras {
     fun complexEmbeddingToQuaternion(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
-        domain = ComplexField,
+        domain = ComplexAlgebras.ComplexField,
         codomain = QuaternionDivisionRing,
         map = UnaryOp { c ->
             val a = c.re
@@ -161,7 +151,7 @@ object QuaternionAlgebras {
     ): FiniteVectorSpace<Complex, Quaternion> {
         val embed = complexEmbeddingToQuaternion(emb)
         return FiniteVectorSpace.of(
-            scalars = ComplexField,
+            scalars = ComplexAlgebras.ComplexField,
             add = QuaternionDivisionRing.add,
             dimension = 2,
             leftAction = LeftAction { c, q ->
@@ -174,16 +164,16 @@ object QuaternionAlgebras {
     val QuaternionLeftComplexVectorSpaceCanonical: FiniteVectorSpace<Complex, Quaternion> =
         quaternionLeftComplexVectorSpace(canonicalEmbedding)
 
-    // A map from all complex embeddings to the vector space that they generate.
+    // A map of all complex embeddings to the vector space that they generate.
     val QuaternionLeftComplexVectorSpacesAll: Map<AxisSignEmbeddings.AxisSignEmbedding, FiniteVectorSpace<Complex, Quaternion>> =
         AxisSignEmbeddings.AxisSignEmbedding.all.associateWith { quaternionLeftComplexVectorSpace(it) }
 
     val QuaternionStarAlgebra: StarAlgebra<Real, Quaternion> = StarAlgebra.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         involutiveRing = QuaternionDivisionRing,
         leftAction = QuaternionVectorSpace.leftAction
     )
 
-    val eqQuaternionStrict: Eq<Quaternion> = CD.eq(eqComplexStrict)
-    val eqQuaternion: Eq<Quaternion> = CD.eq(eqComplex)
+    val eqQuaternionStrict: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplexStrict)
+    val eqQuaternion: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplex)
 }

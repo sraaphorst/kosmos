@@ -4,7 +4,7 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.BinOp
