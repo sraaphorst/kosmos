@@ -11,7 +11,6 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.Quaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.GaussianAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.eqRational
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
@@ -19,12 +18,13 @@ import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbed
 import org.vorpal.kosmos.algebra.structures.instances.quaternion
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.gaussian.GaussianInt
 import org.vorpal.kosmos.core.gaussian.GaussianRat
+import org.vorpal.kosmos.core.gaussian.GaussianRatAlgebras
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
 typealias RationalQuaternion = CD<GaussianRat>
@@ -57,8 +57,7 @@ object RationalQuaternionAlgebras {
         NormedDivisionAlgebra<Rational, RationalQuaternion> {
 
         internal val base: NonAssociativeInvolutiveRing<RationalQuaternion> =
-            CayleyDickson.usual(GaussianAlgebras.GaussianRatField)
-
+            CayleyDickson.usual(GaussianRatAlgebras.GaussianRatField)
 
         override val add = base.add
 
@@ -73,11 +72,10 @@ object RationalQuaternionAlgebras {
                 "Zero has no multiplicative inverse in ${Symbols.BB_Q}."
             }
 
-            val qc = conj(q)
             val scale = n2.reciprocal()
-
+            val qc = conj(q)
             rationalQuaternion(
-                scale * q.w, scale * q.x, scale * q.y, scale * q.z
+                scale * qc.w, scale * qc.x, scale * qc.y, scale * qc.z
             )
         }
 
@@ -95,7 +93,9 @@ object RationalQuaternionAlgebras {
         override val one = mul.identity
     }
 
-    // Scalars: rationals, act componentwise on (a, b)
+    /**
+     * Scalars: rationals, act componentwise on `(a, b)`.
+     */
     val RationalQuaternionVectorSpace: FiniteVectorSpace<Rational, RationalQuaternion> = FiniteVectorSpace.of(
         scalars = RationalAlgebras.RationalField,
         add = RationalQuaternionDivisionRing.add,
@@ -113,7 +113,7 @@ object RationalQuaternionAlgebras {
     fun gaussianRatToQuaternionMonomorphism(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
-        domain = GaussianAlgebras.GaussianRatField,
+        domain = GaussianRatAlgebras.GaussianRatField,
         codomain = RationalQuaternionDivisionRing,
         map = UnaryOp { z ->
             val s =
@@ -149,6 +149,16 @@ object RationalQuaternionAlgebras {
             quaternion(w, x, y, z)
         }
     )
+
+    val HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> =
+        RingMonomorphism.of(
+            domain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing,
+            codomain = RationalQuaternionDivisionRing,
+            map = UnaryOp { hq -> rationalQuaternion(hq.w, hq.x, hq.y, hq.z) }
+        )
+
+    val LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> =
+        HurwitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToRationalQuaternionMonomorphism
 
     val eqRationalQuaternion: Eq<RationalQuaternion> = Eq { q1, q2 -> q1 == q2}
 }

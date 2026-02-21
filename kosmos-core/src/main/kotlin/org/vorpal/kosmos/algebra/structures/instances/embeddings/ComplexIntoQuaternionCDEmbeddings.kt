@@ -12,6 +12,7 @@ import org.vorpal.kosmos.core.ops.UnaryOp
  * This is genuinely doing something different than what is happening in `QuaternionEmbeddingKits`
  * and is useful when you want to stay inside the Cayley-Dickson tower generically.
  */
+@Deprecated("Use AxisSignEmbeddings and QuaternionEmbeddingKit instead.")
 object ComplexIntoQuaternionCDEmbeddings {
 
     fun <B : Any> embed(
