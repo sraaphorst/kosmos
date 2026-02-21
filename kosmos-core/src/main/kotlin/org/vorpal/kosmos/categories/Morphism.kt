@@ -1,10 +1,6 @@
 package org.vorpal.kosmos.categories
 
-import org.vorpal.kosmos.algebra.structures.Group
-import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.finiteset.FiniteSet
-import org.vorpal.kosmos.core.ops.BinOp
-import org.vorpal.kosmos.core.ops.Endo
 
 /** A general morphism from one type to another. */
 fun interface Morphism<A, B> {

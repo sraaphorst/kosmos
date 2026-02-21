@@ -9,7 +9,7 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.Quaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.base.GaussianAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.GaussianAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.algebra.structures.instances.quaternion

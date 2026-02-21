@@ -3,8 +3,8 @@ package org.vorpal.kosmos.algebra.structures.instances
 import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.eqOctonionStrict
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras.ComplexField
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
+import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexField
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real

@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.base
+package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
@@ -10,7 +10,8 @@ import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.base.RationalAlgebras.RationalField
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.eqRational
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.gaussian.GaussianInt
@@ -123,7 +124,7 @@ object GaussianAlgebras {
      * Ring monomorphism from the rationals to the Gaussian rationals.
      */
     val QtoGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> = RingMonomorphism.of(
-        RationalAlgebras.RationalField,
+        RationalField,
         GaussianRatField,
         UnaryOp { q -> GaussianRat(q, Rational.ZERO) }
     )

@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.base
+package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
@@ -10,9 +10,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras.RealField
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
@@ -26,11 +24,7 @@ val Complex.im: Real get() = b
 fun complex(re: Real, im: Real): Complex = Complex(re, im)
 
 object ComplexAlgebras {
-    val RealToComplexMonomorphism: RingMonomorphism<Real, Complex> = RingMonomorphism.of(
-        RealField,
-        ComplexField,
-        UnaryOp { r -> complex(r, 0.0 ) }
-    )
+
     object ComplexField:
         Field<Complex>,
         InvolutiveRing<Complex>,
@@ -57,7 +51,7 @@ object ComplexAlgebras {
         override val normSq: UnaryOp<Complex, Real> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ c -> mul(c, conj(c)).re }
 
-        // Disambiguate zero.
+        // Disambiguate identities.
         override val zero = base.add.identity
         override val one: Complex = mul.identity
         val i = Complex(0.0, 1.0)
@@ -65,18 +59,29 @@ object ComplexAlgebras {
 
     // Scalars: Real, act componentwise on (a, b)
     val ComplexRealVectorSpace : FiniteVectorSpace<Real, Complex> = FiniteVectorSpace.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         add = ComplexField.add,
         dimension = 2,
         leftAction = LeftAction { r, (a, b) -> complex(r * a, r * b) }
     )
 
     val ComplexStarAlgebra: StarAlgebra<Real, Complex> = StarAlgebra.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         involutiveRing = ComplexField,
         leftAction = ComplexRealVectorSpace.leftAction
     )
 
-    val eqComplexStrict: Eq<Complex> = CD.eq(Eqs.realStrict)
-    val eqComplex: Eq<Complex> = CD.eq(Eqs.realApprox())
+    /** Monomorphisms and type conversions **/
+    val RealToComplexMonomorphism: RingMonomorphism<Real, Complex> = RingMonomorphism.of(
+        RealAlgebras.RealField,
+        ComplexField,
+        UnaryOp { r -> complex(r, 0.0 ) }
+    )
+
+    fun Real.asComplex(): Complex =
+        RealToComplexMonomorphism(this)
+
+    /** EQs **/
+    val eqComplexStrict: Eq<Complex> = CD.eq(RealAlgebras.eqRealStrict)
+    val eqComplex: Eq<Complex> = CD.eq(RealAlgebras.eqRealApprox)
 }

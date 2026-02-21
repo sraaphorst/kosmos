@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.base
+package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
