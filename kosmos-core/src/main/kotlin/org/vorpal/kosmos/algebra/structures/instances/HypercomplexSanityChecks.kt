@@ -27,7 +27,7 @@ fun quaternionCheck() {
     val eqQ = eqQuaternion
 
     // Canonical Cayley–Dickson basis units for ℍ = CD(ℂ)
-    // 1 = (1,0), I = (i_C,0), J = (0,1), K = (0,i_C)
+    // 1 = (1, 0), I = (i_C, 0), J = (0, 1), K = (0, i_C)
     val one = quaternionRing.one
     val negOne = quaternionRing.add.inverse(one)
 
@@ -82,7 +82,7 @@ fun quaternionEmbeddingCheck() {
             if (embedding.sign == AxisSignEmbeddings.Sign.PLUS) axisUnit
             else quaternionRing.add.inverse(axisUnit)
 
-        check(eqQ(image, expected)) { "embed(i_C) mismatch for $embedding: got $image expected $expected" }
+        check(eqQ(image, expected)) { "embed(i_C) mismatch for $embedding: got $image, expected $expected" }
     }
 }
 

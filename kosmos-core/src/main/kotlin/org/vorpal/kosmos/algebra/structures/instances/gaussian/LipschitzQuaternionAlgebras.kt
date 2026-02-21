@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.algebra.structures.instances.gaussian
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
@@ -7,17 +8,21 @@ import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.Quaternion
 import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.GaussianAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.algebra.structures.instances.quaternion
+import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 
 import org.vorpal.kosmos.core.gaussian.GaussianInt
+import org.vorpal.kosmos.core.gaussian.GaussianIntAlgebras
+import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
@@ -50,7 +55,7 @@ object LipschitzQuaternionAlgebras {
         HasNormSq<LipschitzQuaternion, BigInteger> {
 
         internal val base: NonAssociativeInvolutiveRing<LipschitzQuaternion> =
-            CayleyDickson.usual(GaussianAlgebras.GaussianIntRing)
+            CayleyDickson.usual(GaussianIntAlgebras.GaussianIntCommutativeRing)
 
 
         override val add = base.add
@@ -82,6 +87,15 @@ object LipschitzQuaternionAlgebras {
         override val one: LipschitzQuaternion = mul.identity
     }
 
+    object LipschitzQuaternionZModule : ZModule<LipschitzQuaternion> {
+        override val scalars = IntegerAlgebras.ZCommutativeRing
+        override val add = LipschitzQuaternionRing.add
+        override val leftAction: LeftAction<BigInteger, LipschitzQuaternion> =
+            LeftAction(Symbols.TRIANGLE_RIGHT) { n, lq ->
+                lipschitzQuaternion(n * lq.w, n * lq.x, n * lq.y, n * lq.z)
+            }
+    }
+
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
 
     /**
@@ -90,7 +104,7 @@ object LipschitzQuaternionAlgebras {
     fun gaussianIntEmbeddingToQuaternion(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
-        domain = GaussianAlgebras.GaussianIntRing,
+        domain = GaussianIntAlgebras.GaussianIntCommutativeRing,
         codomain = LipschitzQuaternionRing,
         map = UnaryOp { z ->
             QuaternionEmbeddingKit.embedComplexLike(
@@ -104,14 +118,20 @@ object LipschitzQuaternionAlgebras {
         }
     )
 
+    val GaussianIntToLipschitzMonomorphism: NonAssociativeRingMonomorphism<GaussianInt, LipschitzQuaternion> =
+        CayleyDickson.canonicalEmbedding(
+            base = GaussianIntAlgebras.GaussianIntCommutativeRing,
+            doubled = LipschitzQuaternionRing
+        )
+
     val LipschitzQuaternionToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> = RingMonomorphism.of(
         domain = LipschitzQuaternionRing,
         codomain = QuaternionAlgebras.QuaternionDivisionRing,
         map = UnaryOp { lq ->
-            val w = lq.a.re.toDouble()
-            val x = lq.a.im.toDouble()
-            val y = lq.b.re.toDouble()
-            val z = lq.b.im.toDouble()
+            val w = lq.a.re.toReal()
+            val x = lq.a.im.toReal()
+            val y = lq.b.re.toReal()
+            val z = lq.b.im.toReal()
             quaternion(w, x, y, z)
         }
     )

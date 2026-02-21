@@ -4,8 +4,10 @@ package org.vorpal.kosmos.algebra.structures.instances.embeddings
  * Shares the logic that takes a complex-like type:
  * - `GaussianInt`
  * - `GaussianRat`
- * - `Complex<Real>`
+ * - `Complex` (Real)
  * and turns it into a quaternion-type.
+ *
+ * The AxisSignEmbedding is the specification, and the QuaternionEmbeddingKit is the implementation.
  */
 internal object QuaternionEmbeddingKit {
     /**
