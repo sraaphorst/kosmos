@@ -121,18 +121,3 @@ fun <A> FiniteSet.Unordered<A>.powerSet(): FiniteSet.Unordered<FiniteSet.Unorder
         subsetFactory = { elems -> FiniteSet.unordered(elems) },
         outerFactory = { subsets -> FiniteSet.unordered(subsets) }
     )
-
-fun <A: Any> recsize(st: FiniteSet.Ordered<A>) {
-    println("*** SIZE: ${st.size} ***")
-    st.forEach { println(it.toString()) }
-    if (st.size >= 10)
-        return
-    recsize(st.powerSet())
-}
-
-fun main() {
-//    recsize(FiniteSet.ordered<Unit>())
-    val s = FiniteSet.unordered(1, 2, 3, 4)
-    val ps = s.powerSetUnordered()
-    ps.forEach { println(it.toList()) }
-}

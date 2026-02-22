@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.noise
 
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.analysis.ScalarField
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras

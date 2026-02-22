@@ -4,6 +4,9 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 
 object ArbQuaternion {
 

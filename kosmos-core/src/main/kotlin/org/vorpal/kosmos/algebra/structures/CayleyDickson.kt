@@ -1,9 +1,11 @@
 package org.vorpal.kosmos.algebra.structures
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
 /**
@@ -100,5 +102,21 @@ class CayleyDickson<A : Any> private constructor(
             val negOne = base.add.inverse(base.mul.identity)
             return withSigma(base, negOne)
         }
+
+        /**
+         * The universal property of the Cayley-Dickson construction:
+         *
+         * For any `A` and `CD<A>`, the first-slot injection `a ↦ (a, 0)` is a ring monomorphism.
+         *
+         * It belongs with the construction itself, not with any specific instance.
+         */
+        fun <A : Any> canonicalEmbedding(
+            base: NonAssociativeInvolutiveRing<A>,
+            doubled: NonAssociativeInvolutiveRing<CD<A>>
+        ): NonAssociativeRingMonomorphism<A, CD<A>> = NonAssociativeRingMonomorphism.of(
+                base,
+                doubled,
+                UnaryOp { a -> CD(a, base.zero) }
+            )
     }
 }

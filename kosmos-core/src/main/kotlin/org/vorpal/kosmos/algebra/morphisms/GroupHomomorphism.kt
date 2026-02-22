@@ -6,20 +6,16 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
 /**
- * A homomorphism between two [Group]s over carriers [A] and [B].
+ * A homomorphism from ome [Group] over carrier [A] to [B].
  *
- * This extends the concept of a general [Morphism] by carrying witnesses for the domain/codomain group structures.
+ * This extends the concept of a general [Morphism] by carrying witnesses for the domain / codomain group structures.
  *
  * NOTE: This type does not *enforce* the homomorphism laws; it is a certified/witnessed arrow.
  * Law checking is a separate concern (tests / verification helpers).
  */
-interface GroupHomomorphism<A : Any, B : Any> : Morphism<A, B> {
+interface GroupHomomorphism<A : Any, B : Any> : AlgebraHomomorphism<A, B> {
     val domain: Group<A>
     val codomain: Group<B>
-    val map: UnaryOp<A, B>
-
-    override fun apply(a: A): B = map(a)
-    operator fun invoke(a: A): B = map(a)
 
     infix fun <C : Any> andThen(other: GroupHomomorphism<B, C>): GroupHomomorphism<A, C> =
         of(

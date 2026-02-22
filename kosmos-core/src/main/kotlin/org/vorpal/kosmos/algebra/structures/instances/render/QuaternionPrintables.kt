@@ -1,12 +1,12 @@
 package org.vorpal.kosmos.algebra.structures.instances.render
 
-import org.vorpal.kosmos.algebra.structures.instances.Quaternion
-import org.vorpal.kosmos.algebra.structures.instances.w
-import org.vorpal.kosmos.algebra.structures.instances.x
-import org.vorpal.kosmos.algebra.structures.instances.y
-import org.vorpal.kosmos.algebra.structures.instances.z
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.quaternion.w
+import org.vorpal.kosmos.hypercomplex.quaternion.x
+import org.vorpal.kosmos.hypercomplex.quaternion.y
+import org.vorpal.kosmos.hypercomplex.quaternion.z
 
 object QuaternionPrintables {
 

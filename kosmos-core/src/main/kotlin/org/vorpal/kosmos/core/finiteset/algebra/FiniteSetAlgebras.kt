@@ -11,93 +11,95 @@ import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 
-infix fun <A> FiniteSet<A>.meet(other: FiniteSet<A>): FiniteSet<A> =
-    this intersect other
+object FiniteSetAlgebras {
+    infix fun <A> FiniteSet<A>.meet(other: FiniteSet<A>): FiniteSet<A> =
+        this intersect other
 
-/* ---------- Monoids on P(S) ---------- */
+    /* ---------- Monoids on P(S) ---------- */
 
-/**
- * For a finite set S, create the commutative monoid (P(S), ∪) where the identity is Ø.
- */
-fun <A> finiteSetUnionMonoid(): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
-    identity = FiniteSet.of(),
-    op = BinOp(Symbols.SET_UNION) { a, b -> a union b }
-)
+    /**
+     * For a finite set S, create the commutative monoid (P(S), ∪) where the identity is Ø.
+     */
+    fun <A> finiteSetUnionMonoid(): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
+        identity = FiniteSet.of(),
+        op = BinOp(Symbols.SET_UNION) { a, b -> a union b }
+    )
 
-// This intersection operator is used in multiple algebras.
-private fun <A> intersection(fullSet: FiniteSet<A>): BinOp<FiniteSet<A>> =
-    BinOp(Symbols.SET_INTERSECTION) { a, b ->
-        check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
-        check(b.isSubsetOf(fullSet)) { "Set $b is not a subset of $fullSet" }
-        a intersect b
-    }
+    // This intersection operator is used in multiple algebras.
+    private fun <A> intersection(fullSet: FiniteSet<A>): BinOp<FiniteSet<A>> =
+        BinOp(Symbols.SET_INTERSECTION) { a, b ->
+            check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
+            check(b.isSubsetOf(fullSet)) { "Set $b is not a subset of $fullSet" }
+            a intersect b
+        }
 
-/**
- * For a finite set S, create the monoid (P(S), ∩) where the identity is S.
- */
-fun <A> finiteSetIntersectionMonoid(fullSet: FiniteSet<A>): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
-    identity = fullSet,
-    op = intersection(fullSet)
-)
+    /**
+     * For a finite set S, create the monoid (P(S), ∩) where the identity is S.
+     */
+    fun <A> finiteSetIntersectionMonoid(fullSet: FiniteSet<A>): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
+        identity = fullSet,
+        op = intersection(fullSet)
+    )
 
-/** (P(S), Δ, Ø) — every element is its own inverse; characteristic 2. */
-fun <A> finiteSetSymmetricDifferenceAbelianGroup(): AbelianGroup<FiniteSet<A>> = AbelianGroup.of(
-    identity = FiniteSet.of(),
-    op = BinOp(Symbols.SET_SYMM_DIFF) { a, b -> a symmetricDifference b },
-    inverse = Endo(Symbols.NOTHING, Identity())
-)
+    /** (P(S), Δ, Ø) — every element is its own inverse; characteristic 2. */
+    fun <A> finiteSetSymmetricDifferenceAbelianGroup(): AbelianGroup<FiniteSet<A>> = AbelianGroup.of(
+        identity = FiniteSet.of(),
+        op = BinOp(Symbols.SET_SYMM_DIFF) { a, b -> a symmetricDifference b },
+        inverse = Endo(Symbols.NOTHING, Identity())
+    )
 
-/* ---------- Boolean ring on P(S) with 1 = S ---------- */
+    /* ---------- Boolean ring on P(S) with 1 = S ---------- */
 
-/**
- * Boolean ring (P(S), +, ·) with:
- *  - addition  a + b = a Δ b (symmetric difference),
- *  - multiply  a · b = a ∩ b (intersection),
- *  - 0 = Ø, 1 = S.
- *
- * NOTE: requires a fixed universe S so that `1 = S`.
- */
-fun <A> finiteSetBooleanRing(fullSet: FiniteSet<A>): CommutativeRing<FiniteSet<A>> = CommutativeRing.of(
-    add = finiteSetSymmetricDifferenceAbelianGroup(),
-    mul = finiteSetIntersectionMonoid(fullSet)
-)
+    /**
+     * Boolean ring (P(S), +, ·) with:
+     *  - addition: a + b = a Δ b (symmetric difference),
+     *  - multiplication: a · b = a ∩ b (intersection),
+     *  - 0 = Ø, 1 = S.
+     *
+     * NOTE: requires a fixed universe S so that `1 = S`.
+     */
+    fun <A> finiteSetBooleanRing(fullSet: FiniteSet<A>): CommutativeRing<FiniteSet<A>> = CommutativeRing.of(
+        add = finiteSetSymmetricDifferenceAbelianGroup(),
+        mul = finiteSetIntersectionMonoid(fullSet)
+    )
 
-/* ---------- Idempotent semiring (∪, ∩) on P(S) ---------- */
+    /* ---------- Idempotent semiring (∪, ∩) on P(S) ---------- */
 
-/**
- * Semiring with:
- * - addition: union monoid (idempotent)
- * - multiplication: intersection monoid (over universe, idempotent)
- *
- * Distribution works in both directions.
- */
-fun <A> finiteSetUnionIntersectionSemiring(fullSet: FiniteSet<A>): Semiring<FiniteSet<A>> = Semiring.of(
-    add = finiteSetUnionMonoid(),
-    mul = finiteSetIntersectionMonoid(fullSet)
-)
+    /**
+     * Semiring with:
+     * - addition: union monoid (idempotent)
+     * - multiplication: intersection monoid (over universe, idempotent)
+     *
+     * Distribution works in both directions.
+     */
+    fun <A> finiteSetUnionIntersectionSemiring(fullSet: FiniteSet<A>): Semiring<FiniteSet<A>> = Semiring.of(
+        add = finiteSetUnionMonoid(),
+        mul = finiteSetIntersectionMonoid(fullSet)
+    )
 
-/* ---------- Boolean algebra on P(S) ---------- */
+    /* ---------- Boolean algebra on P(S) ---------- */
 
-/**
- * Boolean algebra on P(S):
- *  - bottom = ∅, top = S
- *  - join = ∪, meet = ∩
- *  - not(a) = aᶜ
- *
- * All operations are guarded to remain within the fixed universe S.
- */
-fun <A> finiteSetBooleanAlgebra(fullSet: FiniteSet<A>): BooleanAlgebra<FiniteSet<A>> = BooleanAlgebra.of(
-    join = BinOp(Symbols.SET_UNION) { a, b ->
-        check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
-        check(b.isSubsetOf(fullSet)) { "Set $b is not a subset of $fullSet" }
-        a + b
-    },
-    meet = intersection(fullSet),
-    bottom = FiniteSet.of(),
-    top = fullSet,
-    not = Endo(symbol = Symbols.SET_COMPLEMENT_POST) { a ->
-        check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
-        fullSet - a
-    }
-)
-
+    /**
+     * Boolean algebra on P(S), the power set of a set S:
+     *  - bottom = ∅, top = S
+     *  - join = ∪, meet = ∩
+     *  - not(a) = aᶜ
+     *
+     * All operations are guarded to remain within the fixed universe S, and any element used in the operations
+     * of this algebra / boolean lattice must be a subset of S.
+     */
+    fun <A> finiteSetBooleanAlgebra(fullSet: FiniteSet<A>): BooleanAlgebra<FiniteSet<A>> = BooleanAlgebra.of(
+        join = BinOp(Symbols.SET_UNION) { a, b ->
+            check(a.isSubsetOf(fullSet)) { "Set $a is not a subset of $fullSet" }
+            check(b.isSubsetOf(fullSet)) { "Set $b is not a subset of $fullSet" }
+            a + b
+        },
+        meet = intersection(fullSet),
+        bottom = FiniteSet.of(),
+        top = fullSet,
+        not = Endo(symbol = Symbols.SET_COMPLEMENT_POST) { set ->
+            check(set isSubsetOf fullSet) { "Set $set is not a subset of $fullSet" }
+            fullSet - set
+        }
+    )
+}

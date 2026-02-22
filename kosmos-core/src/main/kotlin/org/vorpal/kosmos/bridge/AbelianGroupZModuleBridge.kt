@@ -2,7 +2,7 @@ package org.vorpal.kosmos.bridge
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.RModule
-import org.vorpal.kosmos.algebra.structures.instances.base.IntegerAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.zTimes
 import org.vorpal.kosmos.core.ops.LeftAction
 import java.math.BigInteger
