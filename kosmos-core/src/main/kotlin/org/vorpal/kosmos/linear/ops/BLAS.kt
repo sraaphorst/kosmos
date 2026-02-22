@@ -1,8 +1,8 @@
 package org.vorpal.kosmos.linear.ops
 
-import org.vorpal.kosmos.algebra.structures.instances.base.Complex
-import org.vorpal.kosmos.algebra.structures.instances.base.ComplexAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec

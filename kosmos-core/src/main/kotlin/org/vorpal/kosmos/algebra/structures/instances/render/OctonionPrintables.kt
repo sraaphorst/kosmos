@@ -1,17 +1,16 @@
 package org.vorpal.kosmos.algebra.structures.instances.render
 
-import org.vorpal.kosmos.algebra.structures.instances.Octonion
-import org.vorpal.kosmos.algebra.structures.instances.s
-import org.vorpal.kosmos.algebra.structures.instances.t
-import org.vorpal.kosmos.algebra.structures.instances.u
-import org.vorpal.kosmos.algebra.structures.instances.v
-import org.vorpal.kosmos.algebra.structures.instances.w
-import org.vorpal.kosmos.algebra.structures.instances.x
-import org.vorpal.kosmos.algebra.structures.instances.y
-import org.vorpal.kosmos.algebra.structures.instances.z
+import org.vorpal.kosmos.hypercomplex.octonion.Octonion
+import org.vorpal.kosmos.hypercomplex.octonion.s
+import org.vorpal.kosmos.hypercomplex.octonion.t
+import org.vorpal.kosmos.hypercomplex.octonion.u
+import org.vorpal.kosmos.hypercomplex.octonion.v
+import org.vorpal.kosmos.hypercomplex.octonion.w
+import org.vorpal.kosmos.hypercomplex.octonion.x
+import org.vorpal.kosmos.hypercomplex.octonion.y
+import org.vorpal.kosmos.hypercomplex.octonion.z
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printable
-import kotlin.math.abs
 
 object OctonionPrintables {
 

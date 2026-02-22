@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.algebra.extensions
 
-import org.vorpal.kosmos.algebra.structures.instances.base.RealAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
 import kotlin.math.abs
 import kotlin.math.cos
