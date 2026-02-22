@@ -1,8 +1,8 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionDivisionRing
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionDivisionRing
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -11,21 +11,18 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.QuaternionVectorSpace
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionVectorSpace
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternionStrict
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.OctonionEmbeddingKit
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.RationalOctonion
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.RationalOctonionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.s
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.t
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.u
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.v
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.w
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.x
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.y
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.z
+import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.w
+import org.vorpal.kosmos.hypercomplex.quaternion.x
+import org.vorpal.kosmos.hypercomplex.quaternion.y
+import org.vorpal.kosmos.hypercomplex.quaternion.z
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -34,27 +31,23 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
-typealias Octonion = CD<Quaternion>
-
-val Octonion.w: Real get() = a.w
-val Octonion.x: Real get() = a.x
-val Octonion.y: Real get() = a.y
-val Octonion.z: Real get() = a.z
-
-val Octonion.u: Real get() = b.w
-val Octonion.v: Real get() = b.x
-val Octonion.s: Real get() = b.y
-val Octonion.t: Real get() = b.z
-
-fun octonion(
-    w: Real, x: Real, y: Real, z: Real,
-    u: Real, v: Real, s: Real, t: Real
-): Octonion {
-    val a = quaternion(w, x, y, z)
-    val b = quaternion(u, v, s, t)
-    return Octonion(a, b)
-}
-
+/**
+ * [OctonionAlgebras] contains the algebraic structures over the [Octonion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [OctonionDivisionAlgebraReal]: the real octonion non-associative division algebra.
+ * - [OctonionVectorSpace]: the eight-dimensional vector space of rational octonions over the reals.
+ * - [OctonionStarAlgebra]: the non-associative star algebra of octonions over the reals.
+ *
+ * We have the following homomorphisms:
+ * - [QuaternionToOctonionMonomorphism]: canonical CD embedding of quaternions into octonions.
+ * - [Quaternion.asOctonion]: convenience extension for the canonical embedding.
+ *
+ * We also have the following [Eq]s:
+ * - [eqOctonionStrict]: strict equality on octonions.
+ * - [eqOctonion]: approximate equality on octonions.
+ */
 object OctonionAlgebras {
 
     /**
@@ -119,16 +112,6 @@ object OctonionAlgebras {
             r * o.u, r * o.v, r * o.s, r * o.t)
         }
     )
-
-    val RationalToOctonionRingMonomorphism: NonAssociativeRingMonomorphism<RationalOctonion, Octonion> =
-        NonAssociativeRingMonomorphism.of(
-            RationalOctonionAlgebras.RationalOctonionNonAssociativeInvolutiveRing,
-            OctonionDivisionAlgebraReal,
-            UnaryOp { qo -> octonion(
-                qo.w.toReal(), qo.x.toReal(), qo.y.toReal(), qo.z.toReal(),
-                qo.u.toReal(), qo.v.toReal(), qo.s.toReal(), qo.t.toReal()
-            ) }
-        )
 
     val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
         scalars = RealField,

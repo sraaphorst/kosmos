@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.core.eisenstein
+package org.vorpal.kosmos.hypercomplex.complex
 
 import java.math.BigInteger
 

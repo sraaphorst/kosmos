@@ -1,46 +1,42 @@
-package org.vorpal.kosmos.algebra.structures.instances.gaussian
+package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.Quaternion
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbeddingKit
-import org.vorpal.kosmos.algebra.structures.instances.quaternion
+import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 
-import org.vorpal.kosmos.core.gaussian.GaussianInt
-import org.vorpal.kosmos.core.gaussian.GaussianIntAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
+import org.vorpal.kosmos.hypercomplex.complex.GaussianIntAlgebras
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
-typealias LipschitzQuaternion = CD<GaussianInt>
-val LipschitzQuaternion.w: BigInteger get() = a.re
-val LipschitzQuaternion.x: BigInteger get() = a.im
-val LipschitzQuaternion.y: BigInteger get() = b.re
-val LipschitzQuaternion.z: BigInteger get() = b.im
-
-fun lipschitzQuaternion(w: BigInteger,
-                        x: BigInteger,
-                        y: BigInteger,
-                        z: BigInteger): LipschitzQuaternion =
-    LipschitzQuaternion(
-        GaussianInt(w, x),
-        GaussianInt(y, z)
-    )
-
+/**
+ * [LipschitzQuaternionAlgebras] contains the algebraic structures over the [LipschitzQuaternion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [LipschitzQuaternionRing]: the Lipschitz quaternions.
+ * - [LipschitzQuaternionZModule]: the two-dimensional vector space of Lipschitz quaternions over the integers.
+ *
+ * We have the following homomorphisms:
+ * - [gaussianIntEmbeddingToQuaternion]: the unital embeddings from the Gaussian integers to the Lipschitz quaternions.
+ * - [LipschitzQuaternionToQuaternionMonomorphism]: a ring homomorphism from the Lipschitz quaternions to the quaternions.
+ *
+ * We also have the following [Eq]s:
+ * - [eqLipschitzQuaternion]: equality on Lipschitz quaternions.
+ */
 object LipschitzQuaternionAlgebras {
 
     /**
@@ -57,13 +53,15 @@ object LipschitzQuaternionAlgebras {
         internal val base: NonAssociativeInvolutiveRing<LipschitzQuaternion> =
             CayleyDickson.usual(GaussianIntAlgebras.GaussianIntCommutativeRing)
 
+        override val zero: LipschitzQuaternion = base.add.identity
+        override val one: LipschitzQuaternion = base.mul.identity
 
         override val add = base.add
 
         // base.mul is a NonAssociativeMonoid: for quaternions, it is actually a monoid and
         // Ring expects an associative monoid, so we wrap.
         override val mul: Monoid<LipschitzQuaternion> = Monoid.of(
-            identity = base.mul.identity,
+            identity = one,
             op = base.mul.op
         )
 
@@ -81,10 +79,6 @@ object LipschitzQuaternionAlgebras {
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { q ->
                 q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z
             }
-
-        // Disambiguate zero and one.
-        override val zero: LipschitzQuaternion = add.identity
-        override val one: LipschitzQuaternion = mul.identity
     }
 
     object LipschitzQuaternionZModule : ZModule<LipschitzQuaternion> {
@@ -117,12 +111,6 @@ object LipschitzQuaternionAlgebras {
             )
         }
     )
-
-    val GaussianIntToLipschitzMonomorphism: NonAssociativeRingMonomorphism<GaussianInt, LipschitzQuaternion> =
-        CayleyDickson.canonicalEmbedding(
-            base = GaussianIntAlgebras.GaussianIntCommutativeRing,
-            doubled = LipschitzQuaternionRing
-        )
 
     val LipschitzQuaternionToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> = RingMonomorphism.of(
         domain = LipschitzQuaternionRing,

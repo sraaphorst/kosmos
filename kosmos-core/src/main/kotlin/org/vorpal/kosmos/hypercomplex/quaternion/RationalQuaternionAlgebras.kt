@@ -1,7 +1,6 @@
-package org.vorpal.kosmos.algebra.structures.instances.gaussian
+package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -9,39 +8,38 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.Quaternion
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.eqRational
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.QuaternionEmbeddingKit
-import org.vorpal.kosmos.algebra.structures.instances.quaternion
+import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.gaussian.GaussianRat
-import org.vorpal.kosmos.core.gaussian.GaussianRatAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.GaussianRat
+import org.vorpal.kosmos.hypercomplex.complex.GaussianRatAlgebras
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
-typealias RationalQuaternion = CD<GaussianRat>
-val RationalQuaternion.w: Rational get() = a.re
-val RationalQuaternion.x: Rational get() = a.im
-val RationalQuaternion.y: Rational get() = b.re
-val RationalQuaternion.z: Rational get() = b.im
-
-fun rationalQuaternion(w: Rational,
-                       x: Rational,
-                       y: Rational,
-                       z: Rational): RationalQuaternion =
-    RationalQuaternion(
-        GaussianRat(w, x),
-        GaussianRat(y, z),
-    )
-
+/**
+ * [RationalQuaternionAlgebras] contains the algebraic structures over the [RationalQuaternion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [RationalQuaternionDivisionRing]: the rational quaternions.
+ * - [RationalQuaternionVectorSpace]: the two-dimensional vector space of rational quaternions over the rationals.
+ *
+ * We have the following homomorphisms:
+ * - [gaussianRatToQuaternionMonomorphism]: a ring monomorphism from [GaussianRat] to [RationalQuaternion].
+ * - [RationalQuaternionToQuaternionMonomorphism]: a ring homomorphism from [RationalQuaternion] to [Quaternion].
+ * - [HurwitzToRationalQuaternionMonomorphism]: a ring homomorphism from [HurwitzQuaternion] to [RationalQuaternion].
+ * - [LipschitzToRationalQuaternionMonomorphism]: a ring homomorphism from [LipschitzQuaternion] to [RationalQuaternion]
+ * (passing through the Hurwitz quaternions).
+ *
+ * We also have the following [Eq]s:
+ * - [eqRationalQuaternion]: equality on rational quaternions.
+ */
 object RationalQuaternionAlgebras {
 
     /**
@@ -59,10 +57,13 @@ object RationalQuaternionAlgebras {
         internal val base: NonAssociativeInvolutiveRing<RationalQuaternion> =
             CayleyDickson.usual(GaussianRatAlgebras.GaussianRatField)
 
+        override val zero = base.add.identity
+        override val one = base.mul.identity
+
         override val add = base.add
 
         override val mul: Monoid<RationalQuaternion> = Monoid.of(
-            identity = base.mul.identity,
+            identity = one,
             op = base.mul.op
         )
 
@@ -87,10 +88,6 @@ object RationalQuaternionAlgebras {
 
         override val normSq: UnaryOp<RationalQuaternion, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
-
-        // Disambiguate zero and one.
-        override val zero = add.identity
-        override val one = mul.identity
     }
 
     /**
@@ -116,23 +113,12 @@ object RationalQuaternionAlgebras {
         domain = GaussianRatAlgebras.GaussianRatField,
         codomain = RationalQuaternionDivisionRing,
         map = UnaryOp { z ->
-            val s =
-                if (embedding.sign == AxisSignEmbeddings.Sign.PLUS) Rational.ONE
-                else -Rational.ONE
-
-            // This can still use the helper if you pass imScaled = s * z.im.
-            val re = z.re
-            val im = s * z.im
-
             QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = AxisSignEmbeddings.AxisSignEmbedding(
-                    axis = embedding.axis,
-                    sign = AxisSignEmbeddings.Sign.PLUS
-                ),
-                re = re,
-                im = im,
+                axisSign = embedding,
+                re = z.re,
+                im = z.im,
                 zero = Rational.ZERO,
-                negate = { -it },
+                negate = Rational::unaryMinus,
                 mkQuaternion = ::rationalQuaternion
             )
         }
@@ -142,11 +128,7 @@ object RationalQuaternionAlgebras {
         domain = RationalQuaternionDivisionRing,
         codomain = QuaternionAlgebras.QuaternionDivisionRing,
         map = UnaryOp { lq ->
-            val w = lq.a.re.toReal()
-            val x = lq.a.im.toReal()
-            val y = lq.b.re.toReal()
-            val z = lq.b.im.toReal()
-            quaternion(w, x, y, z)
+            quaternion(lq.a.re.toReal(), lq.a.im.toReal(), lq.b.re.toReal(), lq.b.im.toReal())
         }
     )
 

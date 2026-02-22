@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.core.eisenstein
+package org.vorpal.kosmos.hypercomplex.complex
 
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
@@ -6,8 +6,6 @@ import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.instances.Complex
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -22,6 +20,21 @@ import org.vorpal.kosmos.linear.values.Vec2
 import java.math.BigInteger
 import kotlin.math.sqrt
 
+/**
+ * [EisensteinIntAlgebras] contains the algebraic structures over the [EisensteinInt] type, as well as the
+ * homomorphisms and [org.vorpal.kosmos.core.Eq] instances.
+ *
+ * These include:
+ * - [EisensteinIntCommutativeRing]: the Eisenstein ring of integers.
+ * - [EisensteinIntLattice]: the lattice of Eisenstein numbers.
+ *
+ * We have the following homomorphisms:
+ * - [EisensteinIntToCHomomorphism]: a ring homomorphism from the Eisenstein ring to the complex field.
+ * - [EisensteinInt.toComplex]: convenience method for this monomorphism.
+ *
+ * We also have the following [org.vorpal.kosmos.core.Eq]s:
+ * - [eqEisensteinInt]: equality on Eisenstein numbers.
+ */
 object EisensteinIntAlgebras {
     private val sqrt3over2 = sqrt(3.0) / 2.0
 
@@ -53,10 +66,6 @@ object EisensteinIntAlgebras {
                 val b = z.b
                 a * a - a * b + b * b
             }
-
-        override val normElement: Endo<EisensteinInt> = Endo(Symbols.NORM) { x ->
-            mul.op(x, conj(x))
-        }
 
         override fun fromBigInt(n: BigInteger): EisensteinInt =
             EisensteinInt(n, BigInteger.ZERO)

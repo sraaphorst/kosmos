@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.embeddings
+package org.vorpal.kosmos.hypercomplex.embeddings
 
 /**
  * Shares the logic that takes a complex-like type:

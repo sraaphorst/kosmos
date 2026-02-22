@@ -1,18 +1,20 @@
-package org.vorpal.kosmos.algebra.structures.instances.gaussian
+package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
-import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
-import org.vorpal.kosmos.algebra.structures.instances.Octonion
-import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.OctonionEmbeddingKit
-import org.vorpal.kosmos.algebra.structures.instances.gaussian.CayleyOctonionAlgebras.CayleyOctonionNonAssociativeInvolutiveRing
-import org.vorpal.kosmos.algebra.structures.instances.octonion
+import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.w
+import org.vorpal.kosmos.hypercomplex.quaternion.x
+import org.vorpal.kosmos.hypercomplex.quaternion.y
+import org.vorpal.kosmos.hypercomplex.quaternion.z
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -21,34 +23,32 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
-typealias RationalOctonion = CD<RationalQuaternion>
-
-val RationalOctonion.w: Rational get() = a.w
-val RationalOctonion.x: Rational get() = a.x
-val RationalOctonion.y: Rational get() = a.y
-val RationalOctonion.z: Rational get() = a.z
-
-val RationalOctonion.u: Rational get() = b.w
-val RationalOctonion.v: Rational get() = b.x
-val RationalOctonion.s: Rational get() = b.y
-val RationalOctonion.t: Rational get() = b.z
-
-fun rationalOctonion(w: Rational, x: Rational, y: Rational, z: Rational,
-                     u: Rational, v: Rational, s: Rational, t: Rational
-): RationalOctonion {
-    val a = rationalQuaternion(w, x, y, z)
-    val b = rationalQuaternion(u, v, s, t)
-    return RationalOctonion(a, b)
-}
-
+/**
+ * [RationalOctonionAlgebras] contains the algebraic structures over the [RationalOctonion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [RationalOctonionNonAssociativeInvolutiveRing]: the rational octonions.
+ * - [RationalOctonionVectorSpace]: the eight-dimensional vector space of rational octonions over the rationals.
+ *
+ * We have the following homomorphisms:
+ * - [CayleyToRationalOctonionMonomorphism]: a ring homomorphism from the Cayley octonions to the rational octonions.
+ * - [LipschitzToRationalOctonionMonomorphism]: a ring homomorphism from the Lipschitz quaternions to the rational octonions.
+ * - [RationalQuaternionToRationalOctonionMonomorphism]: a ring homomorphism from the rational quaternions to the rational octonions.
+ * - [HurwitzToRationalOctonionMonomorphism]: a ring homomorphism from the Hurwitz quaternions to the rational octonions.
+ * - [RationalToOctonionMonomorphism]: a ring homomorphism from the rational octonions to the octonions.
+ *
+ * We also have the following [Eq]s:
+ * - [eqRationalOctonion]: equality on rational octonions.
+ */
 object RationalOctonionAlgebras {
-
-    internal val base =
-        CayleyDickson.usual(RationalQuaternionAlgebras.RationalQuaternionDivisionRing)
 
     object RationalOctonionNonAssociativeInvolutiveRing:
         NonAssociativeInvolutiveRing<RationalOctonion>,
         HasNormSq<RationalOctonion, Rational> {
+
+        internal val base =
+            CayleyDickson.usual(RationalQuaternionAlgebras.RationalQuaternionDivisionRing)
 
         override val add = base.add
         override val mul = base.mul
@@ -96,7 +96,7 @@ object RationalOctonionAlgebras {
      */
     val CayleyToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, RationalOctonion> =
     NonAssociativeRingMonomorphism.of(
-        domain = CayleyOctonionNonAssociativeInvolutiveRing,
+        domain = CayleyOctonionAlgebras.CayleyOctonionNonAssociativeInvolutiveRing,
         codomain = RationalOctonionNonAssociativeInvolutiveRing,
         map = UnaryOp { co ->
             rationalOctonion(

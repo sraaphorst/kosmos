@@ -4,6 +4,9 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
+import org.vorpal.kosmos.hypercomplex.octonion.Octonion
+import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.octonion.octonion
 
 object ArbOctonion {
     private val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal

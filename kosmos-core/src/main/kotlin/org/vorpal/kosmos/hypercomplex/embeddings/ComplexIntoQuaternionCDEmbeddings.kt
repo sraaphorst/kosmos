@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.embeddings
+package org.vorpal.kosmos.hypercomplex.embeddings
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD

@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.hypercomplex.complex
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
@@ -10,6 +10,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -17,12 +18,23 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-typealias Complex = CD<Real>
-
-val Complex.re: Real get() = a
-val Complex.im: Real get() = b
-fun complex(re: Real, im: Real): Complex = Complex(re, im)
-
+/**
+ * [ComplexAlgebras] contains the algebraic structures over the [Complex] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [ComplexField]: a complex field with involution (conjugation).
+ * - [ComplexStarAlgebra]: the complex star algebra.
+ * - [ComplexRealVectorSpace]: the two-dimensional vector space of complex numbers over the real numbers.
+ *
+ * We have the following homomorphisms:
+ * - [RealToComplexMonomorphism]: from the real numbers to the complex numbers.
+ * - [Real.toComplex]: convenience method for this monomorphism.
+ *
+ * We also have the following [Eq]s:
+ * - [eqComplexStrict]: strict equality on complex numbers.
+ * - [eqComplex]: approximate equality on complex numbers.
+ */
 object ComplexAlgebras {
 
     object ComplexField:
@@ -78,7 +90,7 @@ object ComplexAlgebras {
         UnaryOp { r -> complex(r, 0.0 ) }
     )
 
-    fun Real.asComplex(): Complex =
+    fun Real.toComplex(): Complex =
         RealToComplexMonomorphism(this)
 
     /** EQs **/
