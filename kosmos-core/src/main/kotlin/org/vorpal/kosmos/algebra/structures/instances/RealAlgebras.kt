@@ -22,38 +22,43 @@ import java.math.BigInteger
  * we do not provide a vector space, monomorphism, or converter.
  */
 object RealAlgebras {
-    val RealField: Field<Real> = Field.of(
-        add = AbelianGroup.of(
-            identity = 0.0,
+    object RealField: Field<Real> {
+        override val zero: Real = 0.0
+        override val one: Real = 1.0
+
+        override val add: AbelianGroup<Real> = AbelianGroup.of(
+            identity = zero,
             op = BinOp(Symbols.PLUS, Real::plus),
             inverse = Endo(Symbols.MINUS, Real::unaryMinus)
-        ),
-        mul = CommutativeMonoid.of(
-            identity = 1.0,
+        )
+
+        override val mul: CommutativeMonoid<Real> = CommutativeMonoid.of(
+            identity = one,
             op = BinOp(Symbols.ASTERISK, Real::times)
-        ),
-        reciprocal = Endo(Symbols.INVERSE) { x ->
+        )
+
+        override val reciprocal: Endo<Real> = Endo(Symbols.INVERSE) { x ->
             require(eqRealApprox.neqv(x, 0.0) && x.isFinite()) { "0 has no reciprocal." }
             1.0 / x
         }
-    )
+
+        override fun fromBigInt(n: BigInteger): Real =
+            n.toDouble()
+    }
 
     object RealStarField:
         Field<Real> by RealField,
         InvolutiveRing<Real>,
         RealNormedDivisionAlgebra<Real> {
 
+        override val zero: Real = RealField.zero
+        override val one: Real = RealField.one
+
         override val conj: Endo<Real> =
             Endo(Symbols.CONJ, Identity())
 
         override val normSq: Endo<Real> =
             Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
-
-        // Disambiguate zero and one:
-        override val zero: Real
-            get() = RealField.zero
-        override val one: Real
-            get() = RealField.one
     }
 
     val ZToRMonomorphism: RingMonomorphism<BigInteger, Real> = RingMonomorphism.of(

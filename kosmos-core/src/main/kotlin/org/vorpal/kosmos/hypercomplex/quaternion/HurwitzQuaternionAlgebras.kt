@@ -1,67 +1,49 @@
-package org.vorpal.kosmos.algebra.structures.instances.gaussian
+package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.algebra.structures.instances.Quaternion
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.algebra.structures.instances.quaternion
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.bridge.ZModule
+import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.gaussian.GaussianInt
+import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
-/**
- * Hurwitz quaternions are quaternions where the coefficients of 1, i, j, and k are rational numbers,
- * and they must all be:
- * - integers
- * - integers / half-integers with even sum (e.g. 1 + i/2 + k/2)
- */
-data class HurwitzQuaternion(
-    val a: Rational,
-    val b: Rational,
-    val c: Rational,
-    val d: Rational
-) {
-    init {
-        require(isHurwitz(a, b, c, d)) {
-            "Not a Hurwitz quaternion: coordinates must be all integers or all half-integers with even sum"
-        }
-    }
-
-    companion object {
-        // A quaternion (a, b, c, d) is Hurwitz iff:
-        // - 2a, 2b, 2c, 2d are all integers
-        // - 2a = 2b = 2c = 2d (mod 2)
-        fun isHurwitz(a: Rational, b: Rational, c: Rational, d: Rational): Boolean {
-            val doubled = listOf(a, b, c, d).map { it * BigInteger.TWO }
-            if (!doubled.all(Rational::isInteger)) return false
-            val p0 = doubled.first().numerator.mod(BigInteger.TWO)
-            return doubled.all { it.numerator.mod(BigInteger.TWO) == p0 }
-        }
-    }
-}
-
-fun hurwitzQuaternion(w: Rational,
-                      x: Rational,
-                      y: Rational,
-                      z: Rational): HurwitzQuaternion =
-    HurwitzQuaternion(w, x, y, z)
 
 val HurwitzQuaternion.w: Rational get() = a
 val HurwitzQuaternion.x: Rational get() = b
 val HurwitzQuaternion.y: Rational get() = c
 val HurwitzQuaternion.z: Rational get() = d
 
-
+/**
+ * [HurwitzQuaternionAlgebras] contains the algebraic structures over the  [HurwitzQuaternion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [HurwitzQuaternionRing]: the Hurwitz quaternions.
+ *
+ * We have the following homomorphisms:
+ * - [gaussianIntEmbeddingToHurwitz]: the unital embeddings from the Gaussian integers to the Hurwitz quaternions.
+ * - [LipschitzToHurwitzQuaternionMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the Hurwitz
+ * quaternions.
+ * - [HurwitzToQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the quaternions.
+ * - [LipschitzToQuaternionMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the quaternions
+ * (passing through the Hurwitz quaternions).
+ *
+ * We also have the following [Eq]s:
+ * - [eqHurwitzQuaternion]: equality on Hurwitz quaternions.
+ */
 object HurwitzQuaternionAlgebras {
     /**
      * The Hurwitz quaternions are:
@@ -86,31 +68,18 @@ object HurwitzQuaternionAlgebras {
         InvolutiveRing<HurwitzQuaternion>,
         HasNormSq<HurwitzQuaternion, Rational> {
 
-        override val zero: HurwitzQuaternion = HurwitzQuaternion(
-            Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ZERO
-        )
-        override val one: HurwitzQuaternion = HurwitzQuaternion(
-            Rational.ONE, Rational.ZERO, Rational.ZERO, Rational.ZERO
-        )
+        override val zero: HurwitzQuaternion = HurwitzQuaternion.ZERO
+        override val one: HurwitzQuaternion = HurwitzQuaternion.ONE
 
         override val add: AbelianGroup<HurwitzQuaternion> = AbelianGroup.of(
             identity = zero,
-            op = BinOp(Symbols.PLUS) { (w1, x1, y1, z1), (w2, x2, y2, z2) ->
-                HurwitzQuaternion(w1 + w2, x1 + x2, y1 + y2, z1 + z2)
-            },
-            inverse = Endo(Symbols.MINUS) { (w, x, y, z) -> HurwitzQuaternion(-w, -x, -y, -z) }
+            op = BinOp(Symbols.PLUS, HurwitzQuaternion::plus),
+            inverse = Endo(Symbols.MINUS, HurwitzQuaternion::unaryMinus)
         )
 
-        // Multiplication is closed under Hurwitz quaternions.
         override val mul: Monoid<HurwitzQuaternion> = Monoid.of(
             identity = one,
-            op = BinOp(Symbols.ASTERISK) { (w1, x1, y1, z1), (w2, x2, y2, z2) ->
-                val w = w1 * w2 - x1 * x2 - y1 * y2 - z1 * z2
-                val x = w1 * x2 + x1 * w2 + y1 * z2 - z1 * y2
-                val y = w1 * y2 - x1 * z2 + y1 * w2 + z1 * x2
-                val z = w1 * z2 + x1 * y2 - y1 * x2 + z1 * w2
-                HurwitzQuaternion(w, x, y, z)
-            }
+            op = BinOp(Symbols.ASTERISK, HurwitzQuaternion::times)
         )
 
         override fun fromBigInt(n: BigInteger): HurwitzQuaternion =
@@ -130,11 +99,16 @@ object HurwitzQuaternionAlgebras {
         override val normSq: UnaryOp<HurwitzQuaternion, Rational> = UnaryOp(Symbols.NORM_SQ_SYMBOL) {
             (a, b, c, d) -> a * a + b * b + c * c + d * d
         }
+    }
 
-        // This is equivalently (normSq(), 0, 0, 0).
-        override val normElement: Endo<HurwitzQuaternion> = Endo(Symbols.NORM) { q ->
-            mul(q, conj(q))
-        }
+    object HurwitzQuaternionZModule : ZModule<HurwitzQuaternion> {
+        override val scalars = IntegerAlgebras.ZCommutativeRing
+        override val add = HurwitzQuaternionRing.add
+        override val leftAction: LeftAction<BigInteger, HurwitzQuaternion> =
+            LeftAction(Symbols.TRIANGLE_RIGHT) { s, hq ->
+                val sr = s.toRational()
+                HurwitzQuaternion( sr * hq.a, sr * hq.b, sr * hq.c, sr * hq.d)
+            }
     }
 
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
@@ -159,9 +133,9 @@ object HurwitzQuaternionAlgebras {
         RingMonomorphism.of(
             domain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
             codomain = HurwitzQuaternionRing,
-            map = UnaryOp { lq ->
-                hurwitzQuaternion(lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational())
-            }
+            map = UnaryOp { lq -> HurwitzQuaternion(
+                lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational()
+            ) }
         )
 
     /**
@@ -171,11 +145,7 @@ object HurwitzQuaternionAlgebras {
         domain = HurwitzQuaternionRing,
         codomain = QuaternionAlgebras.QuaternionDivisionRing,
         map = UnaryOp { (a, b, c, d) ->
-            val w = a.toReal()
-            val x = b.toReal()
-            val y = c.toReal()
-            val z = d.toReal()
-            quaternion(w, x, y, z)
+            quaternion(a.toReal(), b.toReal(), c.toReal(), d.toReal())
         }
     )
 

@@ -1,11 +1,16 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.hypercomplex
 
-import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras.eqOctonionStrict
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternion
-import org.vorpal.kosmos.algebra.structures.instances.QuaternionAlgebras.eqQuaternionStrict
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras.ComplexField
+import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras.eqOctonionStrict
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternionStrict
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras.ComplexField
+import org.vorpal.kosmos.hypercomplex.octonion.Octonion
+import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.octonion.octonion
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras

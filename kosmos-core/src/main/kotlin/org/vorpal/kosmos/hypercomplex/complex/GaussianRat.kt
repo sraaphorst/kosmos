@@ -1,10 +1,12 @@
-package org.vorpal.kosmos.core.gaussian
+package org.vorpal.kosmos.hypercomplex.complex
 
 import org.vorpal.kosmos.core.rational.Rational
 import java.math.BigInteger
 
 /**
- * The type for a Gaussian rational extension, i.e. a Rational real and imaginary component.
+ * The type for a Gaussian rational extension, i.e. a [Rational] real and imaginary component.
+ *
+ * Note that this could also be generated using `CayleyDickson` on a [RationalStarField].
  */
 data class GaussianRat(val re: Rational, val im: Rational) {
     operator fun plus(other: GaussianRat): GaussianRat = GaussianRat(re + other.re, im + other.im)

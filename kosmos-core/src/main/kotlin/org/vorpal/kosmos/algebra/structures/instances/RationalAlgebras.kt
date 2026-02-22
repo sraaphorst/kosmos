@@ -8,6 +8,7 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -17,38 +18,41 @@ import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
 object RationalAlgebras {
-    val RationalField: Field<Rational> = Field.of(
-        add = AbelianGroup.of(
+
+    object RationalField:
+        Field<Rational> {
+
+        override val add = AbelianGroup.of(
             identity = Rational.ZERO,
             op = BinOp(Symbols.PLUS) { a, b -> a + b },
             inverse = Endo(Symbols.MINUS) { -it }
-        ),
-        mul = CommutativeMonoid.of(
+        )
+        override val mul = CommutativeMonoid.of(
             identity = Rational.ONE,
             op = BinOp(Symbols.ASTERISK) { a, b -> a * b }
-        ),
-        reciprocal = Endo(Symbols.INVERSE) { r ->
+        )
+        override val reciprocal: Endo<Rational> = Endo(Symbols.INVERSE) { r ->
             require(r != Rational.ZERO) { "0 has no reciprocal." }
             r.reciprocal()
         }
-    )
+    }
 
     object RationalStarField :
         Field<Rational> by RationalField,
         InvolutiveRing<Rational>,
         NormedDivisionAlgebra<Rational, Rational> {
 
+        override val zero: Rational = Rational.ZERO
+        override val one: Rational = Rational.ONE
+
         override val conj: Endo<Rational> =
-            Endo(Symbols.CONJ) { it }
+            Endo(Symbols.CONJ, Identity())
 
         override val normSq: UnaryOp<Rational, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
-        override val zero: Rational
-            get() = RationalField.zero
-
-        override val one: Rational
-            get() = RationalField.one
+        override fun fromBigInt(n: BigInteger): Rational =
+            Rational.of(n, BigInteger.ONE)
     }
 
     val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(

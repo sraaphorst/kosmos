@@ -1,8 +1,7 @@
-package org.vorpal.kosmos.algebra.structures.instances.embeddings
+package org.vorpal.kosmos.hypercomplex.embeddings
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
-import org.vorpal.kosmos.algebra.structures.instances.HyperComplex
 import org.vorpal.kosmos.combinatorics.FanoPlane
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -77,7 +76,7 @@ object OctonionEmbeddingKit {
         val i: Int,
         val j: Int,
         val k: Int,
-        val handedness: HyperComplex.Handedness,
+        val handedness: Handedness,
         val kSign: Int
     )
 
@@ -133,7 +132,7 @@ object OctonionEmbeddingKit {
         fun createEmbedding(
             iIndex: Int,
             jIndex: Int,
-            handedness: HyperComplex.Handedness
+            handedness: Handedness
         ): Pair<OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<Q, O>> {
             require(iIndex in 1..7) { "iIndex must be in [1,7], got $iIndex" }
             require(jIndex in 1..7) { "jIndex must be in [1,7], got $jIndex" }
@@ -145,8 +144,8 @@ object OctonionEmbeddingKit {
             val one = basisMap.getValue(0)
             val ei = basisMap.getValue(iIndex)
             val di = when (handedness) {
-                HyperComplex.Handedness.RIGHT -> ei
-                HyperComplex.Handedness.LEFT -> add.inverse(ei)
+                Handedness.RIGHT -> ei
+                Handedness.LEFT -> add.inverse(ei)
             }
             val dj = basisMap.getValue(jIndex)
             val dk = octonionRing.mul(di, dj)
@@ -174,7 +173,7 @@ object OctonionEmbeddingKit {
             buildMap {
                 FanoPlane.lines.forEach { line ->
                     line.orderedPairs.forEach { (i, j) ->
-                        HyperComplex.Handedness.entries.forEach { h ->
+                        Handedness.entries.forEach { h ->
                             val (spec, hom) = createEmbedding(i, j, h)
                             require(spec !in this) { "Duplicate spec: $spec" }
                             put(spec, hom)

@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances.embeddings
+package org.vorpal.kosmos.hypercomplex.embeddings
 
 /**
  * These define the maps from one step before the quaternions (i.e. complex-like types) to the unital embeddings

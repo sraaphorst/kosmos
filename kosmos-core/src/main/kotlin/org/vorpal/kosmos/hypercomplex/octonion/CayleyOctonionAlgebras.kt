@@ -1,15 +1,17 @@
-package org.vorpal.kosmos.algebra.structures.instances.gaussian
+package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.Octonion
-import org.vorpal.kosmos.algebra.structures.instances.OctonionAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.embeddings.OctonionEmbeddingKit
-import org.vorpal.kosmos.algebra.structures.instances.octonion
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.w
+import org.vorpal.kosmos.hypercomplex.quaternion.x
+import org.vorpal.kosmos.hypercomplex.quaternion.y
+import org.vorpal.kosmos.hypercomplex.quaternion.z
+import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
@@ -18,27 +20,21 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
-typealias CayleyOctonion = CD<LipschitzQuaternion>
-
-val CayleyOctonion.w: BigInteger get() = a.w
-val CayleyOctonion.x: BigInteger get() = a.x
-val CayleyOctonion.y: BigInteger get() = a.y
-val CayleyOctonion.z: BigInteger get() = a.z
-
-val CayleyOctonion.u: BigInteger get() = b.w
-val CayleyOctonion.v: BigInteger get() = b.x
-val CayleyOctonion.s: BigInteger get() = b.y
-val CayleyOctonion.t: BigInteger get() = b.z
-
-fun cayleyOctonion(
-    w: BigInteger, x: BigInteger, y: BigInteger, z: BigInteger,
-    u: BigInteger, v: BigInteger, s: BigInteger, t: BigInteger
-): CayleyOctonion {
-    val a = lipschitzQuaternion(w, x, y, z)
-    val b = lipschitzQuaternion(u, v, s, t)
-    return CayleyOctonion(a, b)
-}
-
+/**
+ * [CayleyOctonionAlgebras] contains the algebraic structures over the [CayleyOctonion] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [CayleyOctonionNonAssociativeInvolutiveRing]: the Cayley octonions.
+ * - [CayleyOctonionZModule]: the eight-dimensional vector space of Cayley octonions over the rationals.
+ *
+ * We have the following homomorphisms:
+ * - [LipschitzToCayleyMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the Cayley octonions.
+ * - [CayleyToOctonionMonomorphism]: a ring monomorphism from the Cayley octonions to the octonions.
+ *
+ * We also have the following [Eq]s:
+ * - [eqCayleyOctonion]: equality on Cayley octonions.
+ */
 object CayleyOctonionAlgebras {
 
     // Use CayleyDickson to double the LipschitzQuaternions to get the CayleyOctonions.

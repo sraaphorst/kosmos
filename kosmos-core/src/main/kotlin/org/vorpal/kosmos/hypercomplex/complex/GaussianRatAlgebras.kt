@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.core.gaussian
+package org.vorpal.kosmos.hypercomplex.complex
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
@@ -8,10 +8,7 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.Complex
-import org.vorpal.kosmos.algebra.structures.instances.ComplexAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
-import org.vorpal.kosmos.algebra.structures.instances.complex
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
@@ -21,6 +18,25 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import java.math.BigInteger
 
+/**
+ * [GaussianRatAlgebras] contains the algebraic structures over the [GaussianRat] type, as well as the
+ * homomorphisms and [Eq] instances.
+ *
+ * These include:
+ * - [GaussianRatField]: the Gaussian rationals.
+ * - [GaussianRatStarAlgebra]: the Gaussian star algebra.
+ * - [GaussianRatVectorSpace]: the two-dimensional vector space of Gaussian rationals over the rationals.
+ *
+ * We have the following homomorphisms:
+ * - [QtoGaussianRatMonomorphism]: a ring homomorphism from the rational numbers to the Gaussian rationals.
+ * - [GaussianIntToRatMonomorphism]: a ring homomorphism from the Gaussian integers to the Gaussian rationals.
+ * - [ZToGaussianRatMonomorphism]: a ring homomorphism from the integers to the Gaussian rationals.
+ * - [GaussianRatToComplexMonomorphism]: a ring homomorphism from the Gaussian rationals to the complex numbers.
+ * - [GaussianInt.toGaussianRat]: convenience method for this monomorphism.
+ *
+ * We also have the following [Eq]s:
+ * - [eqGaussianRat]: equality on Gaussian rationals.
+ */
 object GaussianRatAlgebras {
     /**
      * Note that the Gaussian rationals actually form an integral domain and
