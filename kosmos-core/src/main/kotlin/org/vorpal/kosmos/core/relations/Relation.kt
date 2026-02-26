@@ -82,14 +82,14 @@ interface Preorder<A : Any> : Reflexive<A>, Transitive<A>, HasRelation<A> {
 /** Poset: preorder + antisymmetry. */
 interface Poset<A : Any> : Preorder<A>, Antisymmetric<A> {
     val ge: Relation<A>
-        get() = le.converse()
+        get() = le.converse(Symbols.GREATER_THAN)
 
     /** Strict part: a < b  :⇔  a ≤ b ∧ ¬(b ≤ a). */
     val lt: Relation<A>
         get() = Relation(Symbols.LESS_THAN) { a, b -> le(a, b) && !le(b, a) }
 
     val gt: Relation<A>
-        get() = lt.converse()
+        get() = lt.converse(Symbols.GREATER_THAN_EQ)
 
     fun dual(): Poset<A> =
         of(le.converse())

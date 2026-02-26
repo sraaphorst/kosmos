@@ -8,21 +8,21 @@ import org.vorpal.kosmos.core.relations.eqRelation
 import org.vorpal.kosmos.core.relations.ltRelation
 
 object IntRelations {
-    val comparatorInt: Comparator<Int> =
+    val IntComparator: Comparator<Int> =
         Comparator.naturalOrder()
 
-    val ltInt: Relation<Int> =
-        comparatorInt.ltRelation()
+    val IntLT: Relation<Int> =
+        IntComparator.ltRelation()
 
-    val totalStrictInt: TotalStrictOrder<Int> =
-        TotalStrictOrder.of(ltInt)
+    val IntTotalStrict: TotalStrictOrder<Int> =
+        TotalStrictOrder.of(IntLT)
 
-    val eqInt: Relation<Int> =
-        comparatorInt.eqRelation(Symbols.EQUALS)
+    val IntEqByComparator: Relation<Int> =
+        IntComparator.eqRelation(Symbols.EQUALS)
 
-    val leInt: Relation<Int> =
-        totalStrictInt.leFrom(eqInt)
+    val IntLE: Relation<Int> =
+        IntTotalStrict.leFrom(IntEqByComparator)
 
-    val totalInt: TotalOrder<Int> =
-        TotalOrder.of(leInt)
+    val IntTotalOrder: TotalOrder<Int> =
+        TotalOrder.of(IntLE)
 }

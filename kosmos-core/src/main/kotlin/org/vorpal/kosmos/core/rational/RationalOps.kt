@@ -1,6 +1,10 @@
 package org.vorpal.kosmos.core.rational
 
+import org.vorpal.kosmos.core.relations.TotalOrder
+import org.vorpal.kosmos.core.relations.instances.RationalRelations.RationalComparator
+import org.vorpal.kosmos.core.relations.leRelation
 import java.math.BigInteger
+
 
 /** Parse rational from string formats like "3/4", "5", "-2/7" */
 fun String.toRational(): Rational {
@@ -13,6 +17,10 @@ fun String.toRational(): Rational {
         }
         else -> Rational.of(BigInteger(trimmed))
     }
+}
+
+object RationalTotalOrder : TotalOrder<Rational> {
+    override val le = RationalComparator.leRelation()
 }
 
 // Pimp existing types to be able to convert to Rational.

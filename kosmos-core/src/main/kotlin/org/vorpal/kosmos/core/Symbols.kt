@@ -151,6 +151,7 @@ object Symbols {
     const val ARROW_RIGHT = IMPLIES
     const val BOOL_AND = WEDGE
     const val BOOL_OR = VEE
+    const val BOTTOM = FALSE
     const val COMPOSE = OPEN_CIRCLE
     const val DIV_LEFT = BACKSLASH
     const val DIV_RIGHT = SLASH
