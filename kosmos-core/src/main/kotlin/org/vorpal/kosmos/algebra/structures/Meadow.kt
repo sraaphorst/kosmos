@@ -5,9 +5,19 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Endo
 
 /**
- * A Meadow is a commutative ring with unity and with a total inverse operation.
+ * A Meadow is a commutative ring with unity equipped with a *total* inverse operation.
  *
- * Typical model: a field with inv(0) = 0.
+ * Conceptually: a field-like structure where division is totalized by defining `inv(0) = 0`,
+ * while *retaining all commutative ring equations* (in particular `0 * x = 0` still holds).
+ *
+ * Meadows satisfy:
+ * - the reflection law `inv(inv(x)) = x`; and
+ * - the restricted inverse law `x * (x * inv(x)) = x`.
+ *
+ * Note that unlike in a field, where `reciprocal` is used to find the inverse of elements, in a meadow, we distinguish
+ * this inverse operation as `inv` since it is distinct. A field specifically dictates that the reciprocal
+ *
+ * Typical model: take a field and extend reciprocal by setting `inv(0) = 0`.
  */
 interface Meadow<A : Any> : CommutativeRing<A> {
     val inv: Endo<A>

@@ -10,6 +10,9 @@ import org.vorpal.kosmos.core.relations.leRelation
 import org.vorpal.kosmos.core.relations.ltRelation
 
 object RationalRelations {
+    /**
+     * Comparator.naturalOrder() uses Rational.compareTo().
+     */
     val RationalComparator: Comparator<Rational> =
         Comparator.naturalOrder()
 
