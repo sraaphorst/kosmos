@@ -16,21 +16,25 @@ import org.vorpal.kosmos.laws.suiteName
  * - [InvertibilityLaw] for addition
  */
 class RngLaws<A : Any>(
-    private val rng: Rng<A>,
-    private val arb: Arb<A>,
-    private val eq: Eq<A> = Eq.default(),
-    private val pr: Printable<A> = Printable.default()
+    rng: Rng<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
 ): LawSuite {
 
     override val name = suiteName("Rng", rng.add.op.symbol, rng.mul.op.symbol)
 
+    private val hemiringLaws = HemiringLaws(rng, arb, eq, pr)
+    private val invertibilityLaw = InvertibilityLaw(
+        rng.add.op, rng.add.identity, arb, rng.add.inverse.asInverseOrNull(), eq, pr
+    )
+
     private fun structureLaws(): List<TestingLaw> =
-        listOf(InvertibilityLaw(rng.add.op, rng.add.identity, arb, rng.add.inverse.asInverseOrNull(), eq, pr))
+        listOf(invertibilityLaw)
 
     override fun laws(): List<TestingLaw> =
-        HemiringLaws(rng, arb, eq, pr).laws() + structureLaws()
-
+        hemiringLaws.laws() + structureLaws()
 
     override fun fullLaws(): List<TestingLaw> =
-        HemiringLaws(rng, arb, eq, pr).fullLaws() + structureLaws()
+        hemiringLaws.fullLaws() + structureLaws()
 }

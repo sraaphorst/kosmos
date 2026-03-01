@@ -91,6 +91,7 @@ object Symbols {
     const val MINUS_PLUS = "∓"
     const val MINUS_SUB = "₋"
     const val MINUS_SUPER = "⁻"
+    const val MOD = "%"
     const val NABLA = "∇"
     const val NOT = "¬"
     const val NOTHING = ""
@@ -100,6 +101,7 @@ object Symbols {
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
     const val OMEGA = "ω"
+    const val ONE = "1"
     const val OPEN_CIRCLE = "∘"
     const val PARTIAL = "∂"
     const val PHI = "φ"
@@ -146,11 +148,13 @@ object Symbols {
     const val TRUE = "⊤"
     const val VEE = "∨"
     const val WEDGE = "∧"
+    const val ZERO = "0"
 
     // Aliases
     const val ARROW_RIGHT = IMPLIES
     const val BOOL_AND = WEDGE
     const val BOOL_OR = VEE
+    const val BOTTOM = FALSE
     const val COMPOSE = OPEN_CIRCLE
     const val DIV_LEFT = BACKSLASH
     const val DIV_RIGHT = SLASH

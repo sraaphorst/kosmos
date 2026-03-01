@@ -9,7 +9,7 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import java.math.BigInteger
 
 /**
- * The Cayley-Dickson elements: a Pair over the CommutativeRing.
+ * The Cayley-Dickson elements: a Pair over a NonAssociativeInvolutiveRing<A>.
  */
 data class CD<A : Any>(val a: A, val b: A) {
     companion object {
@@ -22,10 +22,10 @@ data class CD<A : Any>(val a: A, val b: A) {
 /**
  * The generic doubling step.
  *
- * It always gives (at least) an NonAssociativeInvolutiveRing<CD<A>>.
+ * It always gives (at least) a NonAssociativeInvolutiveRing<CD<A>>.
  *
  * It doesn't try to decide "this is a Field, this is only a Ring, etc."
- * We will do tha that per stage when we know the algebraic facts by wrapping
+ * We will do that per stage when we know the algebraic facts by wrapping
  * it, e.g., in a Field<Complex>.
  *
  * We include `sigma` here to be able to use the Cayley-Dickson process to build the split versions.
@@ -51,6 +51,11 @@ class CayleyDickson<A : Any> private constructor(
         }
     )
 
+    /**
+     * We only ever use `sigma` via left multiplication.
+     * - If the base is commutative (ℤ, ℚ, ℝ, ℂ, finite fields, etc.), this is never an issue.
+     * - If the base is noncommutative, Cayley–Dickson behaves as expected when `sigma`lies in the center.
+     */
     override val mul: NonAssociativeMonoid<CD<A>> = NonAssociativeMonoid.of(
         identity = CD(base.mul.identity, base.add.identity),
         op = BinOp<CD<A>>(Symbols.ASTERISK) { (a, b), (c, d) ->
@@ -106,7 +111,8 @@ class CayleyDickson<A : Any> private constructor(
         /**
          * The universal property of the Cayley-Dickson construction:
          *
-         * For any `A` and `CD<A>`, the first-slot injection `a ↦ (a, 0)` is a ring monomorphism.
+         * For any `A` and `CD<A>`, the first-slot injection `a ↦ (a, 0)` is a ring monomorphism where 0 is
+         * the additive identity of `A`.
          *
          * It belongs with the construction itself, not with any specific instance.
          */
@@ -116,7 +122,7 @@ class CayleyDickson<A : Any> private constructor(
         ): NonAssociativeRingMonomorphism<A, CD<A>> = NonAssociativeRingMonomorphism.of(
                 base,
                 doubled,
-                UnaryOp { a -> CD(a, base.zero) }
+                UnaryOp { a -> CD(a, base.add.identity) }
             )
     }
 }
