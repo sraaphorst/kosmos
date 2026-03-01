@@ -5,12 +5,12 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import java.math.BigInteger
 
 /**
- * This is similar to Rational, but with support for infinities and a bottom element.
- * WheelZ represents a rational number in the form of n/d, where n and d are BigIntegers.
+ * This is similar to Rational, but with support for an infinity and a bottom element.
+ * WheelZ represents a rational number in the form of `n/d`, where `n` and `d` are BigIntegers.
  * It supports operations like addition, subtraction, multiplication, and division.
- * - infinities are represented as `±1/0`;
- * - zero is represented as 0/1; and
- * - bottom is represented as 0/0.
+ * - infinity is represented as `1/0`;
+ * - zero is represented as `0/1`; and
+ * - bottom is represented as `0/0`.
  *
  * Like Rational. [WheelZ] is converted to reduced form on construction, i.e.:
  * - The numerator and denominator are reduced modulo their greatest common divisor;
@@ -36,7 +36,11 @@ data class WheelZ private constructor(
     val isNegative: Boolean
         get() = n.signum() < 0
 
-    operator fun unaryMinus(): WheelZ = of(n.negate(), d)
+    operator fun unaryMinus(): WheelZ = when {
+        isBottom -> BOTTOM
+        isInfinite -> INF
+        else -> of(n.negate(), d)
+    }
 
     fun inv(): WheelZ =
         if (isBottom) BOTTOM else of(d, n)
@@ -62,8 +66,8 @@ data class WheelZ private constructor(
 
     fun compareToOrNull(other: WheelZ): Int? = when {
         isBottom || other.isBottom -> null
-        isInfinite -> if (other.isInfinite) n.compareTo(other.n) else n.signum()
-        other.isInfinite -> -other.n.signum()
+        isInfinite -> if (other.isInfinite) 0 else 1
+        other.isInfinite -> -1
         else -> (n * other.d).compareTo(other.n * d)
     }
 
@@ -71,7 +75,7 @@ data class WheelZ private constructor(
      * This compareTo will fail if either operand is bottom.
      */
     override fun compareTo(other: WheelZ): Int =
-        compareToOrNull(other) ?: throw IllegalArgumentException("Cannot compare infinite values")
+        compareToOrNull(other) ?: throw IllegalArgumentException("Cannot compare bottom values")
 
     /**
      * Absolute value: finite values use |n|/d, -∞ maps to +∞, and ⊥ stays ⊥.
@@ -93,8 +97,7 @@ data class WheelZ private constructor(
 
     override fun toString(): String = when {
         isBottom -> Symbols.BOTTOM
-        isInfinite && n.signum() > 0 -> Symbols.INFINITY
-        isInfinite && n.signum() < 0 -> "-${Symbols.INFINITY}"
+        isInfinite -> Symbols.INFINITY
         d == BigInteger.ONE -> n.toString()
         else -> "$n/$d"
     }
@@ -103,8 +106,7 @@ data class WheelZ private constructor(
         val BOTTOM = WheelZ(BigInteger.ZERO, BigInteger.ZERO)
         val ZERO = of(BigInteger.ZERO, BigInteger.ONE)
         val ONE = of(BigInteger.ONE, BigInteger.ONE)
-        val POS_INF = of(BigInteger.ONE, BigInteger.ZERO) // 1/0
-        val NEG_INF = of(-BigInteger.ONE, BigInteger.ZERO) // -1/0
+        val INF = of(BigInteger.ONE, BigInteger.ZERO) // 1/0
 
         fun of(n: Int, d: Int): WheelZ =
             of(n.toBigInteger(), d.toBigInteger())
@@ -115,9 +117,7 @@ data class WheelZ private constructor(
 
             // infinities: canonicalize to ±1/0
             if (d == BigInteger.ZERO) {
-                val s = n.signum()
-                val nn = if (s >= 0) BigInteger.ONE else -BigInteger.ONE
-                return WheelZ(nn, BigInteger.ZERO)
+                return WheelZ(BigInteger.ONE, BigInteger.ZERO)
             }
 
             // finite: reduce like Rational, enforce d > 0
@@ -136,10 +136,11 @@ data class WheelZ private constructor(
 }
 
 fun main() {
-    println(WheelZ.ONE / WheelZ.ZERO == WheelZ.POS_INF)
-    println(WheelZ.of(-2, 3) / WheelZ.ZERO == WheelZ.NEG_INF)
+    // All of these should evaluate to true.
+    println(WheelZ.ONE / WheelZ.ZERO == WheelZ.INF)
+    println(WheelZ.of(-2, 3) / WheelZ.ZERO == WheelZ.INF)
     println(WheelZ.ZERO / WheelZ.ZERO == WheelZ.BOTTOM)
-    println(WheelZ.POS_INF + WheelZ.NEG_INF == WheelZ.BOTTOM)
-    println(WheelZ.ZERO * WheelZ.POS_INF == WheelZ.BOTTOM)
-    println(WheelZ.of(5, 2) + WheelZ.POS_INF == WheelZ.POS_INF)
+    println(WheelZ.INF + WheelZ.INF == WheelZ.BOTTOM)
+    println(WheelZ.ZERO * WheelZ.INF == WheelZ.BOTTOM)
+    println(WheelZ.of(5, 2) + WheelZ.INF == WheelZ.INF)
 }

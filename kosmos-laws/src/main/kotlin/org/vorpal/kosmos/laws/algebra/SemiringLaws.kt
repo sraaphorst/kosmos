@@ -23,9 +23,10 @@ class SemiringLaws<A : Any>(
     override val name = suiteName("Semiring", semiring.add.op.symbol, semiring.mul.op.symbol)
 
     private val hemiringLaws = HemiringLaws(semiring, arb, eq, pr)
+    private val identityLaw = IdentityLaw(semiring.mul.op, semiring.mul.identity, arb, eq, pr)
 
     private val structureLaws: List<TestingLaw> =
-        listOf(IdentityLaw(semiring.mul.op, semiring.mul.identity, arb, eq, pr))
+        listOf(identityLaw)
 
     override fun laws(): List<TestingLaw> =
         hemiringLaws.laws() + structureLaws

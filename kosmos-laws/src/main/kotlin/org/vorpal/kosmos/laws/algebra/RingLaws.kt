@@ -24,9 +24,10 @@ class RingLaws<A : Any>(
     override val name = suiteName("Ring", ring.add.op.symbol, ring.mul.op.symbol)
 
     private val rngLaws = RngLaws(ring, arb, eq, pr)
+    private val identityLaw = IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr)
 
     private val structureLaws: List<TestingLaw> =
-        listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
+        listOf(identityLaw)
 
     override fun laws(): List<TestingLaw> =
         rngLaws.laws() + structureLaws

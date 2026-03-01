@@ -146,6 +146,10 @@ interface TotalOrder<A : Any> : Poset<A>, Connex<A> {
 
         fun <A : Any> of(comparator: Comparator<A>): TotalOrder<A> =
             of(comparator.leRelation())
+
+        /** Returns the natural total order for a Comparable type. */
+        fun <C : Comparable<C>> naturalOrder(): TotalOrder<C> =
+            of(kotlin.comparisons.naturalOrder())
     }
 }
 
@@ -174,6 +178,16 @@ interface StrictOrder<A : Any> : HasStrictRelation<A>, TransitiveStrict<A>, Irre
             object : StrictOrder<A> {
                 override val lt = lt
             }
+
+        fun <A : Any> of(comparator: Comparator<A>): StrictOrder<A> =
+            of(comparator.ltRelation())
+
+        /**
+         * If the naturalOrder for a type is used, we require that the type has a strict order defined on it.
+         * If the order is not strict, law tests will fail.
+         */
+        fun <C : Comparable<C>> naturalOrder(): StrictOrder<C> =
+            of(kotlin.comparisons.naturalOrder())
     }
 }
 

@@ -1,36 +1,40 @@
-package org.vorpal.kosmos.org.vorpal.kosmos.laws.algebra
+package org.vorpal.kosmos.laws.algebra
 
-import org.vorpal.kosmos.algebra.structures.WheelInf
+import io.kotest.property.Arb
+import org.vorpal.kosmos.algebra.structures.Wheel
+import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.property.InvolutionLaw
+import org.vorpal.kosmos.laws.suiteName
 
 /**
- * [WheelInf] law suite (this instance has ⊥ and ±∞):
- *
- * Structure laws:
- * - Abelian group laws on add (for non-bottom arithmetic; ⊥ is handled by extra laws below)
- * - Commutative monoid laws on mul
- * - Involution law on `inv`: `inv(inv(x)) = x`
- *
- * Bottom / nullity behavior:
- * - `inv(⊥) = ⊥`
- * - `⊥` is absorbing for both operations (tested via [AnnihilationLaw]):
- *   `⊥ + x = ⊥` and `x + ⊥ = ⊥`
- *   `⊥ * x = ⊥` and `x * ⊥ = ⊥`
- *
- * Infinity behavior (WheelZ policy: infinities are ±1/0, bottom is 0/0):
- * - `inv(0) = +∞` (since `inv(0/1) = 1/0)
- * - `inv(+∞) = 0`, and `inv(-∞) = 0`
- * - `(+∞) + (+∞) = +∞`, and `(-∞) + (-∞) = -∞`
- * - `(+∞) + (-∞) = ⊥` (equivalently: `(+∞) - (+∞)` = ⊥ and `(-∞) - (-∞) = ⊥`)
- * - `0 * (+∞) = ⊥` and `0 * (-∞) = ⊥`
- *
- * Notes:
- * - Wheels are ring-like but not rings: identities such as `0 * x = 0` do not hold globally once
- *   infinities / nullity are present.
- *   [oai_citation:2‡Cambridge University Press & Assessment](https://www.cambridge.org/core/journals/mathematical-structures-in-computer-science/article/wheels-on-division-by-zero/183248B486FBFAF27E8AE3EE1EEA4717?utm_source=chatgpt.com)
- * - The “annihilation” laws here are really “absorbing element” laws; wheels use a designated
- *   nullity element (often `0/0`) that propagates through operations.
- *   [oai_citation:3‡Mathematics Stack Exchange](https://math.stackexchange.com/questions/3003703/what-are-the-mathematical-properties-of-%E2%8A%A5-in-wheel-theory?utm_source=chatgpt.com)
+ * [Wheel] laws:
+ * - [CommutativeMonoidLaws] on add
+ * - [CommutativeMonoidLaws] on mul
+ * -[InvolutionLaw] on inv
  */
-class WheelLaws<A : Any> {
-    val wheel: WheelInf<A>,
+class WheelLaws<A : Any>(
+    wheel: Wheel<A>,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default()
+): LawSuite {
+    override val name = suiteName(
+        "Wheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
+    )
+
+    private val addMonoidLaws = CommutativeMonoidLaws(wheel.add, arb, eq, pr)
+    private val mulMonoidLaws = CommutativeMonoidLaws(wheel.mul, arb, eq, pr)
+    private val involutionLaw = InvolutionLaw(wheel.inv, arb, eq, pr)
+
+    private val structureLaws: List<TestingLaw> =
+        listOf(involutionLaw)
+
+    override fun laws(): List<TestingLaw> =
+        addMonoidLaws.laws() + mulMonoidLaws.laws() + structureLaws
+
+    override fun fullLaws(): List<TestingLaw> =
+        addMonoidLaws.fullLaws() + mulMonoidLaws.fullLaws() + structureLaws
 }
