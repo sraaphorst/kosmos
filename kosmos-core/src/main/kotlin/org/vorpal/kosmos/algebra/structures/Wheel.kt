@@ -48,6 +48,8 @@ interface Wheel<A : Any> {
  * - `inv(0)` is typically [inf] (since `inv(0/1) = 1/0` in the fraction picture).
  * - `inv(inf)` is typically `0`.
  * - `inf + inf`, `inf - inf`, `0 * inf`, `inf * 0`, and `inf / inf` are typically **bottom**.
+ * - We cannot specifically test `inf - inf` in the wheel test suite since we do not have an additive
+ *   inverse / subtraction operation.
  * - `inf * inf = inf`
  * - These are not compatible with ring identity laws, which is why the [Wheel] is not a ring.
  *
