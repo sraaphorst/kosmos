@@ -141,7 +141,7 @@ fun Iterable<BigInteger>.lcm(): BigInteger =
 /**
  * Result of extended Euclidean algorithm: a*x + b*y = gcd(a,b)
  */
-sealed class GcdResult<T>(val gcd: T, val x: T, val a: T, val y: T, val b: T) {
+abstract class GcdResult<T>(val gcd: T, val x: T, val a: T, val y: T, val b: T) {
 
     protected abstract fun equals(a: T, b: T): Boolean
     protected abstract fun multiply(a: T, b: T): T

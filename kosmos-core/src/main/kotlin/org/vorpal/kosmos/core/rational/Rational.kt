@@ -50,7 +50,8 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
         if (exp >= 0) of(n.pow(exp), d.pow(exp)) else reciprocal().pow(-exp)
 
     // To be able to implement Comparable<Rational>.
-    override operator fun compareTo(other: Rational): Int = (n * other.d).compareTo(other.n * d)
+    override operator fun compareTo(other: Rational): Int =
+        (n * other.d).compareTo(other.n * d)
 
     override fun toString(): String =
         if (d == BigInteger.ONE) n.toString()

@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.core.relations.instances
 
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.relations.Relation
@@ -20,8 +21,7 @@ object RealRelations {
         a.compareTo(b)
     }
 
-    val RealLT: Relation<Real> =
-        RealComparator.ltRelation()
+    val RealLT: Relation<Real> = RealComparator.ltRelation()
 
     val RealStrictOrder: StrictOrder<Real> =
         StrictOrder.of(RealLT)
@@ -32,9 +32,18 @@ object RealRelations {
     val RealTotalStrictOrder: TotalStrictOrder<Real> =
         TotalStrictOrder.of(RealLT)
 
-    val RealEqByComparator: Relation<Real> =
-        Relation(Symbols.APPROX) { a, b -> RealComparator.compare(a, b) == 0 }
+    val RealEqApprox: Relation<Real> =
+        Relation(Symbols.APPROX) { a, b -> RealAlgebras.eqRealApprox(a, b) }
+
+    val RealEqRelation: Relation<Real> =
+        Relation(Symbols.EQUALS) { a, b -> RealComparator.compare(a, b) == 0 }
 
     val RealLE: Relation<Real> =
-        RealStrictOrder.leFrom(RealEqByComparator)
+        RealStrictOrder.leFrom(RealEqRelation)
+
+    val RealGT: Relation<Real> =
+        RealTotalOrder.gt
+
+    val RealGE: Relation<Real> =
+        RealTotalOrder.ge
 }
