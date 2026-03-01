@@ -11,12 +11,15 @@ import org.vorpal.kosmos.core.ops.Endo
  * Operations propagate nullity, and some ring identities are not valid globally; in particular,
  * `0 * x` need not equal 0 (e.g. `0 * (1/0)` can become nullity).
  *
- * Wheels are therefore not simply commutative rings with an inverse: they are a different equational
+ * Wheels are therefore not simply commutative rings with inverse: they are a different equational
  * theory designed so that division/inversion is total while retaining information about invalid
  * expressions rather than erasing it.
+ *
+ * Additionally, an infinite-like value exists (1/0), but is not specifically named in the algebra:
+ * hence, the main focus is on the [CarlstromWheel] model below.
  */
 interface Wheel<A : Any> {
-    val add: AbelianGroup<A>
+    val add: CommutativeMonoid<A>
     val mul: CommutativeMonoid<A>
     val inv: Endo<A>
 
@@ -26,7 +29,8 @@ interface Wheel<A : Any> {
 }
 
 /**
- * A [WheelInf] is a wheel (a total-division algebra) that *distinguishes infinities* in addition to nullity.
+ * A [CarlstromWheel] (named after Carlström) is a wheel (a total-division algebra) that
+ * *distinguishes infinity* in addition to nullity.
  *
  * # Intuition
  * This is the "fraction model with a memory for explosions":
@@ -35,34 +39,38 @@ interface Wheel<A : Any> {
  * - Division / inversion is *total*: `inv(x)` is defined for every `x`.
  * - There is a distinguished **bottom / nullity** element (typically corresponding to `0/0`) that represents
  *   an undefined result and tends to propagate through operations.
- * - In addition, the structure contains two **infinite-like** elements:
- *   - [posInf] (typically `1/0`)
- *   - [negInf] (typically `-1/0`)
+ * - In addition, the structure contains an **infinite-like** element:
+ *   - [inf] (typically `1/0`)
  *
  * Unlike a meadow, a wheel does *not* totalize division by forcing `inv(0) = 0`. Instead, it keeps track of
  * what went wrong:
  *
- * - `inv(0)` is typically [posInf] (since `inv(0/1) = 1/0` in the fraction picture).
- * - `inv(posInf)` is typically `0`.
- * - `posInf + negInf` is typically **bottom** (think: `1/0 + (-1)/0 = 0/0`).
- * - `0 * posInf` may be **bottom** (so the ring identity `0 * x = 0` is not valid globally).
+ * - `inv(0)` is typically [inf] (since `inv(0/1) = 1/0` in the fraction picture).
+ * - `inv(inf)` is typically `0`.
+ * - `inf + inf`, `inf - inf`, `0 * inf`, `inf * 0`, and `inf / inf` are typically **bottom**.
+ * - `inf * inf = inf`
+ * - These are not compatible with ring identity laws, which is why the [Wheel] is not a ring.
  *
  * # Why this is not a CommutativeRing
- * Wheels intentionally allow some familiar ring identities to fail in the presence of infinities/nullity.
- * In particular, multiplication is still a commutative monoid, and addition is still an abelian group,
- * but distributivity / annihilation-by-zero behavior may not hold universally once infinities and nullity
+ * Wheels intentionally allow some familiar ring identities to fail in the presence of infinity / nullity.
+ * In particular, addition and multiplication are still commutative monoids,
+ * but distributivity / annihilation-by-zero behavior may not hold universally once infinity and nullity
  * participate.
  *
  * # Typical model
  * A common concrete model is "fractions with zero denominators allowed":
  *
  * - finite values: `n/d` with `d != 0` (reduced)
- * - infinities: `±1/0`
+ * - infinity: `±1/0`
  * - bottom/nullity: `0/0`
  *
  * with `inv(n/d) = d/n` and bottom propagation.
+ *
+ * References:
+ * - J. Carlström, “Wheels – on division by zero,” Math. Struct. Comput. Sci. 14(1):143–184, 2004. doi:10.1017/S0960129503004110.
+ * - J. Carlström, “Wheels — On Division by Zero,” Research Reports in Mathematics 2001:11, Stockholm Univ., 2001 (PDF).
+ * - https://en.wikipedia.org/wiki/Wheel_(mathematics)
  */
-interface WheelInf<A : Any> : Wheel<A> {
-    val posInf: A
-    val negInf: A
+interface CarlstromWheel<A : Any> : Wheel<A> {
+    val inf: A
 }

@@ -8,7 +8,7 @@ import java.math.BigInteger
 /**
  * A semiring polynomial scope: provides + and * for Poly<A>, plus embedding A -> Poly<A>.
  *
- * This scope is intentionally "thin": it is a Kotlin-operator façade over your BinOp-based structures.
+ * This scope is intentionally "thin": it is a Kotlin-operator façade over the BinOp-based structures.
  */
 open class PolyScope<A : Any>(
     val kit: PolyKit<A>

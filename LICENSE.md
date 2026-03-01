@@ -1,4 +1,7 @@
-Copyright (c) 2025 Sebastian Raaphorst
+BSD 3-Clause License
+
+Kosmos
+Copyright (c) 2025-2026, Sebastian Raaphorst
 
 Redistribution and use in source and binary forms, with or without modification, are permitted provided that the
 following conditions are met:
