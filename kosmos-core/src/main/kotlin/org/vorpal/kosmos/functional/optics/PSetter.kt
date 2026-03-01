@@ -173,7 +173,7 @@ data class PSetter<S, T, A, B>(
      * val inner: PSetter<Middle, Middle, Inner, Inner> = ...
      * val composed = outer andThen inner
      *
-     * composed.modify(outerValue) { it.transform() }
+     * composed.modify(outerValue) { transform(it) }
      * ```
      */
     infix fun <C, D> andThen(other: PSetter<A, B, C, D>): PSetter<S, T, C, D> =

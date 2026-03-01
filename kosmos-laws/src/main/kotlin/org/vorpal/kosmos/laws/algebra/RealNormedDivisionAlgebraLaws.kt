@@ -73,7 +73,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
             checkAll(arb) { a ->
                 val nSq = algebra.normSq(a)
                 val n = algebra.norm(a)
-                val computed = RealAlgebras.RealField.mul.op(n, n)
+                val computed = RealAlgebras.RealField.mul(n, n)
                 val expected = max(0.0, nSq)
 
                 check(eqReal(computed, expected)) {

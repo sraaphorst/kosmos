@@ -12,23 +12,23 @@ fun <L : Any, R : Any> iorSemigroup(
     override val op: BinOp<Ior<L, R>> = BinOp { a, b ->
         when (a) {
             is Ior.Left -> when (b) {
-                is Ior.Left -> Ior.Left(left.op(a.value, b.value))
+                is Ior.Left -> Ior.Left(left(a.value, b.value))
                 is Ior.Right -> Ior.Both(a.value, b.value)
-                is Ior.Both -> Ior.Both(left.op(a.value, b.first), b.second)
+                is Ior.Both -> Ior.Both(left(a.value, b.first), b.second)
             }
 
             is Ior.Right -> when (b) {
                 is Ior.Left -> Ior.Both(b.value, a.value)
-                is Ior.Right -> Ior.Right(right.op(a.value, b.value))
-                is Ior.Both -> Ior.Both(b.first, right.op(a.value, b.second))
+                is Ior.Right -> Ior.Right(right(a.value, b.value))
+                is Ior.Both -> Ior.Both(b.first, right(a.value, b.second))
             }
 
             is Ior.Both -> when (b) {
-                is Ior.Left -> Ior.Both(left.op(a.first, b.value), a.second)
-                is Ior.Right -> Ior.Both(a.first, right.op(a.second, b.value))
+                is Ior.Left -> Ior.Both(left(a.first, b.value), a.second)
+                is Ior.Right -> Ior.Both(a.first, right(a.second, b.value))
                 is Ior.Both -> Ior.Both(
-                    left.op(a.first, b.first),
-                    right.op(a.second, b.second)
+                    left(a.first, b.first),
+                    right(a.second, b.second)
                 )
             }
         }
