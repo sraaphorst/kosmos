@@ -28,5 +28,5 @@ interface ZLattice<V : Any> {
     fun embed(coeffs: List<BigInteger>): V =
         coeffs
             .zip(basis)
-            .fold(addV.identity) { acc, (z, b) -> addV.op(acc, scale(z, b)) }
+            .fold(addV.identity) { acc, (z, b) -> addV(acc, scale(z, b)) }
 }

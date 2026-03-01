@@ -80,7 +80,7 @@ fun <K, V> mapEq(eqK: Eq<K>, eqV: Eq<V>): Eq<Map<K, V>> =
 
         ma.entries.all { (ka, va) ->
             val hit = findKeyLike(ka, mb) ?: return@all false
-            eqV.eqv(va, hit.value)
+            eqV(va, hit.value)
         } && mb.entries.all { (kb, vb) ->
             val hit = ma.entries.firstOrNull { (k, _) -> eqK(k, kb) } ?: return@all false
             eqV(hit.value, vb)

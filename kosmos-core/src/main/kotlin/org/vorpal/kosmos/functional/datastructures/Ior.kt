@@ -350,12 +350,12 @@ object Iors {
             }
             return when (val head = f(iter.next())) {
                 is Ior.Left -> {
-                    val newB = b?.let { semigroup.op(b, head.value)} ?: head.value
+                    val newB = b?.let { semigroup(b, head.value)} ?: head.value
                     aux(iter, newB, cs)
                 }
                 is Ior.Right -> aux(iter, b, cs.apply { add(head.value) })
                 is Ior.Both -> {
-                    val newB = b?.let { semigroup.op(b, head.first)} ?: head.first
+                    val newB = b?.let { semigroup(b, head.first)} ?: head.first
                     aux(iter, newB, cs.apply { add(head.second) })
                 }
             }

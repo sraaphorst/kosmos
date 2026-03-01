@@ -172,13 +172,6 @@ class DualRingPropertySpec : FunSpec({
             }
         }
 
-        test("addition via op matches invoke") {
-            checkAll(arbDual(), arbDual()) { d1, d2 ->
-                val viaInvoke = add(d1, d2)
-                val viaOp = add.op(d1, d2)
-                viaInvoke shouldBeApproximately viaOp
-            }
-        }
     }
 
     // ------------------------------------------------------------------------
@@ -234,13 +227,6 @@ class DualRingPropertySpec : FunSpec({
             }
         }
 
-        test("multiplication via op matches invoke") {
-            checkAll(arbDual(), arbDual()) { d1, d2 ->
-                val viaInvoke = mul(d1, d2)
-                val viaOp = mul.op(d1, d2)
-                viaInvoke shouldBeApproximately viaOp
-            }
-        }
     }
 
     // ------------------------------------------------------------------------
