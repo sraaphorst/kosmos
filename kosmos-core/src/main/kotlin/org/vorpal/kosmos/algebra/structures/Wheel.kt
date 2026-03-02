@@ -70,7 +70,7 @@ interface Wheel<A : Any> {
  *
  * References:
  * - J. Carlström, “Wheels – on division by zero,” Math. Struct. Comput. Sci. 14(1):143–184, 2004. doi:10.1017/S0960129503004110.
- * - J. Carlström, “Wheels — On Division by Zero,” Research Reports in Mathematics 2001:11, Stockholm Univ., 2001 (PDF).
+ * - J. Carlström, “Wheels - On Division by Zero,” Research Reports in Mathematics 2001:11, Stockholm Univ., 2001 (PDF).
  * - https://en.wikipedia.org/wiki/Wheel_(mathematics)
  */
 interface CarlstromWheel<A : Any> : Wheel<A> {
