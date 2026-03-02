@@ -7,7 +7,9 @@ import kotlin.math.atan
 import kotlin.math.cos
 import kotlin.math.cosh
 import kotlin.math.exp
+import kotlin.math.expm1
 import kotlin.math.ln
+import kotlin.math.ln1p
 import kotlin.math.sin
 import kotlin.math.sinh
 import kotlin.math.sqrt
@@ -35,7 +37,11 @@ object DualRealFns {
 
     fun tan(x: Dual<Real>): Dual<Real> {
         val ca = cos(x.a)
+
+        if (x.b != 0.0) require(ca != 0.0) { "tan derivative undefined when cos(a)=0, got a=${x.a}" }
+
         val sec2 = 1.0 / (ca * ca)
+
         return Dual(
             a = tan(x.a),
             b = x.b * sec2,
@@ -44,33 +50,61 @@ object DualRealFns {
 
     fun exp(x: Dual<Real>): Dual<Real> {
         val ea = exp(x.a)
+
         return Dual(
             a = ea,
             b = x.b * ea,
         )
     }
 
+    fun expm1(x: Dual<Real>): Dual<Real> {
+        val ea = exp(x.a)
+        return Dual(
+            a = expm1(x.a),
+            b = x.b * ea,
+        )
+    }
+
     fun log(x: Dual<Real>): Dual<Real> {
         require(x.a > 0.0) { "log requires positive real part, got ${x.a}" }
+
         return Dual(
             a = ln(x.a),
             b = x.b / x.a,
         )
     }
 
+    fun log1p(x: Dual<Real>): Dual<Real> {
+        require(x.a > -1.0) { "log1p requires real part > -1, got ${x.a}" }
+
+        return Dual(
+            a = ln1p(x.a),
+            b = x.b / (1.0 + x.a),
+        )
+    }
+
     fun sqrt(x: Dual<Real>): Dual<Real> {
         require(x.a >= 0.0) { "sqrt requires nonnegative real part, got ${x.a}" }
+
+        if (x.b != 0.0) require(x.a > 0.0) { "sqrt derivative undefined at a=0 unless b=0" }
+
         val sa = sqrt(x.a)
+
         return Dual(
             a = sa,
             b = x.b / (2.0 * sa),
         )
     }
 
-    // Inverse trig (domain restrictions on real part apply)
     fun asin(x: Dual<Real>): Dual<Real> {
         require(x.a in -1.0..1.0) { "asin requires real part in [-1,1], got ${x.a}" }
-        val denom = sqrt(1.0 - x.a * x.a)
+
+        val denom2 = 1.0 - x.a * x.a
+
+        if (x.b != 0.0) require(denom2 > 0.0) { "asin derivative undefined at a=±1 unless b=0" }
+
+        val denom = sqrt(denom2)
+
         return Dual(
             a = asin(x.a),
             b = x.b / denom,
@@ -79,7 +113,13 @@ object DualRealFns {
 
     fun acos(x: Dual<Real>): Dual<Real> {
         require(x.a in -1.0..1.0) { "acos requires real part in [-1,1], got ${x.a}" }
-        val denom = sqrt(1.0 - x.a * x.a)
+
+        val denom2 = 1.0 - x.a * x.a
+
+        if (x.b != 0.0) require(denom2 > 0.0) { "acos derivative undefined at a=±1 unless b=0" }
+
+        val denom = sqrt(denom2)
+
         return Dual(
             a = acos(x.a),
             b = -x.b / denom,
@@ -107,6 +147,7 @@ object DualRealFns {
     fun tanh(x: Dual<Real>): Dual<Real> {
         val ta = tanh(x.a)
         val sech2 = 1.0 - ta * ta
+
         return Dual(
             a = ta,
             b = x.b * sech2,
@@ -117,7 +158,9 @@ object DualRealFns {
         require(n >= 0) { "pow requires n >= 0" }
 
         val aPow = x.a.powInt(n)
-        val bPart = if (n == 0) 0.0 else n * x.b * x.a.powInt(n - 1)
+        val bPart =
+            if (n == 0) 0.0
+            else n * x.b * x.a.powInt(n - 1)
 
         return Dual(
             a = aPow,
