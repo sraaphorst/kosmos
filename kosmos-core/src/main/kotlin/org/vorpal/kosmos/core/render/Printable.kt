@@ -31,7 +31,7 @@ fun <A> Printable<A>.pretty(a: A): String = render(a)
  * Defaults for classes that don't have a Printable explicitly defined.
  */
 fun <A> pr(a: A, printable: Printable<A> = Printable.default()): String =
-    printable.render(a)
+    printable(a)
 
 object Printables {
     val char: Printable<Char> = Printable.default()

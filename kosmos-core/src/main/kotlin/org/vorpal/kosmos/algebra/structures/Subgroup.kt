@@ -38,7 +38,7 @@ class PredicateSubgroup<A : Any>(
         BinOp(parent.op.symbol) { x, y ->
             requireMember(x)
             requireMember(y)
-            val z = parent.op(x, y)
+            val z = parent(x, y)
             requireMember(z)
             z
         }

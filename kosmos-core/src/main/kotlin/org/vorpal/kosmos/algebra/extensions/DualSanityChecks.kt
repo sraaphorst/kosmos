@@ -15,7 +15,7 @@ fun main() {
     run {
         fun f(x: Dual<Real>): Dual<Real> {
             val x5 = DualRealFns.pow(x, 5)
-            val twoX = DualRing(RealAlgebras.RealField).mul.op(DualRing(RealAlgebras.RealField).lift(2.0), x) // meh
+            val twoX = DualRing(RealAlgebras.RealField).mul(DualRing(RealAlgebras.RealField).lift(2.0), x) // meh
             // Better: do it with the ring ops directly (see below) or add scalar*dual helpers later.
             // For now, simplest: x + x style:
             val d = RealAlgebras.RealField.dual()
