@@ -1,9 +1,10 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.hypercomplex
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
 import io.kotest.property.arbitrary.bind
+import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.hypercomplex.octonion.Octonion
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.octonion.octonion

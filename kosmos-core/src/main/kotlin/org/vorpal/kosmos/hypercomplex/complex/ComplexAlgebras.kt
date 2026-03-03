@@ -9,6 +9,7 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
@@ -84,11 +85,11 @@ object ComplexAlgebras {
     )
 
     /** Monomorphisms and type conversions **/
-    val RealToComplexMonomorphism: RingMonomorphism<Real, Complex> = RingMonomorphism.of(
-        RealAlgebras.RealField,
-        ComplexField,
-        UnaryOp { r -> complex(r, 0.0 ) }
-    )
+    object RealToComplexMonomorphism: RingMonomorphism<Real, Complex> {
+        override val domain = RealAlgebras.RealField
+        override val codomain = ComplexField
+        override val map = UnaryOp<Real, Complex> { r -> complex(r, 0.0) }
+    }
 
     fun Real.toComplex(): Complex =
         RealToComplexMonomorphism(this)

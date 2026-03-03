@@ -16,6 +16,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
 /**
@@ -88,20 +89,19 @@ object GaussianRatAlgebras {
             LeftAction(Symbols.TRIANGLE_RIGHT) { q, (a, b) -> GaussianRat(q * a, q * b) }
     }
 
-    val QtoGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> = RingMonomorphism.of(
-        RationalField,
-        GaussianRatField,
-        UnaryOp { q -> GaussianRat(q, Rational.ZERO) }
-    )
+    object QtoGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> {
+        override val domain = RationalField
+        override val codomain = GaussianRatField
+        override val map = UnaryOp<Rational, GaussianRat> { q -> GaussianRat(q, Rational.ZERO) }
+    }
 
-    val GaussianIntToRatMonomorphism: RingMonomorphism<GaussianInt, GaussianRat> = RingMonomorphism.of(
-        GaussianIntAlgebras.GaussianIntCommutativeRing,
-        GaussianRatField,
-        UnaryOp { gi -> GaussianRat(
-            Rational.of(gi.re, BigInteger.ONE),
-            Rational.of(gi.im, BigInteger.ONE)
-        ) }
-    )
+    object GaussianIntToRatMonomorphism: RingMonomorphism<GaussianInt, GaussianRat> {
+        override val domain = GaussianIntAlgebras.GaussianIntCommutativeRing
+        override val codomain = GaussianRatField
+        override val map = UnaryOp<GaussianInt, GaussianRat> { (a, b) ->
+            GaussianRat(a.toRational(), b.toRational())
+        }
+    }
 
     val ZToGaussianRatMonomorphism: RingMonomorphism<BigInteger, GaussianRat> =
         GaussianIntAlgebras.ZToGaussianIntMonomorphism andThen GaussianIntToRatMonomorphism
@@ -110,11 +110,11 @@ object GaussianRatAlgebras {
      * This may not be a perfect monomorphism due to floating point imprecision of converting
      * Rational to Real when building Complex.
      */
-    val GaussianRatToComplexMonomorphism: RingMonomorphism<GaussianRat, Complex> = RingMonomorphism.of(
-        GaussianRatField,
-        ComplexAlgebras.ComplexField,
-        UnaryOp { gr -> complex(gr.re.toReal(), gr.im.toReal()) }
-    )
+    object GaussianRatToComplexMonomorphism: RingMonomorphism<GaussianRat, Complex> {
+        override val domain = GaussianRatField
+        override val codomain = ComplexAlgebras.ComplexField
+        override val map = UnaryOp<GaussianRat, Complex> { (a, b) -> complex(a.toReal(), b.toReal()) }
+    }
 
     fun GaussianInt.toGaussianRat(): GaussianRat =
         GaussianIntToRatMonomorphism(this)
