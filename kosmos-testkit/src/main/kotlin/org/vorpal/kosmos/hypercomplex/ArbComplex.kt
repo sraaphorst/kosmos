@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.structures.instances
+package org.vorpal.kosmos.hypercomplex
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.double
@@ -7,6 +7,7 @@ import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
 import org.vorpal.kosmos.algebra.structures.CD
+import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import kotlin.math.cos
 import kotlin.math.sin

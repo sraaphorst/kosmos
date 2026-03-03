@@ -132,12 +132,13 @@ object RationalQuaternionAlgebras {
         }
     )
 
-    val HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> =
-        RingMonomorphism.of(
-            domain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing,
-            codomain = RationalQuaternionDivisionRing,
-            map = UnaryOp { hq -> rationalQuaternion(hq.w, hq.x, hq.y, hq.z) }
-        )
+    object HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> {
+        override val domain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing
+        override val codomain = RationalQuaternionDivisionRing
+        override val map = UnaryOp<HurwitzQuaternion, RationalQuaternion> { (a, b, c, d) ->
+            rationalQuaternion(a, b, c, d)
+        }
+    }
 
     val LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> =
         HurwitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToRationalQuaternionMonomorphism
