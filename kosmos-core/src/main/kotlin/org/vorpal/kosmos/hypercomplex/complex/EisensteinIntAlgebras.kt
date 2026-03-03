@@ -109,15 +109,15 @@ object EisensteinIntAlgebras {
      * Note: due to rounding in Real, for sufficiently large values, this may not precisely meet the exact
      * definition of a ring homomorphism. BigInteger to Real may become lossy quite quickly.
      */
-    val EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, Complex> = RingHomomorphism.of(
-        EisensteinIntCommutativeRing,
-        ComplexAlgebras.ComplexField,
-        UnaryOp { (a, b) ->
+    object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, Complex> {
+        override val domain = EisensteinIntCommutativeRing
+        override val codomain = ComplexAlgebras.ComplexField
+        override val map = UnaryOp<EisensteinInt, Complex> { (a, b) ->
             val aReal = a.toReal()
             val bReal = b.toReal()
             Complex(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
-    )
+    }
 
     fun EisensteinInt.toComplex(): Complex =
         EisensteinIntToCHomomorphism.apply(this)

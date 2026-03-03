@@ -12,6 +12,7 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.Semialgebra
 import org.vorpal.kosmos.algebra.structures.Semiring
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -504,4 +505,29 @@ object DenseMatAlgebras {
 
         return GroupIsomorphism.of(forward = forward, backward = backward)
     }
+
+    /**
+     * Lift an Eq<A> into an Eq<DenseMat<A>>.
+     */
+    fun <A : Any> liftEq(eqA: Eq<A>): Eq<DenseMat<A>> =
+        Eq { x, y ->
+            if (x.rows != y.rows) false
+            else if (x.cols != y.cols) false
+            else {
+                val rows = x.rows
+                val cols = x.cols
+
+                // Avoid allocations: raw index loops.
+                var r = 0
+                while (r < rows) {
+                    var c = 0
+                    while (c < cols) {
+                        if (!eqA(x[r, c], y[r, c])) return@Eq false
+                        c += 1
+                    }
+                    r += 1
+                }
+                true
+            }
+        }
 }

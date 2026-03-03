@@ -77,17 +77,17 @@ object GaussianIntAlgebras {
             LeftAction(Symbols.TRIANGLE_RIGHT) { n, gi -> GaussianInt(n * gi.re, n * gi.im) }
     }
 
-    val ZToGaussianIntMonomorphism: RingMonomorphism<BigInteger, GaussianInt> = RingMonomorphism.of(
-        IntegerAlgebras.ZCommutativeRing,
-        GaussianIntCommutativeRing,
-        UnaryOp { z -> GaussianInt(z, BigInteger.ZERO) }
-    )
+    object ZToGaussianIntMonomorphism: RingMonomorphism<BigInteger, GaussianInt> {
+        override val domain = IntegerAlgebras.ZCommutativeRing
+        override val codomain = GaussianIntCommutativeRing
+        override val map = UnaryOp<BigInteger, GaussianInt> { z -> GaussianInt(z, BigInteger.ZERO) }
+    }
 
-    val GaussianIntToComplexMonomorphism: RingMonomorphism<GaussianInt, Complex> = RingMonomorphism.of(
-        GaussianIntCommutativeRing,
-        ComplexAlgebras.ComplexField,
-        UnaryOp { gi -> complex(gi.re.toReal(), gi.im.toReal()) }
-    )
+    object GaussianIntToComplexMonomorphism: RingMonomorphism<GaussianInt, Complex> {
+        override val domain = GaussianIntCommutativeRing
+        override val codomain = ComplexAlgebras.ComplexField
+        override val map = UnaryOp<GaussianInt, Complex> { (a, b) -> complex(a.toReal(), b.toReal()) }
+    }
 
     val eqGaussianInt: Eq<GaussianInt> = Eq { gz1, gz2 -> gz1.re == gz2.re && gz1.im == gz2.im }
 }

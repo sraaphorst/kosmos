@@ -141,13 +141,14 @@ object HurwitzQuaternionAlgebras {
     /**
      * General mappings from the Hurwitz quaternion rings to the Quaternion ring.
      */
-    val HurwitzToQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, Quaternion> = RingMonomorphism.of(
-        domain = HurwitzQuaternionRing,
-        codomain = QuaternionAlgebras.QuaternionDivisionRing,
-        map = UnaryOp { (a, b, c, d) ->
-            quaternion(a.toReal(), b.toReal(), c.toReal(), d.toReal())
+    object HurwitzToQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, Quaternion> {
+        override val domain = HurwitzQuaternionRing
+        override val codomain = QuaternionAlgebras.QuaternionDivisionRing
+        override val map = UnaryOp<HurwitzQuaternion, Quaternion> { (a, b, c, d) ->
+            quaternion(a.toReal(),  b.toReal(), c.toReal(), d.toReal())
         }
-    )
+    }
+
 
     val LipschitzToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> =
         LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToQuaternionMonomorphism

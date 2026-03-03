@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.linear.values
 
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.linear.instances.DenseMatKernel
 

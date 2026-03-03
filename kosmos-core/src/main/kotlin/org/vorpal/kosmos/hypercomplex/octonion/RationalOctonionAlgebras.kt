@@ -94,17 +94,16 @@ object RationalOctonionAlgebras {
     /**
      * CayleyOctonion to RationalOctonion ring homomorphism.
      */
-    val CayleyToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, RationalOctonion> =
-    NonAssociativeRingMonomorphism.of(
-        domain = CayleyOctonionAlgebras.CayleyOctonionNonAssociativeInvolutiveRing,
-        codomain = RationalOctonionNonAssociativeInvolutiveRing,
-        map = UnaryOp { co ->
+    object CayleyToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, RationalOctonion> {
+        override val domain = CayleyOctonionAlgebras.CayleyOctonionNonAssociativeInvolutiveRing
+        override val codomain = RationalOctonionNonAssociativeInvolutiveRing
+        override val map = UnaryOp<CayleyOctonion, RationalOctonion> { co ->
             rationalOctonion(
-                co.w.toRational(),co.x.toRational(),co.y.toRational(),co.z.toRational(),
-                co.u.toRational(),co.v.toRational(),co.s.toRational(),co.t.toRational()
+                co.w.toRational(), co.x.toRational(), co.y.toRational(), co.z.toRational(),
+                co.u.toRational(), co.v.toRational(), co.s.toRational(), co.t.toRational()
             )
         }
-    )
+    }
 
     val LipschitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, RationalOctonion> =
         CayleyOctonionAlgebras.LipschitzToCayleyMonomorphism andThen CayleyToRationalOctonionMonomorphism
@@ -121,17 +120,16 @@ object RationalOctonionAlgebras {
     /**
      * RationalOctonion to Octonion ring monomorphism.
      */
-    val RationalToOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalOctonion, Octonion> =
-        NonAssociativeRingMonomorphism.of(
-            domain = RationalOctonionNonAssociativeInvolutiveRing,
-            codomain = OctonionAlgebras.OctonionDivisionAlgebraReal,
-            map = UnaryOp { ro ->
-                octonion(
-                    ro.w.toReal(),ro.x.toReal(),ro.y.toReal(),ro.z.toReal(),
-                    ro.u.toReal(),ro.v.toReal(),ro.s.toReal(),ro.t.toReal()
-                )
-            }
-        )
+    object RationalToOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalOctonion, Octonion> {
+        override val domain = RationalOctonionNonAssociativeInvolutiveRing
+        override val codomain = OctonionAlgebras.OctonionDivisionAlgebraReal
+        override val map = UnaryOp<RationalOctonion, Octonion> { ro ->
+            octonion(
+                ro.w.toReal(), ro.x.toReal(), ro.y.toReal(), ro.z.toReal(),
+                ro.u.toReal(), ro.v.toReal(), ro.s.toReal(), ro.t.toReal()
+            )
+        }
+    }
 
     val eqRationalOctonion: Eq<RationalOctonion> = Eq { o1, o2 -> o1 == o2 }
 

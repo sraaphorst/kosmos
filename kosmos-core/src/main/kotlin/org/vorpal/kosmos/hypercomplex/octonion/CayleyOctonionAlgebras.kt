@@ -99,17 +99,16 @@ object CayleyOctonionAlgebras {
     /**
      * Monomorphism from CayleyOctonions to Octonions.
      */
-    val CayleyToOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, Octonion> =
-        NonAssociativeRingMonomorphism.of(
-            domain = CayleyOctonionNonAssociativeInvolutiveRing,
-            codomain = OctonionAlgebras.OctonionDivisionAlgebraReal,
-            map = UnaryOp { co ->
-                octonion(
-                    co.w.toReal(),co.x.toReal(),co.y.toReal(),co.z.toReal(),
-                    co.u.toReal(),co.v.toReal(),co.s.toReal(),co.t.toReal()
-                )
-            }
-        )
+    object CayleyToOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, Octonion> {
+        override val domain = CayleyOctonionNonAssociativeInvolutiveRing
+        override val codomain = OctonionAlgebras.OctonionDivisionAlgebraReal
+        override val map = UnaryOp<CayleyOctonion, Octonion> { co ->
+            octonion(
+                co.w.toReal(), co.x.toReal(), co.y.toReal(), co.z.toReal(),
+                co.u.toReal(), co.v.toReal(), co.s.toReal(), co.t.toReal()
+            )
+        }
+    }
 
     val eqCayleyOctonion: Eq<CayleyOctonion> = Eq { o1, o2 -> o1 == o2 }
 
