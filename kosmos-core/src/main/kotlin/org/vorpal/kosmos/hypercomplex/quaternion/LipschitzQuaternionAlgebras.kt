@@ -112,17 +112,17 @@ object LipschitzQuaternionAlgebras {
         }
     )
 
-    val LipschitzQuaternionToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> = RingMonomorphism.of(
-        domain = LipschitzQuaternionRing,
-        codomain = QuaternionAlgebras.QuaternionDivisionRing,
-        map = UnaryOp { lq ->
+    object LipschitzQuaternionToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> {
+        override val domain = LipschitzQuaternionRing
+        override val codomain = QuaternionAlgebras.QuaternionDivisionRing
+        override val map = UnaryOp<LipschitzQuaternion, Quaternion> { lq ->
             val w = lq.a.re.toReal()
             val x = lq.a.im.toReal()
             val y = lq.b.re.toReal()
             val z = lq.b.im.toReal()
             quaternion(w, x, y, z)
         }
-    )
+    }
 
     val eqLipschitzQuaternion: Eq<LipschitzQuaternion> = Eq { q1, q2 -> q1 == q2}
 }

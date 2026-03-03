@@ -22,6 +22,8 @@ import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.im
 import org.vorpal.kosmos.hypercomplex.complex.re
+import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
+import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 import kotlin.isFinite
 
@@ -171,6 +173,23 @@ object QuaternionAlgebras {
     fun Complex.asQuaternion(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): Quaternion = complexEmbeddingToQuaternion(emb)(this)
+
+    /**
+     * A monomorphism from H to M_2(C).
+     */
+    object QuaternionToComplexMatrixMonomorphism: RingMonomorphism<Quaternion, DenseMat<Complex>> {
+        private val complexField = ComplexAlgebras.ComplexField
+        override val domain = QuaternionDivisionRing
+        override val codomain = DenseMatAlgebras.DenseMatRing(complexField, 2)
+        override val map: UnaryOp<Quaternion, DenseMat<Complex>> = UnaryOp { h ->
+            DenseMat.ofRows(
+                listOf(
+                    listOf(h.a, h.b),
+                    listOf(complexField.add.inverse(complexField.conj(h.b)), complexField.conj(h.a))
+                )
+            )
+        }
+    }
 
     val eqQuaternionStrict: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplexStrict)
     val eqQuaternion: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplex)
