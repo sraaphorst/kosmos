@@ -9,7 +9,6 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.eqRational
 import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.core.Eq
@@ -20,6 +19,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -69,7 +69,7 @@ object RationalQuaternionAlgebras {
 
         override val reciprocal: Endo<RationalQuaternion> = Endo(Symbols.SLASH) { q ->
             val n2 = normSq(q)
-            require(eqRational.neqv(n2, Rational.ZERO)) {
+            require(RationalAlgebras.eqRational.neqv(n2, Rational.ZERO)) {
                 "Zero has no multiplicative inverse in ${Symbols.BB_Q}."
             }
 
@@ -143,5 +143,17 @@ object RationalQuaternionAlgebras {
     val LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> =
         HurwitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToRationalQuaternionMonomorphism
 
-    val eqRationalQuaternion: Eq<RationalQuaternion> = Eq { q1, q2 -> q1 == q2}
+    val eqRationalQuaternion: Eq<RationalQuaternion> = Eq.default()
+
+    val printableRationalQuaternion: Printable<RationalQuaternion> =
+        QuaternionPrintable.quaternionPrintable(
+            signed = RationalAlgebras.SignedRational,
+            zero = Rational.ZERO,
+            one = Rational.ONE,
+            prA = RationalAlgebras.printableRational,
+            eqA = RationalAlgebras.eqRational,
+            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
+        )
+
+    val printableRationalQuaternionPretty = printableRationalQuaternion
 }

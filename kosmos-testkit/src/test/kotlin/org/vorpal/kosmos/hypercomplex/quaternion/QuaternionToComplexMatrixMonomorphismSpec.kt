@@ -18,15 +18,16 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
 
     "QuaternionToComplexMatrixMonomorphism satisfies UnitalRingHomomorphismLaws" {
         val mono = QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism
-
+        val prA: Printable<Quaternion> = Printable.default()
+        val prC: Printable<Complex> = Printable.default()
         val laws = UnitalRingHomomorphismLaws(
             hom = { q -> mono.map(q) },
             domain = mono.domain,
             codomain = mono.codomain,
             arb = ArbQuaternion.quaternion,
             eqB = DenseMatAlgebras.liftEq(ComplexAlgebras.eqComplex),
-            prA = Printable.default(),
-            prB = Printable.default()
+            prA = prA,
+            prB = DenseMatAlgebras.liftPrintable(prC)
         )
 
         laws.fullTest().throwIfFailed()

@@ -14,10 +14,12 @@ import org.vorpal.kosmos.algebra.structures.Semialgebra
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 
@@ -506,6 +508,128 @@ object DenseMatAlgebras {
         return GroupIsomorphism.of(forward = forward, backward = backward)
     }
 
+    private fun ellipsis(exceeded: Boolean) = if (exceeded) ", ${Symbols.ELLIPSIS}" else ""
+
+    /**
+     * Lift a Printable<A> into a Printable<DenseMat<A>> with strict printing.
+     *
+     * Furthermore, we accept a maxRows and maxCols parameter to limit the size of the printed matrix. If the matrix
+     * ends up larger, we print ellipses for the remaining entries.
+     *
+     * If maxRows or maxCols is null, the matrix will be printed in full.
+     *
+     * For example, if we have the matrix:
+     * ```kotlin
+     * val mat = DenseMat.ofRows(
+     *         listOf(
+     *             listOf(1.0, 2.2, -3.333, 4.0, -5.55555, 6.0),
+     *             listOf(7.7, 8.88, -9.9, 10.1010, 11.11111, 12.1),
+     *             listOf(13.13, 14.1414, -15.151515, 16.161616, 17.171717, 18.181818),
+     *             listOf(19.1919, 20.20202, -21.212121, 22.222222, 23.232323, 24.242424)
+     *         )
+     *     )
+     * ```
+     *
+     * and we use:
+     * ```kotlin
+     * println(DenseMatAlgebras.liftPrintableStrict(Printable.default<Real>(), maxRows = 3, maxCols = 3)(mat))
+     *```
+     *
+     * Example output:
+     * ```
+     * 4×6 [[1.0, 2.2, -3.333, 4.0, -5.55555, …], [7.7, 8.88, -9.9, 10.101, 11.11111, …], [13.13, 14.1414, -15.151515, 16.161616, 17.171717, …], …]
+     * ```
+     */
+    fun <A : Any> liftPrintableStrict(
+        prA: Printable<A>,
+        maxRows: Int? = 6,
+        maxCols: Int? = 6
+    ): Printable<DenseMat<A>> =
+        Printable { m ->
+            val rLim = if (maxRows == null) m.rows else minOf(m.rows, maxRows)
+            val cLim = if (maxCols == null) m.cols else minOf(m.cols, maxCols)
+
+            val body = (0 until rLim)
+                .joinToString(prefix = "[", postfix = "${ellipsis(m.rows > rLim)}]") { r ->
+                    (0 until cLim)
+                        .joinToString(prefix = "[", postfix = "${ellipsis(m.cols > cLim)}]") { c ->
+                            prA(m[r, c])
+                        }
+                }
+
+            "${m.rows}${Symbols.TIMES}${m.cols} $body"
+        }
+
+    /**
+     * Lift a Printable<A> into a Printable<DenseMat<A>> with pretty-printing.
+     *
+     * Furthermore, we accept a [maxRows] and [maxCols] parameter to limit the size of the printed matrix. If the matrix
+     * ends up larger, we print ellipses for the remaining entries.
+     *
+     * If maxRows or maxCols is null, the matrix will be printed in full.
+     *
+     * For example, if we have the matrix:
+     *
+     * ```kotlin
+     * val mat = DenseMat.ofRows(
+     *         listOf(
+     *             listOf(1.0, 2.2, -3.333, 4.0, -5.55555, 6.0),
+     *             listOf(7.7, 8.88, -9.9, 10.1010, 11.11111, 12.1),
+     *             listOf(13.13, 14.1414, -15.151515, 16.161616, 17.171717, 18.181818),
+     *             listOf(19.1919, 20.20202, -21.212121, 22.222222, 23.232323, 24.242424)
+     *         )
+     *     )
+     * ```
+     *
+     * and we use:
+     *
+     * ```kotlin
+     * println(DenseMatAlgebras.liftPrintablePretty(Printable.default<Real>(), maxRows = 3, maxCols = 3)(mat))
+     *```
+     *
+     * we get:
+     * ```text
+     * 4×6 matrix:
+     *    [  1.0,     2.2,     -3.333, …]
+     *    [  7.7,    8.88,       -9.9, …]
+     *    [13.13, 14.1414, -15.151515, …]
+     *    [    ⋮,       ⋮,          ⋮, ⋱]
+     * ```
+     */
+    fun <A : Any> liftPrintablePretty(
+        prA: Printable<A>,
+        maxRows: Int? = 6,
+        maxCols: Int? = 6
+    ): Printable<DenseMat<A>> =
+        Printable { m ->
+            val rLim = if (maxRows == null) m.rows else minOf(m.rows, maxRows)
+            val cLim = if (maxCols == null) m.cols else minOf(m.cols, maxCols)
+
+            // Pre-render all visible entries
+            val rendered = (0 until rLim).map { r ->
+                (0 until cLim).map { c -> prA(m[r, c]) }
+            }
+
+            // Compute column widths
+            val colWidths = (0 until cLim).map { c ->
+                rendered.maxOf { row -> row[c].length }
+            }
+
+            fun formatRow(cells: List<String>, suffix: String): String =
+                cells.mapIndexed { c, cell -> cell.padStart(colWidths[c]) }
+                    .joinToString(prefix = "   [", postfix = "$suffix]", separator = ", ")
+
+            val ellipsisRow = colWidths.map { w -> " ".repeat(w - 1) + "⋮" }
+
+            val rows = rendered.map { row ->
+                formatRow(row, if (m.cols > cLim) ", …" else "")
+            } + if (m.rows > rLim) listOf(
+                formatRow(ellipsisRow, if (m.cols > cLim) ", ⋱" else "")
+            ) else emptyList()
+
+            "${m.rows}${Symbols.TIMES}${m.cols} matrix:\n" + rows.joinToString(separator = "\n")
+        }
+
     /**
      * Lift an Eq<A> into an Eq<DenseMat<A>>.
      */
@@ -513,21 +637,6 @@ object DenseMatAlgebras {
         Eq { x, y ->
             if (x.rows != y.rows) false
             else if (x.cols != y.cols) false
-            else {
-                val rows = x.rows
-                val cols = x.cols
-
-                // Avoid allocations: raw index loops.
-                var r = 0
-                while (r < rows) {
-                    var c = 0
-                    while (c < cols) {
-                        if (!eqA(x[r, c], y[r, c])) return@Eq false
-                        c += 1
-                    }
-                    r += 1
-                }
-                true
-            }
+            else (0 until x.size).all { i -> eqA(x.flatGet(i), y.flatGet(i)) }
         }
 }

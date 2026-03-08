@@ -135,3 +135,4 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
         val ONE  = of(1, 1)
     }
 }
+

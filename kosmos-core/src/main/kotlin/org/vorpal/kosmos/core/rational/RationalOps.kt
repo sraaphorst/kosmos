@@ -19,8 +19,18 @@ fun String.toRational(): Rational {
     }
 }
 
-object RationalTotalOrder : TotalOrder<Rational> {
-    override val le = RationalComparator.leRelation()
+
+/**
+ * Extension function to find the nearest integer.
+ */
+fun Rational.toNearestInt(): BigInteger {
+    val f = floor()
+    val c = ceil()
+
+    val df = this - f
+    val dc = c.toRational() - this
+
+    return if (df <= dc) f else c
 }
 
 // Pimp existing types to be able to convert to Rational.

@@ -18,10 +18,9 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
-import org.vorpal.kosmos.hypercomplex.complex.im
-import org.vorpal.kosmos.hypercomplex.complex.re
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
@@ -33,7 +32,7 @@ import kotlin.isFinite
  *
  * These include:
  * - [QuaternionDivisionRing]: the quaternion division ring.
- * - [QuaternionVectorSpace]: the two-dimensional vector space of quaternions over the real numbers.
+ * - [QuaternionVectorSpace]: the four-dimensional vector space of quaternions over the real numbers.
  * - [quaternionLeftComplexVectorSpace]: the two-dimensional vector space of quaternions over the complex numbers.
  * - [QuaternionLeftComplexVectorSpacesAll]: a map of all complex embeddings to the vector space that they generate.
  * - [QuaternionLeftComplexVectorSpaceCanonical]: the canonical vector space of quaternions over the complex numbers.
@@ -125,7 +124,7 @@ object QuaternionAlgebras {
 
     // A map of all complex embeddings to the vector space that they generate.
     val QuaternionLeftComplexVectorSpacesAll: Map<AxisSignEmbeddings.AxisSignEmbedding, FiniteVectorSpace<Complex, Quaternion>> =
-        AxisSignEmbeddings.AxisSignEmbedding.all.associateWith { quaternionLeftComplexVectorSpace(it) }
+        AxisSignEmbeddings.AxisSignEmbedding.all.associateWith(::quaternionLeftComplexVectorSpace)
 
     // Optional convenience vals, replacing the former AlongI/J/K trio.
     val QuaternionLeftComplexVectorSpaceCanonical: FiniteVectorSpace<Complex, Quaternion> =
@@ -145,22 +144,20 @@ object QuaternionAlgebras {
      * ```
      * a + b i_C  ↦  a·1 + b·u
      * ```
-     * where u ∈ {±i, ±j, ±k} based on emb.axis and emb.sign.
+     * where `u ∈ {±i, ±j, ±k}` based on `emb.axis` and `emb.sign`.
      */
     fun complexEmbeddingToQuaternion(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
         domain = ComplexAlgebras.ComplexField,
         codomain = QuaternionDivisionRing,
-        map = UnaryOp { c ->
-            val a = c.re
-            val b = c.im
+        map = UnaryOp { (re, im) ->
             val s = emb.sign.factor.toDouble()
 
             when (emb.axis) {
-                AxisSignEmbeddings.ImagAxis.I -> quaternion(a, s * b, 0.0, 0.0)
-                AxisSignEmbeddings.ImagAxis.J -> quaternion(a, 0.0, s * b, 0.0)
-                AxisSignEmbeddings.ImagAxis.K -> quaternion(a, 0.0, 0.0, s * b)
+                AxisSignEmbeddings.ImagAxis.I -> quaternion(re, s * im, 0.0, 0.0)
+                AxisSignEmbeddings.ImagAxis.J -> quaternion(re, 0.0, s * im, 0.0)
+                AxisSignEmbeddings.ImagAxis.K -> quaternion(re, 0.0, 0.0, s * im)
             }
         }
     )
@@ -181,11 +178,11 @@ object QuaternionAlgebras {
         private val complexField = ComplexAlgebras.ComplexField
         override val domain = QuaternionDivisionRing
         override val codomain = DenseMatAlgebras.DenseMatRing(complexField, 2)
-        override val map: UnaryOp<Quaternion, DenseMat<Complex>> = UnaryOp { h ->
+        override val map: UnaryOp<Quaternion, DenseMat<Complex>> = UnaryOp { (a, b) ->
             DenseMat.ofRows(
                 listOf(
-                    listOf(h.a, h.b),
-                    listOf(complexField.add.inverse(complexField.conj(h.b)), complexField.conj(h.a))
+                    listOf(a, b),
+                    listOf(complexField.add.inverse(complexField.conj(b)), complexField.conj(a))
                 )
             )
         }
@@ -193,4 +190,32 @@ object QuaternionAlgebras {
 
     val eqQuaternionStrict: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplexStrict)
     val eqQuaternion: Eq<Quaternion> = CD.eq(ComplexAlgebras.eqComplex)
+
+    private fun printableQuaternionGenerator(
+        prReal: Printable<Real>,
+        eqReal: Eq<Real>
+    ): Printable<Quaternion> =
+        QuaternionPrintable.quaternionPrintable(
+            signed = RealAlgebras.SignedReal,
+            zero = RealAlgebras.RealField.zero,
+            one = RealAlgebras.RealField.one,
+            prA = prReal,
+            eqA = eqReal,
+            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
+        )
+
+    val printableQuaternion: Printable<Quaternion> = printableQuaternionGenerator(
+        prReal = RealAlgebras.printableReal,
+        eqReal = RealAlgebras.eqRealApprox
+    )
+
+    val printableQuaternionStrict: Printable<Quaternion> = printableQuaternionGenerator(
+        prReal = RealAlgebras.printableRealStrict,
+        eqReal = RealAlgebras.eqRealStrict
+    )
+
+    val printableQuaternionPretty: Printable<Quaternion> = printableQuaternionGenerator(
+        prReal = RealAlgebras.printableRealPretty,
+        eqReal = RealAlgebras.eqRealApprox
+    )
 }
