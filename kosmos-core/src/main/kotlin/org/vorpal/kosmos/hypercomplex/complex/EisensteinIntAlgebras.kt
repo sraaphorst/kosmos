@@ -85,7 +85,11 @@ object EisensteinIntAlgebras {
 
     /**
      * Note that this is actually an integral domain, and in fact a Euclidean domain with
-     * norm function n(a + bω) = a^2 - ab + b^2, giving gcd and unique factorization.
+     * norm function:
+     *
+     *    n(a + bω) = a^2 - ab + b^2
+     *
+     * giving gcd and unique factorization.
      *
      * We keep them separate to avoid carrying too much machinery in one class.
      */

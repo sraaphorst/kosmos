@@ -108,16 +108,8 @@ object GaussianRatAlgebras {
         override val map = UnaryOp<Rational, GaussianRat> { q -> GaussianRat(q, Rational.ZERO) }
     }
 
-    object GaussianIntToRatMonomorphism: RingMonomorphism<GaussianInt, GaussianRat> {
-        override val domain = GaussianIntAlgebras.GaussianIntCommutativeRing
-        override val codomain = GaussianRatField
-        override val map = UnaryOp<GaussianInt, GaussianRat> { (a, b) ->
-            GaussianRat(a.toRational(), b.toRational())
-        }
-    }
-
     val ZToGaussianRatMonomorphism: RingMonomorphism<BigInteger, GaussianRat> =
-        GaussianIntAlgebras.ZToGaussianIntMonomorphism andThen GaussianIntToRatMonomorphism
+        GaussianIntAlgebras.ZToGaussianIntMonomorphism andThen GaussianIntAlgebras.GaussianIntToRatMonomorphism
 
     /**
      * This may not be a perfect monomorphism due to floating point imprecision of converting
@@ -128,9 +120,6 @@ object GaussianRatAlgebras {
         override val codomain = ComplexAlgebras.ComplexField
         override val map = UnaryOp<GaussianRat, Complex> { (a, b) -> complex(a.toReal(), b.toReal()) }
     }
-
-    fun GaussianInt.toGaussianRat(): GaussianRat =
-        GaussianIntToRatMonomorphism(this)
 
     val eqGaussianRat: Eq<GaussianRat> = Eq { gq1, gq2 -> gq1.re == gq2.re && gq1.im == gq2.im }
 

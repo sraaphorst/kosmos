@@ -51,7 +51,7 @@ object LipschitzQuaternionAlgebras {
         HasNormSq<LipschitzQuaternion, BigInteger> {
 
         internal val base: NonAssociativeInvolutiveRing<LipschitzQuaternion> =
-            CayleyDickson.usual(GaussianIntAlgebras.GaussianIntCommutativeRing)
+            CayleyDickson.usual(GaussianIntAlgebras.GaussianIntEuclideanDomain)
 
         override val zero: LipschitzQuaternion = base.add.identity
         override val one: LipschitzQuaternion = base.mul.identity
@@ -98,7 +98,7 @@ object LipschitzQuaternionAlgebras {
     fun gaussianIntEmbeddingToQuaternion(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
-        domain = GaussianIntAlgebras.GaussianIntCommutativeRing,
+        domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionRing,
         map = UnaryOp { z ->
             QuaternionEmbeddingKit.embedComplexLike(

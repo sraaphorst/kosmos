@@ -13,8 +13,6 @@ import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.octonion.octonion
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
-import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
 import org.vorpal.kosmos.linear.values.Vec2
 
