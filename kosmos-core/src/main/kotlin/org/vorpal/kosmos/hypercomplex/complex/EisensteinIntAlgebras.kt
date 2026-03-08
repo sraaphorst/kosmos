@@ -4,17 +4,23 @@ import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.EuclideanDomain
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
+import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toNearestInt
+import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
 import org.vorpal.kosmos.linear.values.Vec2
 import java.math.BigInteger
@@ -26,7 +32,11 @@ import kotlin.math.sqrt
  *
  * These include:
  * - [EisensteinIntCommutativeRing]: the Eisenstein ring of integers.
+ * - [EisensteinIntEuclideanDomain]: the Eisenstein ring of integers as a Euclidean domain.
  * - [EisensteinIntLattice]: the lattice of Eisenstein numbers.
+ *
+ * We are also a ZModule:
+ * - [ZModuleEisensteinInt]: the Eisenstein ring of integers as a ZModule.
  *
  * We have the following homomorphisms:
  * - [EisensteinIntToCHomomorphism]: a ring homomorphism from the Eisenstein ring to the complex field.
@@ -38,14 +48,11 @@ import kotlin.math.sqrt
 object EisensteinIntAlgebras {
     private val sqrt3over2 = sqrt(3.0) / 2.0
 
-    /**
-     * Note that this is actually an integral domain, and in fact a Euclidean domain with
-     * norm function n(a + bω) = a^2 - ab + b^2, giving gcd and unique factorization.
-     */
     object EisensteinIntCommutativeRing :
         CommutativeRing<EisensteinInt>, // by EisensteinIntCommutativeRing,
         HasNormSq<EisensteinInt, BigInteger>,
         InvolutiveRing<EisensteinInt> {
+
         override val add: AbelianGroup<EisensteinInt> = AbelianGroup.of(
             identity = EisensteinInt.ZERO,
             op = BinOp(Symbols.PLUS, EisensteinInt::plus),
@@ -76,17 +83,97 @@ object EisensteinIntAlgebras {
         }
     }
 
+    /**
+     * Note that this is actually an integral domain, and in fact a Euclidean domain with
+     * norm function n(a + bω) = a^2 - ab + b^2, giving gcd and unique factorization.
+     *
+     * We keep them separate to avoid carrying too much machinery in one class.
+     */
+    object EisensteinIntEuclideanDomain :
+        EuclideanDomain<EisensteinInt, BigInteger> by EuclideanDomain.of(
+            add = EisensteinIntCommutativeRing.add,
+            mul = EisensteinIntCommutativeRing.mul,
+            divRem = BinaryOp(Symbols.DIV_REM) { alpha, beta ->
+                require(beta != EisensteinInt.ZERO) { "division by zero" }
+                val den = EisensteinIntCommutativeRing.normSq(beta)
+                require(den != BigInteger.ZERO) { "normSq(beta) must be nonzero for beta != 0" }
+
+                val conjBeta = EisensteinIntCommutativeRing.conj(beta)
+                val num = EisensteinIntCommutativeRing.mul(alpha, conjBeta)
+                val m0 = Rational.of(num.a, den).toNearestInt()
+                val n0 = Rational.of(num.b, den).toNearestInt()
+
+                fun remainder(q: EisensteinInt): EisensteinInt =
+                    EisensteinIntCommutativeRing.add(alpha,
+                        EisensteinIntCommutativeRing.add.inverse(EisensteinIntCommutativeRing.mul(beta, q))
+                    )
+
+                val (bestQ, bestR) = (-1..1).asSequence()
+                    .flatMap { dm -> (-1..1).asSequence().map { dn -> dm to dn } }
+                    .map { (dm, dn) -> EisensteinInt(m0 + dm.toBigInteger(), n0 + dn.toBigInteger()) }
+                    .map { q -> q to remainder(q) }
+                    .minBy { (_, r) -> EisensteinIntCommutativeRing.normSq(r) }
+
+                check(bestR == EisensteinInt.ZERO || EisensteinIntCommutativeRing.normSq(bestR) < den) {
+                    "Euclidean condition failed"
+                }
+                bestQ to bestR
+            },
+            measureOp = UnaryOp(Symbols.NORM_SQ_SYMBOL) { z ->
+                EisensteinIntCommutativeRing.normSq(z)
+            }
+        )
+
+
+    object ZModuleEisensteinInt: ZModule<EisensteinInt> {
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
+        override val add = EisensteinIntCommutativeRing.add
+        override val leftAction: LeftAction<BigInteger, EisensteinInt> =
+            LeftAction(Symbols.TRIANGLE_RIGHT) { n, ez ->
+                EisensteinInt(n * ez.a, n * ez.b)
+            }
+    }
+
+    /**
+     * The Eisenstein integers `ℤ[ω]` are viewed via three related embeddings:
+     *
+     * 1) Coordinate embedding: `ℤ² → ℤ[ω]`, `(m, n) ↦ m + nω` (ℤ² is the free abelian group)
+     * 2) Real (geometric) embedding: `ℤ[ω] → ℝ²`, `a + bω ↦ (a - b/2, (√3/2)b)`
+     * 3) Complex embedding: `ℤ[ω] → ℂ`, `a + bω ↦ a + bω`
+     *
+     * where `ω = e^{2πi/3} = (-1 + √3 i) / 2`.
+     *
+     *  The bilinear form `dot` is the symmetric bilinear form associated to the quadratic form
+     *
+     *     N(a + bω) = a² - ab + b²
+     *
+     * via polarization:
+     *
+     *     ⟨x, y⟩ = (N(x + y) - N(x) - N(y)) / 2.
+     *
+     * Under the standard real embedding ℤ[ω] → ℝ² given by ω = (-1 + √3 i)/2,
+     *
+     *     a + bω ↦ (a - b/2, (√3/2)b),
+     *
+     * this ⟨·,·⟩ is exactly the usual Euclidean dot product in ℝ².
+     *
+     * In particular, for the ℤ-basis vectors {1, ω} we have
+     *
+     *     ⟨1, ω⟩ = -1/2,
+     *
+     * since the corresponding vectors (1, 0) and (-1/2, √3/2) are not orthogonal.
+     */
     object EisensteinIntLattice: EuclideanLattice<EisensteinInt, Rational> {
         private val ring = EisensteinIntCommutativeRing
 
         override val dot: (EisensteinInt, EisensteinInt) -> Rational = { x, y ->
-            Rational.of(ring.normSq((ring.add(x, y))) - ring.normSq(x) - ring.normSq(y), BigInteger.TWO)
+            Rational.of(ring.normSq(ring.add(x, y)) - ring.normSq(x) - ring.normSq(y), BigInteger.TWO)
         }
 
         override val rank: Int = 2
 
         /**
-         * The basis is {1, ω}.
+         * The Eisenstein integers form a `ℤ`-basis `{1, ω}` over the abelian group `ℤ[ω]`.
          */
         override val basis: List<EisensteinInt> = listOf(
             EisensteinInt.ONE,
@@ -98,11 +185,17 @@ object EisensteinIntAlgebras {
             EisensteinInt(s * a, s * b)
         }
 
-        val embed: UnaryOp<EisensteinInt, Vec2<Real>> = UnaryOp { (a, b) ->
+        val embedR2: UnaryOp<EisensteinInt, Vec2<Real>> = UnaryOp { (a, b) ->
             val aReal = a.toReal()
             val bReal = b.toReal()
             Vec2(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
+
+        /**
+         * Call validate() last to make sure all necessary conditions are met AFTER initialization happens.
+         */
+        @Suppress("unused")
+        private val _validated = validate()
     }
 
     /**
@@ -122,5 +215,20 @@ object EisensteinIntAlgebras {
     fun EisensteinInt.toComplex(): Complex =
         EisensteinIntToCHomomorphism.apply(this)
 
-    val eqEisensteinInt: Eq<EisensteinInt> = Eq { x, y -> x == y }
+    val eqEisensteinInt: Eq<EisensteinInt> = Eq.default()
+
+    val printableEisensteinInt: Printable<EisensteinInt> =
+        ComplexPrintable.complexLikePrintable(
+            signed = IntegerAlgebras.SignedInteger,
+            zero = BigInteger.ZERO,
+            one = BigInteger.ONE,
+            re = { it.a },
+            im = { it.b },
+            basis = Symbols.OMEGA,
+            prA = IntegerAlgebras.printableInteger,
+            eqA = IntegerAlgebras.eqInt
+        )
+
+    val printableEisensteinIntPretty: Printable<EisensteinInt> =
+        printableEisensteinInt
 }

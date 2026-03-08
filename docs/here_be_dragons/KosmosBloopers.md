@@ -4,6 +4,8 @@ Some general life lessons learned from this project.
 
 ## 1. Wheels
 
+We roll inquisitively into our journey into insanity.
+
 ### The Prelude
 
 - GPT 5.2: "Sebastian, wheels are not a good idea. Low ROI, high risk, not a good investment of time."
@@ -65,4 +67,31 @@ GPT-5.2: We don't. Just test ∞ * inv(∞) and call it a day.
 Sebastian: Argh. I just want to get this done already.
 GPT-5.2: 🎋
 ```
- 
+
+## 2. Zorn Matrices
+
+The journey threatens to continue.
+
+### The Premise
+
+- Sebastian: “What if we implement Zorn matrices? We could get a slick model for split octonions, and it’ll be elegant and mathematically spicy.”
+- GPT-5.2: “No.”
+- Sebastian: “But… *vector hats*.”
+- GPT-5.2: “Still no.”
+
+### The Core Issue
+
+Zorn matrices are the kind of structure that looks like a tidy 2×2 block matrix on paper and then immediately reveals itself as a gleefully non-associative trapdoor in code. You start with something that resembles:
+
+$$
+\begin{pmatrix}
+a & \hat v \\
+\hat w & b
+\end{pmatrix}
+$$
+
+and end up juggling cross products, bilinear forms, sign conventions, and “this is not actually a matrix ring” caveats, all while your future self stands behind you holding a fire extinguisher labeled *regret*. After the Wheel Incident™, we are officially adopting a new policy: **if GPT points at the blackboard with a bamboo rod, we listen**.
+
+### Exhibit A
+
+![Zorn matrices warning cartoon](zornmatrices.png)

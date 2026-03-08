@@ -16,9 +16,7 @@ import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionVe
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternionStrict
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
 import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
-import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.w
 import org.vorpal.kosmos.hypercomplex.quaternion.x
 import org.vorpal.kosmos.hypercomplex.quaternion.y
@@ -29,6 +27,7 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -104,7 +103,7 @@ object OctonionAlgebras {
      * the reals lie in the center, so scalar multiplication is safe.
      */
     val OctonionVectorSpace: FiniteVectorSpace<Real, Octonion> = FiniteVectorSpace.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         add = OctonionDivisionAlgebraReal.add,
         dimension = 8,
         leftAction = LeftAction { r, o -> octonion(
@@ -114,7 +113,7 @@ object OctonionAlgebras {
     )
 
     val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
-        scalars = RealField,
+        scalars = RealAlgebras.RealField,
         involutiveRing = OctonionDivisionAlgebraReal,
         leftAction = OctonionVectorSpace.leftAction,
     )
@@ -159,4 +158,32 @@ object OctonionAlgebras {
      * enumeration or spec construction.
      */
     fun allQuaternionEmbeddings() = embeddingKit.allEmbeddings()
+
+    private fun printableOctonionGenerator(
+        prReal: Printable<Real>,
+        eqReal: Eq<Real>
+    ): Printable<Octonion> =
+        OctonionPrintable.octonionPrintable(
+            signed = RealAlgebras.SignedReal,
+            zero = RealAlgebras.RealField.zero,
+            one = RealAlgebras.RealField.one,
+            prA = prReal,
+            eqA = eqReal,
+            decompose = { o -> listOf(o.w, o.x, o.y, o.z, o.u, o.v, o.s, o.t) }
+        )
+
+    val printableOctonion: Printable<Octonion> = printableOctonionGenerator(
+        prReal = RealAlgebras.printableReal,
+        eqReal = RealAlgebras.eqRealApprox
+    )
+
+    val printableOctonionStrict: Printable<Octonion> = printableOctonionGenerator(
+        prReal = RealAlgebras.printableRealStrict,
+        eqReal = RealAlgebras.eqRealStrict
+    )
+
+    val printableOctonionPretty: Printable<Octonion> = printableOctonionGenerator(
+        prReal = RealAlgebras.printableRealPretty,
+        eqReal = RealAlgebras.eqRealApprox
+    )
 }

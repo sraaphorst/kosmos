@@ -18,9 +18,13 @@ object AbelianGroupZModuleBridge {
 
     /**
      * Canonical: an abelian group gives a Z-module structure.
+     *
+     * Note that the [ZModule] structure returned here likely does not use the most efficient means of
+     * implementing the scalar multiplication operation: the action relies on calculating the image of the scalar
+     * in the group by doubling the group identity until the effect of multiplying by the scalar is achieved.
      */
     fun <M : Any> AbelianGroup<M>.toZModule(): ZModule<M> {
         val action: LeftAction<BigInteger, M> = LeftAction(::zTimes)
-        return RModule.of(IntegerAlgebras.ZCommutativeRing, this, action)
+        return RModule.of(IntegerAlgebras.IntegerCommutativeRing, this, action)
     }
 }

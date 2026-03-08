@@ -6,18 +6,20 @@ import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.PrimeField
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
-import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.render.LinearCombinationPrintable
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 object IntegerAlgebras {
     val F2: PrimeField = PrimeField(BigInteger.TWO)
 
-    object ZCommutativeRing:
+    object IntegerCommutativeRing:
         CommutativeRing<BigInteger>,
         InvolutiveRing<BigInteger>,
         HasNormSq<BigInteger, BigInteger> {
@@ -43,4 +45,13 @@ object IntegerAlgebras {
 
         override fun fromBigInt(n: BigInteger): BigInteger = n
     }
+
+    val eqInt: Eq<BigInteger> = Eq.default()
+
+    object SignedInteger : LinearCombinationPrintable.SignedOps<BigInteger> {
+        override fun isNeg(x: BigInteger): Boolean = x.signum() < 0
+        override fun abs(x: BigInteger): BigInteger = x.abs()
+    }
+
+    val printableInteger: Printable<BigInteger> = Printable.default()
 }

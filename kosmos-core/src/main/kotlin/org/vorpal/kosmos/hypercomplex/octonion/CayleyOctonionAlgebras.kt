@@ -18,6 +18,7 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -26,7 +27,7 @@ import java.math.BigInteger
  *
  * These include:
  * - [CayleyOctonionNonAssociativeInvolutiveRing]: the Cayley octonions.
- * - [CayleyOctonionZModule]: the eight-dimensional vector space of Cayley octonions over the rationals.
+ * - [ZModuleCayleyOctonion]: the eight-dimensional vector space of Cayley octonions over the rationals.
  *
  * We have the following homomorphisms:
  * - [LipschitzToCayleyMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the Cayley octonions.
@@ -79,8 +80,8 @@ object CayleyOctonionAlgebras {
      * but we can build a Z-module and we need the LeftAction to scale. Instead of building using the
      * AbelianGroupZModuleBridge, we build it directly for efficiency on the scaling operation.
      */
-    object CayleyOctonionZModule: ZModule<CayleyOctonion> {
-        override val scalars = IntegerAlgebras.ZCommutativeRing
+    object ZModuleCayleyOctonion: ZModule<CayleyOctonion> {
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = base.add
         override val leftAction: LeftAction<BigInteger, CayleyOctonion> = LeftAction { n, co ->
             cayleyOctonion(
@@ -116,10 +117,22 @@ object CayleyOctonionAlgebras {
         quaternionRing = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
         octonionRing = CayleyOctonionNonAssociativeInvolutiveRing,
         basisMap = CayleyOctonionNonAssociativeInvolutiveRing.basisMap,
-        leftAction = CayleyOctonionZModule.leftAction,
+        leftAction = ZModuleCayleyOctonion.leftAction,
         eq = eqCayleyOctonion,
         decompose = { lq -> listOf(lq.w, lq.x, lq.y, lq.z) }
     )
 
     fun allQuaternionEmbeddings() = embeddingKit.allEmbeddings()
+
+    val printableCayleyOctonion: Printable<CayleyOctonion> =
+        OctonionPrintable.octonionPrintable(
+            signed = IntegerAlgebras.SignedInteger,
+            zero = BigInteger.ZERO,
+            one = BigInteger.ONE,
+            prA = IntegerAlgebras.printableInteger,
+            eqA = IntegerAlgebras.eqInt,
+            decompose = { co -> listOf(co.w, co.x, co.y, co.z, co.u, co.v, co.s, co.t) }
+        )
+
+    val printableCayleyOctonionPretty = printableCayleyOctonion
 }

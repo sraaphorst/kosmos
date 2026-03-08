@@ -7,7 +7,6 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
@@ -15,6 +14,8 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.core.render.LinearCombinationPrintable
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 object RationalAlgebras {
@@ -35,6 +36,8 @@ object RationalAlgebras {
             require(r != Rational.ZERO) { "0 has no reciprocal." }
             r.reciprocal()
         }
+        override fun fromBigInt(n: BigInteger): Rational =
+            Rational.of(n, BigInteger.ONE)
     }
 
     object RationalStarField :
@@ -50,16 +53,23 @@ object RationalAlgebras {
 
         override val normSq: UnaryOp<Rational, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
-
-        override fun fromBigInt(n: BigInteger): Rational =
-            Rational.of(n, BigInteger.ONE)
     }
 
     val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
-        IntegerAlgebras.ZCommutativeRing,
+        IntegerAlgebras.IntegerCommutativeRing,
         RationalField,
         UnaryOp { z -> z.toRational() }
     )
 
-    val eqRational: Eq<Rational> = Eqs.rational
+    val eqRational: Eq<Rational> = Eq.default()
+
+    object SignedRational : LinearCombinationPrintable.SignedOps<Rational> {
+        override fun isNeg(x: Rational): Boolean = x.signum < 0
+        override fun abs(x: Rational): Rational = x.abs()
+    }
+
+    // Rational.toString() does exactly what we want.
+    val printableRational: Printable<Rational> = Printable.default()
+
+    val printableRationalPretty = printableRational
 }

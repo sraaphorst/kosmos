@@ -15,22 +15,12 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
  * [GaussianIntAlgebras] contains the algebraic structures over the [GaussianInt] type, as well as the
- * homomorphisms and [Eq] instances.
- *
- * These include:
- * - [GaussianIntCommutativeRing]: the Gaussian integers.
- * - [ZModuleGaussianInt]: the two-dimensional vector space of Gaussian integers over the integers.
- *
- * We have the following homomorphisms:
- * - [ZToGaussianIntMonomorphism]: from the integers to the Gaussian integers.
- * - [GaussianIntToComplexMonomorphism]: from the Gaussian integers to the complex numbers.
- *
- * We also have the following [Eq]s:
- * - [eqGaussianInt]: equality on Gaussian integers.
+ * homomorphisms, [Eq] instances, and [Printable]s.
  */
 object GaussianIntAlgebras {
     /**
@@ -71,14 +61,14 @@ object GaussianIntAlgebras {
     }
 
     object ZModuleGaussianInt: ZModule<GaussianInt> {
-        override val scalars = IntegerAlgebras.ZCommutativeRing
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = GaussianIntCommutativeRing.add
         override val leftAction: LeftAction<BigInteger, GaussianInt> =
             LeftAction(Symbols.TRIANGLE_RIGHT) { n, gi -> GaussianInt(n * gi.re, n * gi.im) }
     }
 
     object ZToGaussianIntMonomorphism: RingMonomorphism<BigInteger, GaussianInt> {
-        override val domain = IntegerAlgebras.ZCommutativeRing
+        override val domain = IntegerAlgebras.IntegerCommutativeRing
         override val codomain = GaussianIntCommutativeRing
         override val map = UnaryOp<BigInteger, GaussianInt> { z -> GaussianInt(z, BigInteger.ZERO) }
     }
@@ -89,5 +79,19 @@ object GaussianIntAlgebras {
         override val map = UnaryOp<GaussianInt, Complex> { (a, b) -> complex(a.toReal(), b.toReal()) }
     }
 
-    val eqGaussianInt: Eq<GaussianInt> = Eq { gz1, gz2 -> gz1.re == gz2.re && gz1.im == gz2.im }
+    val eqGaussianInt: Eq<GaussianInt> = Eq.default()
+
+    val printableGaussianInt: Printable<GaussianInt> =
+        ComplexPrintable.complexLikePrintable(
+            signed = IntegerAlgebras.SignedInteger,
+            zero = IntegerAlgebras.IntegerCommutativeRing.zero,
+            one = IntegerAlgebras.IntegerCommutativeRing.one,
+            re = { it.re },
+            im = { it.im },
+            basis = Symbols.IMAGINARY_I,
+            prA = IntegerAlgebras.printableInteger,
+            eqA = IntegerAlgebras.eqInt
+        )
+
+    val printableGaussianIntPretty = printableGaussianInt
 }

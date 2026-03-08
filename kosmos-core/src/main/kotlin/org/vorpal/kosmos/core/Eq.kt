@@ -192,6 +192,4 @@ object Eqs {
             abs(a - b) <= ulp
         }
     }
-
-    val rational: Eq<Rational> = Eq { x, y -> x == y }
 }
