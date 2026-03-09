@@ -16,7 +16,7 @@ class NonAssociativeInvolutiveRingLaws<A : Any>(
 ): LawSuite {
 
     override val name = suiteName(
-        "InvolutiveAlgebra",
+        "NonAssociativeInvolutiveRing",
         algebra.add.op.symbol,
         algebra.mul.op.symbol,
         algebra.conj.symbol)
