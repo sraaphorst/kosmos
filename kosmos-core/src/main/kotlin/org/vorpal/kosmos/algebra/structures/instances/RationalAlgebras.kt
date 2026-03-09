@@ -13,6 +13,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.syntax.toRational
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
