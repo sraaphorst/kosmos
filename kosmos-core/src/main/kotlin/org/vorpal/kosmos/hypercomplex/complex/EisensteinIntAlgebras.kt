@@ -19,7 +19,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.core.rational.toNearestInt
+import org.vorpal.kosmos.core.rational.syntax.toNearestInt
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
 import org.vorpal.kosmos.linear.values.Vec2

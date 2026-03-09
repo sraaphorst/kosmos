@@ -6,6 +6,7 @@ import org.vorpal.kosmos.frameworks.sequence.CachedRecurrence
 import org.vorpal.kosmos.frameworks.sequence.CachedRecurrenceImplementation
 import org.vorpal.kosmos.numerical.quasirandom.HaltonSequence
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.syntax.toRational
 import org.vorpal.kosmos.core.rational.toRational
 
 /**

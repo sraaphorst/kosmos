@@ -27,7 +27,7 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
             arb = ArbQuaternion.quaternion,
             eqB = DenseMatAlgebras.liftEq(ComplexAlgebras.eqComplex),
             prA = prA,
-            prB = DenseMatAlgebras.liftPrintable(prC)
+            prB = DenseMatAlgebras.liftPrintablePretty(prC)
         )
 
         laws.fullTest().throwIfFailed()

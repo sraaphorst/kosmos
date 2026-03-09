@@ -2,7 +2,6 @@ package org.vorpal.kosmos.core.rational
 
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
-import org.vorpal.kosmos.functional.datastructures.Option
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
@@ -61,12 +60,6 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     fun toBigDecimal(scale: Int = 20): BigDecimal =
         n.toBigDecimal().divide(d.toBigDecimal(), scale, RoundingMode.HALF_EVEN)
     fun toReal(): Real = n.toReal() / d.toReal()
-    fun toFloat(): Float = n.toFloat() / d.toFloat()
-
-    @Deprecated("use toReal() instead",
-        ReplaceWith("toReal()", imports = ["org.vorpal.kosmos.core.math.Real"]),
-        level = DeprecationLevel.ERROR)
-    fun toDouble(): Double = n.toDouble() / d.toDouble()
 
     val isInteger: Boolean
         get() = d == BigInteger.ONE
@@ -136,3 +129,11 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     }
 }
 
+// Pimp existing types to be able to convert to Rational.
+fun Int.toRational(): Rational = Rational.of(this.toBigInteger(), BigInteger.ONE)
+fun Long.toRational(): Rational = Rational.of(this.toBigInteger(), BigInteger.ONE)
+fun BigInteger.toRational(): Rational = Rational.of(this, BigInteger.ONE)
+fun Short.toRational(): Rational = Rational.of(this.toInt().toBigInteger(), BigInteger.ONE)
+fun Byte.toRational(): Rational  = Rational.of(this.toInt().toBigInteger(), BigInteger.ONE)
+fun UInt.toRational(): Rational  = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
+fun ULong.toRational(): Rational = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
