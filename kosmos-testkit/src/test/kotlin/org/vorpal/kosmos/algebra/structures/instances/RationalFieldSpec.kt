@@ -13,13 +13,12 @@ class RationalFieldSpec : StringSpec({
     val field = RationalAlgebras.RationalField
 
     "RationalField satisfies FieldLaws" {
-        val laws = FieldLaws(
+        FieldLaws(
             field = field,
             arb = ArbRational.small,
             eq = RationalAlgebras.eqRational,
             pr = RationalAlgebras.printableRationalPretty
-        )
-        laws.fullTest().throwIfFailed()
+        ).fullTest().throwIfFailed()
     }
 
     "zero is Rational.ZERO" {

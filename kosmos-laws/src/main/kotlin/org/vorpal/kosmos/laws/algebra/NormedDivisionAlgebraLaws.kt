@@ -1,23 +1,36 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.exists
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
-import org.vorpal.kosmos.laws.homomorphism.preservesBinaryOpLaw
+import org.vorpal.kosmos.laws.property.NormSqDefiniteLaw
+import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * Laws for [NormedDivisionAlgebra]<N, A>:
  * - [NonAssociativeDivisionAlgebraLaws] on A
- * - Multiplicativity of normSq: N(xy) = N(x) * N(y)
- *
- * Optionally (if [zeroN] is provided):
- * - Definiteness: N(x) = 0_N  ⇔  x = 0_A
+ * - Multiplicativity of normSq:
+ * ```
+ * N(xy) = N(x) * N(y)
+ *```
+ * Optionally, if [zeroN] = `Some(0_N)`:
+ * - Definiteness:
+ * ```
+ * N(x) = 0_N ⇔ x = 0_A
+ * ```
+ * In the future, we may want to include:
+ * - NormSqFromConjugationLaw
+ * - NormSqNegationInvariantLaw
+ * This depends on the kinds of algebras represented by NormedDivisionAlgebras:
+ * - For classical composition algebras, yes.
+ * - For future exotic algebras that may come up, possibly not.
  */
 class NormedDivisionAlgebraLaws<N : Any, A : Any>(
     private val algebra: NormedDivisionAlgebra<N, A>,
@@ -27,7 +40,7 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
     private val eqN: Eq<N> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prN: Printable<N> = Printable.default(),
-    private val zeroN: N? = null
+    private val zeroN: Option<N> = Option.None
 ) : LawSuite {
 
     private val normDesc = "N[${algebra.normSq.symbol}]"
@@ -41,39 +54,34 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
         normDesc
     )
 
-    private val divAlgLaws = NonAssociativeDivisionAlgebraLaws(algebra, arbA, eqA, prA)
+    private val divAlgLaws =
+        NonAssociativeDivisionAlgebraLaws(algebra, arbA, eqA, prA)
 
     private val structureLaws: List<TestingLaw> = buildList {
-        // N(xy) = N(x) * N(y)
         add(
-            preservesBinaryOpLaw(
-                domainOp = algebra.mul.op,
-                codomainOp = mulN,
-                hom = algebra.normSq::invoke,
+            NormSqMultiplicativeLaw(
+                mulA = algebra.mul.op,
+                normSq = algebra.normSq,
+                mulN = mulN,
                 arbA = arbA,
-                eqB = eqN,
+                eqN = eqN,
                 prA = prA,
-                prB = prN,
-                label = "normSq multiplicative"
+                prN = prN
             )
         )
 
-        // Optional: definiteness (requires a chosen 0_N)
-        if (zeroN != null) {
+        zeroN.exists {
             add(
-                TestingLaw.named("normSq definite: N(a)=0 ⇔ a=0") {
-                    checkAll(arbA) { a ->
-                        val isNormZero = eqN(algebra.normSq(a), zeroN)
-                        val isVecZero = eqA(a, algebra.zero)
-
-                        check(isNormZero == isVecZero) {
-                            "Definiteness failed:\n" +
-                                "a=${prA(a)}\n" +
-                                "N(a)=${prN(algebra.normSq(a))}\n" +
-                                "N(a)==0? $isNormZero   a==0? $isVecZero"
-                        }
-                    }
-                }
+                NormSqDefiniteLaw(
+                    normSq = algebra.normSq,
+                    zeroA = algebra.zero,
+                    zeroN = it,
+                    arbA = arbA,
+                    eqA = eqA,
+                    eqN = eqN,
+                    prA = prA,
+                    prN = prN
+                )
             )
         }
     }
