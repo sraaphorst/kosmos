@@ -9,7 +9,6 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
@@ -18,6 +17,7 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 
 /**
  * [ComplexAlgebras] contains the algebraic structures over the [Complex] type, as well as the
@@ -97,4 +97,51 @@ object ComplexAlgebras {
     /** EQs **/
     val eqComplexStrict: Eq<Complex> = CD.eq(RealAlgebras.eqRealStrict)
     val eqComplex: Eq<Complex> = CD.eq(RealAlgebras.eqRealApprox)
+
+    private fun printableComplexGenerator(
+        prReal: Printable<Real>,
+        eqReal: Eq<Real>,
+    ): Printable<Complex> =
+        ComplexPrintable.complexLikePrintable(
+            signed = RealAlgebras.SignedReal,
+            zero = RealAlgebras.RealField.zero,
+            one = RealAlgebras.RealField.one,
+            re = { it.re },
+            im = { it.im },
+            basis = Symbols.IMAGINARY_I,
+            prA = prReal,
+            eqA = eqReal
+        )
+
+    val printableComplex: Printable<Complex> =
+        printableComplexGenerator(
+            prReal = RealAlgebras.printableReal,
+            eqReal = RealAlgebras.eqRealApprox
+        )
+
+    val printableComplexStrict: Printable<Complex> =
+        printableComplexGenerator(
+            prReal = RealAlgebras.printableRealStrict,
+            eqReal = RealAlgebras.eqRealStrict
+        )
+
+    val printableComplexPretty: Printable<Complex> =
+        printableComplexGenerator(
+            prReal = RealAlgebras.printableRealPretty,
+            eqReal = RealAlgebras.eqRealApprox
+        )
+}
+
+
+fun main() {
+    val e1 = Complex(1.0, 0.0)
+    val e2 = Complex(0.0, 1.0)
+    val e3 = Complex(1.0, 1.0)
+    val e4 = Complex(1.0, 2.5)
+    val e5 = complex(-10.0, 10.0)
+    val e6 = complex(10.5, -1.0)
+    val e7 = complex(-0.0, -0.0)
+    listOf(e1, e2, e3, e4, e5, e6, e7).forEach {
+        println(ComplexAlgebras.printableComplexPretty(it))
+    }
 }

@@ -32,7 +32,7 @@ class StarAlgebraLaws<R : Any, A : Any>(
         algebra.conj.symbol
     )
 
-    private val algebraStarLaws: NonAssociativeStarAlgebraLaws<R, A> by lazy {
+    private val starAlgebraLaws: NonAssociativeStarAlgebraLaws<R, A> by lazy {
         NonAssociativeStarAlgebraLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
     }
 
@@ -41,10 +41,10 @@ class StarAlgebraLaws<R : Any, A : Any>(
     }
 
     override fun laws(): List<TestingLaw> =
-        algebraStarLaws.laws() +
+        starAlgebraLaws.laws() +
             associativityLaw
 
     override fun fullLaws(): List<TestingLaw> =
-        algebraStarLaws.fullLaws() +
+        starAlgebraLaws.fullLaws() +
             associativityLaw
 }

@@ -1,36 +1,35 @@
-package org.vorpal.kosmos.core.rational
+package org.vorpal.kosmos.core.rational.syntax
 
-import org.vorpal.kosmos.core.relations.TotalOrder
-import org.vorpal.kosmos.core.relations.instances.RationalRelations.RationalComparator
-import org.vorpal.kosmos.core.relations.leRelation
+import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
 import java.math.BigInteger
 
 
-/** Parse rational from string formats like "3/4", "5", "-2/7" */
+
 fun String.toRational(): Rational {
     val trimmed = trim()
     return when {
         '/' in trimmed -> {
             val parts = trimmed.split('/')
             require(parts.size == 2) { "Invalid rational format: $this" }
-            Rational.of(BigInteger(parts[0].trim()), BigInteger(parts[1].trim()))
+            Rational.Companion.of(BigInteger(parts[0].trim()), BigInteger(parts[1].trim()))
         }
-        else -> Rational.of(BigInteger(trimmed))
+        else -> Rational.Companion.of(BigInteger(trimmed))
     }
 }
 
-object RationalTotalOrder : TotalOrder<Rational> {
-    override val le = RationalComparator.leRelation()
-}
+/**
+ * Extension function to find the nearest integer.
+ */
+fun Rational.toNearestInt(): BigInteger {
+    val f = floor()
+    val c = ceil()
 
-// Pimp existing types to be able to convert to Rational.
-fun Int.toRational(): Rational = Rational.of(this.toBigInteger(), BigInteger.ONE)
-fun Long.toRational(): Rational = Rational.of(this.toBigInteger(), BigInteger.ONE)
-fun BigInteger.toRational(): Rational = Rational.of(this, BigInteger.ONE)
-fun Short.toRational(): Rational = Rational.of(this.toInt().toBigInteger(), BigInteger.ONE)
-fun Byte.toRational(): Rational  = Rational.of(this.toInt().toBigInteger(), BigInteger.ONE)
-fun UInt.toRational(): Rational  = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
-fun ULong.toRational(): Rational = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
+    val df = this - f
+    val dc = c.toRational() - this
+
+    return if (df <= dc) f else c
+}
 
 // Extension operators for left-hand integer operations
 operator fun Int.plus(rational: Rational): Rational = this.toRational() + rational
@@ -47,3 +46,4 @@ operator fun BigInteger.plus(rational: Rational): Rational = this.toRational() +
 operator fun BigInteger.minus(rational: Rational): Rational = this.toRational() - rational
 operator fun BigInteger.times(rational: Rational): Rational = this.toRational() * rational
 operator fun BigInteger.div(rational: Rational): Rational = this.toRational() / rational
+

@@ -82,31 +82,26 @@ tailrec fun <A : Any> EuclideanDomain<A, *>.gcd(a: A, b: A, eqA: Eq<A> = Eq.defa
  */
 data class ExtendedGcdResult<A : Any>(val a: A, val b: A, val gcd: A, val x: A, val y: A)
 
-fun <A : Any> EuclideanDomain<A, *>.extendedGcd(a: A, b: A, eqA: Eq<A> = Eq.default()): ExtendedGcdResult<A> {
-    var oldR = a
-    var r = b
-    var oldS = one
-    var s = zero
-    var oldT = zero
-    var t = one
+fun <A : Any> EuclideanDomain<A, *>.extendedGcd(
+    a: A,
+    b: A,
+    eqA: Eq<A> = Eq.default()
+): ExtendedGcdResult<A> {
+    tailrec fun go(oldR: A, r: A, oldS: A, s: A, oldT: A, t: A): ExtendedGcdResult<A> =
+        if (eqA(r, zero)) ExtendedGcdResult(a, b, oldR, oldS, oldT)
+        else {
+            val (q, newR) = divRem(oldR, r)
+            go(
+                oldR = r,
+                r    = newR,
+                oldS = s,
+                s    = add(oldS, add.inverse(mul(q, s))),
+                oldT = t,
+                t    = add(oldT, add.inverse(mul(q, t)))
+            )
+        }
 
-    while (!eqA(r, zero)) {
-        val (q, newR) = divRem(oldR, r)
-
-        val newS = add(oldS, add.inverse(mul(q, s)))
-        val newT = add(oldT, add.inverse(mul(q, t)))
-
-        oldR = r
-        r = newR
-
-        oldS = s
-        s = newS
-
-        oldT = t
-        t = newT
-    }
-
-    return ExtendedGcdResult(a, b, oldR, oldS, oldT)
+    return go(a, b, one, zero, zero, one)
 }
 
 fun <A : Any> EuclideanDomain<A, *>.lcm(a: A, b: A, eqA: Eq<A> = Eq.default()): A {

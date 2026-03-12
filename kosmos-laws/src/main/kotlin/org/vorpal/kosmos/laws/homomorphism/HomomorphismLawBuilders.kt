@@ -150,3 +150,56 @@ fun <A : Any> preservesIdentityLaw(
     pr: Printable<A> = Printable.default(),
     label: String = "endomorphism: preserves identity"
 ) = preservesIdentityLaw(identity, identity, hom, eq, pr, pr, label)
+
+/**
+ * Injectivity:
+ *
+ *    f(a) = f(b) => a = b
+ *
+ * Useful for monomorphisms.
+ */
+fun <A : Any, B : Any> injectivityLaw(
+    hom: (A) -> B,
+    arbA: Arb<A>,
+    eqA: Eq<A> = Eq.default(),
+    eqB: Eq<B> = Eq.default(),
+    prA: Printable<A> = Printable.default(),
+    prB: Printable<B> = Printable.default(),
+    label: String = "monomorphism: injectivity"
+): TestingLaw {
+    val pairArb = TestingLaw.arbPair(arbA)
+
+    return TestingLaw.named(label) {
+        checkAll(pairArb) { (a, b) ->
+            val fa = hom(a)
+            val fb = hom(b)
+
+            if (eqB(fa, fb)) {
+                withClue(
+                    buildString {
+                        val sa = prA(a)
+                        val sb = prA(b)
+                        appendLine("Monomorphism injectivity failed:")
+                        appendLine("f($sa) = ${prB(fa)}")
+                        appendLine("f($sb) = ${prB(fb)}")
+                        appendLine("So f($sa) = f($sb), but $sa ≠ $sb")
+                    }
+                ) {
+                    check(eqA(a, b))
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Simplified version for when the domain and the codomain are the same, i.e. we have an injective endomorphism.
+ */
+fun <A : Any> injectivityLaw(
+    hom: (A) -> A,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default(),
+    label: String = "injective endomorphism"
+): TestingLaw =
+    injectivityLaw(hom, arb, eq, eq, pr, pr, label)

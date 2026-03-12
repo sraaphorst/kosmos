@@ -16,7 +16,7 @@ fun interface Printable<in A> {
         fun <A> default(): Printable<A> = Printable { it.toString() }
 
         /** Build from a lambda (handy at call sites). */
-        fun <A> from(f: (A) -> String): Printable<A> = Printable { a -> f(a) }
+        fun <A> from(f: (A) -> String): Printable<A> = Printable { f(it) }
     }
 }
 
@@ -24,14 +24,13 @@ fun interface Printable<in A> {
 fun <A, B> Printable<B>.contramap(f: (A) -> B): Printable<A> =
     Printable { a -> render(f(a)) }
 
-/** Small convenience for inline use. */
-fun <A> Printable<A>.pretty(a: A): String = render(a)
 
 /**
  * Defaults for classes that don't have a Printable explicitly defined.
  */
 fun <A> pr(a: A, printable: Printable<A> = Printable.default()): String =
     printable(a)
+
 
 object Printables {
     val char: Printable<Char> = Printable.default()

@@ -56,6 +56,7 @@ object Symbols {
     const val DOTS_SLASH = "⋰"
     const val DOTS_VERTICAL = "⋮"
     const val DUAL = "⋀"
+    const val ELLIPSIS = "…"
     const val ENTAILS = "⊨"
     const val ENTAILS_NOT = "⊭"
     const val EPSILON = "ε"
@@ -72,6 +73,9 @@ object Symbols {
     const val GREATER_THAN_EQ = "≥"
     const val IFF = "↔"
     const val IFF_BB = "⇔"
+    const val IMAGINARY_I = "I"
+    const val IMAGINARY_J = "J"
+    const val IMAGINARY_K = "K"
     const val IMPLIES = "→"
     const val IMPLIES_BB = "⇒"
     const val INFINITY = "∞"
@@ -170,6 +174,7 @@ object Symbols {
     const val TURNSTYLE = PROVES
 
     // Intricate symbols
+    const val DIV_REM = "$SLASH$MOD"
     const val NORM = "||"
     const val NORM_SQ_SYMBOL = "|${DOT}|${SQUARE}"
 }

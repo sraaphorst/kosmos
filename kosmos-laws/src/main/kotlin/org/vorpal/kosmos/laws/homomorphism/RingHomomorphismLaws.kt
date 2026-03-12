@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.laws.homomorphism
 
 import io.kotest.property.Arb
+import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
@@ -16,7 +17,7 @@ import org.vorpal.kosmos.laws.TestingLaw
  *
  */
 class RingHomomorphismLaws<A : Any, B : Any>(
-    private val hom: (A) -> B,
+    private val hom: RingHomomorphism<A, B>,
     private val domain: Ring<A>,
     private val codomain: Ring<B>,
     private val arb: Arb<A>,
@@ -31,7 +32,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
         preservesBinaryOpLaw(
             domainOp = domain.add.op,
             codomainOp = codomain.add.op,
-            hom = hom,
+            hom = hom::invoke,
             arbA = arb,
             eqB = eqB,
             prA = prA,
@@ -41,7 +42,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
         preservesIdentityLaw(
             domainIdentity = domain.add.identity,
             codomainIdentity = codomain.add.identity,
-            hom = hom,
+            hom = hom::invoke,
             eqB = eqB,
             prA = prA,
             prB = prB,
@@ -51,7 +52,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
         preservesBinaryOpLaw(
             domainOp = domain.mul.op,
             codomainOp = codomain.mul.op,
-            hom = hom,
+            hom = hom::invoke,
             arbA = arb,
             eqB = eqB,
             prA = prA,

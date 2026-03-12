@@ -211,5 +211,6 @@ fun octonionCheck() {
 fun main() {
     realCheck()
     quaternionCheck()
+    quaternionEmbeddingCheck()
     octonionCheck()
 }

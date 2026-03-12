@@ -7,7 +7,6 @@ import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.relations.StrictOrder
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.core.relations.TotalStrictOrder
-import org.vorpal.kosmos.core.relations.instances.RationalRelations.RationalLT
 import org.vorpal.kosmos.core.relations.leRelation
 import org.vorpal.kosmos.core.relations.ltRelation
 
