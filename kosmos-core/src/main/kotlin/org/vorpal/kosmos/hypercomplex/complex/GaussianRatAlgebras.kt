@@ -8,7 +8,9 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
-import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
+import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
@@ -17,6 +19,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -76,13 +79,23 @@ object GaussianRatAlgebras {
     }
 
     val GaussianRatStarAlgebra: StarAlgebra<Rational, GaussianRat> = StarAlgebra.of(
-        scalars = RationalField,
+        scalars = RationalAlgebras.RationalField,
         involutiveRing = GaussianRatField,
         leftAction = GaussianRatVectorSpace.leftAction
     )
 
+    object ZModuleGaussianRat: ZModule<GaussianRat> {
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
+        override val add = GaussianRatField.add
+        override val leftAction: LeftAction<BigInteger, GaussianRat> =
+            LeftAction(Symbols.TRIANGLE_RIGHT) { n, g ->
+                val q = n.toRational()
+                GaussianRat(q * g.re, q * g.im)
+            }
+    }
+
     object GaussianRatVectorSpace: FiniteVectorSpace<Rational, GaussianRat> {
-        override val scalars = RationalField
+        override val scalars = RationalAlgebras.RationalField
         override val add = GaussianRatField.add
         override val dimension = 2
         override val leftAction: LeftAction<Rational, GaussianRat> =
@@ -90,21 +103,13 @@ object GaussianRatAlgebras {
     }
 
     object QtoGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> {
-        override val domain = RationalField
+        override val domain = RationalAlgebras.RationalField
         override val codomain = GaussianRatField
         override val map = UnaryOp<Rational, GaussianRat> { q -> GaussianRat(q, Rational.ZERO) }
     }
 
-    object GaussianIntToRatMonomorphism: RingMonomorphism<GaussianInt, GaussianRat> {
-        override val domain = GaussianIntAlgebras.GaussianIntCommutativeRing
-        override val codomain = GaussianRatField
-        override val map = UnaryOp<GaussianInt, GaussianRat> { (a, b) ->
-            GaussianRat(a.toRational(), b.toRational())
-        }
-    }
-
     val ZToGaussianRatMonomorphism: RingMonomorphism<BigInteger, GaussianRat> =
-        GaussianIntAlgebras.ZToGaussianIntMonomorphism andThen GaussianIntToRatMonomorphism
+        GaussianIntAlgebras.ZToGaussianIntMonomorphism andThen GaussianIntAlgebras.GaussianIntToRatMonomorphism
 
     /**
      * This may not be a perfect monomorphism due to floating point imprecision of converting
@@ -116,8 +121,20 @@ object GaussianRatAlgebras {
         override val map = UnaryOp<GaussianRat, Complex> { (a, b) -> complex(a.toReal(), b.toReal()) }
     }
 
-    fun GaussianInt.toGaussianRat(): GaussianRat =
-        GaussianIntToRatMonomorphism(this)
-
     val eqGaussianRat: Eq<GaussianRat> = Eq { gq1, gq2 -> gq1.re == gq2.re && gq1.im == gq2.im }
+
+    val printableGaussianRat: Printable<GaussianRat> =
+        ComplexPrintable.complexLikePrintable(
+            signed = RationalAlgebras.SignedRational,
+            zero = RationalAlgebras.RationalField.add.identity, // Rational.ZERO
+            one = RationalAlgebras.RationalField.mul.identity,  // Rational.ONE
+            re = { it.re },
+            im = { it.im },
+            basis = Symbols.IMAGINARY_I,
+            prA = RationalAlgebras.printableRational,
+            eqA = RationalAlgebras.eqRational
+        )
+
+    val printableGaussianRatPretty: Printable<GaussianRat> =
+        printableGaussianRat
 }

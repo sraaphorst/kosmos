@@ -9,6 +9,7 @@ import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.realPositiveDefiniteLaw
@@ -56,7 +57,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
             eqN = eqReal,
             prA = prA,
             prN = prReal,
-            zeroN = null
+            zeroN = Option.None
         )
 
     private val realOnly: List<TestingLaw> = listOf(

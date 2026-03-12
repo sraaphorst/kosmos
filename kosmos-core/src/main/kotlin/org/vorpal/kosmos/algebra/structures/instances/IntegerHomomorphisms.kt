@@ -7,7 +7,7 @@ import java.math.BigInteger
 
 fun <S: Any> Ring<S>.zHom(): RingHomomorphism<BigInteger, S> =
     RingHomomorphism.of(
-        domain = IntegerAlgebras.ZCommutativeRing,
+        domain = IntegerAlgebras.IntegerCommutativeRing,
         codomain = this as CommutativeRing<S>,
         map = ::fromBigInt
     )

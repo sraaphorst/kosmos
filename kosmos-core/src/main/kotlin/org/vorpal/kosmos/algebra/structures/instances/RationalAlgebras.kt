@@ -3,18 +3,22 @@ package org.vorpal.kosmos.algebra.structures.instances
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
+import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
+import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.core.render.LinearCombinationPrintable
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 object RationalAlgebras {
@@ -35,15 +39,25 @@ object RationalAlgebras {
             require(r != Rational.ZERO) { "0 has no reciprocal." }
             r.reciprocal()
         }
+        override fun fromBigInt(n: BigInteger): Rational =
+            Rational.of(n)
     }
 
+    /**
+     * The field of rational numbers equipped with the trivial involution,
+     * viewed in particular as a star algebra over itself.
+     */
     object RationalStarField :
         Field<Rational> by RationalField,
         InvolutiveRing<Rational>,
-        NormedDivisionAlgebra<Rational, Rational> {
+        NormedDivisionAlgebra<Rational, Rational>,
+        StarAlgebra<Rational, Rational> {
 
         override val zero: Rational = Rational.ZERO
         override val one: Rational = Rational.ONE
+
+        override val scalars: CommutativeRing<Rational> =
+            RationalField
 
         override val conj: Endo<Rational> =
             Endo(Symbols.CONJ, Identity())
@@ -51,15 +65,25 @@ object RationalAlgebras {
         override val normSq: UnaryOp<Rational, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
-        override fun fromBigInt(n: BigInteger): Rational =
-            Rational.of(n, BigInteger.ONE)
+        override val leftAction: LeftAction<Rational, Rational> =
+            LeftAction(Symbols.TRIANGLE_RIGHT) { r, a -> r * a }
     }
 
     val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
-        IntegerAlgebras.ZCommutativeRing,
+        IntegerAlgebras.IntegerCommutativeRing,
         RationalField,
         UnaryOp { z -> z.toRational() }
     )
 
-    val eqRational: Eq<Rational> = Eqs.rational
+    val eqRational: Eq<Rational> = Eq.default()
+
+    object SignedRational : LinearCombinationPrintable.SignedOps<Rational> {
+        override fun isNeg(x: Rational): Boolean = x.signum < 0
+        override fun abs(x: Rational): Rational = x.abs()
+    }
+
+    // Rational.toString() does exactly what we want.
+    val printableRational: Printable<Rational> = Printable.default()
+
+    val printableRationalPretty = printableRational
 }

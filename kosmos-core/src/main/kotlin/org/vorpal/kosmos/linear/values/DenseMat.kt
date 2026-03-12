@@ -31,13 +31,30 @@ class DenseMat<A : Any> private constructor(
     }
 
     /**
+     * Total number of entries in the matrix.
+     */
+    val size: Int = data.size
+
+    /**
+     * Flat accessors for entries of the matrix, i.e.:
+     *
+     *    0 <= index < size = rows * cols
+     *
+     * Passing in an index will return the entry at row and column `index / cols` and `index % cols`.
+     *
+     * @throws IndexOutOfBoundsException if index is out of range.
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun flatGet(index: Int): A =
+        data[index] as A
+
+    /**
      * Return the element at row [r], column [c].
      *
      * @throws IndexOutOfBoundsException if indices are out of range.
      */
-    @Suppress("UNCHECKED_CAST")
     override operator fun get(r: Int, c: Int): A =
-        data[indexOf(r, c)] as A
+        flatGet(indexOf(r, c))
 
     fun toListOfRows(): List<List<A>> =
         List(rows) { r ->
@@ -57,7 +74,7 @@ class DenseMat<A : Any> private constructor(
             private var idx = 0
 
             override fun hasNext(): Boolean =
-                idx < rows * cols
+                idx < size
 
             override fun next(): A {
                 if (!hasNext()) throw NoSuchElementException()

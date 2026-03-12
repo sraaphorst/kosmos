@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
@@ -20,6 +19,7 @@ import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -28,7 +28,7 @@ import java.math.BigInteger
  *
  * These include:
  * - [LipschitzQuaternionRing]: the Lipschitz quaternions.
- * - [LipschitzQuaternionZModule]: the two-dimensional vector space of Lipschitz quaternions over the integers.
+ * - [ZModuleLipschitzQuaternion]: the two-dimensional vector space of Lipschitz quaternions over the integers.
  *
  * We have the following homomorphisms:
  * - [gaussianIntEmbeddingToQuaternion]: the unital embeddings from the Gaussian integers to the Lipschitz quaternions.
@@ -51,7 +51,7 @@ object LipschitzQuaternionAlgebras {
         HasNormSq<LipschitzQuaternion, BigInteger> {
 
         internal val base: NonAssociativeInvolutiveRing<LipschitzQuaternion> =
-            CayleyDickson.usual(GaussianIntAlgebras.GaussianIntCommutativeRing)
+            CayleyDickson.usual(GaussianIntAlgebras.GaussianIntEuclideanDomain)
 
         override val zero: LipschitzQuaternion = base.add.identity
         override val one: LipschitzQuaternion = base.mul.identity
@@ -81,8 +81,8 @@ object LipschitzQuaternionAlgebras {
             }
     }
 
-    object LipschitzQuaternionZModule : ZModule<LipschitzQuaternion> {
-        override val scalars = IntegerAlgebras.ZCommutativeRing
+    object ZModuleLipschitzQuaternion : ZModule<LipschitzQuaternion> {
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = LipschitzQuaternionRing.add
         override val leftAction: LeftAction<BigInteger, LipschitzQuaternion> =
             LeftAction(Symbols.TRIANGLE_RIGHT) { n, lq ->
@@ -98,7 +98,7 @@ object LipschitzQuaternionAlgebras {
     fun gaussianIntEmbeddingToQuaternion(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
-        domain = GaussianIntAlgebras.GaussianIntCommutativeRing,
+        domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionRing,
         map = UnaryOp { z ->
             QuaternionEmbeddingKit.embedComplexLike(
@@ -124,5 +124,17 @@ object LipschitzQuaternionAlgebras {
         }
     }
 
-    val eqLipschitzQuaternion: Eq<LipschitzQuaternion> = Eq { q1, q2 -> q1 == q2}
+    val eqLipschitzQuaternion: Eq<LipschitzQuaternion> = Eq.default()
+
+    val printableLipschitzQuaternion: Printable<LipschitzQuaternion> =
+        QuaternionPrintable.quaternionPrintable(
+            signed = IntegerAlgebras.SignedInteger,
+            zero = BigInteger.ZERO,
+            one = BigInteger.ONE,
+            prA = IntegerAlgebras.printableInteger,
+            eqA = IntegerAlgebras.eqInt,
+            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
+        )
+
+    val printableLipschitzQuaternionPretty = printableLipschitzQuaternion
 }

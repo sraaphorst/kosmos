@@ -18,6 +18,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 
@@ -102,7 +103,7 @@ object HurwitzQuaternionAlgebras {
     }
 
     object HurwitzQuaternionZModule : ZModule<HurwitzQuaternion> {
-        override val scalars = IntegerAlgebras.ZCommutativeRing
+        override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = HurwitzQuaternionRing.add
         override val leftAction: LeftAction<BigInteger, HurwitzQuaternion> =
             LeftAction(Symbols.TRIANGLE_RIGHT) { s, hq ->
@@ -149,9 +150,20 @@ object HurwitzQuaternionAlgebras {
         }
     }
 
-
     val LipschitzToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> =
         LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToQuaternionMonomorphism
 
-    val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq { q1, q2 -> q1 == q2 }
+    val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq.default()
+
+    val printableHurwitzQuaternion: Printable<HurwitzQuaternion> =
+        QuaternionPrintable.quaternionPrintable(
+            signed = RationalAlgebras.SignedRational,
+            zero = Rational.ZERO,
+            one = Rational.ONE,
+            prA = RationalAlgebras.printableRational,
+            eqA = RationalAlgebras.eqRational,
+            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
+        )
+
+    val printableHurwitzQuaternionPretty = printableHurwitzQuaternion
 }

@@ -21,6 +21,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
+import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
@@ -143,4 +144,16 @@ object RationalOctonionAlgebras {
     )
 
     fun allEmbeddings() = embeddingKit.allEmbeddings()
+
+    val printableRationalOctonion: Printable<RationalOctonion> =
+        OctonionPrintable.octonionPrintable(
+            signed = RationalAlgebras.SignedRational,
+            zero = Rational.ZERO,
+            one = Rational.ONE,
+            prA = RationalAlgebras.printableRational,
+            eqA = RationalAlgebras.eqRational,
+            decompose = { ro -> listOf(ro.w, ro.x, ro.y, ro.z, ro.u, ro.v, ro.s, ro.t) }
+        )
+
+    val printableRationalOctonionPretty = printableRationalOctonion
 }

@@ -4,6 +4,11 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.core.ops.LeftAction
 import java.math.BigInteger
 
+/**
+ * An interface for a lattice in a vector space over the integers.
+ *
+ * NOTE: This class has a validate method that should be called when an instance is created.
+ */
 interface ZLattice<V : Any> {
     val rank: Int
 
@@ -22,11 +27,23 @@ interface ZLattice<V : Any> {
      */
     val scale: LeftAction<BigInteger, V>
 
+    fun validate() {
+        require(rank >= 0) { "rank must be nonnegative: $rank" }
+        require(basis.size == rank) { "basis size ${basis.size} must equal rank $rank" }
+    }
+
     /**
      * The linear map Φ_B: Z^rank → V.
      */
-    fun embed(coeffs: List<BigInteger>): V =
-        coeffs
+    fun embed(coeffs: List<BigInteger>): V {
+        require(coeffs.size == rank) {
+            "expected $rank coefficients, got ${coeffs.size}"
+        }
+
+        return coeffs
             .zip(basis)
-            .fold(addV.identity) { acc, (z, b) -> addV(acc, scale(z, b)) }
+            .fold(addV.identity) { acc, (z, b) ->
+                addV(acc, scale(z, b))
+            }
+    }
 }
