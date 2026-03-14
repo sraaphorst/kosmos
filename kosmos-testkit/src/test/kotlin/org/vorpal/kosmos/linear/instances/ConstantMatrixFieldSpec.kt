@@ -1,12 +1,18 @@
 package org.vorpal.kosmos.linear.instances
 
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.matchers.shouldBe
+import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.hypercomplex.ArbGaussianRat
 import org.vorpal.kosmos.hypercomplex.complex.GaussianRatAlgebras
 import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.linear.instance.arbConstMat
+import org.vorpal.kosmos.linear.values.DenseMat
 
 class ConstantMatrixFieldSpec : StringSpec({
 
@@ -46,5 +52,24 @@ class ConstantMatrixFieldSpec : StringSpec({
             eq = eq,
             pr = pr
         ).fullTest().throwIfFailed()
+    }
+
+    "ConstantMatrixField satisfies fromBigInt for matrices over Rational" {
+        val eq = DenseMatAlgebras.liftEq(RationalAlgebras.eqRational)
+
+        (1 until 10).forEach { n ->
+            val field = ConstantMatrixAlgebras.ConstantMatrixField(
+                base = RationalAlgebras.RationalField,
+                n = n
+            )
+            val nBigInt = n.toBigInteger()
+
+            checkAll(ArbInteger.small) { k ->
+                val frac = Rational.of(k, nBigInt)
+                val expected = DenseMat.tabulate(n, n) { _, _ -> frac }
+                val actual = field.fromBigInt(k)
+                expected shouldBe actual
+            }
+        }
     }
 })
