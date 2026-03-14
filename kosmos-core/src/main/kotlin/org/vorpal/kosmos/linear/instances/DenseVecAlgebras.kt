@@ -6,10 +6,14 @@ import org.vorpal.kosmos.algebra.structures.Dimensionality
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.Monoid
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.VecLike
 import kotlin.require
@@ -137,4 +141,88 @@ object DenseVecAlgebras {
             DenseVec.tabulate(dimension) { i -> field.reciprocal(x[i]) }
         }
     }
+
+    private fun ellipsis(exceeded: Boolean) =
+        if (exceeded) ", ${Symbols.ELLIPSIS}" else ""
+
+    /**
+     * Lift a Printable<A> into a Printable<DenseVec<A>> with strict printing.
+     *
+     * The optional [maxEntries] parameter limits how many entries are shown.
+     * If the vector is longer, an ellipsis is appended.
+     *
+     * Example:
+     * ```kotlin
+     * val v = DenseVec.of(1.0, 2.2, -3.333, 4.0, -5.55555, 6.0)
+     * println(DenseVecAlgebras.liftPrintableStrict(Printable.default<Real>(), maxEntries = Option.Some(4))(v))
+     * ```
+     *
+     * Output:
+     * ```text
+     * 6 [1.0, 2.2, -3.333, 4.0, …]
+     * ```
+     */
+    fun <A : Any> liftPrintableStrict(
+        prA: Printable<A>,
+        maxEntries: Option<Int> = Option.Some(12)
+    ): Printable<DenseVec<A>> =
+        Printable { v ->
+            val limit = minOf(v.size, maxEntries.getOrElse(Int.MAX_VALUE))
+
+            val body = (0 until limit)
+                .joinToString(
+                    prefix = "[",
+                    postfix = "${ellipsis(v.size > limit)}]"
+                ) { i ->
+                    prA(v[i])
+                }
+
+            "${v.size} $body"
+        }
+
+    /**
+     * Lift a Printable<A> into a Printable<DenseVec<A>> with pretty-printing.
+     *
+     * The optional [maxEntries] parameter limits how many entries are shown.
+     * If the vector is longer, an ellipsis is appended.
+     *
+     * Example:
+     * ```kotlin
+     * val v = DenseVec.of(1.0, 2.2, -3.333, 4.0, -5.55555, 6.0)
+     * println(DenseVecAlgebras.liftPrintablePretty(Printable.default<Real>(), maxEntries = Option.Some(4))(v))
+     * ```
+     *
+     * Output:
+     * ```text
+     * 6-vector:
+     *    [  1.0,   2.2, -3.333,   4.0, …]
+     * ```
+     */
+    fun <A : Any> liftPrintablePretty(
+        prA: Printable<A>,
+        maxEntries: Option<Int> = Option.Some(12)
+    ): Printable<DenseVec<A>> =
+        Printable { v ->
+            val limit = minOf(v.size, maxEntries.getOrElse(Int.MAX_VALUE))
+
+            val rendered = (0 until limit).map { i -> prA(v[i]) }
+
+            val width = rendered.maxOfOrNull { it.length } ?: 1
+
+            val body = rendered
+                .map { it.padStart(width) }
+                .joinToString(
+                    prefix = "   [",
+                    postfix = if (v.size > limit) ", …]" else "]",
+                    separator = ", "
+                )
+
+            "${v.size}-vector:\n$body"
+        }
+
+    fun <A : Any> liftEq(eqA: Eq<A>): Eq<DenseVec<A>> =
+        Eq { x, y ->
+            if (x.size != y.size) false
+            else (0 until x.size).all { i -> eqA(x[i], y[i]) }
+        }
 }
