@@ -14,12 +14,13 @@ import org.vorpal.kosmos.algebra.structures.Semialgebra
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 
@@ -542,12 +543,12 @@ object DenseMatAlgebras {
      */
     fun <A : Any> liftPrintableStrict(
         prA: Printable<A>,
-        maxRows: Int? = 6,
-        maxCols: Int? = 6
+        maxRows: Option<Int> = Option.Some(6),
+        maxCols: Option<Int> = Option.Some(6)
     ): Printable<DenseMat<A>> =
         Printable { m ->
-            val rLim = if (maxRows == null) m.rows else minOf(m.rows, maxRows)
-            val cLim = if (maxCols == null) m.cols else minOf(m.cols, maxCols)
+            val rLim = minOf(m.rows, maxRows.getOrElse(Int.MAX_VALUE))
+            val cLim = minOf(m.cols, maxCols.getOrElse(Int.MAX_VALUE))
 
             val body = (0 until rLim)
                 .joinToString(prefix = "[", postfix = "${ellipsis(m.rows > rLim)}]") { r ->
@@ -598,12 +599,12 @@ object DenseMatAlgebras {
      */
     fun <A : Any> liftPrintablePretty(
         prA: Printable<A>,
-        maxRows: Int? = 6,
-        maxCols: Int? = 6
-    ): Printable<DenseMat<A>> =
+        maxRows: Option<Int> = Option.Some(6),
+        maxCols: Option<Int> = Option.Some(6)
+     ): Printable<DenseMat<A>> =
         Printable { m ->
-            val rLim = if (maxRows == null) m.rows else minOf(m.rows, maxRows)
-            val cLim = if (maxCols == null) m.cols else minOf(m.cols, maxCols)
+            val rLim = minOf(m.rows, maxRows.getOrElse(Int.MAX_VALUE))
+            val cLim = minOf(m.cols, maxCols.getOrElse(Int.MAX_VALUE))
 
             // Pre-render all visible entries
             val rendered = (0 until rLim).map { r ->

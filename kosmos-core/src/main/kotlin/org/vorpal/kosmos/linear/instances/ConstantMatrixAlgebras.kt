@@ -13,26 +13,36 @@ import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.functional.datastructures.getOrElse
 import java.math.BigInteger
 
-// ============================================================================
-// Constant-matrix structures (carrier: {aJ})
-// ============================================================================
-
-// 1) Unit group: nonzero constants under multiplication
-// 2) Field of constant matrices
-// 3) Algebra over base field
-// 4) Isomorphisms (F ≅ constant matrices)
-// 5) Statistical helper: mean projection
-
+/**
+ * Constant-matrix structures (carrier: `{aJ}`)
+ * 1) Unit group: nonzero constants under multiplication
+ * 2) Field of constant matrices
+ * 3) Algebra over base field
+ * 4) Isomorphisms (F ≅ constant matrices)
+ * 5) Statistical helper: mean projection
+ */
 object ConstantMatrixAlgebras {
+    private fun <F : Any> requireInvertibleOrThrow(
+        field: Field<F>,
+        n: Int,
+        value: F
+    ): F = field.reciprocalOption(value).getOrElse {
+        throw IllegalArgumentException(
+            "Cannot construct constant-matrix structure: n = $n is not invertible in the base field."
+        )
+    }
+
     /**
-     * A construction for the Abelian group of `n×n` nonzero matrices over a [base] [Field].
-     * - The identity element for this group is the constant matrix of entries `(1/n)J`.
-     * - Multiplication is standard matrix multiplication, but is commutative.
-     * - The inverse of a constant matrix of value `a` is `(1/(n^2 a))J`.
+     * The multiplicative group of nonzero constant `n×n` matrices over a base field [base].
+     * - The carrier is `{aJ | a ∈ F, a ≠ 0}`, where `J` is the all-ones matrix.
+     * - The identity element is `(1/n)J`.
+     * - Multiplication is ordinary matrix multiplication, which is commutative on this carrier.
+     * - The inverse of `aJ` is `(1/(n^2 a))J`.
      */
-    class ConstantMatrixAbelianGroup<F : Any>(
+    class ConstantMatrixUnitGroup<F : Any>(
         base: Field<F>,
         n: Int
     ): AbelianGroup<DenseMat<F>>, MatrixDimensionality {
@@ -45,7 +55,7 @@ object ConstantMatrixAlgebras {
         override val cols = n
 
         private val nScalar: F = base.fromBigInt(n.toBigInteger())
-        private val nInv: F = base.reciprocal(nScalar)
+        private val nInv: F = requireInvertibleOrThrow(base, n, nScalar)
         private val n2: F = base.mul(nScalar, nScalar)
 
         override val identity: DenseMat<F> = DenseMatKernel.constMat(nInv, n, n)
@@ -63,9 +73,13 @@ object ConstantMatrixAlgebras {
 
         override val inverse = Endo(Symbols.INVERSE) { x: DenseMat<F> ->
             DenseMatKernel.requireSize(x, n, n)
-            val a = DenseMatKernel.checkConstNonemptyMat(x, base.zero) // forbid a = 0
+            val a = DenseMatKernel.checkConstNonemptyMat(x, base.zero)
             val denom = base.mul(n2, a)
-            val inv = base.reciprocal(denom)
+            val inv = base.reciprocalOption(denom).getOrElse {
+                throw IllegalArgumentException(
+                    "Constant matrix is not invertible in the constant-matrix multiplicative group."
+                )
+            }
             DenseMatKernel.constMat(inv, n, n)
         }
     }
@@ -73,37 +87,34 @@ object ConstantMatrixAlgebras {
 
     /**
      * The field of constant `n×n` matrices over a base field [F], with carrier:
-     *
-     *
-     *    { aJ | a ∈ F }
-     *
-     *
+     * ```kotlin
+     * {aJ | a ∈ F}
+     * ```
      * where `J` is the all-ones matrix.
      *
-     * Addition is entrywise, so `(aJ) + (bJ) = (a+b)J`.
+     * Addition is entrywise, so:
+     * ```kotlin
+     * (aJ) + (bJ) = (a+b)J.
+     * ```
      *
      * Multiplication is matrix multiplication, and `J^2 = nJ`, so:
-     *
-     *
-     *    (aJ)(bJ) = (n·a·b)J.
-     *
+     * ```kotlin
+     * (aJ)(bJ) = (n·a·b)J.
+     * ```
      *
      * The multiplicative identity in this field is:
-     *
-     *
-     *    1_A = (1/n)J
-     *
-     *
+     * ```kotlin
+     * 1_A = (1/n)J.
+     * ```
      * so this is a field **in its own right**, but it is not a unital subfield of `M_n(F)`
      * unless `n=1` (because its 1 differs from the ambient identity matrix `I`).
      *
      * The multiplicative inverse of a nonzero constant matrix `aJ` is:
+     * ```kotlin
+     * (aJ)^{-1} = (1/(n^2 a))J.
+     * ```
      *
-     *
-     *    (aJ)^{-1} = (1/(n^2 a))J.
-     *
-     *
-     * Construction requires that [n] is invertible in [F] (i.e. `n ≠ 0` in [F]), since we must form `1/n`.
+     * Construction requires that the image of the integer `n` in `F` is invertible.
      */
     class ConstantMatrixField<F : Any>(
         private val base: Field<F>,
@@ -118,7 +129,7 @@ object ConstantMatrixAlgebras {
         override val cols = n
 
         private val nScalar: F = base.fromBigInt(n.toBigInteger())
-        private val nInv: F = base.reciprocal(nScalar)
+        private val nInv: F = requireInvertibleOrThrow(base, n, nScalar)
         private val n2: F = base.mul(nScalar, nScalar)
 
         /**
@@ -173,11 +184,15 @@ object ConstantMatrixAlgebras {
         override val reciprocal: Endo<DenseMat<F>> =
             Endo(Symbols.INVERSE) { x ->
                 val a = extractScalar(x)
-                require(a != base.zero) { "0 has no multiplicative inverse in constant-matrix field." }
 
-                // (aJ)^{-1} = (1/(n^2 a))J
+                // (aJ)^{-1} = (1/(n^2 a))J, when a != 0
                 val denom = base.mul(n2, a)
-                val inv = base.reciprocal(denom)
+                val inv = base.reciprocalOption(denom).getOrElse {
+                    throw IllegalArgumentException(
+                        "Constant matrix is not invertible in the constant-matrix field."
+                    )
+                }
+
                 constMat(inv)
             }
 
@@ -195,16 +210,13 @@ object ConstantMatrixAlgebras {
      * The underlying ring is [fieldOfConstantMatrices], whose multiplicative identity is `(1/n)J`.
      *
      * Scalars act via the unital embedding:
-     *
-     *
-     *    ι(r) = r · 1_A = (r/n)J
-     *
-     *
+     * ```kotlin
+     * ι(r) = r · 1_A = (r/n)J
+     * ```
      * and the action is left multiplication by `ι(r)`:
-     *
-     *
-     *    r ⊳ X = ι(r) · X
-     *
+     * ```kotlin
+     * r ⊳ X = ι(r) · X
+     * ```
      *
      * For constant matrices `X = aJ`, this simplifies to `(r ⊳ X) = (ra)J`.
      */
@@ -273,7 +285,13 @@ object ConstantMatrixAlgebras {
             i += 1
         }
 
-        val nInv = field.reciprocal(field.fromBigInt(x.size.toBigInteger()))
+        val nScalar = field.fromBigInt(x.size.toBigInteger())
+        val nInv = field.reciprocalOption(nScalar).getOrElse {
+            throw IllegalArgumentException(
+                "Cannot compute mean projection: vector size ${x.size} is not invertible in the field."
+            )
+        }
+
         val mean = field.mul(nInv, sum)
         return DenseVec.tabulate(x.size) { mean }
     }
