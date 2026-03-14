@@ -8,7 +8,7 @@ import org.vorpal.kosmos.hypercomplex.complex.GaussianRat
 import org.vorpal.kosmos.std.ArbRational
 
 object ArbGaussianRat {
-    val gaussianRat: Arb<GaussianRat> =
+    val small: Arb<GaussianRat> =
         Arb.pair(ArbRational.small, ArbRational.small)
             .map { (a, b) -> GaussianRat(a, b) }
 
