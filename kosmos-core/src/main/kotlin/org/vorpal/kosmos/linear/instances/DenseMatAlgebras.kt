@@ -547,8 +547,8 @@ object DenseMatAlgebras {
         maxCols: Option<Int> = Option.Some(6)
     ): Printable<DenseMat<A>> =
         Printable { m ->
-            val rLim = maxRows.getOrElse(Int.MAX_VALUE)
-            val cLim = maxCols.getOrElse(Int.MAX_VALUE)
+            val rLim = minOf(m.rows, maxRows.getOrElse(Int.MAX_VALUE))
+            val cLim = minOf(m.cols, maxCols.getOrElse(Int.MAX_VALUE))
 
             val body = (0 until rLim)
                 .joinToString(prefix = "[", postfix = "${ellipsis(m.rows > rLim)}]") { r ->
@@ -603,8 +603,8 @@ object DenseMatAlgebras {
         maxCols: Option<Int> = Option.Some(6)
      ): Printable<DenseMat<A>> =
         Printable { m ->
-            val rLim = maxRows.getOrElse(Int.MAX_VALUE)
-            val cLim = maxCols.getOrElse(Int.MAX_VALUE)
+            val rLim = minOf(m.rows, maxRows.getOrElse(Int.MAX_VALUE))
+            val cLim = minOf(m.cols, maxCols.getOrElse(Int.MAX_VALUE))
 
             // Pre-render all visible entries
             val rendered = (0 until rLim).map { r ->
