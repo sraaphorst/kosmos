@@ -29,13 +29,13 @@ object GaussianIntAlgebras {
      * The Gaussian integers `ℤ[i]`.
      *
      * This is a Euclidean domain with Euclidean measure
-     * ```kotlin
+     * ```text
      * δ(a + bi) = a² + b².
      * ```
      * Division with remainder is performed by dividing in `ℚ(i)` and rounding each component
      * of the quotient to the nearest integer in `ℤ`. This yields a quotient `q` and remainder `r`
      * satisfying:
-     * ```kotlin
+     * ```text
      * a = qb + r, with r = 0 or δ(r) < δ(b).
      * ```
      * Since nearest-lattice rounding is not unique on half-ties, `divRem` is deterministic but
@@ -78,7 +78,7 @@ object GaussianIntAlgebras {
          * Euclidean division in `ℤ[i]`.
          *
          * For `b != 0`, write:
-         * ```kotlin
+         * ```text
          * a / b = (a * conjugate(b)) / N(b)
          * ```
          * in `ℚ(i)`, round each component to the nearest integer, and take that Gaussian integer
@@ -151,7 +151,7 @@ object GaussianIntAlgebras {
 
     /**
      * The canonical embedding `ℤ[i] → ℚ(i)`, given by
-     * ```kotlin
+     * ```text
      * a + bi ↦ a/1 + (b/1)i.
      * ```
      */

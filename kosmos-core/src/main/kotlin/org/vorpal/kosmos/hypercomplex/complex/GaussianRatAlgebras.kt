@@ -44,7 +44,7 @@ import java.math.BigInteger
 object GaussianRatAlgebras {
     /**
      * Note that the Gaussian rationals actually form a field with norm function
-     * ```kotlin
+     * ```text
      * N(a + bi) = a^2 + b^2
      * ```
      * thus giving division with remainder (up to rounding in ℂ), hence gcd and unique factorization.
@@ -79,7 +79,7 @@ object GaussianRatAlgebras {
 
         /**
          * The reciprocal of the Gaussian rational `a/b + i c/d` is:
-         * ```kotlin
+         * ```text
          * abd^2 / (a^2 d^2 + c^2 b^2) + i b^2 c d / (a^2 d^2 + c^2 b^2).
          * ```
          */
