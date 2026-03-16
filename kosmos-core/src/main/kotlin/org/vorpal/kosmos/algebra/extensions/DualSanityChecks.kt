@@ -2,14 +2,12 @@ package org.vorpal.kosmos.algebra.extensions
 
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
-import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
 import kotlin.math.sin
 
 fun main() {
-    fun approxEq(a: Real, b: Real, eps: Real = 1e-10): Boolean =
-        abs(a - b) <= eps
+    val approxEq = RealAlgebras.eqRealApprox
 
     // 1) f(x) = x^5 + 2x + 7
     run {

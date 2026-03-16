@@ -13,28 +13,21 @@ object DualModules {
     /**
      * Given a base vector space V over a field F and the dual ring Dual(F),
      * build the scalar-extension module:
-     *
-     *
-     *
-     *    V ⊗_F Dual(F)  ≅  V × V
-     *
+     * ```text
+     * V ⊗_F Dual(F) ≅ V × V
+     * ```
      * with action:
-     *
-     *
-     *
-     *    (a + bε) · (x, y) = (a·x, a·y + b·x).
-     *
+     * ```text
+     * (a + bε) · (x, y) = (a·x, a·y + b·x).
+     * ```
      * Intuition:
-     *
-     *
-     *
-     *    (x, y) corresponds to x + εy.
-     *
+     * ```text
+     * (x, y) corresponds to x + εy.
+     * ```
      * Thus, this module gives the structure behind the formula:
-     *
-     *
-     *    f(p + εv) = f(p) + D_vf(p)
-     *
+     * ```text
+     * f(p + εv) = f(p) + D_vf(p)
+     * ```
      * where `p + εv` is represented by `(p, v)`.
      */
     fun <F : Any, V : Any> over(
@@ -69,11 +62,17 @@ object DualModules {
             }
         }
 
-    /** Pack a point and a tangent into the extended carrier: p + εv ≡ (p, v). */
+    /** Pack a point and a tangent into the extended carrier:
+     * ```text
+     * p + εv ≡ (p, v).
+     * ```
+     */
     fun <V : Any> pack(p: V, v: V): Pair<V, V> =
         p to v
 
-    /** Convenience: zero tangent at p. */
+    /**
+     * Convenience: zero tangent at `p`.
+     c         */
     fun <V : Any> atPoint(p: V, zero: V): Pair<V, V> =
         p to zero
 }
