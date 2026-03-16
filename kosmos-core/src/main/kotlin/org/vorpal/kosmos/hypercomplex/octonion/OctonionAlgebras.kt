@@ -112,7 +112,7 @@ object OctonionAlgebras {
         }
     )
 
-    val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
+    val dOctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
         scalars = RealAlgebras.RealField,
         involutiveRing = OctonionDivisionAlgebraReal,
         leftAction = OctonionVectorSpace.leftAction,

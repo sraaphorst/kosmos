@@ -47,6 +47,7 @@ object Symbols {
     const val COLON_EQUALS = "≔"
     const val CONJ = "¯"
     const val CUBE_ROOT = "∛"
+    const val DAGGER = "†"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
     const val DIVISION = "÷"
@@ -109,6 +110,7 @@ object Symbols {
     const val OPEN_CIRCLE = "∘"
     const val PARTIAL = "∂"
     const val PHI = "φ"
+    const val PI = "𝜋"
     const val PLUS = "+"
     const val PLUS_MINUS = "±"
     const val PLUS_SUB = "₊"
@@ -166,6 +168,7 @@ object Symbols {
     const val INJECTION = MAPS_INTO
     const val KRONECKER = O_TIMES
     const val LEXICOGRAPHIC = BIG_DOT
+    const val PROJECTION = PI
     const val SET_MINUS = BACKSLASH
     const val SIGMA = SUM
     const val SQUARED_TIMES = BOX_TIMES
