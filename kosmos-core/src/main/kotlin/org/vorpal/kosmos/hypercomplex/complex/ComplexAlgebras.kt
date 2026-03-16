@@ -65,9 +65,9 @@ object ComplexAlgebras {
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ c -> mul(c, conj(c)).re }
 
         // Disambiguate identities.
-        override val zero = base.add.identity
+        override val zero: Complex = base.add.identity
         override val one: Complex = mul.identity
-        val i = Complex(0.0, 1.0)
+        val i: Complex = Complex(0.0, 1.0)
     }
 
     // Scalars: Real, act componentwise on (a, b)
