@@ -19,8 +19,6 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.GaussianIntAlgebras.GaussianIntToRatMonomorphism
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRatAlgebras.GaussianRatField
 import java.math.BigInteger
 
 /**
@@ -28,20 +26,18 @@ import java.math.BigInteger
  */
 object GaussianIntAlgebras {
     /**
-     * The Gaussian integers `Z[i]`.
+     * The Gaussian integers `ℤ[i]`.
      *
      * This is a Euclidean domain with Euclidean measure
-     *
-     *     δ(a + bi) = a² + b².
-     *
-     * Division with remainder is performed by dividing in `Q(i)` and rounding each component
-     * of the quotient to the nearest integer in `Z`. This yields a quotient `q` and remainder `r`
-     * satisfying
-     *
-     *     a = qb + r
-     *
-     * and either `r = 0` or `δ(r) < δ(b)`.
-     *
+     * ```kotlin
+     * δ(a + bi) = a² + b².
+     * ```
+     * Division with remainder is performed by dividing in `ℚ(i)` and rounding each component
+     * of the quotient to the nearest integer in `ℤ`. This yields a quotient `q` and remainder `r`
+     * satisfying:
+     * ```kotlin
+     * a = qb + r, with r = 0 or δ(r) < δ(b).
+     * ```
      * Since nearest-lattice rounding is not unique on half-ties, `divRem` is deterministic but
      * not canonical.
      */
@@ -55,14 +51,14 @@ object GaussianIntAlgebras {
 
         override val add: AbelianGroup<GaussianInt> = AbelianGroup.of(
             identity = zero,
-            op = BinOp(Symbols.PLUS) { gi1, gi2 -> GaussianInt(gi1.re + gi2.re, gi1.im + gi2.im) },
-            inverse = Endo(Symbols.MINUS) { gi -> GaussianInt(-gi.re, -gi.im) }
+            op = BinOp(Symbols.PLUS) { gz1, gz2 -> GaussianInt(gz1.re + gz2.re, gz1.im + gz2.im) },
+            inverse = Endo(Symbols.MINUS) { gz -> GaussianInt(-gz.re, -gz.im) }
         )
 
         override val mul: CommutativeMonoid<GaussianInt> = CommutativeMonoid.of(
             identity = one,
-            op = BinOp(Symbols.ASTERISK) { gi1, gi2 ->
-                GaussianInt(gi1.re * gi2.re - gi1.im * gi2.im, gi1.re * gi2.im + gi1.im * gi2.re)
+            op = BinOp(Symbols.ASTERISK) { gz1, gz2 ->
+                GaussianInt(gz1.re * gz2.re - gz1.im * gz2.im, gz1.re * gz2.im + gz1.im * gz2.re)
             }
         )
 
@@ -79,13 +75,13 @@ object GaussianIntAlgebras {
             EuclidMeasure.ofZ(normSq)
 
         /**
-         * Euclidean division in `Z[i]`.
+         * Euclidean division in `ℤ[i]`.
          *
-         * For `b != 0`, write
-         *
-         *     a / b = (a * conjugate(b)) / N(b)
-         *
-         * in `Q(i)`, round each component to the nearest integer, and take that Gaussian integer
+         * For `b != 0`, write:
+         * ```kotlin
+         * a / b = (a * conjugate(b)) / N(b)
+         * ```
+         * in `ℚ(i)`, round each component to the nearest integer, and take that Gaussian integer
          * as the quotient.
          *
          * The rounding policy breaks half-ties away from zero.
@@ -129,20 +125,20 @@ object GaussianIntAlgebras {
     }
 
     /**
-     * The natural `Z`-module structure on `Z[i]`.
+     * The natural `ℤ`-module structure on `ℤ[i]`.
      */
     object ZModuleGaussianInt : ZModule<GaussianInt> {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = GaussianIntEuclideanDomain.add
 
         override val leftAction: LeftAction<BigInteger, GaussianInt> =
-            LeftAction(Symbols.TRIANGLE_RIGHT) { n, gi ->
-                GaussianInt(n * gi.re, n * gi.im)
+            LeftAction(Symbols.TRIANGLE_RIGHT) { n, gz ->
+                GaussianInt(n * gz.re, n * gz.im)
             }
     }
 
     /**
-     * The canonical embedding `Z -> Z[i]`, given by `n ↦ n + 0i`.
+     * The canonical embedding `ℤ → ℤ[i]`, given by `n ↦ n + 0i`.
      */
     object ZToGaussianIntMonomorphism : RingMonomorphism<BigInteger, GaussianInt> {
         override val domain = IntegerAlgebras.IntegerCommutativeRing
@@ -154,30 +150,29 @@ object GaussianIntAlgebras {
     }
 
     /**
-     * The canonical embedding `Z[i] -> Q(i)`, given by
-     *
-     *     a + bi ↦ a/1 + (b/1)i.
+     * The canonical embedding `ℤ[i] → ℚ(i)`, given by
+     * ```kotlin
+     * a + bi ↦ a/1 + (b/1)i.
+     * ```
      */
     object GaussianIntToRatMonomorphism : RingMonomorphism<GaussianInt, GaussianRat> {
         override val domain = GaussianIntEuclideanDomain
-        override val codomain = GaussianRatField
+        override val codomain = GaussianRatAlgebras.GaussianRatField
 
-        override val map = UnaryOp<GaussianInt, GaussianRat> { (a, b) ->
-            GaussianRat(a.toRational(), b.toRational())
+        override val map = UnaryOp<GaussianInt, GaussianRat> { gz ->
+            GaussianRat(gz.re.toRational(), gz.im.toRational())
         }
     }
 
     /**
-     * The canonical embedding `Z[i] -> C`, given by
-     *
-     *     a + bi ↦ Complex(a, b).
+     * The canonical monomorphism `ℤ[i] → ℂ`.
      */
     object GaussianIntToComplexMonomorphism : RingMonomorphism<GaussianInt, Complex> {
         override val domain = GaussianIntEuclideanDomain
         override val codomain = ComplexAlgebras.ComplexField
 
-        override val map = UnaryOp<GaussianInt, Complex> { (a, b) ->
-            complex(a.toReal(), b.toReal())
+        override val map = UnaryOp<GaussianInt, Complex> { gz ->
+            complex(gz.re.toReal(), gz.im.toReal())
         }
     }
 
@@ -202,4 +197,4 @@ object GaussianIntAlgebras {
  * Convert a Gaussian integer to the corresponding Gaussian rational.
  */
 fun GaussianInt.toGaussianRat(): GaussianRat =
-    GaussianIntToRatMonomorphism(this)
+    GaussianIntAlgebras.GaussianIntToRatMonomorphism(this)
