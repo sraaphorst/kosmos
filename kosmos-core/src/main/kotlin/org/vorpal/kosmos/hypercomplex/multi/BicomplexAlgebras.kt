@@ -26,6 +26,7 @@ import org.vorpal.kosmos.hypercomplex.complex.re
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+import kotlin.math.sqrt
 
 /**
  * [BicomplexAlgebras] contains the algebraic structures over the [Bicomplex] type.
@@ -107,11 +108,11 @@ object BicomplexAlgebras {
          * Conjugates only the complex unit `i`, leaving `j` unchanged.
          *
          * In the standard basis:
-         * ```kotlin
+         * ```text
          * a + bi + cj + d(ij) ↦ a - bi + cj - d(ij)
          * ```
          * In the idempotent basis:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷) ↦ (𝜷*, 𝛂*)
          * ```
          */
@@ -128,11 +129,11 @@ object BicomplexAlgebras {
          * Annihilates the `i` and `k` terms, mapping the result perfectly into the
          * split-complex plane `ℂ(j)` spanned by `{1, j}`.
          *
-         * ```kotlin
+         * ```text
          * * N1(w) = w * w†1 = (a² + b² - c² - d²) + 2(ac + bd)j
          * ```
          * Idempotent logic:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷)(𝜷*, 𝛂*) = (𝛂𝜷*, 𝜷𝛂*)
          * ```
          *
@@ -153,11 +154,11 @@ object BicomplexAlgebras {
          * Conjugates only the bicomplex unit `j`, leaving `i` unchanged.
          *
          * In the standard basis:
-         * ```kotlin
+         * ```text
          * a + bi + cj + d(ij) ↦ a + bi - cj - d(ij)
          * ```
          * In the idempotent basis:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷) ↦ (𝜷, 𝛂)
          * ```
          */
@@ -171,11 +172,11 @@ object BicomplexAlgebras {
          * Annihilates the `j` and `k` terms, mapping the result perfectly into the
          * canonical complex plane `ℂ(i)` spanned by `{1, i}`.
          *
-         * ```kotlin
+         * ```text
          * N2(w) = w * w†2 = (a² - b² + c² - d²) + 2(ab + cd)i
          * ```
          * Idempotent logic:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷)(𝜷, 𝛂) = (𝛂𝜷, 𝛂𝜷)
          * ```
          * * Note: Because both idempotents are identical, this is strictly a standard [Complex] number.
@@ -191,11 +192,11 @@ object BicomplexAlgebras {
          * Conjugates both `i` and `j`.
          *
          * In the standard basis:
-         * ```kotlin
+         * ```text
          * a + bi + cj + d(ij) ↦ a - bi - cj + d(ij)
          * ```
          * In the idempotent basis:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷) ↦ (𝛂*, 𝜷*)
          * ```
          */
@@ -211,11 +212,11 @@ object BicomplexAlgebras {
          *
          * Annihilates the `i` and `j` terms, mapping the result into the
          * split-complex plane `ℂ(k)` spanned by `{1, k}`, where `k = ij`.
-         * ```kotlin
+         * ```text
          * N3(w) = w * w†3 = (a² + b² + c² + d²) + 2(ad - bc)k
          * ```
          * Idempotent logic:
-         * ```kotlin
+         * ```text
          * (𝛂, 𝜷)(𝛂*, 𝜷*) = (|𝛂|², |𝜷|²)
          * ```
          * The real part of this result yields the squared Euclidean norm.
@@ -241,7 +242,7 @@ object BicomplexAlgebras {
          * Calculates the 4D Euclidean norm of the bicomplex number.
          */
         val norm: UnaryOp<Bicomplex, Real> = UnaryOp("norm") {
-            kotlin.math.sqrt(normSq(it))
+            sqrt(normSq(it))
         }
     }
 
@@ -249,7 +250,7 @@ object BicomplexAlgebras {
      * Standard embedding of ℂ into the Bicomplex ring.
      *
      * In the idempotent representation, maps:
-     * ```kotlin
+     * ```text
      * z -> (z, z)
      * ```
      */
