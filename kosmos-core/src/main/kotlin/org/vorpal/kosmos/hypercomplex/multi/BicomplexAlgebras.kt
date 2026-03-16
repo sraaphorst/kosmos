@@ -108,11 +108,11 @@ object BicomplexAlgebras {
          *
          * In the standard basis:
          * ```kotlin
-         * a + bi + cj + d(ij) ⟼ a - bi + cj - d(ij)
+         * a + bi + cj + d(ij) ↦ a - bi + cj - d(ij)
          * ```
          * In the idempotent basis:
          * ```kotlin
-         * (𝛂, 𝜷) ⟼ (𝜷*, 𝛂*)
+         * (𝛂, 𝜷) ↦ (𝜷*, 𝛂*)
          * ```
          */
         val conj1: Endo<Bicomplex> = Endo("${Symbols.DAGGER}1") { z ->
@@ -154,11 +154,11 @@ object BicomplexAlgebras {
          *
          * In the standard basis:
          * ```kotlin
-         * a + bi + cj + d(ij) ⟼ a + bi - cj - d(ij)
+         * a + bi + cj + d(ij) ↦ a + bi - cj - d(ij)
          * ```
          * In the idempotent basis:
          * ```kotlin
-         * (𝛂, 𝜷) ⟼ (𝜷, 𝛂)
+         * (𝛂, 𝜷) ↦ (𝜷, 𝛂)
          * ```
          */
         val conj2: Endo<Bicomplex> = Endo("${Symbols.DAGGER}2") { z ->
@@ -192,11 +192,11 @@ object BicomplexAlgebras {
          *
          * In the standard basis:
          * ```kotlin
-         * a + bi + cj + d(ij) ⟼ a - bi - cj + d(ij)
+         * a + bi + cj + d(ij) ↦ a - bi - cj + d(ij)
          * ```
          * In the idempotent basis:
          * ```kotlin
-         * (𝛂, 𝜷) ⟼ (𝛂*, 𝜷*)
+         * (𝛂, 𝜷) ↦ (𝛂*, 𝜷*)
          * ```
          */
         val conj3: Endo<Bicomplex> = Endo("${Symbols.DAGGER}3") { z ->
@@ -281,7 +281,7 @@ object BicomplexAlgebras {
 
     /**
      * A monomorphism from 𝔹 to M_2(ℂ) using the canonical basis.
-     * Maps z_1 + z_2 j ⟼ [[z_1, z_2], [-z_2, z_1]]
+     * Maps z_1 + z_2 j ↦ [[z_1, z_2], [-z_2, z_1]]
      */
     object BicomplexToComplexMatrixMonomorphism : RingMonomorphism<Bicomplex, DenseMat<Complex>> {
         private val complexField = ComplexAlgebras.ComplexField
@@ -300,7 +300,7 @@ object BicomplexAlgebras {
 
     /**
      * A monomorphism from 𝔹 to M_2(ℂ) using the orthogonal idempotent basis.
-     * Maps (𝛂, 𝜷) ⟼ [[𝛂, 0], [0, 𝜷]]
+     * Maps (𝛂, 𝜷) ↦ [[𝛂, 0], [0, 𝜷]]
      */
     object BicomplexToDiagonalMatrixMonomorphism : RingMonomorphism<Bicomplex, DenseMat<Complex>> {
         private val complexField = ComplexAlgebras.ComplexField
