@@ -30,7 +30,7 @@ object ConstantMatrixAlgebras {
         n: Int,
         value: F
     ): F = field.reciprocalOption(value).getOrElse {
-        throw IllegalArgumentException(
+        throw ArithmeticException(
             "Cannot construct constant-matrix structure: n = $n is not invertible in the base field."
         )
     }
@@ -76,7 +76,7 @@ object ConstantMatrixAlgebras {
             val a = DenseMatKernel.checkConstNonemptyMat(x, base.zero)
             val denom = base.mul(n2, a)
             val inv = base.reciprocalOption(denom).getOrElse {
-                throw IllegalArgumentException(
+                throw ArithmeticException(
                     "Constant matrix is not invertible in the constant-matrix multiplicative group."
                 )
             }
@@ -188,7 +188,7 @@ object ConstantMatrixAlgebras {
                 // (aJ)^{-1} = (1/(n^2 a))J, when a != 0
                 val denom = base.mul(n2, a)
                 val inv = base.reciprocalOption(denom).getOrElse {
-                    throw IllegalArgumentException(
+                    throw ArithmeticException(
                         "Constant matrix is not invertible in the constant-matrix field."
                     )
                 }
@@ -287,7 +287,7 @@ object ConstantMatrixAlgebras {
 
         val nScalar = field.fromBigInt(x.size.toBigInteger())
         val nInv = field.reciprocalOption(nScalar).getOrElse {
-            throw IllegalArgumentException(
+            throw ArithmeticException(
                 "Cannot compute mean projection: vector size ${x.size} is not invertible in the field."
             )
         }
