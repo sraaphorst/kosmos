@@ -55,13 +55,15 @@ object GaussianIntAlgebras {
 
         override val add: AbelianGroup<GaussianInt> = AbelianGroup.of(
             identity = zero,
-            op = BinOp(Symbols.PLUS, GaussianInt::plus),
-            inverse = Endo(Symbols.MINUS, GaussianInt::unaryMinus)
+            op = BinOp(Symbols.PLUS) { gi1, gi2 -> GaussianInt(gi1.re + gi2.re, gi1.im + gi2.im) },
+            inverse = Endo(Symbols.MINUS) { gi -> GaussianInt(-gi.re, -gi.im) }
         )
 
         override val mul: CommutativeMonoid<GaussianInt> = CommutativeMonoid.of(
             identity = one,
-            op = BinOp(Symbols.ASTERISK, GaussianInt::times)
+            op = BinOp(Symbols.ASTERISK) { gi1, gi2 ->
+                GaussianInt(gi1.re * gi2.re - gi1.im * gi2.im, gi1.re * gi2.im + gi1.im * gi2.re)
+            }
         )
 
         override val conj: Endo<GaussianInt> = Endo(Symbols.CONJ) { a ->
@@ -99,8 +101,8 @@ object GaussianIntAlgebras {
                 val qIm = roundDivNearest(numerator.im, denominator)
 
                 val q = GaussianInt(qRe, qIm)
-                val r = a - q * b
-
+                val qb = mul(q, b)
+                val r = add(a, add.inverse(qb))
                 q to r
             }
 
