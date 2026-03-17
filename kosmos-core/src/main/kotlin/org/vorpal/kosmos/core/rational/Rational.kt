@@ -5,6 +5,7 @@ import org.vorpal.kosmos.core.math.toReal
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.math.RoundingMode
+import javax.tools.Tool
 
 /** Normalized rational n/d with d > 0 and gcd(n,d) = 1. */
 @ConsistentCopyVisibility
@@ -126,6 +127,9 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
 
         val ZERO = of(0, 1)
         val ONE  = of(1, 1)
+        val TWO  = of(2, 1)
+        val TEN  = of(10, 1)
+        val NEG_ONE = of(-1, 1)
     }
 }
 

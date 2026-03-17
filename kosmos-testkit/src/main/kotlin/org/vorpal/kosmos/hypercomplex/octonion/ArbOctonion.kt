@@ -1,19 +1,16 @@
-package org.vorpal.kosmos.hypercomplex
+package org.vorpal.kosmos.hypercomplex.octonion
 
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
-import io.kotest.property.arbitrary.bind
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
-import org.vorpal.kosmos.hypercomplex.octonion.Octonion
-import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
-import org.vorpal.kosmos.hypercomplex.octonion.octonion
 
 object ArbOctonion {
     private val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal
 
     val octonion: Arb<Octonion> =
-        Arb.bind(
+        Arb.Companion.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -33,8 +30,8 @@ object ArbOctonion {
         }
 
     val octonionTriple: Arb<Triple<Octonion, Octonion, Octonion>> =
-        Arb.triple(octonion, octonion, octonion)
+        Arb.Companion.triple(octonion, octonion, octonion)
 
     val reciprocalTriple: Arb<Triple<Octonion, Octonion, Octonion>> =
-        Arb.triple(reciprocalSafeOctonion, reciprocalSafeOctonion, reciprocalSafeOctonion)
+        Arb.Companion.triple(reciprocalSafeOctonion, reciprocalSafeOctonion, reciprocalSafeOctonion)
 }

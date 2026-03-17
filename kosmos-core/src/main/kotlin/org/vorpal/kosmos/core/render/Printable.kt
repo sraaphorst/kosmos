@@ -14,9 +14,6 @@ fun interface Printable<in A> {
     companion object {
         /** Default printable: uses toString(). */
         fun <A> default(): Printable<A> = Printable { it.toString() }
-
-        /** Build from a lambda (handy at call sites). */
-        fun <A> from(f: (A) -> String): Printable<A> = Printable { f(it) }
     }
 }
 

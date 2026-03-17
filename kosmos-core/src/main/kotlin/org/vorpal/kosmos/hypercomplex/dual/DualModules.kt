@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.extensions
+package org.vorpal.kosmos.hypercomplex.dual
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -18,7 +18,7 @@ object DualModules {
      * ```
      * with action:
      * ```text
-     * (a + bε) · (x, y) = (a·x, a·y + b·x).
+     * (a + bε)(x, y) = (ax, ay + bx).
      * ```
      * Intuition:
      * ```text
@@ -32,7 +32,7 @@ object DualModules {
      */
     fun <F : Any, V : Any> over(
         base: VectorSpace<F, V>,
-        dual: DualRing<F>,
+        dual: DualAlgebras.DualRing<F>,
     ): RModule<Dual<F>, Pair<V, V>> =
         object : RModule<Dual<F>, Pair<V, V>> {
 
@@ -61,18 +61,4 @@ object DualModules {
                 ax to base.add(ay, bx)
             }
         }
-
-    /** Pack a point and a tangent into the extended carrier:
-     * ```text
-     * p + εv ≡ (p, v).
-     * ```
-     */
-    fun <V : Any> pack(p: V, v: V): Pair<V, V> =
-        p to v
-
-    /**
-     * Convenience: zero tangent at `p`.
-     c         */
-    fun <V : Any> atPoint(p: V, zero: V): Pair<V, V> =
-        p to zero
 }

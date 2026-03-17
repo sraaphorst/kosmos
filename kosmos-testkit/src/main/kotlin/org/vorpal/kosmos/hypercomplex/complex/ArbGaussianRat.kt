@@ -1,10 +1,9 @@
-package org.vorpal.kosmos.hypercomplex
+package org.vorpal.kosmos.hypercomplex.complex
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.choice
 import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.pair
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRat
 import org.vorpal.kosmos.std.ArbRational
 
 object ArbGaussianRat {

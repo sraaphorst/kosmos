@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.HasFromBigInt
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
@@ -18,6 +19,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import java.math.BigInteger
 
 /**
  * [ComplexAlgebras] contains the algebraic structures over the [Complex] type, as well as the
@@ -68,6 +70,22 @@ object ComplexAlgebras {
         override val zero: Complex = base.add.identity
         override val one: Complex = mul.identity
         val i: Complex = Complex(0.0, 1.0)
+    }
+
+    /**
+     * Given a complex number c and a non-negative integer n, computes c^n using exponentiation by squaring.
+     */
+    fun Complex.powInt(n: Int): Complex {
+        require(n >= 0) { "n must be >= 0" }
+        val field = ComplexField
+
+        tailrec fun go(base: Complex, exp: Int, acc: Complex): Complex = when {
+            exp == 0         -> acc
+            (exp and 1) == 1 -> go(field.mul(base, base), exp ushr 1, field.mul(acc, base))
+            else             -> go(field.mul(base, base), exp ushr 1, acc)
+        }
+
+        return go(this, n, field.one)
     }
 
     // Scalars: Real, act componentwise on (a, b)
