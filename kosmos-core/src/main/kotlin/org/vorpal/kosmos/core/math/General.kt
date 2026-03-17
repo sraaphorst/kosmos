@@ -95,3 +95,20 @@ fun longSgn(n: Int): Long =
  */
 fun bigIntSgn(n: Int): BigInteger =
     if (n and 1 == 0) BigInteger.ONE else -BigInteger.ONE
+
+/**
+ * Given a real number `r` and a nonnegative integer `n`, returns `r^n`.
+ *
+ * This is done using doubling and squaring for efficiency.
+ */
+fun Real.powInt(n: Int): Real {
+    require(n >= 0) { "n must be >= 0" }
+
+    tailrec fun go(base: Real, exp: Int, acc: Real): Real = when {
+        exp == 0         -> acc
+        (exp and 1) == 1 -> go(base * base, exp ushr 1, acc * base)
+        else             -> go(base * base, exp ushr 1, acc)
+    }
+
+    return go(this, n, 1.0)
+}

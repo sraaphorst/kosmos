@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.extensions
+package org.vorpal.kosmos.hypercomplex.dual
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -13,33 +13,26 @@ object DualModules {
     /**
      * Given a base vector space V over a field F and the dual ring Dual(F),
      * build the scalar-extension module:
-     *
-     *
-     *
-     *    V ⊗_F Dual(F)  ≅  V × V
-     *
+     * ```text
+     * V ⊗_F Dual(F) ≅ V × V
+     * ```
      * with action:
-     *
-     *
-     *
-     *    (a + bε) · (x, y) = (a·x, a·y + b·x).
-     *
+     * ```text
+     * (a + bε)(x, y) = (ax, ay + bx).
+     * ```
      * Intuition:
-     *
-     *
-     *
-     *    (x, y) corresponds to x + εy.
-     *
+     * ```text
+     * (x, y) corresponds to x + εy.
+     * ```
      * Thus, this module gives the structure behind the formula:
-     *
-     *
-     *    f(p + εv) = f(p) + D_vf(p)
-     *
+     * ```text
+     * f(p + εv) = f(p) + D_vf(p)
+     * ```
      * where `p + εv` is represented by `(p, v)`.
      */
     fun <F : Any, V : Any> over(
         base: VectorSpace<F, V>,
-        dual: DualRing<F>,
+        dual: DualAlgebras.DualRing<F>,
     ): RModule<Dual<F>, Pair<V, V>> =
         object : RModule<Dual<F>, Pair<V, V>> {
 
@@ -68,12 +61,4 @@ object DualModules {
                 ax to base.add(ay, bx)
             }
         }
-
-    /** Pack a point and a tangent into the extended carrier: p + εv ≡ (p, v). */
-    fun <V : Any> pack(p: V, v: V): Pair<V, V> =
-        p to v
-
-    /** Convenience: zero tangent at p. */
-    fun <V : Any> atPoint(p: V, zero: V): Pair<V, V> =
-        p to zero
 }

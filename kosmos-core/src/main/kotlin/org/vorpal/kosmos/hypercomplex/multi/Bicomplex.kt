@@ -23,7 +23,7 @@ data class Bicomplex private constructor(val alpha: Complex, val beta: Complex) 
 
     /**
      * Returns the standard real coefficients `[a,b,c,d]`:
-     * ```kotlin
+     * ```text
      * z = (a + bi) + (c + di)j
      * ```
      */

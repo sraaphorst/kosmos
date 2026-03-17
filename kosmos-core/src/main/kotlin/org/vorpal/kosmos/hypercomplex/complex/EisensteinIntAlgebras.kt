@@ -40,6 +40,8 @@ import kotlin.math.sqrt
  *
  * We have the following homomorphisms:
  * - [EisensteinIntToCHomomorphism]: a ring homomorphism from the Eisenstein ring to the complex field.
+ *   Note that this could defensibly be a ring monomorphism, but due to floating point errors, we cannot guarantee
+ *   injectivity.
  * - [EisensteinInt.toComplex]: convenience method for this monomorphism.
  *
  * We also have the following [org.vorpal.kosmos.core.Eq]s:
@@ -53,19 +55,21 @@ object EisensteinIntAlgebras {
         HasNormSq<EisensteinInt, BigInteger>,
         InvolutiveRing<EisensteinInt> {
 
+        override val zero: EisensteinInt = EisensteinInt.ZERO
+        override val one: EisensteinInt = EisensteinInt.ONE
+
         override val add: AbelianGroup<EisensteinInt> = AbelianGroup.of(
-            identity = EisensteinInt.ZERO,
-            op = BinOp(Symbols.PLUS, EisensteinInt::plus),
-            inverse = Endo(Symbols.MINUS, EisensteinInt::unaryMinus)
+            identity = zero,
+            op = BinOp(Symbols.PLUS) { e1, e2 -> EisensteinInt(e1.a + e2.a, e1.b + e2.b) },
+            inverse = Endo(Symbols.MINUS) { e -> EisensteinInt(-e.a, -e.b) }
         )
 
         override val mul: CommutativeMonoid<EisensteinInt> = CommutativeMonoid.of(
-            identity = EisensteinInt.ONE,
-            op = BinOp(Symbols.ASTERISK, EisensteinInt::times)
+            identity = one,
+            op = BinOp(Symbols.ASTERISK) { e1, e2 ->
+                EisensteinInt(e1.a * e2.a - e1.b * e2.b, e1.a * e2.b + e1.b * e2.a - e1.b * e2.b)
+            }
         )
-
-        override val zero: EisensteinInt = EisensteinInt.ZERO
-        override val one: EisensteinInt = EisensteinInt.ONE
 
         override val normSq: UnaryOp<EisensteinInt, BigInteger> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { z ->
@@ -86,9 +90,9 @@ object EisensteinIntAlgebras {
     /**
      * Note that this is actually an integral domain, and in fact a Euclidean domain with
      * norm function:
-     *
-     *    n(a + bω) = a^2 - ab + b^2
-     *
+     * ```text
+     * N(a + bω) = a^2 - ab + b^2
+     * ```
      * giving gcd and unique factorization.
      *
      * We keep them separate to avoid carrying too much machinery in one class.
@@ -145,33 +149,36 @@ object EisensteinIntAlgebras {
      * 2) Real (geometric) embedding: `ℤ[ω] → ℝ²`, `a + bω ↦ (a - b/2, (√3/2)b)`
      * 3) Complex embedding: `ℤ[ω] → ℂ`, `a + bω ↦ a + bω`
      *
-     * where `ω = e^{2πi/3} = (-1 + √3 i) / 2`.
-     *
-     *  The bilinear form `dot` is the symmetric bilinear form associated to the quadratic form
-     *
-     *     N(a + bω) = a² - ab + b²
-     *
+     * where:
+     * ```text
+     * ω = e^{2πi/3} = (-1 + √3 i) / 2.
+     * ```
+     * The bilinear form `dot` is the symmetric bilinear form associated to the quadratic form
+     * ```text
+     * N(a + bω) = a² - ab + b²
+     * ```
      * via polarization:
+     * ```text
+     * ⟨x, y⟩ = (N(x + y) - N(x) - N(y)) / 2.
+     * ```
      *
-     *     ⟨x, y⟩ = (N(x + y) - N(x) - N(y)) / 2.
+     * Under the standard real embedding `ℤ[ω] → ℝ²` given by `ω = (-1 + √3 i)/2`,
+     * ```text
+     * a + bω ↦ (a - b/2, (√3/2)b),
+     * ```
+     * this `⟨·,·⟩` is exactly the usual Euclidean dot product in ℝ².
      *
-     * Under the standard real embedding ℤ[ω] → ℝ² given by ω = (-1 + √3 i)/2,
-     *
-     *     a + bω ↦ (a - b/2, (√3/2)b),
-     *
-     * this ⟨·,·⟩ is exactly the usual Euclidean dot product in ℝ².
-     *
-     * In particular, for the ℤ-basis vectors {1, ω} we have
-     *
-     *     ⟨1, ω⟩ = -1/2,
-     *
-     * since the corresponding vectors (1, 0) and (-1/2, √3/2) are not orthogonal.
+     * In particular, for the ℤ-basis vectors `{1, ω}`, we have
+     * ```text
+     * ⟨1, ω⟩ = -1/2,
+     * ```
+     * since the corresponding vectors `(1, 0)` and `(-1/2, √3/2)` are not orthogonal.
      */
     object EisensteinIntLattice: EuclideanLattice<EisensteinInt, Rational> {
         private val ring = EisensteinIntCommutativeRing
 
-        override val dot: (EisensteinInt, EisensteinInt) -> Rational = { x, y ->
-            Rational.of(ring.normSq(ring.add(x, y)) - ring.normSq(x) - ring.normSq(y), BigInteger.TWO)
+        override val dot: (EisensteinInt, EisensteinInt) -> Rational = { e1, e2 ->
+            Rational.of(ring.normSq(ring.add(e1, e2)) - ring.normSq(e1) - ring.normSq(e2), BigInteger.TWO)
         }
 
         override val rank: Int = 2
@@ -185,13 +192,13 @@ object EisensteinIntAlgebras {
         )
 
         override val addV: AbelianGroup<EisensteinInt> = ring.add
-        override val scale: LeftAction<BigInteger, EisensteinInt> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, (a, b) ->
-            EisensteinInt(s * a, s * b)
+        override val scale: LeftAction<BigInteger, EisensteinInt> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, e ->
+            EisensteinInt(s * e.a, s * e.b)
         }
 
-        val embedR2: UnaryOp<EisensteinInt, Vec2<Real>> = UnaryOp { (a, b) ->
-            val aReal = a.toReal()
-            val bReal = b.toReal()
+        val embedR2: UnaryOp<EisensteinInt, Vec2<Real>> = UnaryOp { e ->
+            val aReal = e.a.toReal()
+            val bReal = e.b.toReal()
             Vec2(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
 
@@ -209,15 +216,12 @@ object EisensteinIntAlgebras {
     object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, Complex> {
         override val domain = EisensteinIntCommutativeRing
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<EisensteinInt, Complex> { (a, b) ->
-            val aReal = a.toReal()
-            val bReal = b.toReal()
+        override val map = UnaryOp<EisensteinInt, Complex> { e ->
+            val aReal = e.a.toReal()
+            val bReal = e.b.toReal()
             Complex(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
     }
-
-    fun EisensteinInt.toComplex(): Complex =
-        EisensteinIntToCHomomorphism.apply(this)
 
     val eqEisensteinInt: Eq<EisensteinInt> = Eq.default()
 
@@ -236,3 +240,6 @@ object EisensteinIntAlgebras {
     val printableEisensteinIntPretty: Printable<EisensteinInt> =
         printableEisensteinInt
 }
+
+fun EisensteinInt.toComplex(): Complex =
+    EisensteinIntAlgebras.EisensteinIntToCHomomorphism.apply(this)
