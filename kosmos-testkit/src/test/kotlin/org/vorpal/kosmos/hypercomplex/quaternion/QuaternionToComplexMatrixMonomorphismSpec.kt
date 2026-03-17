@@ -4,7 +4,7 @@ import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.ArbQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.ArbQuaternion
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex

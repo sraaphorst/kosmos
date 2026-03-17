@@ -2,7 +2,7 @@ package org.vorpal.kosmos.testutils
 
 import io.kotest.matchers.doubles.plusOrMinus
 import io.kotest.matchers.shouldBe
-import org.vorpal.kosmos.algebra.extensions.Dual
+import org.vorpal.kosmos.hypercomplex.dual.Dual
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.linear.values.Vec2
 import kotlin.math.abs
@@ -10,6 +10,10 @@ import kotlin.math.abs
 /**
  * Compares two Reals with a relative tolerance (default 1e-9).
  * Works well for both small and large magnitudes.
+ *
+ * Note that while RealAlgebras.eqRealApprox is used within Kosmos for actual work,
+ * due to the precision used in kotest, we need something more robust for test cases
+ * to pass correctly, which is why we use this custom tolerance library instead.
  */
 infix fun Real.shouldBeApproximately(
     other: Real

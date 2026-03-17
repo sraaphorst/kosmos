@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algebra.extensions
+package org.vorpal.kosmos.hypercomplex.dual
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
