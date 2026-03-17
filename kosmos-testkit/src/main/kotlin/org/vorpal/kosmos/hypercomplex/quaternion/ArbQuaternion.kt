@@ -1,13 +1,10 @@
-package org.vorpal.kosmos.hypercomplex
+package org.vorpal.kosmos.hypercomplex.quaternion
 
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.triple
-import io.kotest.property.arbitrary.bind
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 
 object ArbQuaternion {
 
@@ -15,7 +12,7 @@ object ArbQuaternion {
      * Generic quaternion with reasonably small components.
      */
     val quaternion: Arb<Quaternion> =
-        Arb.bind(
+        Arb.Companion.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -34,8 +31,8 @@ object ArbQuaternion {
         }
 
     val quaternionTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
-        Arb.triple(quaternion, quaternion, quaternion)
+        Arb.Companion.triple(quaternion, quaternion, quaternion)
 
     val reciprocalTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
-        Arb.triple(reciprocalSafeQuaternion, reciprocalSafeQuaternion, reciprocalSafeQuaternion)
+        Arb.Companion.triple(reciprocalSafeQuaternion, reciprocalSafeQuaternion, reciprocalSafeQuaternion)
 }
