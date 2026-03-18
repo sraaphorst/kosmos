@@ -12,39 +12,40 @@ import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-
 import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
 import org.vorpal.kosmos.hypercomplex.complex.GaussianIntAlgebras
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 /**
- * [LipschitzQuaternionAlgebras] contains the algebraic structures over the [LipschitzQuaternion] type, as well as the
- * homomorphisms and [Eq] instances.
- *
- * These include:
+ * Main structures:
  * - [LipschitzQuaternionRing]: the Lipschitz quaternions.
- * - [ZModuleLipschitzQuaternion]: the two-dimensional vector space of Lipschitz quaternions over the integers.
  *
- * We have the following homomorphisms:
- * - [gaussianIntEmbeddingToQuaternion]: the unital embeddings from the Gaussian integers to the Lipschitz quaternions.
- * - [LipschitzQuaternionToQuaternionMonomorphism]: a ring homomorphism from the Lipschitz quaternions to the quaternions.
+ * Vector spaces and modules:
+ * - [ZModuleLipschitzQuaternion]: the rank-4 ℤ-module of Lipschitz quaternions.
  *
- * We also have the following [Eq]s:
- * - [eqLipschitzQuaternion]: equality on Lipschitz quaternions.
+ * Homomorphisms:
+ * - [gaussianIntEmbeddingToQuaternion]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
+ * - [LipschitzToHurwitzQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the Hurwitz quaternions.
+ * - [LipschitzToRationalQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the rational quaternions.
+ * - [LipschitzToQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the quaternions.
+ *
+ * Eqs:
+ * - [eqLipschitzQuaternion]
+ *
+ * Printables:
+ * - [printableLipschitzQuaternion]
+ * - [printableLipschitzQuaternionPretty]
  */
 object LipschitzQuaternionAlgebras {
 
     /**
-     * This is the Lipschitz quaternion ring Lipschitz-ℍ:
-     * - associative
-     * - noncommutative
-     * - involutive
-     * - not a division ring.
+     * The Lipschitz quaternions are associative, noncommutative, and involutive.
      */
     object LipschitzQuaternionRing:
         InvolutiveRing<LipschitzQuaternion>,
@@ -72,8 +73,10 @@ object LipschitzQuaternionAlgebras {
             base.conj
 
         /**
-         * normSq(q) = scalar part of q * conj(q).
-         * In ℍ_Z, this lands in ℤ (BigInteger).
+         * The norm-square lands in ℤ:
+         * ```text
+         * normSq(q) = w² + x² + y² + z²
+         * ```
          */
         override val normSq: UnaryOp<LipschitzQuaternion, BigInteger> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { q ->
@@ -85,16 +88,12 @@ object LipschitzQuaternionAlgebras {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = LipschitzQuaternionRing.add
         override val leftAction: LeftAction<BigInteger, LipschitzQuaternion> =
-            LeftAction(Symbols.TRIANGLE_RIGHT) { n, lq ->
-                lipschitzQuaternion(n * lq.w, n * lq.x, n * lq.y, n * lq.z)
+            LeftAction(Symbols.TRIANGLE_RIGHT) { s, lq ->
+                lipschitzQuaternion(s * lq.w, s * lq.x, s * lq.y, s * lq.z)
             }
     }
 
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
-
-    /**
-     * Return the ring monomorphism embedding Gaussian-ℤ into Lipschitz-ℍ as determined by [embedding].
-     */
     fun gaussianIntEmbeddingToQuaternion(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
@@ -112,14 +111,32 @@ object LipschitzQuaternionAlgebras {
         }
     )
 
-    object LipschitzQuaternionToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> {
+    object LipschitzToHurwitzQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, HurwitzQuaternion> {
+        override val domain = LipschitzQuaternionRing
+        override val codomain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing
+        override val map = UnaryOp<LipschitzQuaternion, HurwitzQuaternion> { lq ->
+            HurwitzQuaternion(
+                lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational()
+            )
+        }
+    }
+
+    object LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> {
+        override val domain = LipschitzQuaternionRing
+        override val codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
+        override val map = UnaryOp<LipschitzQuaternion, RationalQuaternion> { lq ->
+            rationalQuaternion(lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational())
+        }
+    }
+
+    object LipschitzToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> {
         override val domain = LipschitzQuaternionRing
         override val codomain = QuaternionAlgebras.QuaternionDivisionRing
         override val map = UnaryOp<LipschitzQuaternion, Quaternion> { lq ->
-            val w = lq.a.re.toReal()
-            val x = lq.a.im.toReal()
-            val y = lq.b.re.toReal()
-            val z = lq.b.im.toReal()
+            val w = lq.w.toReal()
+            val x = lq.x.toReal()
+            val y = lq.y.toReal()
+            val z = lq.z.toReal()
             quaternion(w, x, y, z)
         }
     }

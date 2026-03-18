@@ -11,57 +11,58 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.times
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
+import org.vorpal.kosmos.linear.values.Vec4
 import java.math.BigInteger
 
-
-val HurwitzQuaternion.w: Rational get() = a
-val HurwitzQuaternion.x: Rational get() = b
-val HurwitzQuaternion.y: Rational get() = c
-val HurwitzQuaternion.z: Rational get() = d
-
 /**
- * [HurwitzQuaternionAlgebras] contains the algebraic structures over the  [HurwitzQuaternion] type, as well as the
- * homomorphisms and [Eq] instances.
- *
- * These include:
+ * Main structures:
  * - [HurwitzQuaternionRing]: the Hurwitz quaternions.
  *
- * We have the following homomorphisms:
- * - [gaussianIntEmbeddingToHurwitz]: the unital embeddings from the Gaussian integers to the Hurwitz quaternions.
- * - [LipschitzToHurwitzQuaternionMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the Hurwitz
- * quaternions.
- * - [HurwitzToQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the quaternions.
- * - [LipschitzToQuaternionMonomorphism]: a ring monomorphism from the Lipschitz quaternions to the quaternions
- * (passing through the Hurwitz quaternions).
+ * Vector spaces and modules:
+ * - [ZModuleHurwitzQuaternion]: the rank-4 ℤ-module of Hurwitz quaternions.
  *
- * We also have the following [Eq]s:
- * - [eqHurwitzQuaternion]: equality on Hurwitz quaternions.
+ * Lattices:
+ * - [HurwitzQuaternionLattice]: the rank-4 Euclidean lattice of Hurwitz quaternions in `ℝ⁴`,
+ *   related to the `D₄`/24-cell configuration.
+ *
+ *
+ * Homomorphisms:
+ * - [gaussianIntEmbeddingToHurwitz]: the unital embeddings from the Gaussian integers to the Hurwitz quaternions.
+ * - [HurwitzToRationalQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the rational quaternions.
+ * - [HurwitzToQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the quaternions.
+ *
+ * Eqs:
+ * - [eqHurwitzQuaternion]
+ *
+ * Printables:
+ * - [printableHurwitzQuaternion]
+ * - [printableHurwitzQuaternionPretty]
  */
 object HurwitzQuaternionAlgebras {
     /**
-     * The Hurwitz quaternions are:
-     * - associative
-     * - noncommutative
-     * - involutive
-     * - a finite unit group of size 24
-     * - but do not form a division ring.
+     * Hurwitz quaternions are associative, noncommutative, involutive, and form a finite unit group of size 24.
      *
-     * However, they are the maximal order in the rational quaternion division algebra ℍ(ℚ):
+     * They are the maximal order in the rational quaternion division algebra ℍ(ℚ):
+     *
      * An order in ℍ(ℚ) is a subring 𝒪 such that:
-     * - Contains 1 and is closed under addition and multiplication
-     * - Is a lattice (finitely generated ℤ-module of rank 4)
-     * - Spans ℍ(ℚ) over ℚ (i.e., ℚ ⊗_ℤ 𝒪 = ℍ(ℚ)).
+     * - 1 ∈ 𝒪
+     * - 𝒪 is closed under addition and multiplication
+     * - 𝒪 is a lattice (finitely generated ℤ-module of rank 4)
+     * - 𝒪 spans ℍ(ℚ) over ℚ (i.e., `ℚ ⊗_ℤ 𝒪 = ℍ(ℚ)`).
      *
      * The containment can be described as:
-     * ```
+     * ```text
      * Lipschitz (ring) ⊂ Hurwitz (ring) ⊂ ℍ(ℚ) (division ring) ⊂ ℍ (division ring)
      * ```
      */
@@ -74,35 +75,54 @@ object HurwitzQuaternionAlgebras {
 
         override val add: AbelianGroup<HurwitzQuaternion> = AbelianGroup.of(
             identity = zero,
-            op = BinOp(Symbols.PLUS, HurwitzQuaternion::plus),
-            inverse = Endo(Symbols.MINUS, HurwitzQuaternion::unaryMinus)
+            op = BinOp(Symbols.PLUS) { hq1, hq2 ->
+                HurwitzQuaternion(
+                    hq1.a + hq2.a, hq1.b + hq2.b,
+                    hq1.c + hq2.c, hq1.d + hq2.d
+                )
+            },
+            inverse = Endo(Symbols.MINUS) { hq ->
+                HurwitzQuaternion(-hq.a, -hq.b, -hq.c, -hq.d)
+            }
         )
 
         override val mul: Monoid<HurwitzQuaternion> = Monoid.of(
             identity = one,
-            op = BinOp(Symbols.ASTERISK, HurwitzQuaternion::times)
+            op = BinOp(Symbols.ASTERISK) { hq1, hq2 ->
+                HurwitzQuaternion(
+                    hq1.a * hq2.a - hq1.b * hq2.b - hq1.c * hq2.c - hq1.d * hq2.d,
+                    hq1.a * hq2.b + hq1.b * hq2.a + hq1.c * hq2.d - hq1.d * hq2.c,
+                    hq1.a * hq2.c - hq1.b * hq2.d + hq1.c * hq2.a + hq1.d * hq2.b,
+                    hq1.a * hq2.d + hq1.b * hq2.c - hq1.c * hq2.b + hq1.d * hq2.a
+                )
+            }
         )
 
         override fun fromBigInt(n: BigInteger): HurwitzQuaternion =
             HurwitzQuaternion(n.toRational(), Rational.ZERO, Rational.ZERO, Rational.ZERO)
 
-        // This always is a Hurwitz quaternion as doubling maintains integrality and parity mod 2
-        // doesn't change under negation.
-        override val conj: Endo<HurwitzQuaternion> = Endo(Symbols.CONJ) { (a, b, c, d) ->
-            HurwitzQuaternion(a, -b, -c, -d)
+        // This always is a Hurwitz quaternion as:
+        // - doubling maintains integrality; and
+        // - parity mod 2 doesn't change under negation.
+        override val conj: Endo<HurwitzQuaternion> = Endo(Symbols.CONJ) { hq ->
+            HurwitzQuaternion(hq.a, -hq.b, -hq.c, -hq.d)
         }
 
-        // normSq always lands in Z:
-        // 1. If they're already in Z, obvious.
-        // 2. If they're all half-integers, then they all can be written n/2 with n odd.
-        //    a^2 + b^2 + c^2 + d^2 = (n_a^2 + n_b^2 + n_c^2 + n_d^2) / 4
-        //    with each odd square being 1 (mod 8), so the numerator is 4 (mod 8), hence divisible by 4.
+        /**
+         * normSq always lands in ℤ:
+         * 1. If the values are already in ℤ, the calculation remains there.
+         * 2. If the values are all half-integers, then they all can be written `n/2` with `n` odd:
+         * ```text
+         * a^2 + b^2 + c^2 + d^2 = (n_a^2 + n_b^2 + n_c^2 + n_d^2) / 4
+         * ```
+         * with each odd square being `1 (mod 8)`, so the numerator is `4 (mod 8)`, and hence divisible by 4.
+         */
         override val normSq: UnaryOp<HurwitzQuaternion, Rational> = UnaryOp(Symbols.NORM_SQ_SYMBOL) {
-            (a, b, c, d) -> a * a + b * b + c * c + d * d
+            hq -> hq.a * hq.a + hq.b * hq.b + hq.c * hq.c + hq.d * hq.d
         }
     }
 
-    object HurwitzQuaternionZModule : ZModule<HurwitzQuaternion> {
+    object ZModuleHurwitzQuaternion : ZModule<HurwitzQuaternion> {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = HurwitzQuaternionRing.add
         override val leftAction: LeftAction<BigInteger, HurwitzQuaternion> =
@@ -112,12 +132,64 @@ object HurwitzQuaternionAlgebras {
             }
     }
 
+    /**
+     * The Hurwitz quaternions form a rank-4 Euclidean lattice in `ℝ⁴` under the coordinate embedding:
+     * ```text
+     * a + bi + cj + dk ↦ (a, b, c, d).
+     * ```
+     *
+     * As a set, this lattice is:
+     * ```text
+     * ℤ⁴ ∪ (ℤ + 1/2)⁴
+     * ```
+     * i.e. the cubic lattice together with its all-half-integer translate.
+     *
+     * The 24 norm-1 Hurwitz units form the vertices of the regular 24-cell, equivalently a scaled
+     * `D₄` root configuration.
+     */
+    object HurwitzQuaternionLattice: EuclideanLattice<HurwitzQuaternion, Rational> {
+        override val rank = 4
+        private val ring = HurwitzQuaternionRing
+
+        // Alternatively, we could use the following:
+        // (ring.normSq(ring.add(hq1, hq2)) - ring.normSq(hq1) - ring.normSq(hq2)) / Rational.TWO
+        override val dot: (HurwitzQuaternion, HurwitzQuaternion) -> Rational = { hq1, hq2 ->
+            hq1.a * hq2.a + hq1.b * hq2.b + hq1.c * hq2.c + hq1.d * hq2.d
+        }
+
+        /**
+         * A ℤ-basis of the Hurwitz quaternion lattice is `[1, I, J, (1 + I + J + K) / 2]`.
+         */
+        private val HALF = Rational.of(BigInteger.ONE, BigInteger.TWO)
+        override val basis: List<HurwitzQuaternion> = listOf(
+            HurwitzQuaternion.ONE,
+            HurwitzQuaternion.I,
+            HurwitzQuaternion.J,
+            HurwitzQuaternion(HALF, HALF, HALF, HALF)
+        )
+
+        override val addV: AbelianGroup<HurwitzQuaternion> = ring.add
+        override val scale: LeftAction<BigInteger, HurwitzQuaternion> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, hq ->
+            HurwitzQuaternion(s * hq.a, s * hq.b, s * hq.c, s * hq.d)
+        }
+
+        val embedR4: UnaryOp<HurwitzQuaternion, Vec4<Real>> = UnaryOp { hq ->
+            Vec4(hq.a.toReal(), hq.b.toReal(), hq.c.toReal(), hq.d.toReal())
+        }
+
+        /**
+         * Call validate() last to make sure all necessary conditions are met AFTER initialization happens.
+         */
+        @Suppress("unused")
+        private val _validated = validate()
+    }
+
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
 
     /**
-     * Create the [GaussianInt] -> [LipschitzQuaternion] monomorphism according to the [embedding] and then
-     * apply the [LipschitzToHurwitzQuaternionMonomorphism] to get a [RingMonomorphism]:
-     * ```kotlin
+     * Create the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
+     * apply the [LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * ```text
      * GaussianInt ↪ LipschitzQuaternion ↪ HurwitzQuaternion
      * ```
      */
@@ -125,22 +197,21 @@ object HurwitzQuaternionAlgebras {
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, HurwitzQuaternion> =
         LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion(embedding) andThen
-            LipschitzToHurwitzQuaternionMonomorphism
+            LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism
 
     /**
-     * General mappings from the Lipschitz quaternion rings to the Hurwitz quaternion rings.
+     * Monomorphism: HurwitzQuaternion to RationalQuaternion.
      */
-    val LipschitzToHurwitzQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, HurwitzQuaternion> =
-        RingMonomorphism.of(
-            domain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-            codomain = HurwitzQuaternionRing,
-            map = UnaryOp { lq -> HurwitzQuaternion(
-                lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational()
-            ) }
-        )
+    object HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> {
+        override val domain = HurwitzQuaternionRing
+        override val codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
+        override val map = UnaryOp<HurwitzQuaternion, RationalQuaternion> { (a, b, c, d) ->
+            rationalQuaternion(a, b, c, d)
+        }
+    }
 
     /**
-     * General mappings from the Hurwitz quaternion rings to the Quaternion ring.
+     * Monomorphism: HurwitzQuaternion to Quaternion.
      */
     object HurwitzToQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, Quaternion> {
         override val domain = HurwitzQuaternionRing
@@ -149,9 +220,6 @@ object HurwitzQuaternionAlgebras {
             quaternion(a.toReal(),  b.toReal(), c.toReal(), d.toReal())
         }
     }
-
-    val LipschitzToQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, Quaternion> =
-        LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToQuaternionMonomorphism
 
     val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq.default()
 
