@@ -140,9 +140,6 @@ object RationalQuaternionAlgebras {
         }
     }
 
-    val LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> =
-        HurwitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism andThen HurwitzToRationalQuaternionMonomorphism
-
     val eqRationalQuaternion: Eq<RationalQuaternion> = Eq.default()
 
     val printableRationalQuaternion: Printable<RationalQuaternion> =
