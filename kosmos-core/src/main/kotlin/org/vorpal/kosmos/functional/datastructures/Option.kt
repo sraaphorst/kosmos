@@ -2,19 +2,9 @@ package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.Identity
-import org.vorpal.kosmos.functional.core.Kind
 import org.vorpal.kosmos.functional.optics.Prism
 
-
-// HKT basis for Option.
-object ForOption
-typealias OptionOf<A> = Kind<ForOption, A>
-@Suppress("UNCHECKED_CAST")
-val <A> OptionOf<A>.fix: Option<A>
-    get() = this as Option<A>
-
-
-sealed class Option<out A>: OptionOf<A> {
+sealed class Option<out A> {
     data class Some<A>(val value: A) : Option<A>()
     data object None : Option<Nothing>()
 
