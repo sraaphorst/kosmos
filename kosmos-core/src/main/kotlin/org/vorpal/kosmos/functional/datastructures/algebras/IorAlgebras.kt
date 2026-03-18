@@ -4,7 +4,6 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.functional.datastructures.Ior
 
-
 fun <L : Any, R : Any> iorSemigroup(
     left: Semigroup<L>,
     right: Semigroup<R>,

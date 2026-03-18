@@ -1,18 +1,9 @@
 package org.vorpal.kosmos.functional.datastructures
 
 import org.vorpal.kosmos.core.Identity
-import org.vorpal.kosmos.functional.core.Kind
-import org.vorpal.kosmos.functional.core.Kind2
 import org.vorpal.kosmos.functional.optics.Prism
 
-object ForEither
-typealias EitherOf<A, B> = Kind2<ForEither, A, B>
-@Suppress("UNCHECKED_CAST")
-val <A, B> EitherOf<A, B>.fix: Either<A, B>
-    get() = this as Either<A, B>
-
-
-sealed class Either<out L, out R>: EitherOf<L, R> {
+sealed class Either<out L, out R> {
     data class Left<out L>(val value: L) : Either<L, Nothing>()
     data class Right<out R>(val value: R) : Either<Nothing, R>()
 
