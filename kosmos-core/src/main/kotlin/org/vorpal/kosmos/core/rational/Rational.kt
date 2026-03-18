@@ -141,3 +141,9 @@ fun Short.toRational(): Rational = Rational.of(this.toInt().toBigInteger(), BigI
 fun Byte.toRational(): Rational  = Rational.of(this.toInt().toBigInteger(), BigInteger.ONE)
 fun UInt.toRational(): Rational  = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
 fun ULong.toRational(): Rational = Rational.of(this.toLong().toBigInteger(), BigInteger.ONE)
+
+// Add convenience for BigInteger.
+operator fun BigInteger.plus(rational: Rational): Rational = rational + this
+operator fun BigInteger.minus(rational: Rational): Rational = -rational + this
+operator fun BigInteger.times(rational: Rational): Rational = rational * this
+operator fun BigInteger.div(rational: Rational): Rational = this * rational.reciprocal()
