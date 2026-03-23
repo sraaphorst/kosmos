@@ -19,7 +19,7 @@ class IntegerCommutativeRingSpec : StringSpec({
         CommutativeRingLaws(
             ring = ring,
             arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInt,
+            eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
         ).fullTest().throwIfFailed()
     }
@@ -28,7 +28,7 @@ class IntegerCommutativeRingSpec : StringSpec({
         InvolutiveRingLaws(
             ring = ring,
             arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInt,
+            eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
         ).fullTest().throwIfFailed()
     }
@@ -39,7 +39,7 @@ class IntegerCommutativeRingSpec : StringSpec({
             add = ring.add,
             mul = ring.mul,
             arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInt,
+            eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
         ).fullTest().throwIfFailed()
     }
@@ -49,8 +49,8 @@ class IntegerCommutativeRingSpec : StringSpec({
             normSq = ring.normSq,
             zeroA = ring.zero,
             arbA = ArbInteger.small,
-            eqA = IntegerAlgebras.eqInt,
-            eqN = IntegerAlgebras.eqInt,
+            eqA = IntegerAlgebras.eqInteger,
+            eqN = IntegerAlgebras.eqInteger,
             zeroN = ring.zero,
             prA = IntegerAlgebras.printableInteger,
             prN = IntegerAlgebras.printableInteger
@@ -72,7 +72,7 @@ class IntegerCommutativeRingSpec : StringSpec({
             normSq = ring.normSq,
             mulN = ring.mul.op,
             arbA = ArbInteger.small,
-            eqN = IntegerAlgebras.eqInt,
+            eqN = IntegerAlgebras.eqInteger,
             prA = IntegerAlgebras.printableInteger,
             prN = IntegerAlgebras.printableInteger
         ).test()
@@ -83,7 +83,7 @@ class IntegerCommutativeRingSpec : StringSpec({
             neg = ring.add.inverse,
             normSq = ring.normSq,
             arbA = ArbInteger.small,
-            eqN = IntegerAlgebras.eqInt,
+            eqN = IntegerAlgebras.eqInteger,
             prA = IntegerAlgebras.printableInteger,
             prN = IntegerAlgebras.printableInteger
         ).test()
@@ -96,7 +96,7 @@ class IntegerCommutativeRingSpec : StringSpec({
             mulA = ring.mul.op,
             conj = ring.conj,
             arbA = ArbInteger.small,
-            eqA = IntegerAlgebras.eqInt,
+            eqA = IntegerAlgebras.eqInteger,
             prA = IntegerAlgebras.printableInteger,
             prN = IntegerAlgebras.printableInteger
         ).test()

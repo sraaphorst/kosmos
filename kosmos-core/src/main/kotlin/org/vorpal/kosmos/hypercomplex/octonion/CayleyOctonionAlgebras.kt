@@ -130,7 +130,7 @@ object CayleyOctonionAlgebras {
             zero = BigInteger.ZERO,
             one = BigInteger.ONE,
             prA = IntegerAlgebras.printableInteger,
-            eqA = IntegerAlgebras.eqInt,
+            eqA = IntegerAlgebras.eqInteger,
             decompose = { co -> listOf(co.w, co.x, co.y, co.z, co.u, co.v, co.s, co.t) }
         )
 

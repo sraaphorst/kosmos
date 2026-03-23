@@ -1,23 +1,42 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
+import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.PrimeField
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
+/**
+ * Main structures:
+ * - [IntegerCommutativeRing]: the integers.
+ *
+ * Homomorphisms:
+ * - [ZToQMonomorphism]: from integers to rationals.
+ * - [ZToRHomomorphism]: from integers to reals. The abstract map `ℤ → ℝ` is a monomorphism,
+ *   but this implementation uses Real (represented by [Double]), so it is not injective for
+ *   sufficiently large integers, and is therefore only a ring homomorphism.
+ *
+ * Eqs:
+ * - [eqInteger]
+ *
+ * Printables:
+ * - [printableInteger]
+ */
 object IntegerAlgebras {
-    val F2: PrimeField = PrimeField(BigInteger.TWO)
 
     object IntegerCommutativeRing:
         CommutativeRing<BigInteger>,
@@ -46,12 +65,24 @@ object IntegerAlgebras {
         override fun fromBigInt(n: BigInteger): BigInteger = n
     }
 
-    val eqInt: Eq<BigInteger> = Eq.default()
-
     object SignedInteger : LinearCombinationPrintable.SignedOps<BigInteger> {
         override fun isNeg(x: BigInteger): Boolean = x.signum() < 0
         override fun abs(x: BigInteger): BigInteger = x.abs()
     }
+
+    val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
+        IntegerCommutativeRing,
+        RationalField,
+        UnaryOp(transform = BigInteger::toRational)
+    )
+
+    val ZToRHomomorphism: RingHomomorphism<BigInteger, Double> = RingHomomorphism.of(
+        IntegerCommutativeRing,
+        RealAlgebras.RealField,
+        UnaryOp(transform = BigInteger::toDouble)
+    )
+
+    val eqInteger: Eq<BigInteger> = Eq.default()
 
     val printableInteger: Printable<BigInteger> = Printable.default()
 }
