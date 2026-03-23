@@ -175,13 +175,12 @@ object EisensteinIntAlgebras {
      * since the corresponding vectors `(1, 0)` and `(-1/2, √3/2)` are not orthogonal.
      */
     object EisensteinIntLattice: EuclideanLattice<EisensteinInt, Rational> {
+        override val rank: Int = 2
         private val ring = EisensteinIntCommutativeRing
 
         override val dot: (EisensteinInt, EisensteinInt) -> Rational = { e1, e2 ->
             Rational.of(ring.normSq(ring.add(e1, e2)) - ring.normSq(e1) - ring.normSq(e2), BigInteger.TWO)
         }
-
-        override val rank: Int = 2
 
         /**
          * The Eisenstein integers form a `ℤ`-basis `{1, ω}` over the abelian group `ℤ[ω]`.
@@ -234,7 +233,7 @@ object EisensteinIntAlgebras {
             im = { it.b },
             basis = Symbols.OMEGA,
             prA = IntegerAlgebras.printableInteger,
-            eqA = IntegerAlgebras.eqInt
+            eqA = IntegerAlgebras.eqInteger
         )
 
     val printableEisensteinIntPretty: Printable<EisensteinInt> =

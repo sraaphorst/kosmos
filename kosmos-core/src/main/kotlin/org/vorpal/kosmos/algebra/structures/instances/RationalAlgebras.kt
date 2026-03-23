@@ -69,12 +69,6 @@ object RationalAlgebras {
             LeftAction(Symbols.TRIANGLE_RIGHT) { r, a -> r * a }
     }
 
-    val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
-        IntegerAlgebras.IntegerCommutativeRing,
-        RationalField,
-        UnaryOp { z -> z.toRational() }
-    )
-
     val eqRational: Eq<Rational> = Eq.default()
 
     object SignedRational : LinearCombinationPrintable.SignedOps<Rational> {

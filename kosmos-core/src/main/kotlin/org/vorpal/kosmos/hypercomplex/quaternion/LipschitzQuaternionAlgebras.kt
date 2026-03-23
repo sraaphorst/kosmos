@@ -1,18 +1,17 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
+import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.hypercomplex.complex.GaussianIntAlgebras
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
@@ -20,6 +19,8 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
+import org.vorpal.kosmos.linear.values.Vec4
 import java.math.BigInteger
 
 /**
@@ -29,8 +30,10 @@ import java.math.BigInteger
  * Vector spaces and modules:
  * - [ZModuleLipschitzQuaternion]: the rank-4 ℤ-module of Lipschitz quaternions.
  *
+ * Lattices:
+ * - [LipschitzQuaternionLattice]: the rank-4 Euclidean lattice of Lipschitz quaternions in `ℝ⁴`.
+ *
  * Homomorphisms:
- * - [gaussianIntEmbeddingToQuaternion]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
  * - [LipschitzToHurwitzQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the Hurwitz quaternions.
  * - [LipschitzToRationalQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the rational quaternions.
  * - [LipschitzToQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the quaternions.
@@ -84,32 +87,50 @@ object LipschitzQuaternionAlgebras {
             }
     }
 
+    // Used by both the module and the lattice.
+    private val zScaling: LeftAction<BigInteger, LipschitzQuaternion> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, lq ->
+        lipschitzQuaternion(s * lq.w, s * lq.x, s * lq.y, s * lq.z)
+    }
+
     object ZModuleLipschitzQuaternion : ZModule<LipschitzQuaternion> {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = LipschitzQuaternionRing.add
-        override val leftAction: LeftAction<BigInteger, LipschitzQuaternion> =
-            LeftAction(Symbols.TRIANGLE_RIGHT) { s, lq ->
-                lipschitzQuaternion(s * lq.w, s * lq.x, s * lq.y, s * lq.z)
-            }
+        override val leftAction: LeftAction<BigInteger, LipschitzQuaternion> = zScaling
     }
 
-    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
-    fun gaussianIntEmbeddingToQuaternion(
-        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
-        domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
-        codomain = LipschitzQuaternionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = BigInteger.ZERO,
-                negate = BigInteger::negate,
-                mkQuaternion = ::lipschitzQuaternion
-            )
+    object LipschitzQuaternionLattice: EuclideanLattice<LipschitzQuaternion, BigInteger> {
+        override val rank = 4
+        private val ring = LipschitzQuaternionRing
+
+        // Alternatively, we could use the following:
+        // (ring.normSq(ring.add(lq1, lq2)) - ring.normSq(lq1) - ring.normSq(lq2)) / BigInteger.TWO
+        override val dot: (LipschitzQuaternion, LipschitzQuaternion) -> BigInteger = { lq1, lq2 ->
+            lq1.w * lq2.w + lq1.x * lq2.x + lq1.y * lq2.y + lq1.z * lq2.z
         }
-    )
+
+        /**
+         * A `ℤ`-basis of the Lipschitz quaternion lattice is `[1, I, J, K]`.
+         */
+        override val basis: List<LipschitzQuaternion> = listOf(
+            LipschitzQuaternions.ONE,
+            LipschitzQuaternions.I,
+            LipschitzQuaternions.J,
+            LipschitzQuaternions.K
+        )
+
+        override val addV: AbelianGroup<LipschitzQuaternion> = ring.add
+        override val scale: LeftAction<BigInteger, LipschitzQuaternion> = zScaling
+
+        val embedR4: UnaryOp<LipschitzQuaternion, Vec4<Real>> = UnaryOp { lq ->
+            Vec4(lq.w.toReal(), lq.x.toReal(), lq.y.toReal(), lq.z.toReal())
+        }
+
+        /**
+         * Call validate() last to make sure all necessary conditions are met AFTER initialization happens.
+         */
+        @Suppress("unused")
+        private val _validated = validate()
+    }
 
     object LipschitzToHurwitzQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, HurwitzQuaternion> {
         override val domain = LipschitzQuaternionRing
@@ -149,7 +170,7 @@ object LipschitzQuaternionAlgebras {
             zero = BigInteger.ZERO,
             one = BigInteger.ONE,
             prA = IntegerAlgebras.printableInteger,
-            eqA = IntegerAlgebras.eqInt,
+            eqA = IntegerAlgebras.eqInteger,
             decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
         )
 

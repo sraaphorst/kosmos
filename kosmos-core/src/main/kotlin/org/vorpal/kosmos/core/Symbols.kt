@@ -71,7 +71,7 @@ object Symbols {
     const val FORCES = "⊩"
     const val FORALL = "∀"
     const val FOUR_SUB = "₄"
-    const val FOURTH_POWER = "⁴"
+    const val FOUR_SUP = "⁴"
     const val FOURTH_ROOT = "∜"
     const val GREATER_THAN = ">"
     const val GREATER_THAN_EQ = "≥"
