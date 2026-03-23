@@ -8,11 +8,9 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.bridge.ZModule
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -38,7 +36,6 @@ import java.math.BigInteger
  *
  *
  * Homomorphisms:
- * - [gaussianIntEmbeddingToHurwitz]: the unital embeddings from the Gaussian integers to the Hurwitz quaternions.
  * - [HurwitzToRationalQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the rational quaternions.
  * - [HurwitzToQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the quaternions.
  *
@@ -142,10 +139,21 @@ object HurwitzQuaternionAlgebras {
      * ```text
      * ℤ⁴ ∪ (ℤ + 1/2)⁴
      * ```
-     * i.e. the cubic lattice together with its all-half-integer translate.
+     * i.e. the cubic lattice together with its all-half-integer translate. A 2D slice would resemble:
+     * ```text
+     * •   •   •   •
+     *   •   •   •
+     * •   •   •   •
+     *   •   •   •
+     * •   •   •   •
+     *```
+     * i.e. one lattice plus a shifted coset.
      *
      * The 24 norm-1 Hurwitz units form the vertices of the regular 24-cell, equivalently a scaled
-     * `D₄` root configuration.
+     * `D₄` root configuration. By definition, these units are the roots of the polynomial
+     * `x⁴ - 4x² + 1`, which is the characteristic polynomial of the `D₄` Coxeter group.
+     *
+     * We consider the unit hypersphere, which gives us the number of
      */
     object HurwitzQuaternionLattice: EuclideanLattice<HurwitzQuaternion, Rational> {
         override val rank = 4
@@ -183,21 +191,6 @@ object HurwitzQuaternionAlgebras {
         @Suppress("unused")
         private val _validated = validate()
     }
-
-    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
-
-    /**
-     * Create the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
-     * apply the [LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism] to get a [RingMonomorphism]:
-     * ```text
-     * GaussianInt ↪ LipschitzQuaternion ↪ HurwitzQuaternion
-     * ```
-     */
-    fun gaussianIntEmbeddingToHurwitz(
-        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<GaussianInt, HurwitzQuaternion> =
-        LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion(embedding) andThen
-            LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism
 
     /**
      * Monomorphism: HurwitzQuaternion to RationalQuaternion.

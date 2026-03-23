@@ -19,10 +19,21 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras.LipschitzQuaternionRing
+import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism
+import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternion
 import java.math.BigInteger
 
 /**
  * Algebraic structures, morphisms, equality, and rendering support for [GaussianInt].
+ *
+ * - [gaussianIntEmbeddingToQuaternion]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
+ * - [gaussianIntEmbeddingToHurwitz]: unital embedding factory from the Gaussian integers to the Hurwitz quaternions.
  */
 object GaussianIntAlgebras {
     /**
@@ -176,6 +187,42 @@ object GaussianIntAlgebras {
         }
     }
 
+    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
+
+    /**
+     * Unital embedding factory from the Gaussian integers into the Lipschitz quaternions,
+     * parameterized by the chosen quaternion axis/sign convention.
+     */
+    fun gaussianIntEmbeddingToQuaternion(
+        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
+        domain = GaussianIntEuclideanDomain,
+        codomain = LipschitzQuaternionRing,
+        map = UnaryOp { z ->
+            QuaternionEmbeddingKit.embedComplexLike(
+                axisSign = embedding,
+                re = z.re,
+                im = z.im,
+                zero = BigInteger.ZERO,
+                negate = BigInteger::negate,
+                mkQuaternion = ::lipschitzQuaternion
+            )
+        }
+    )
+
+    /**
+     * Create the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
+     * apply the [LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * ```text
+     * GaussianInt ↪ LipschitzQuaternion ↪ HurwitzQuaternion
+     * ```
+     */
+    fun gaussianIntEmbeddingToHurwitz(
+        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<GaussianInt, HurwitzQuaternion> =
+        gaussianIntEmbeddingToQuaternion(embedding) andThen LipschitzToHurwitzQuaternionMonomorphism
+
+
     val eqGaussianInt: Eq<GaussianInt> = Eq.default()
 
     val printableGaussianInt: Printable<GaussianInt> =
@@ -187,7 +234,7 @@ object GaussianIntAlgebras {
             im = { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = IntegerAlgebras.printableInteger,
-            eqA = IntegerAlgebras.eqInt
+            eqA = IntegerAlgebras.eqInteger
         )
 
     val printableGaussianIntPretty = printableGaussianInt

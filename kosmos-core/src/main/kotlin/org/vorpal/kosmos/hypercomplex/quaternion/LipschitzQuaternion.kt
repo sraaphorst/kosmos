@@ -22,3 +22,20 @@ fun lipschitzQuaternion(w: BigInteger,
         GaussianInt(w, x),
         GaussianInt(y, z)
     )
+
+object LipschitzQuaternions {
+    val ZERO: LipschitzQuaternion =
+        lipschitzQuaternion(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
+
+    val ONE: LipschitzQuaternion =
+        lipschitzQuaternion(BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
+
+    val I: LipschitzQuaternion =
+        lipschitzQuaternion(BigInteger.ZERO, BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO)
+
+    val J: LipschitzQuaternion =
+        lipschitzQuaternion(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE, BigInteger.ZERO)
+
+    val K: LipschitzQuaternion =
+        lipschitzQuaternion(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ONE)
+}

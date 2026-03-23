@@ -8,9 +8,9 @@ import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 
 class ZToQMonomorphismSpec: StringSpec({
-    val mono = RationalAlgebras.ZToQMonomorphism
+    val mono = IntegerAlgebras.ZToQMonomorphism
     val arbZ = ArbInteger.small
-    val eqZ = IntegerAlgebras.eqInt
+    val eqZ = IntegerAlgebras.eqInteger
     val eqQ = RationalAlgebras.eqRational
     val prZ = IntegerAlgebras.printableInteger
     val prQ = RationalAlgebras.printableRationalPretty
