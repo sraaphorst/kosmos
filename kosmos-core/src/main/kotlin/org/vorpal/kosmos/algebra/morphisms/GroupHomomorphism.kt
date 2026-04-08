@@ -13,9 +13,9 @@ import org.vorpal.kosmos.core.ops.UnaryOp
  * NOTE: This type does not *enforce* the homomorphism laws; it is a certified/witnessed arrow.
  * Law checking is a separate concern (tests / verification helpers).
  */
-interface GroupHomomorphism<A : Any, B : Any> : AlgebraHomomorphism<A, B> {
-    val domain: Group<A>
-    val codomain: Group<B>
+interface GroupHomomorphism<A : Any, B : Any> : MonoidHomomorphism<A, B> {
+    override val domain: Group<A>
+    override val codomain: Group<B>
 
     infix fun <C : Any> andThen(other: GroupHomomorphism<B, C>): GroupHomomorphism<A, C> =
         of(

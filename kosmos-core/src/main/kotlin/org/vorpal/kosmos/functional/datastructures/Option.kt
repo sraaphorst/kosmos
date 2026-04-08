@@ -141,7 +141,7 @@ object Options {
         f.liftOption()(a, b)
 
     fun <A, B, C, D> map3(a: Option<A>, b: Option<B>, c: Option<C>, f: (A, B, C) -> D): Option<D> =
-        f.liftOption().invoke(a, b, c)
+        f.liftOption()(a, b, c)
 
     fun <A, B> ((A) -> B).liftOption(): (Option<A>) -> Option<B> =
         { it.map(this) }
