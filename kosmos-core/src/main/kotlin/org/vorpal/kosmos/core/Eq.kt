@@ -46,8 +46,10 @@ fun <A> Eq<A>.list(): Eq<List<A>> =
 
 fun <A> Eq<A>.sequence(): Eq<Sequence<A>> =
     Eq { xs, ys ->
-        val ix = xs.iterator(); val iy = ys.iterator()
-        while (ix.hasNext() && iy.hasNext()) if (neqv(ix.next(), iy.next())) return@Eq false
+        val ix = xs.iterator()
+        val iy = ys.iterator()
+        while (ix.hasNext() && iy.hasNext())
+            if (neqv(ix.next(), iy.next())) return@Eq false
         !ix.hasNext() && !iy.hasNext()
     }
 
@@ -100,23 +102,23 @@ fun <A, B, C> tripleEq(eqA: Eq<A>, eqB: Eq<B>, eqC: Eq<C>): Eq<Triple<A, B, C>> 
 /** Instances and factories. */
 
 object Eqs {
-    // Primitives / basic
-    val boolean: Eq<Boolean> = Eq { a, b -> a == b }
-    val byte: Eq<Byte> = Eq { a, b -> a == b }
-    val short: Eq<Short> = Eq { a, b -> a == b }
-    val int: Eq<Int> = Eq { a, b -> a == b }
-    val long: Eq<Long> = Eq { a, b -> a == b }
-    val char: Eq<Char> = Eq { a, b -> a == b }
-    val string: Eq<String> = Eq { a, b -> a == b }
-    val uuid: Eq<UUID> = Eq { a, b -> a == b }
+    // Primitives / basic:
+    val boolean: Eq<Boolean> = Eq.default()
+    val byte: Eq<Byte> = Eq.default()
+    val short: Eq<Short> = Eq.default()
+    val int: Eq<Int> = Eq.default()
+    val long: Eq<Long> = Eq.default()
+    val char: Eq<Char> = Eq.default()
+    val string: Eq<String> = Eq.default()
+    val uuid: Eq<UUID> = Eq.default()
 
     // Big numbers
-    val bigInteger: Eq<BigInteger> = Eq { a, b -> a == b }
+    val bigInteger: Eq<BigInteger> = Eq.default()
     /** BigDecimal structural equality with normalized scale (so 1.0 == 1.00). */
     val bigDecimalNormalized: Eq<BigDecimal> =
         Eq { a, b -> a.stripTrailingZeros().compareTo(b.stripTrailingZeros()) == 0 }
     /** BigDecimal strict (scale-sensitive) equality. */
-    val bigDecimalStrict: Eq<BigDecimal> = Eq { a, b -> a == b }
+    val bigDecimalStrict: Eq<BigDecimal> = Eq.default()
 
     /** Time */
     val instant: Eq<Instant>               = Eq { a, b -> a.compareTo(b) == 0 }
