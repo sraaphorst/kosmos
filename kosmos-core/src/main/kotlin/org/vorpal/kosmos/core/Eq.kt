@@ -148,8 +148,8 @@ object Eqs {
      * Treat NaNs as not equal to anything, and use absolute/relative tolerance.
      */
     fun realApprox(
-        absTol: Real = 1e-12,
-        relTol: Real = 1e-12
+        absTol: Real = 1e-8,
+        relTol: Real = 1e-8
     ): Eq<Real> = Eq { x, y ->
         if (x.isNaN() || y.isNaN()) false
         else if (x == 0.0 && y == 0.0) true
