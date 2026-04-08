@@ -2,10 +2,6 @@ package org.vorpal.kosmos.core.ops
 
 import org.vorpal.kosmos.core.Symbols
 
-/* =========================
- *  Generic heterogeneous op
- * ========================= */
-
 /** A heterogeneous binary operation (A, B) -> R with a printable symbol. */
 interface BinaryOp<A : Any, B : Any, R : Any> : Op {
     operator fun invoke(a: A, b: B): R
@@ -106,4 +102,7 @@ fun <V : Any, F : Any> BilinearForm(
     override val symbol: String = symbol
     override fun invoke(a: V, b: V): F = apply(a, b)
 }
-fun <V : Any, F : Any> BilinearForm(apply: (V, V) -> F) = BilinearForm(Symbols.DOT, apply)
+
+fun <V : Any, F : Any> BilinearForm(
+    apply: (V, V) -> F
+) = BilinearForm(Symbols.DOT, apply)

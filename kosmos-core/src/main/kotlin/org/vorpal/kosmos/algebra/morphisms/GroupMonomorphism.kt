@@ -8,9 +8,7 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 /**
  * A [GroupHomomorphism] which is also a [Monomorphism].
  */
-interface GroupMonomorphism<A : Any, B : Any> :
-    GroupHomomorphism<A, B>,
-    Monomorphism<A, B> {
+interface GroupMonomorphism<A : Any, B : Any> : GroupHomomorphism<A, B> {
         companion object {
             fun <A : Any, B : Any> of(
                 domain: Group<A>,
