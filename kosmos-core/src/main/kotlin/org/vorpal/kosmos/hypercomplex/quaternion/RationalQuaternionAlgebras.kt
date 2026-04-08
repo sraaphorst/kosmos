@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
+import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
@@ -9,12 +10,10 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRat
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRatAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
@@ -55,7 +54,7 @@ object RationalQuaternionAlgebras {
         NormedDivisionAlgebra<Rational, RationalQuaternion> {
 
         internal val base: NonAssociativeInvolutiveRing<RationalQuaternion> =
-            CayleyDickson.usual(GaussianRatAlgebras.GaussianRatField)
+            CayleyDickson.usual(GaussianRatAlgebras.GaussianRatStarAlgebra)
 
         override val zero = base.add.identity
         override val one = base.mul.identity
@@ -124,7 +123,11 @@ object RationalQuaternionAlgebras {
         }
     )
 
-    val RationalQuaternionToQuaternionMonomorphism: RingMonomorphism<RationalQuaternion, Quaternion> = RingMonomorphism.of(
+    /**
+     * This should theoretically be a ring monomorphism, but since we are mapping from rationals to floating point
+     * quaternions and may lose precision, we use a ring homomorphism instead.
+     */
+    val RationalQuaternionToQuaternionMonomorphism: RingHomomorphism<RationalQuaternion, Quaternion> = RingHomomorphism.of(
         domain = RationalQuaternionDivisionRing,
         codomain = QuaternionAlgebras.QuaternionDivisionRing,
         map = UnaryOp { lq ->

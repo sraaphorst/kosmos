@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.hypercomplex.complex.GaussianInt
+import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
 import java.math.BigInteger
 
 /**

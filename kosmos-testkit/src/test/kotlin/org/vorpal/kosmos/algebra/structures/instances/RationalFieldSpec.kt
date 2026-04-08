@@ -7,7 +7,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.laws.algebra.FieldLaws
-import org.vorpal.kosmos.std.ArbRational
+import org.vorpal.kosmos.core.rational.ArbRational
 
 class RationalFieldSpec : StringSpec({
     val field = RationalAlgebras.RationalField

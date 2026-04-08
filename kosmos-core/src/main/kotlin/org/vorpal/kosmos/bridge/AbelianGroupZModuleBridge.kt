@@ -9,15 +9,21 @@ import java.math.BigInteger
 
 typealias ZModule<M> = RModule<BigInteger, M>
 
+/**
+ * A functorial bridge between:
+ * - (additive) [AbelianGroup]s; and
+ * - ℤ-modules.
+ */
 object AbelianGroupZModuleBridge {
     /**
-     * Forgetful: any Z-module has an underlying additive abelian group.
+     * Forgetful: any ℤ-module has an underlying additive abelian group.
      */
     fun <M : Any> ZModule<M>.toAbelianGroup(): AbelianGroup<M> =
         add
 
     /**
-     * Canonical: an abelian group gives a Z-module structure.
+     * Canonical: An [AbelianGroup] gives a Z-module structure:
+     * `toZModule()` is about ℤ as the free rank-1 scalar ring for [AbelianGroup]s.
      *
      * Note that the [ZModule] structure returned here likely does not use the most efficient means of
      * implementing the scalar multiplication operation: the action relies on calculating the image of the scalar

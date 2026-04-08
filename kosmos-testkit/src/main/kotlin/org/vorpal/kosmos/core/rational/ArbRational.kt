@@ -1,11 +1,10 @@
-package org.vorpal.kosmos.std
+package org.vorpal.kosmos.core.rational
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bigInt
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
-import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.testing.ArbProduct2
 import java.math.BigInteger
 

@@ -4,6 +4,9 @@ import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 
+/**
+ * A Quaternion is a Cayley-Dickson doubling of the Complex numbers.
+ */
 typealias Quaternion = CD<Complex>
 
 val Quaternion.w: Real get() = a.a

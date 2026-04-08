@@ -7,7 +7,6 @@ import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
@@ -72,7 +71,7 @@ object IntegerAlgebras {
 
     val ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> = RingMonomorphism.of(
         IntegerCommutativeRing,
-        RationalField,
+        RationalAlgebras.RationalField,
         UnaryOp(transform = BigInteger::toRational)
     )
 

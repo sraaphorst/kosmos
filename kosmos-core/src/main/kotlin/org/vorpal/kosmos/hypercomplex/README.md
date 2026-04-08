@@ -117,7 +117,7 @@ takes an `AxisSignEmbedding` parameter (defaulting to canonical: $i_{\mathbb{C}}
 #### ℂ ↪ ℍ  (Real coefficients)
 
 ```kotlin
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings.*
+import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.*
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 
 // Canonical: i_C ↦ +i

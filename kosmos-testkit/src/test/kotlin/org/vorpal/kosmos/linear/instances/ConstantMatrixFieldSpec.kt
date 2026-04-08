@@ -8,8 +8,8 @@ import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.hypercomplex.complex.ArbGaussianRat
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRatAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.linear.instance.arbConstMat
 import org.vorpal.kosmos.linear.values.DenseMat
