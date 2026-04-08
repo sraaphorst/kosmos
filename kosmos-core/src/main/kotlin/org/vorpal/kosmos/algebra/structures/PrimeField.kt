@@ -5,7 +5,6 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import java.math.BigInteger
 
-
 /**
  * Prime fields 𝔽_p.
  */

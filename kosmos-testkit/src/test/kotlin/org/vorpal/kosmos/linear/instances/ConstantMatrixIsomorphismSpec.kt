@@ -6,7 +6,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
 import org.vorpal.kosmos.linear.instance.arbConstMat
-import org.vorpal.kosmos.std.ArbRational
+import org.vorpal.kosmos.core.rational.ArbRational
 
 class ConstantMatrixIsomorphismSpec : StringSpec({
 

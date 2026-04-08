@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.hypercomplex.embeddings
+package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing

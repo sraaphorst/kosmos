@@ -1,6 +1,8 @@
-package org.vorpal.kosmos.hypercomplex.complex
+package org.vorpal.kosmos.numberfields.quadratic
 
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
+import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -22,36 +24,45 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.syntax.toNearestInt
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
+import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
+import org.vorpal.kosmos.hypercomplex.complex.complex
+import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.Vec2
 import java.math.BigInteger
 import kotlin.math.sqrt
 
 /**
- * [EisensteinIntAlgebras] contains the algebraic structures over the [EisensteinInt] type, as well as the
- * homomorphisms and [org.vorpal.kosmos.core.Eq] instances.
+ * Main structures:
+ * - [EisensteinIntCommutativeRing]: the Eisenstein integers.
+ * - [EisensteinIntEuclideanDomain]: the Eisenstein integers as a Euclidean domain.
  *
- * These include:
- * - [EisensteinIntCommutativeRing]: the Eisenstein ring of integers.
- * - [EisensteinIntEuclideanDomain]: the Eisenstein ring of integers as a Euclidean domain.
- * - [EisensteinIntLattice]: the lattice of Eisenstein numbers.
+ * Lattice structures:
+ * - [EisensteinIntLattice]: the Eisenstein integers as a lattice.
  *
- * We are also a ZModule:
- * - [ZModuleEisensteinInt]: the Eisenstein ring of integers as a ZModule.
+ * Vector spaces and modules:
+ * - [ZModuleEisensteinInt]: the Eisenstein integers as a ZModule.
  *
- * We have the following homomorphisms:
+ * Homomorphisms:
+ * - [EisensteinIntRank2ZMatrixEmbedding]: a ring monomorphism from the Eisenstein ring to the rank 2 Z matrix ring.
  * - [EisensteinIntToCHomomorphism]: a ring homomorphism from the Eisenstein ring to the complex field.
  *   Note that this could defensibly be a ring monomorphism, but due to floating point errors, we cannot guarantee
  *   injectivity.
  * - [EisensteinInt.toComplex]: convenience method for this monomorphism.
  *
- * We also have the following [org.vorpal.kosmos.core.Eq]s:
+ * Eqs:
  * - [eqEisensteinInt]: equality on Eisenstein numbers.
+ *
+ * Printables:
+ * - [printableEisensteinInt]: a printable Eisenstein number.
+ * - [printableEisensteinIntPretty]: a pretty printable Eisenstein number.
  */
 object EisensteinIntAlgebras {
     private val sqrt3over2 = sqrt(3.0) / 2.0
 
     object EisensteinIntCommutativeRing :
-        CommutativeRing<EisensteinInt>, // by EisensteinIntCommutativeRing,
+        CommutativeRing<EisensteinInt>,
         HasNormSq<EisensteinInt, BigInteger>,
         InvolutiveRing<EisensteinInt> {
 
@@ -145,7 +156,7 @@ object EisensteinIntAlgebras {
     /**
      * The Eisenstein integers `ℤ[ω]` are viewed via three related embeddings:
      *
-     * 1) Coordinate embedding: `ℤ² → ℤ[ω]`, `(m, n) ↦ m + nω` (ℤ² is the free abelian group)
+     * 1) Coordinate embedding: `ℤ² → ℤ[ω]`, `(m, n) ↦ m + nω` (`ℤ²` is the free abelian group on the basis `{1, ω}`)
      * 2) Real (geometric) embedding: `ℤ[ω] → ℝ²`, `a + bω ↦ (a - b/2, (√3/2)b)`
      * 3) Complex embedding: `ℤ[ω] → ℂ`, `a + bω ↦ a + bω`
      *
@@ -173,6 +184,8 @@ object EisensteinIntAlgebras {
      * ⟨1, ω⟩ = -1/2,
      * ```
      * since the corresponding vectors `(1, 0)` and `(-1/2, √3/2)` are not orthogonal.
+     *
+     * Note that the Eisenstein integers are not obtained by a Cayley-Dickson doubling construction.
      */
     object EisensteinIntLattice: EuclideanLattice<EisensteinInt, Rational> {
         override val rank: Int = 2
@@ -208,6 +221,15 @@ object EisensteinIntAlgebras {
         private val _validated = validate()
     }
 
+    val EisensteinIntRank2ZMatrixEmbedding: RingMonomorphism<EisensteinInt, DenseMat<BigInteger>> =
+        quadraticRank2MatrixEmbedding(
+            domain = EisensteinIntCommutativeRing,
+            coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
+            s = -BigInteger.ONE,
+            t = -BigInteger.ONE,
+            coeffs = { it.a to it.b }
+        )
+
     /**
      * Note: due to rounding in Real, for sufficiently large values, this may not precisely meet the exact
      * definition of a ring homomorphism. BigInteger to Real may become lossy quite quickly.
@@ -218,9 +240,12 @@ object EisensteinIntAlgebras {
         override val map = UnaryOp<EisensteinInt, Complex> { e ->
             val aReal = e.a.toReal()
             val bReal = e.b.toReal()
-            Complex(aReal - bReal / 2.0, bReal * sqrt3over2)
+            complex(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
     }
+
+    fun EisensteinInt.toComplex(): Complex =
+        EisensteinIntToCHomomorphism(this)
 
     val eqEisensteinInt: Eq<EisensteinInt> = Eq.default()
 
@@ -239,6 +264,3 @@ object EisensteinIntAlgebras {
     val printableEisensteinIntPretty: Printable<EisensteinInt> =
         printableEisensteinInt
 }
-
-fun EisensteinInt.toComplex(): Complex =
-    EisensteinIntAlgebras.EisensteinIntToCHomomorphism.apply(this)

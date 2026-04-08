@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.structures.instances
 
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
-import org.vorpal.kosmos.std.ArbRational
+import org.vorpal.kosmos.core.rational.ArbRational
 
 class RationalStarFieldSpec : StringSpec({
     "RationalStarField satisfies StarAlgebraLaws" {

@@ -11,7 +11,6 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
@@ -27,13 +26,12 @@ import java.math.BigInteger
 import kotlin.isFinite
 
 /**
- * [QuaternionAlgebras] contains the algebraic structures over the [Quaternion] type, as well as the homomorphisms
- * and [Eq] instances.
- *
- * These include:
+ * Main structures:
  * - [QuaternionDivisionRing]: the quaternion division ring.
+ *
+ * Vector spaces and modules:
  * - [QuaternionVectorSpace]: the four-dimensional vector space of quaternions over the real numbers.
- * - [quaternionLeftComplexVectorSpace]: the two-dimensional vector space of quaternions over the complex numbers.
+ * - [quaternionLeftComplexVectorSpace]: a two-dimensional left ℂ-vector space using the chosen embedding.
  * - [QuaternionLeftComplexVectorSpacesAll]: a map of all complex embeddings to the vector space that they generate.
  * - [QuaternionLeftComplexVectorSpaceCanonical]: the canonical vector space of quaternions over the complex numbers.
  * - [QuaternionStarAlgebra]: the quaternion star algebra.
@@ -111,7 +109,7 @@ object QuaternionAlgebras {
     fun quaternionLeftComplexVectorSpace(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): FiniteVectorSpace<Complex, Quaternion> {
-        val embed = complexEmbeddingToQuaternion(emb)
+        val embed = ComplexAlgebras.complexToQuaternionEmbedding(emb)
         return FiniteVectorSpace.of(
             scalars = ComplexAlgebras.ComplexField,
             add = QuaternionDivisionRing.add,
@@ -137,52 +135,17 @@ object QuaternionAlgebras {
     )
 
     /**
-     * Return the ring monomorphism embedding ℂ into ℍ determined by [emb].
-     *
-     * Embed a complex number into ℍ using the subfield `ℝ ⊕ ℝ·i`.
-     * Sends:
-     * ```
-     * a + b i_C  ↦  a·1 + b·u
-     * ```
-     * where `u ∈ {±i, ±j, ±k}` based on `emb.axis` and `emb.sign`.
-     */
-    fun complexEmbeddingToQuaternion(
-        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
-        domain = ComplexAlgebras.ComplexField,
-        codomain = QuaternionDivisionRing,
-        map = UnaryOp { (re, im) ->
-            val s = emb.sign.factor.toDouble()
-
-            when (emb.axis) {
-                AxisSignEmbeddings.ImagAxis.I -> quaternion(re, s * im, 0.0, 0.0)
-                AxisSignEmbeddings.ImagAxis.J -> quaternion(re, 0.0, s * im, 0.0)
-                AxisSignEmbeddings.ImagAxis.K -> quaternion(re, 0.0, 0.0, s * im)
-            }
-        }
-    )
-
-    /**
-     * Convenience extension.
-     *
-     * Canonical default is `i_C ↦ i`.
-     */
-    fun Complex.asQuaternion(
-        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): Quaternion = complexEmbeddingToQuaternion(emb)(this)
-
-    /**
      * A monomorphism from H to M_2(C).
      */
     object QuaternionToComplexMatrixMonomorphism: RingMonomorphism<Quaternion, DenseMat<Complex>> {
-        private val complexField = ComplexAlgebras.ComplexField
+        private val complexStarAlgebra = ComplexAlgebras.ComplexStarAlgebra
         override val domain = QuaternionDivisionRing
-        override val codomain = DenseMatAlgebras.DenseMatRing(complexField, 2)
+        override val codomain = DenseMatAlgebras.DenseMatRing(complexStarAlgebra, 2)
         override val map: UnaryOp<Quaternion, DenseMat<Complex>> = UnaryOp { (a, b) ->
             DenseMat.ofRows(
                 listOf(
                     listOf(a, b),
-                    listOf(complexField.add.inverse(complexField.conj(b)), complexField.conj(a))
+                    listOf(complexStarAlgebra.add.inverse(complexStarAlgebra.conj(b)), complexStarAlgebra.conj(a))
                 )
             )
         }

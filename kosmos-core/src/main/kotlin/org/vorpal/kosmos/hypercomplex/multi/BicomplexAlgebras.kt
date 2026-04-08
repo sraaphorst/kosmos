@@ -118,8 +118,8 @@ object BicomplexAlgebras {
          */
         val conj1: Endo<Bicomplex> = Endo("${Symbols.DAGGER}1") { z ->
             Bicomplex.ofIdempotent(
-                ComplexAlgebras.ComplexField.conj(z.beta),
-                ComplexAlgebras.ComplexField.conj(z.alpha)
+                ComplexAlgebras.ComplexStarAlgebra.conj(z.beta),
+                ComplexAlgebras.ComplexStarAlgebra.conj(z.alpha)
             )
         }
 
@@ -141,10 +141,10 @@ object BicomplexAlgebras {
          *       returning [Bicomplex] is structurally sound as `ℂ(j)` is a valid subring.
          */
         val norm1: UnaryOp<Bicomplex, Bicomplex> = UnaryOp("norm1") { z ->
-            val complexField = ComplexAlgebras.ComplexField
+            val complex = ComplexAlgebras.ComplexStarAlgebra
             Bicomplex.ofIdempotent(
-                complexField.mul(z.alpha, complexField.conj(z.beta)),
-                complexField.mul(z.beta, complexField.conj(z.alpha))
+                complex.mul(z.alpha, complex.conj(z.beta)),
+                complex.mul(z.beta, complex.conj(z.alpha))
             )
         }
 
@@ -201,9 +201,10 @@ object BicomplexAlgebras {
          * ```
          */
         val conj3: Endo<Bicomplex> = Endo("${Symbols.DAGGER}3") { z ->
+            val complex = ComplexAlgebras.ComplexStarAlgebra
             Bicomplex.ofIdempotent(
-                ComplexAlgebras.ComplexField.conj(z.alpha),
-                ComplexAlgebras.ComplexField.conj(z.beta)
+                complex.conj(z.alpha),
+                complex.conj(z.beta)
             )
         }
 
@@ -222,10 +223,10 @@ object BicomplexAlgebras {
          * The real part of this result yields the squared Euclidean norm.
          */
         val norm3: UnaryOp<Bicomplex, Bicomplex> = UnaryOp("norm3") { z ->
-            val complexField = ComplexAlgebras.ComplexField
+            val complex = ComplexAlgebras.ComplexStarAlgebra
             Bicomplex.ofIdempotent(
-                complexField.mul(z.alpha, complexField.conj(z.alpha)),
-                complexField.mul(z.beta, complexField.conj(z.beta))
+                complex.mul(z.alpha, complex.conj(z.alpha)),
+                complex.mul(z.beta, complex.conj(z.beta))
             )
         }
 

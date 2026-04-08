@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
@@ -12,7 +13,7 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.hypercomplex.complex.GaussianIntAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -20,6 +21,10 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
+import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonion
+import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonionAlgebras.GravesianOctonionNonAssociativeInvolutiveRing
+import org.vorpal.kosmos.hypercomplex.octonion.RationalOctonion
 import org.vorpal.kosmos.linear.values.Vec4
 import java.math.BigInteger
 
@@ -37,6 +42,8 @@ import java.math.BigInteger
  * - [LipschitzToHurwitzQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the Hurwitz quaternions.
  * - [LipschitzToRationalQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the rational quaternions.
  * - [LipschitzToQuaternionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the quaternions.
+ * - [LipschitzToGravesianOctonionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the Gravesian octonions.
+ * - [LipschitzToRationalOctonionMonomorphism]: ring monomorphism from the Lipschitz quaternions to the rational octonions.
  *
  * Eqs:
  * - [eqLipschitzQuaternion]
@@ -161,6 +168,15 @@ object LipschitzQuaternionAlgebras {
             quaternion(w, x, y, z)
         }
     }
+
+    val LipschitzToGravesianOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, GravesianOctonion> =
+        CayleyDickson.canonicalEmbedding(
+            base = LipschitzQuaternionRing,
+            doubled = GravesianOctonionNonAssociativeInvolutiveRing
+        )
+
+    val LipschitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, RationalOctonion> =
+        LipschitzToGravesianOctonionMonomorphism andThen GravesianOctonionAlgebras.GravesianToRationalOctonionMonomorphism
 
     val eqLipschitzQuaternion: Eq<LipschitzQuaternion> = Eq.default()
 
