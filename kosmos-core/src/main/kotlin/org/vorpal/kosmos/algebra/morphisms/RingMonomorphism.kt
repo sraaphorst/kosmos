@@ -5,9 +5,7 @@ import org.vorpal.kosmos.categories.Monomorphism
 import org.vorpal.kosmos.core.ops.UnaryOp
 
 interface RingMonomorphism<A : Any, B: Any>:
-    RingHomomorphism<A, B>,
-    NonAssociativeRingMonomorphism<A, B>,
-    Monomorphism<A, B> {
+    RingHomomorphism<A, B> {
 
     infix fun <C: Any> andThen(other: RingMonomorphism<B, C>): RingMonomorphism<A, C> =
         of(domain, other.codomain, map andThen other.map)
