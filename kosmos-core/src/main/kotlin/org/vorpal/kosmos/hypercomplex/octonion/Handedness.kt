@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.hypercomplex.embeddings
+package org.vorpal.kosmos.hypercomplex.octonion
 
 /**
  * Handedness of a map.

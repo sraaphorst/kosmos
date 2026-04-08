@@ -149,9 +149,14 @@ object DualAlgebras {
     ): Pair<Real, Real> =
         diffAt(RealAlgebras.RealField, f, x)
 
-    ////////////////
-    // PRINTABLES //
-    ////////////////
+    fun <A : Any> dualEq(
+        eqA: Eq<A>
+    ): Eq<Dual<A>> = Eq {
+        x, y -> eqA(x.a, y.a) && eqA(x.b, y.b)
+    }
+
+    val eqDualReal: Eq<Dual<Real>> =
+        dualEq(RealAlgebras.eqRealApprox)
 
     /** Always prints "a + bε". */
     fun <F : Any> liftPrintable(prF: Printable<F>): Printable<Dual<F>> =
