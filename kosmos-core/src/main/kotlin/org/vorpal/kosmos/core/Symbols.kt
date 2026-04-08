@@ -112,6 +112,7 @@ object Symbols {
     const val ONE = "1"
     const val OPEN_CIRCLE = "∘"
     const val PARTIAL = "∂"
+    const val PATH_TO = "⇝"
     const val PHI = "φ"
     const val PI = "𝜋"
     const val PLUS = "+"

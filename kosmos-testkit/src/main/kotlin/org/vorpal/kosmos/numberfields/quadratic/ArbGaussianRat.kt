@@ -1,10 +1,10 @@
-package org.vorpal.kosmos.hypercomplex.complex
+package org.vorpal.kosmos.numberfields.quadratic
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.choice
 import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.pair
-import org.vorpal.kosmos.std.ArbRational
+import org.vorpal.kosmos.core.rational.ArbRational
 
 object ArbGaussianRat {
     val small: Arb<GaussianRat> =

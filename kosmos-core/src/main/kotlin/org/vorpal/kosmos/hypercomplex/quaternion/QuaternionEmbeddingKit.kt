@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.hypercomplex.embeddings
+package org.vorpal.kosmos.hypercomplex.quaternion
 
 /**
  * Shares the logic that takes a complex-like type:

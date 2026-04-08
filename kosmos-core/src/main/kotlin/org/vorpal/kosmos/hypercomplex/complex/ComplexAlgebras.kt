@@ -1,12 +1,12 @@
 package org.vorpal.kosmos.hypercomplex.complex
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
+import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
-import org.vorpal.kosmos.algebra.structures.HasFromBigInt
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
@@ -19,34 +19,46 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
+import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 
 /**
- * [ComplexAlgebras] contains the algebraic structures over the [Complex] type, as well as the
- * homomorphisms and [Eq] instances.
+ * Main structures:
+ * - [i]: the imaginary unit.
+ * - [ComplexField]: the complex field.
+ * - [ComplexStarAlgebra]: the complex star algebra with conjugation and norm.
  *
- * These include:
- * - [ComplexField]: a complex field with involution (conjugation).
- * - [ComplexStarAlgebra]: the complex star algebra.
+ * Convenience functions:
+ * - [Complex.powInt]: compute `c^n` for a complex number `c` and a non-negative integer `n`.
+ *
+ * Vector spaces and modules:
  * - [ComplexRealVectorSpace]: the two-dimensional vector space of complex numbers over the real numbers.
  *
- * We have the following homomorphisms:
- * - [RealToComplexMonomorphism]: from the real numbers to the complex numbers.
- * - [Real.toComplex]: convenience method for this monomorphism.
+ * Homomorphisms:
+ * - [complexToQuaternionEmbedding]: the unital embeddings from the complex numbers to the quaternions.
+ * - [Complex.asQuaternion]: convenience extension for the canonical embedding.
  *
- * We also have the following [Eq]s:
+ * Eqs:
  * - [eqComplexStrict]: strict equality on complex numbers.
  * - [eqComplex]: approximate equality on complex numbers.
+ *
+ * Printables:
+ * - [printableComplex]: a printable complex number.
+ * - [printableComplexStrict]: a strict printable complex number.
+ * - [printableComplexPretty]: a pretty printable complex number.
  */
 object ComplexAlgebras {
 
-    object ComplexField:
-        Field<Complex>,
-        InvolutiveRing<Complex>,
-        RealNormedDivisionAlgebra<Complex> {
+    val i: Complex = complex(0.0, 1.0)
 
-        private val base: NonAssociativeInvolutiveRing<Complex> =
-            CayleyDickson.usual(RealAlgebras.RealStarField)
+    private val base: NonAssociativeInvolutiveRing<Complex> =
+        CayleyDickson.usual(RealAlgebras.RealStarField)
+
+    object ComplexField : Field<Complex> {
 
         override val add = base.add
 
@@ -55,25 +67,45 @@ object ComplexAlgebras {
             op = base.mul.op
         )
 
-        override val reciprocal: Endo<Complex> = Endo(Symbols.SLASH) { c ->
-            val n2 = normSq(c)
-            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "Zero has no multiplicative inverse in ${Symbols.BB_C}." }
-            CD(c.re / n2, -c.im / n2)
+        override val reciprocal: Endo<Complex> = Endo(Symbols.INVERSE) { c ->
+            val n2 = c.re * c.re + c.im * c.im
+            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) {
+                "Zero has no multiplicative inverse in ${Symbols.BB_C}."
+            }
+            complex(c.re / n2, -c.im / n2)
         }
 
-        override val conj = base.conj
+        override fun fromBigInt(n: BigInteger): Complex =
+            complex(n.toDouble(), 0.0)
+    }
+
+    private val action: LeftAction<Real, Complex> =
+        LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, b) -> complex(r * a, r * b) }
+
+    object ComplexStarAlgebra :
+        Field<Complex> by ComplexField,
+        InvolutiveRing<Complex>,
+        RealNormedDivisionAlgebra<Complex>,
+        StarAlgebra<Real, Complex> {
+
+        override val zero: Complex = ComplexField.zero
+        override val one: Complex = ComplexField.one
+
+        override val scalars = RealAlgebras.RealField
+
+        override val conj: Endo<Complex> =
+            base.conj
 
         override val normSq: UnaryOp<Complex, Real> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL){ c -> mul(c, conj(c)).re }
+            UnaryOp(Symbols.NORM_SQ_SYMBOL) { c -> c.re * c.re + c.im * c.im }
 
-        // Disambiguate identities.
-        override val zero: Complex = base.add.identity
-        override val one: Complex = mul.identity
-        val i: Complex = Complex(0.0, 1.0)
+        override val leftAction: LeftAction<Real, Complex> =
+            action
     }
 
     /**
-     * Given a complex number c and a non-negative integer n, computes c^n using exponentiation by squaring.
+     * Compute `c^n` for a complex number `c` and a non-negative integer `n`
+     * using exponentiation by squaring.
      */
     fun Complex.powInt(n: Int): Complex {
         require(n >= 0) { "n must be >= 0" }
@@ -88,29 +120,66 @@ object ComplexAlgebras {
         return go(this, n, field.one)
     }
 
-    // Scalars: Real, act componentwise on (a, b)
-    val ComplexRealVectorSpace : FiniteVectorSpace<Real, Complex> = FiniteVectorSpace.of(
-        scalars = RealAlgebras.RealField,
-        add = ComplexField.add,
-        dimension = 2,
-        leftAction = LeftAction { r, (a, b) -> complex(r * a, r * b) }
-    )
-
-    val ComplexStarAlgebra: StarAlgebra<Real, Complex> = StarAlgebra.of(
-        scalars = RealAlgebras.RealField,
-        involutiveRing = ComplexField,
-        leftAction = ComplexRealVectorSpace.leftAction
-    )
-
-    /** Monomorphisms and type conversions **/
-    object RealToComplexMonomorphism: RingMonomorphism<Real, Complex> {
-        override val domain = RealAlgebras.RealField
-        override val codomain = ComplexField
-        override val map = UnaryOp<Real, Complex> { r -> complex(r, 0.0) }
+    object ComplexRealVectorSpace : FiniteVectorSpace<Real, Complex> {
+        override val scalars = RealAlgebras.RealField
+        override val add = ComplexField.add
+        override val dimension = 2
+        override val leftAction = action
     }
 
-    fun Real.toComplex(): Complex =
-        RealToComplexMonomorphism(this)
+    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
+
+    /**
+     * Return the ring monomorphism embedding ℂ into ℍ determined by [emb].
+     *
+     * Embed a complex number into ℍ using the subfield `ℝ ⊕ ℝ·i`.
+     * Sends:
+     * ```text
+     * a + b i_C ↦ a·1 + b·u
+     * ```
+     * where `u ∈ {±i, ±j, ±k}` based on `emb.axis` and `emb.sign`.
+     */
+    fun complexToQuaternionEmbedding(
+        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
+        domain = ComplexField,
+        codomain = QuaternionAlgebras.QuaternionDivisionRing,
+        map = UnaryOp { (re, im) ->
+            val s = emb.sign.factor.toDouble()
+            when (emb.axis) {
+                AxisSignEmbeddings.ImagAxis.I -> quaternion(re, s * im, 0.0, 0.0)
+                AxisSignEmbeddings.ImagAxis.J -> quaternion(re, 0.0, s * im, 0.0)
+                AxisSignEmbeddings.ImagAxis.K -> quaternion(re, 0.0, 0.0, s * im)
+            }
+        }
+    )
+
+    /**
+     * Canonical monomorphism from the complex numbers into `M_2(ℝ)`, given by:
+     * - `1 ↦ [[1, 0], [0, 1]]`
+     * - `i ↦ [[0, -1], [1, 0]]`
+     *
+     * Equivalently,
+     * ```text
+     * a + bi ↦ [[a, -b], [b, a]]
+     * ```
+     */
+    val ComplexToRank2RMatrixMonomorphism: RingMonomorphism<Complex, DenseMat<Real>> = quadraticRank2MatrixEmbedding(
+        domain = ComplexField,
+        coefficientRing = RealAlgebras.RealField,
+        s = -1.0,
+        t = 0.0,
+        coeffs = { (re, im) -> re to im }
+    )
+
+    /**
+     * Convenience extension.
+     *
+     * Canonical default is `i_C ↦ i`.
+     */
+    fun Complex.asQuaternion(
+        emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): Quaternion = complexToQuaternionEmbedding(emb)(this)
 
     /** EQs **/
     val eqComplexStrict: Eq<Complex> = CD.eq(RealAlgebras.eqRealStrict)
@@ -148,18 +217,4 @@ object ComplexAlgebras {
             prReal = RealAlgebras.printableRealPretty,
             eqReal = RealAlgebras.eqRealApprox
         )
-}
-
-
-fun main() {
-    val e1 = Complex(1.0, 0.0)
-    val e2 = Complex(0.0, 1.0)
-    val e3 = Complex(1.0, 1.0)
-    val e4 = Complex(1.0, 2.5)
-    val e5 = complex(-10.0, 10.0)
-    val e6 = complex(10.5, -1.0)
-    val e7 = complex(-0.0, -0.0)
-    listOf(e1, e2, e3, e4, e5, e6, e7).forEach {
-        println(ComplexAlgebras.printableComplexPretty(it))
-    }
 }

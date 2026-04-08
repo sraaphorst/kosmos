@@ -1,6 +1,7 @@
-package org.vorpal.kosmos.hypercomplex.complex
+package org.vorpal.kosmos.numberfields.quadratic
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
+import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.EuclidMeasure
@@ -19,21 +20,46 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.embeddings.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
+import org.vorpal.kosmos.hypercomplex.complex.complex
+import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras.LipschitzQuaternionRing
-import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternion
+import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 
 /**
- * Algebraic structures, morphisms, equality, and rendering support for [GaussianInt].
+ * Main structures:
+ * - [GaussianIntEuclideanDomain]: the Euclidean domain of Gaussian integers.
  *
- * - [gaussianIntEmbeddingToQuaternion]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
- * - [gaussianIntEmbeddingToHurwitz]: unital embedding factory from the Gaussian integers to the Hurwitz quaternions.
+ * Vector spaces and modules:
+ * - [ZModuleGaussianInt]: The Gaussian integers as a ℤ-Module.
+ *
+ * Homomorphisms:
+ * - [ZToGaussianIntMonomorphism]: embedding homomorphism from the integers to the Gaussian integers.
+ * - [GaussianIntToRatMonomorphism]: embedding homomorphism from the Gaussian integers to the Gaussian rationals.
+ * - [toGaussianRat]: convenience method for this monomorphism.
+ * - [GaussianIntToComplexMonomorphism]: embedding homomorphism from the Gaussian integers to the [Complex] numbers.
+ * - [gaussianIntToLipschitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
+ * - [asLipschitzQuaternion]: convenience method for this monomorphism.
+ * - [gaussianIntToHurwitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Hurwitz quaternions.
+ * - [gaussianIntToRationalQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the rational quaternions.
+ * - [gaussianIntToQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the quaternions.
+ * - [GaussianIntRank2ZMatrixEmbedding]: embedding homomorphism from the Gaussian integers to the rank 2 Z matrix.
+ *
+ * Eqs:
+ * - [eqGaussianInt]: equality on Gaussian integers.
+ *
+ * Printables:
+ * - [printableGaussianInt]: a printable Gaussian integer.
+ * - [printableGaussianIntPretty]: a pretty printable Gaussian integer.
  */
 object GaussianIntAlgebras {
     /**
@@ -160,6 +186,15 @@ object GaussianIntAlgebras {
         }
     }
 
+    val GaussianIntRank2ZMatrixEmbedding: RingMonomorphism<GaussianInt, DenseMat<BigInteger>> =
+        quadraticRank2MatrixEmbedding(
+            domain = GaussianIntEuclideanDomain,
+            coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
+            s = -BigInteger.ONE,
+            t = BigInteger.ZERO,
+            coeffs = { it.re to it.im }
+        )
+
     /**
      * The canonical embedding `ℤ[i] → ℚ(i)`, given by
      * ```text
@@ -174,6 +209,12 @@ object GaussianIntAlgebras {
             GaussianRat(gz.re.toRational(), gz.im.toRational())
         }
     }
+
+    /**
+     * Convert a Gaussian integer to the corresponding Gaussian rational.
+     */
+    fun GaussianInt.toGaussianRat(): GaussianRat =
+        GaussianIntToRatMonomorphism(this)
 
     /**
      * The canonical monomorphism `ℤ[i] → ℂ`.
@@ -193,11 +234,11 @@ object GaussianIntAlgebras {
      * Unital embedding factory from the Gaussian integers into the Lipschitz quaternions,
      * parameterized by the chosen quaternion axis/sign convention.
      */
-    fun gaussianIntEmbeddingToQuaternion(
+    fun gaussianIntToLipschitzQuaternionEmbedding(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
         domain = GaussianIntEuclideanDomain,
-        codomain = LipschitzQuaternionRing,
+        codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
         map = UnaryOp { z ->
             QuaternionEmbeddingKit.embedComplexLike(
                 axisSign = embedding,
@@ -211,17 +252,49 @@ object GaussianIntAlgebras {
     )
 
     /**
+     * Convert a Gaussian integer to the corresponding Lipschitz quaternion.
+     */
+    fun GaussianInt.asLipschitzQuaternion(
+        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): LipschitzQuaternion = gaussianIntToLipschitzQuaternionEmbedding(embedding)(this)
+
+    /**
      * Create the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
-     * apply the [LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * apply the `LipschitzToHurwitzQuaternionMonomorphism` to get a [RingMonomorphism]:
      * ```text
      * GaussianInt ↪ LipschitzQuaternion ↪ HurwitzQuaternion
      * ```
      */
-    fun gaussianIntEmbeddingToHurwitz(
+    fun gaussianIntToHurwitzQuaternionEmbedding(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
     ): RingMonomorphism<GaussianInt, HurwitzQuaternion> =
-        gaussianIntEmbeddingToQuaternion(embedding) andThen LipschitzToHurwitzQuaternionMonomorphism
+        gaussianIntToLipschitzQuaternionEmbedding(embedding) andThen
+            LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism
 
+    /**
+     * Create the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
+     * apply the `LipschitzToRationalQuaternionMonomorphism` to get a [RingMonomorphism]:
+     * ```text
+     * GaussianInt ↪ LipschitzQuaternion ↪ RationalQuaternion
+     * ```
+     */
+    fun gaussianIntToRationalQuaternionEmbedding(
+        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<GaussianInt, RationalQuaternion> =
+        gaussianIntToLipschitzQuaternionEmbedding(embedding) andThen
+            LipschitzQuaternionAlgebras.LipschitzToRationalQuaternionMonomorphism
+
+    /**
+     * Apply the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
+     * apply the [LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * ```text
+     * GaussianInt ↪ LipschitzQuaternion ↪ Quaternion
+     * ```
+     */
+    fun gaussianIntToQuaternionEmbedding(
+        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
+    ): RingMonomorphism<GaussianInt, Quaternion> =
+        gaussianIntToLipschitzQuaternionEmbedding(embedding) andThen LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism
 
     val eqGaussianInt: Eq<GaussianInt> = Eq.default()
 
@@ -240,8 +313,3 @@ object GaussianIntAlgebras {
     val printableGaussianIntPretty = printableGaussianInt
 }
 
-/**
- * Convert a Gaussian integer to the corresponding Gaussian rational.
- */
-fun GaussianInt.toGaussianRat(): GaussianRat =
-    GaussianIntAlgebras.GaussianIntToRatMonomorphism(this)

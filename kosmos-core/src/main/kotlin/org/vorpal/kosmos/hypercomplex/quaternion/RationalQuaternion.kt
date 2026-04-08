@@ -2,7 +2,7 @@ package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.hypercomplex.complex.GaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
 
 /**
  * A [RationalQuaternion] is a Cayley-Dickson doubling of the [GaussianRat] numbers.

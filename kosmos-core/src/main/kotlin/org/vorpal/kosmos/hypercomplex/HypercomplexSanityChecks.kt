@@ -9,12 +9,15 @@ import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras.RealField
-import org.vorpal.kosmos.hypercomplex.embeddings.AxisSignEmbeddings
+import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.octonion.octonion
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
 import org.vorpal.kosmos.linear.values.Vec2
+
+val iC = ComplexAlgebras.i
 
 fun realCheck() {
     val a = Vec2(1.0, 2.0)
@@ -36,7 +39,6 @@ fun quaternionCheck() {
     val one = quaternionRing.one
     val negOne = quaternionRing.add.inverse(one)
 
-    val iC = ComplexField.i
     val zeroC = ComplexField.zero
     val oneC = ComplexField.one
 
@@ -66,15 +68,13 @@ fun quaternionEmbeddingCheck() {
     val quaternionRing = QuaternionAlgebras.QuaternionDivisionRing
     val eqQ = eqQuaternionStrict
 
-    val iC = ComplexField.i
-
     // In ℍ = CD(ℂ), these are the canonical Cayley–Dickson basis units:
-    val iAxis: Quaternion = Quaternion(ComplexField.i, ComplexField.zero)
+    val iAxis: Quaternion = Quaternion(iC, ComplexField.zero)
     val jAxis: Quaternion = Quaternion(ComplexField.zero, ComplexField.one)
-    val kAxis: Quaternion = Quaternion(ComplexField.zero, ComplexField.i)
+    val kAxis: Quaternion = Quaternion(ComplexField.zero, iC)
 
     AxisSignEmbeddings.AxisSignEmbedding.all.forEach { embedding ->
-        val embed = QuaternionAlgebras.complexEmbeddingToQuaternion(embedding)
+        val embed = ComplexAlgebras.complexToQuaternionEmbedding(embedding)
         val image = embed(iC) // should be ±I/±J/±K depending on spec
 
         val axisUnit = when (embedding.axis) {

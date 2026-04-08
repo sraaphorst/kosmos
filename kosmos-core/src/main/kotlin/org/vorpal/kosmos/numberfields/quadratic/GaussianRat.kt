@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.hypercomplex.complex
+package org.vorpal.kosmos.numberfields.quadratic
 
 import org.vorpal.kosmos.core.rational.Rational
 

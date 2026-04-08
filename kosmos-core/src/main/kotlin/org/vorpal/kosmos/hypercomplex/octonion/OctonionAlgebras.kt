@@ -16,7 +16,6 @@ import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionVe
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternionStrict
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
-import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
 import org.vorpal.kosmos.hypercomplex.quaternion.w
 import org.vorpal.kosmos.hypercomplex.quaternion.x
 import org.vorpal.kosmos.hypercomplex.quaternion.y

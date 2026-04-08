@@ -6,9 +6,7 @@ import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.hypercomplex.embeddings.OctonionEmbeddingKit
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.w
@@ -20,7 +18,6 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
@@ -33,7 +30,6 @@ import java.math.BigInteger
  * - [RationalOctonionVectorSpace]: the eight-dimensional vector space of rational octonions over the rationals.
  *
  * We have the following homomorphisms:
- * - [CayleyToRationalOctonionMonomorphism]: a ring homomorphism from the Cayley octonions to the rational octonions.
  * - [LipschitzToRationalOctonionMonomorphism]: a ring homomorphism from the Lipschitz quaternions to the rational octonions.
  * - [RationalQuaternionToRationalOctonionMonomorphism]: a ring homomorphism from the rational quaternions to the rational octonions.
  * - [HurwitzToRationalOctonionMonomorphism]: a ring homomorphism from the Hurwitz quaternions to the rational octonions.
@@ -91,23 +87,6 @@ object RationalOctonionAlgebras {
             )
         }
     )
-
-    /**
-     * CayleyOctonion to RationalOctonion ring homomorphism.
-     */
-    object CayleyToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<CayleyOctonion, RationalOctonion> {
-        override val domain = CayleyOctonionAlgebras.CayleyOctonionNonAssociativeInvolutiveRing
-        override val codomain = RationalOctonionNonAssociativeInvolutiveRing
-        override val map = UnaryOp<CayleyOctonion, RationalOctonion> { co ->
-            rationalOctonion(
-                co.w.toRational(), co.x.toRational(), co.y.toRational(), co.z.toRational(),
-                co.u.toRational(), co.v.toRational(), co.s.toRational(), co.t.toRational()
-            )
-        }
-    }
-
-    val LipschitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, RationalOctonion> =
-        CayleyOctonionAlgebras.LipschitzToCayleyMonomorphism andThen CayleyToRationalOctonionMonomorphism
 
     val RationalQuaternionToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalQuaternion, RationalOctonion> =
         CayleyDickson.canonicalEmbedding(

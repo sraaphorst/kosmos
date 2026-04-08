@@ -14,7 +14,7 @@ import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.syntax.*
 import org.vorpal.kosmos.core.rational.toRational
-import org.vorpal.kosmos.std.ArbRational
+import org.vorpal.kosmos.core.rational.ArbRational
 import java.math.BigInteger
 
 class RationalSpec : StringSpec({

@@ -4,7 +4,6 @@ import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.quaternion.ArbQuaternion
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
@@ -21,7 +20,7 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
     val eqM = DenseMatAlgebras.liftEq(eqC)
     val prC = ComplexAlgebras.printableComplexPretty
     val prM = DenseMatAlgebras.liftPrintablePretty(prC)
-    val complexField = ComplexAlgebras.ComplexField
+    val complex = ComplexAlgebras.ComplexStarAlgebra
 
     "QuaternionToComplexMatrixMonomorphism satisfies UnitalRingHomomorphismLaws" {
         val laws = UnitalRingHomomorphismLaws(
@@ -42,8 +41,8 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
             require(m.rows == 2 && m.cols == 2) { "expected 2x2, got ${m.rows}${Symbols.TIMES}${m.cols}" }
             return DenseMat.ofRows(
                 listOf(
-                    listOf(complexField.conj(m[0, 0]), complexField.conj(m[1, 0])),
-                    listOf(complexField.conj(m[0, 1]), complexField.conj(m[1, 1]))
+                    listOf(complex.conj(m[0, 0]), complex.conj(m[1, 0])),
+                    listOf(complex.conj(m[0, 1]), complex.conj(m[1, 1]))
                 )
             )
         }
@@ -66,22 +65,22 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
         }
 
         fun sub(x: Complex, y: Complex): Complex =
-            complexField.add(x, complexField.add.inverse(y))
+            complex.add(x, complex.add.inverse(y))
 
         fun trace2x2(m: DenseMat<Complex>): Complex {
             require2x2(m)
-            return complexField.add(m[0, 0], m[1, 1])
+            return complex.add(m[0, 0], m[1, 1])
         }
 
         fun det2x2(m: DenseMat<Complex>): Complex {
             require2x2(m)
-            val ad = complexField.mul(m[0, 0], m[1, 1])
-            val bc = complexField.mul(m[0, 1], m[1, 0])
+            val ad = complex.mul(m[0, 0], m[1, 1])
+            val bc = complex.mul(m[0, 1], m[1, 0])
             return sub(ad, bc)
         }
 
         fun twoRe(z: Complex): Complex =
-            complexField.add(z, complexField.conj(z))
+            complex.add(z, complex.conj(z))
 
         fun normSqAsComplex(q: Quaternion): Complex =
             complex(mono.domain.normSq(q), 0.0)
