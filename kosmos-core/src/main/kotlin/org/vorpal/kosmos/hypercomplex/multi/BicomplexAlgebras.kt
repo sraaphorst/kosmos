@@ -29,12 +29,31 @@ import java.math.BigInteger
 import kotlin.math.sqrt
 
 /**
- * [BicomplexAlgebras] contains the algebraic structures over the [Bicomplex] type.
+ * Main structures:
+ * - [BicomplexCommutativeRing]: the ring of bicomplex numbers.
+ * - [BicomplexStarAlgebra1]: the star algebra associated with the first conjugation (conjugating only the 'i' unit).
+ * - [BicomplexStarAlgebra2]: the star algebra associated with the second conjugation (conjugating only the 'j' unit).
+ * - [BicomplexStarAlgebraPrincipal]: the star algebra associated with the principal involution (conjugating both 'i' and 'j').
  *
- * These include:
- * - [BicomplexCommutativeRing]: the bicomplex commutative ring (has zero divisors).
- * - [bicomplexRealVectorSpace]: the 4D vector space over the reals.
- * - [bicomplexComplexVectorSpace]: the 2D vector space over the complex numbers.
+ * Vector spaces and modules:
+ * - [BicomplexRealVectorSpace]: the 4D vector space over the reals.
+ * - [BicomplexComplexVectorSpace]: the 2D vector space over the complex numbers.
+ *
+ * Homomorphisms
+ * - [complexToBicomplexMonomorphism]: a monomorphism from complex numbers to bicomplex numbers.
+ * - [BicomplexFirstProjectionHomomorphism]: a homomorphism from bicomplex numbers to complex numbers, projecting onto the first component.
+ * - [BicomplexSecondProjectionHomomorphism]: a homomorphism from bicomplex numbers to complex numbers, projecting onto the second component.
+ * - [BicomplexToComplexMatrixMonomorphism]: a monomorphism from bicomplex numbers to a 2x2 matrix over complex numbers.
+ * - [BicomplexToDiagonalMatrixMonomorphism]: a monomorphism from bicomplex numbers to a 2x2 matrix over complex numbers, using the diagonal basis.
+ *
+ * Eqs:
+ * - [eqBicomplexStrict]: the strict equality of bicomplex numbers.
+ * - [eqBicomplex]: the equality of bicomplex numbers in the idempotent representation.
+ *
+ * Printables:
+ * - [printableBicomplex]: a printable representation of bicomplex numbers.
+ * - [printableBicomplexStrict]: a strict printable representation of bicomplex numbers.
+ * - [printableBicomplexPretty]: a pretty-printable representation of bicomplex numbers.
  */
 object BicomplexAlgebras {
 
@@ -321,7 +340,7 @@ object BicomplexAlgebras {
     /**
      * The bicomplex numbers are a 4-dimensional vector space over the reals.
      */
-    val bicomplexRealVectorSpace: FiniteVectorSpace<Real, Bicomplex> = FiniteVectorSpace.of(
+    val BicomplexRealVectorSpace: FiniteVectorSpace<Real, Bicomplex> = FiniteVectorSpace.of(
         scalars = RealAlgebras.RealField,
         add = BicomplexCommutativeRing.add,
         dimension = 4,
@@ -336,7 +355,7 @@ object BicomplexAlgebras {
     /**
      * The bicomplex numbers are a 2-dimensional vector space over the complex numbers.
      */
-    val bicomplexComplexVectorSpace: FiniteVectorSpace<Complex, Bicomplex> = FiniteVectorSpace.of(
+    val BicomplexComplexVectorSpace: FiniteVectorSpace<Complex, Bicomplex> = FiniteVectorSpace.of(
         scalars = ComplexAlgebras.ComplexField,
         add = BicomplexCommutativeRing.add,
         dimension = 2,
@@ -351,38 +370,38 @@ object BicomplexAlgebras {
     /**
      * The star algebra associated with the first conjugation (conjugating only the 'i' unit).
      */
-    val bicomplexStarAlgebra1: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
+    val BicomplexStarAlgebra1: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
         scalars = RealAlgebras.RealField,
         involutiveRing = object : InvolutiveRing<Bicomplex>, CommutativeRing<Bicomplex> by BicomplexCommutativeRing {
             override val zero = BicomplexCommutativeRing.zero
             override val conj = BicomplexCommutativeRing.conj1
         },
-        leftAction = bicomplexRealVectorSpace.leftAction
+        leftAction = BicomplexRealVectorSpace.leftAction
     )
 
     /**
      * The star algebra associated with the second conjugation (conjugating only the 'j' unit).
      */
-    val bicomplexStarAlgebra2: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
+    val BicomplexStarAlgebra2: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
         scalars = RealAlgebras.RealField,
         involutiveRing = object : InvolutiveRing<Bicomplex>, CommutativeRing<Bicomplex> by BicomplexCommutativeRing {
             override val zero = BicomplexCommutativeRing.zero
             override val conj = BicomplexCommutativeRing.conj2
         },
-        leftAction = bicomplexRealVectorSpace.leftAction
+        leftAction = BicomplexRealVectorSpace.leftAction
     )
 
     /**
      * The principal star algebra associated with the third conjugation (conjugating both 'i' and 'j').
      * This is the standard involution used when treating Bicomplex as a RealNormedAlgebra.
      */
-    val bicomplexStarAlgebraPrincipal: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
+    val BicomplexStarAlgebraPrincipal: StarAlgebra<Real, Bicomplex> = StarAlgebra.of(
         scalars = RealAlgebras.RealField,
         involutiveRing = object : InvolutiveRing<Bicomplex>, CommutativeRing<Bicomplex> by BicomplexCommutativeRing {
             override val zero = BicomplexCommutativeRing.zero
             override val conj = BicomplexCommutativeRing.conj3
         },
-        leftAction = bicomplexRealVectorSpace.leftAction
+        leftAction = BicomplexRealVectorSpace.leftAction
     )
 
     val eqBicomplexStrict: Eq<Bicomplex> = Eq { x, y ->
