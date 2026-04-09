@@ -90,8 +90,25 @@ a & \hat v \\
 \end{pmatrix}
 $$
 
-and end up juggling cross products, bilinear forms, sign conventions, and “this is not actually a matrix ring” caveats, all while your future self stands behind you holding a fire extinguisher labeled *regret*. After the Wheel Incident™, we are officially adopting a new policy: **if GPT points at the blackboard with a bamboo rod, we listen**.
+and end up juggling cross products, bilinear forms, sign conventions, and “this is not actually a matrix ring” caveats,
+all while your future self stands behind you holding a fire extinguisher labeled *regret*. After the Wheel Incident™, we
+are officially adopting a new policy: **if GPT points at the blackboard with a bamboo rod, we listen**.
 
 ### Exhibit A
 
 ![Zorn matrices warning cartoon](zornmatrices.png)
+
+### The Hexadecycle
+
+In K133, we began implementing and testing product algebras. For fun (and to poke GPT-5.4 with his own bamboo stick), I
+decided to create the hexadecycle, which has type:
+```kotlin
+CarlstromWheel<Pair<Pair<Pair<Pair<WheelZ, WheelZ>, Pair<WheelZ, WheelZ>>, Pair<Pair<WheelZ, WheelZ>, Pair<WheelZ, WheelZ>>>, Pair<Pair<Pair<WheelZ, WheelZ>, Pair<WheelZ, WheelZ>>, Pair<Pair<WheelZ, WheelZ>, Pair<WheelZ, WheelZ>>>>>
+```
+and type it against the Carlström wheel laws that to see what eldritch horrors would erupt.
+
+Lo and behold, the hexadecycle is a roaring Seussian success! To commemorate this momento... well... "achievement," I present
+to you the monocled eels (one has lost his monocle) on their way to the supply closet where the CrabbyCrab guards the underwater
+stationery from the bureaucratic bunch.
+
+![Eel hexadecycle](eel_hexadecycle.png)
