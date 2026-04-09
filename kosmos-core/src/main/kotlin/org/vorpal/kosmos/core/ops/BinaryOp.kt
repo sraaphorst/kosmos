@@ -77,6 +77,20 @@ fun <A : Any> BinOp(
 fun <A : Any> BinOp(combine: (A, A) -> A): BinOp<A> =
     BinOp(Symbols.DOT, combine)
 
+/**
+ * Combine two [BinOp] on types [L] and [R] to create a joint [BinOp] on [Pair<L, R>].
+ */
+fun <L : Any, R : Any> pairOp(
+    leftOp: BinOp<L>,
+    rightOp: BinOp<R>
+): BinOp<Pair<L, R>> =
+    BinOp("${leftOp.symbol}${Symbols.TIMES}${rightOp.symbol}") { x, y ->
+        Pair(
+            leftOp(x.first, y.first),
+            rightOp(x.second, y.second)
+        )
+    }
+
 fun <R : Any, M : Any> LeftAction(
     symbol: String,
     apply: (R, M) -> M
