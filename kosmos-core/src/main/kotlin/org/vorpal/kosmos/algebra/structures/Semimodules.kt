@@ -28,7 +28,7 @@ interface LeftRSemimodule<R : Any, M : Any> {
         fun <R : Any, M : Any> of(
             leftScalars: Semiring<R>,
             add: CommutativeMonoid<M>,
-            leftAction: LeftAction<R, M>,
+            leftAction: LeftAction<R, M>
         ): LeftRSemimodule<R, M> = object : LeftRSemimodule<R, M> {
             override val leftScalars = leftScalars
             override val add = add
@@ -61,7 +61,7 @@ interface RightRSemimodule<M : Any, S : Any> {
         fun <M : Any, S : Any> of(
             rightScalars: Semiring<S>,
             add: CommutativeMonoid<M>,
-            rightAction: RightAction<M, S>,
+            rightAction: RightAction<M, S>
         ): RightRSemimodule<M, S> = object : RightRSemimodule<M, S> {
             override val rightScalars = rightScalars
             override val add = add
@@ -86,7 +86,7 @@ interface RSBiSemimodule<R : Any, M : Any, S : Any> :
             rightScalars: Semiring<S>,
             add: CommutativeMonoid<M>,
             leftAction: LeftAction<R, M>,
-            rightAction: RightAction<M, S>,
+            rightAction: RightAction<M, S>
         ): RSBiSemimodule<R, M, S> = object : RSBiSemimodule<R, M, S> {
             override val leftScalars = leftScalars
             override val rightScalars = rightScalars
@@ -121,7 +121,7 @@ interface Semimodule<R : Any, M : Any> :
         fun <R : Any, M : Any> of(
             scalars: CommutativeSemiring<R>,
             add: CommutativeMonoid<M>,
-            leftAction: LeftAction<R, M>,
+            leftAction: LeftAction<R, M>
         ): Semimodule<R, M> = object : Semimodule<R, M> {
             override val scalars = scalars
             override val add = add

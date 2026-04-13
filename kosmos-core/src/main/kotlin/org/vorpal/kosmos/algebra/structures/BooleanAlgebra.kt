@@ -22,11 +22,11 @@ import org.vorpal.kosmos.core.ops.Endo
  *  - Complement:  x ∨ ¬x = ⊤, x ∧ ¬x = ⊥, and De Morgan dualities
  */
 interface BooleanAlgebra<A : Any> : DistributiveLattice<A> {
-    val not: Endo<A>
     override val join: BinOp<A>
     override val meet: BinOp<A>
     override val bottom: A
     override val top: A
+    val not: Endo<A>
 
     fun implies(a: A, b: A): A =
         join(not(a), b)

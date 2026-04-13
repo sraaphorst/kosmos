@@ -4,6 +4,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 
 /**
  * We get the scalar ring, `CommutativeRing<R>` from the `Algebra<R, A>`.
+ *
  * We get the ring on `A` and `conj: Endo<A>` from `InvolutiveRing<A>`.
  */
 interface StarAlgebra<R : Any, A : Any>:
@@ -19,11 +20,11 @@ interface StarAlgebra<R : Any, A : Any>:
             leftAction: LeftAction<R, A>
         ): StarAlgebra<R, A> = object : StarAlgebra<R, A> {
             override val scalars = scalars
+            override val one = involutiveRing.one
             override val add = involutiveRing.add
             override val mul = involutiveRing.mul
             override val conj = involutiveRing.conj
             override val leftAction = leftAction
-            override val one = involutiveRing.one
         }
     }
 }

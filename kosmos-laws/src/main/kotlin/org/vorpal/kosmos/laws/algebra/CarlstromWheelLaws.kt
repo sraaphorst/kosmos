@@ -2,6 +2,8 @@ package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
+import io.kotest.property.arbitrary.triple
+import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.CarlstromWheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
@@ -28,6 +30,10 @@ import org.vorpal.kosmos.laws.suiteName
  * - `∞ * inv(∞) = ⊥`
  * - `0 * ∞ = ⊥`
  * - `∞ * ∞ = ∞`
+ *
+ * Additional laws:
+ * - Left weak distributivity: `x * (y + z) + 0 * x = x * y + x * z`
+ * - Right weak distributivity: `x * (y + z) + x * 0 = x * y + x * z`
  *
  * - The [Arb] used should be biased towards the special values with heavy weights given to:
  *   `⊥`, `∞`, `0`, and `1`. The rest of the time, the [Arb] should produce random finite values.
@@ -117,11 +123,65 @@ class CarlstromWheelLaws<A : Any>(
         }
     }
 
+    /**
+     * x * (y + z) + 0 * x = x * y + x * z
+     */
+    private val leftWeakDistributivityLaw: TestingLaw = object : TestingLaw {
+        override val name = "left weak distributivity law"
+
+        override suspend fun test() {
+            val tripleArb = Arb.triple(arb, arb, arb)
+            checkAll(tripleArb) { (x, y, z) ->
+                val lhs = wheel.add(
+                    wheel.mul(x, wheel.add(y, z)),
+                    wheel.mul(wheel.zero, x)
+                )
+                val rhs = wheel.add(
+                    wheel.mul(x, y),
+                    wheel.mul(x, z)
+                )
+                withClue(
+                    "Left weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}"
+                ) {
+                    check(eq(lhs, rhs))
+                }
+            }
+        }
+    }
+
+    /**
+     * x * (y + z) + x * 0 = x * y + x * z
+     */
+    private val rightWeakDistributivityLaw: TestingLaw = object : TestingLaw {
+        override val name = "right weak distributivity law"
+
+        override suspend fun test() {
+            val tripleArb = Arb.triple(arb, arb, arb)
+            checkAll(tripleArb) { (x, y, z) ->
+                val lhs = wheel.add(
+                    wheel.mul(x, wheel.add(y, z)),
+                    wheel.mul(x, wheel.zero)
+                )
+                val rhs = wheel.add(
+                    wheel.mul(x, y),
+                    wheel.mul(x, z)
+                )
+                withClue(
+                    "Right weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}"
+                ) {
+                    check(eq(lhs, rhs))
+                }
+            }
+        }
+    }
+
     private val structureLaws: List<TestingLaw> = listOf(
         bottomDominatesAdd,
         bottomDominatesMul,
         specialInvLaws,
-        specialInfLaws
+        specialInfLaws,
+        leftWeakDistributivityLaw,
+        rightWeakDistributivityLaw
     )
 
     override fun laws(): List<TestingLaw> =
