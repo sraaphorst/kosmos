@@ -21,6 +21,8 @@ fun interface Printable<in A> {
 fun <A, B> Printable<B>.contramap(f: (A) -> B): Printable<A> =
     Printable { a -> render(f(a)) }
 
+fun <A, B> pairPrintable(printA: Printable<A>, printB: Printable<B>): Printable<Pair<A, B>> =
+    Printable { (a, b) -> "(${printA(a)}, ${printB(b)})" }
 
 /**
  * Defaults for classes that don't have a Printable explicitly defined.
