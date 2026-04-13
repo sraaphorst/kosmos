@@ -160,6 +160,7 @@ object Symbols {
     const val TWO_SUB = "₂"
     const val VEE = "∨"
     const val WEDGE = "∧"
+    const val WREATH = "≀"
     const val ZERO = "0"
 
     // Aliases

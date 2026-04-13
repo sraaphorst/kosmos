@@ -134,13 +134,3 @@ data class WheelZ private constructor(
         }
     }
 }
-
-fun main() {
-    // All of these should evaluate to true.
-    println(WheelZ.ONE / WheelZ.ZERO == WheelZ.INF)
-    println(WheelZ.of(-2, 3) / WheelZ.ZERO == WheelZ.INF)
-    println(WheelZ.ZERO / WheelZ.ZERO == WheelZ.BOTTOM)
-    println(WheelZ.INF + WheelZ.INF == WheelZ.BOTTOM)
-    println(WheelZ.ZERO * WheelZ.INF == WheelZ.BOTTOM)
-    println(WheelZ.of(5, 2) + WheelZ.INF == WheelZ.INF)
-}

@@ -27,6 +27,20 @@ interface LeftAction<R : Any, M : Any> : BinaryOp<R, M, M> {
 }
 
 /**
+ * Combine two [LeftAction]s from scalars [R] to types [M] and [N] to create a joint [LeftAction] on [Pair<M, N>].
+ */
+fun <R : Any, M : Any, N : Any> pairLeftAction(
+    leftActionFirst: LeftAction<R, M>,
+    leftActionSecond: LeftAction<R, N>
+): LeftAction<R, Pair<M, N>> =
+    LeftAction("${leftActionFirst.symbol}${Symbols.TIMES}${leftActionSecond.symbol}") { r, (m, n) ->
+        Pair(
+            leftActionFirst(r, m),
+            leftActionSecond(r, n)
+        )
+    }
+
+/**
  * A right action is (M, S) -> M.
  */
 interface RightAction<M : Any, S : Any> : BinaryOp<M, S, M> {
@@ -43,6 +57,20 @@ interface RightAction<M : Any, S : Any> : BinaryOp<M, S, M> {
     fun contramap(g: (S) -> S): RightAction<M, S> =
         RightAction(symbol) { m, s -> this(m, g(s)) }
 }
+
+/**
+ * Combine two [RightAction]s from scalars [S] to types [M] and [N] to create a joint [RightAction] on [Pair<M, N>].
+ */
+fun <M : Any, N : Any, S : Any> pairRightAction(
+    rightActionFirst: RightAction<M, S>,
+    rightActionSecond: RightAction<N, S>
+): RightAction<Pair<M, N>, S> =
+    RightAction("${rightActionFirst.symbol}${Symbols.TIMES}${rightActionSecond.symbol}") { (m, n), s ->
+        Pair(
+            rightActionFirst(m, s),
+            rightActionSecond(n, s)
+        )
+    }
 
 /**
  * A closed operation (A, A) -> A.
@@ -76,6 +104,20 @@ fun <A : Any> BinOp(
 
 fun <A : Any> BinOp(combine: (A, A) -> A): BinOp<A> =
     BinOp(Symbols.DOT, combine)
+
+/**
+ * Combine two [BinOp] on types [L] and [R] to create a joint [BinOp] on [Pair<L, R>].
+ */
+fun <L : Any, R : Any> pairOp(
+    leftOp: BinOp<L>,
+    rightOp: BinOp<R>
+): BinOp<Pair<L, R>> =
+    BinOp("${leftOp.symbol}${Symbols.TIMES}${rightOp.symbol}") { x, y ->
+        Pair(
+            leftOp(x.first, y.first),
+            rightOp(x.second, y.second)
+        )
+    }
 
 fun <R : Any, M : Any> LeftAction(
     symbol: String,

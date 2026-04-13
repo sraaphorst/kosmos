@@ -52,3 +52,13 @@ fun <A> Endo(symbol: String, transform: (A) -> A): Endo<A> =
 
 fun <A> Endo(transform: (A) -> A): Endo<A> =
     UnaryOp(transform)
+
+fun <L, R> pairEndo(
+    leftEndo: Endo<L>,
+    rightEndo: Endo<R>
+): Endo<Pair<L, R>> = Endo("${leftEndo.symbol}${Symbols.TIMES}${rightEndo.symbol}") { (x, y) ->
+    Pair(
+        leftEndo(x),
+        rightEndo(y)
+    )
+}
