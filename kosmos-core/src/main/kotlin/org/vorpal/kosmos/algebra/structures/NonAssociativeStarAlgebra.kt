@@ -4,7 +4,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 
 interface NonAssociativeStarAlgebra<R : Any, A : Any> :
     NonAssociativeAlgebra<R, A>,
-    HasConj<A>
+    NonAssociativeInvolutiveRing<A>
 {
     companion object {
         fun <R : Any, A : Any> of(
@@ -13,11 +13,11 @@ interface NonAssociativeStarAlgebra<R : Any, A : Any> :
             leftAction: LeftAction<R, A>
         ): NonAssociativeStarAlgebra<R, A> = object : NonAssociativeStarAlgebra<R, A> {
             override val scalars = scalars
+            override val one = involutiveRing.one
             override val add = involutiveRing.add
             override val mul = involutiveRing.mul
             override val conj = involutiveRing.conj
             override val leftAction = leftAction
-            override val one = involutiveRing.one
         }
     }
 }
