@@ -15,5 +15,5 @@ object Hemirings {
 
     fun <A : Any> double(
         obj: Hemiring<A>
-    ) = product(obj, obj)
+    ): Hemiring<Pair<A, A>> = product(obj, obj)
 }

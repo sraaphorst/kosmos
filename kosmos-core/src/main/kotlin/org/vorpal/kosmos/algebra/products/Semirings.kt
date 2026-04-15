@@ -17,5 +17,5 @@ class Semirings {
 
     fun <A : Any> double(
         obj: Semiring<A>
-    ) = product(obj, obj)
+    ): Semiring<Pair<A, A>> = product(obj, obj)
 }

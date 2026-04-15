@@ -16,5 +16,5 @@ object Groups {
 
     fun <A : Any> double(
         obj: Group<A>
-    ) = product(obj, obj)
+    ): Group<Pair<A, A>> = product(obj, obj)
 }

@@ -13,7 +13,7 @@ object Algebras {
         right: Algebra<R, B>
     ): Algebra<R, Pair<A, B>> = object : Algebra<R, Pair<A, B>> {
         init {
-            require(left.scalars == right.scalars) { "Scalars must be the same for product algebra" }
+            require(left.scalars === right.scalars) { "Scalars must be the same for product algebra" }
         }
         override val scalars: CommutativeRing<R> = left.scalars
         override val add: AbelianGroup<Pair<A, B>> = AbelianGroups.product(left.add, right.add)

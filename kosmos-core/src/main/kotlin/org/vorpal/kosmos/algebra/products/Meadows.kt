@@ -21,5 +21,5 @@ object Meadows {
 
     fun <A : Any> double(
         obj: Meadow<A>
-    ) = product(obj, obj)
+    ): Meadow<Pair<A, A>> = product(obj, obj)
 }

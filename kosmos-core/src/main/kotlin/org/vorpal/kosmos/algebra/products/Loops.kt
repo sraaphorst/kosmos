@@ -16,5 +16,5 @@ object Loops {
 
     fun <A : Any> double(
         obj: Loop<A>
-    ) = product(obj, obj)
+    ): Loop<Pair<A, A>> = product(obj, obj)
 }

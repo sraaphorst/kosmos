@@ -14,5 +14,5 @@ object CommutativeMonoids {
 
     fun <A : Any> double(
         obj: CommutativeMonoid<A>
-    ) = product(obj, obj)
+    ): CommutativeMonoid<Pair<A, A>> = product(obj, obj)
 }
