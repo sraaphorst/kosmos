@@ -18,7 +18,7 @@ object JoinSemilattices {
 
     fun <A : Any> double(
         obj: JoinSemilattice<A>
-    ) = product(obj, obj)
+    ): JoinSemilattice<Pair<A, A>> = product(obj, obj)
 }
 
 object MeetSemilattices {
@@ -31,7 +31,7 @@ object MeetSemilattices {
 
     fun <A : Any> double(
         obj: MeetSemilattice<A>
-    ) = product(obj, obj)
+    ): MeetSemilattice<Pair<A, A>> = product(obj, obj)
 }
 
 object Lattices {
@@ -45,7 +45,7 @@ object Lattices {
 
     fun <A : Any> double(
         obj: Lattice<A>
-    ) = product(obj, obj)
+    ): Lattice<Pair<A, A>> = product(obj, obj)
 }
 
 object BoundedLattices {
@@ -61,7 +61,7 @@ object BoundedLattices {
 
     fun <A : Any> double(
         obj: BoundedLattice<A>
-    ) = product(obj, obj)
+    ): BoundedLattice<Pair<A, A>> = product(obj, obj)
 }
 
 object DistributiveLattices {
@@ -77,5 +77,5 @@ object DistributiveLattices {
 
     fun <A : Any> double(
         obj: DistributiveLattice<A>
-    ) = product(obj, obj)
+    ): DistributiveLattice<Pair<A, A>> = product(obj, obj)
 }

@@ -13,5 +13,5 @@ object Semigroups {
 
     fun <A : Any> double(
         obj: Semigroup<A>
-    ) = product(obj, obj)
+    ): Semigroup<Pair<A, A>> = product(obj, obj)
 }

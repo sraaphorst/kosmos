@@ -16,5 +16,5 @@ object AbelianGroups {
 
     fun <A : Any> double(
         obj: AbelianGroup<A>
-    ) = product(obj, obj)
+    ): AbelianGroup<Pair<A, A>> = product(obj, obj)
 }

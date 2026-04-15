@@ -15,5 +15,5 @@ object Quasigroups {
 
     fun <A : Any> double(
         obj: Quasigroup<A>
-    ) = product(obj, obj)
+    ): Quasigroup<Pair<A, A>> = product(obj, obj)
 }

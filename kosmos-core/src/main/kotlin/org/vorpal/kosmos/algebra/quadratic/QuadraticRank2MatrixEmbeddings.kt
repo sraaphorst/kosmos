@@ -3,11 +3,9 @@ package org.vorpal.kosmos.algebra.quadratic
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Ring
-import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
-import java.math.BigInteger
 
 /**
  * Given a rank-2 `R`-basis `{1, w}` with quadratic relation

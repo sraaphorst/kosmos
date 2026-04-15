@@ -20,5 +20,5 @@ object BooleanAlgebras {
 
     fun <A : Any> double(
         obj: BooleanAlgebra<A>
-    ) = product(obj, obj)
+    ): BooleanAlgebra<Pair<A, A>> = product(obj, obj)
 }

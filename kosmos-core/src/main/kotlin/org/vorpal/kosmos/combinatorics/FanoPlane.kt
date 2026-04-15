@@ -10,10 +10,12 @@ import org.vorpal.kosmos.core.ops.BinOp
 /**
  * The canonical representation of the Fano plane, which is:
  * - The unique Steiner triple system of order 7 (STS(7)) up to isomorphism.
- * - THe projective plane / geometry, PG(2, 2).
+ * - The projective plane / geometry, PG(2, 2).
  * - Its own dual: we can switch the roles of points and lines, and the structure remains the same.
- * Since the Fano plane is a STS, it can also serve the structure of a quasigroup, which coincides with the
- * multiplicative structure defined by the unit octonions (if the signs of the octonions are ignored).
+ *
+ * As a Steiner triple system, the Fano plane yields an idempotent symmetric quasigroup.
+ * This captures the unoriented triple-incidence pattern underlying octonion basis multiplication, where each line
+ * identifies a quaternionic triple and the missing sign/orientation data is ignored.
  */
 object FanoPlane : FiniteProjectivePlane<Int> {
     override val order: Int = 2

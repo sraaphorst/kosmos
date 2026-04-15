@@ -13,5 +13,5 @@ object NonAssociativeSemigroups {
 
     fun <A : Any> double(
         obj: NonAssociativeSemigroup<A>
-    ) = product(obj, obj)
+    ): NonAssociativeSemigroup<Pair<A, A>> = product(obj, obj)
 }
