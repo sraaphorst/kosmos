@@ -15,7 +15,7 @@ object StarAlgebras {
         right: StarAlgebra<R, B>
     ): StarAlgebra<R, Pair<A, B>> = object : StarAlgebra<R, Pair<A, B>> {
         init {
-            require(left.scalars == right.scalars) { "Scalars must be the same for both algebras" }
+            require(left.scalars === right.scalars) { "Scalars must be the same for both algebras" }
         }
         override val one: Pair<A, B> = Pair(left.one, right.one)
         override val scalars: CommutativeRing<R> = left.scalars

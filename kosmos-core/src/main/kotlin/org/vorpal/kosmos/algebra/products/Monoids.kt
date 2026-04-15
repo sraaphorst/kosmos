@@ -14,5 +14,5 @@ object Monoids {
 
     fun <A : Any> double(
         obj: Monoid<A>
-    ) = product(obj, obj)
+    ): Monoid<Pair<A, A>> = product(obj, obj)
 }

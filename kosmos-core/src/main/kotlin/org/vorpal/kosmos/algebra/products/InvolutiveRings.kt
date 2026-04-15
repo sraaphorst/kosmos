@@ -20,5 +20,5 @@ object InvolutiveRings {
 
     fun <A : Any> double(
         obj: InvolutiveRing<A>
-    ) = product(obj, obj)
+    ): InvolutiveRing<Pair<A, A>> = product(obj, obj)
 }

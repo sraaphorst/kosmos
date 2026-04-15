@@ -13,5 +13,5 @@ object CommutativeSemigroups {
 
     fun <A : Any> double(
         obj: CommutativeSemigroup<A>
-    ) = product(obj, obj)
+    ): CommutativeSemigroup<Pair<A, A>> = product(obj, obj)
 }

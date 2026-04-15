@@ -20,5 +20,5 @@ object NonAssociativeInvolutiveRings {
 
     fun <A : Any> double(
         obj: NonAssociativeInvolutiveRing<A>
-    ) = product(obj, obj)
+    ): NonAssociativeInvolutiveRing<Pair<A, A>> = product(obj, obj)
 }

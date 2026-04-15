@@ -16,5 +16,5 @@ object CommutativeSemirings {
 
     fun <A : Any> double(
         obj: CommutativeSemiring<A>
-    ) = product(obj, obj)
+    ): CommutativeSemiring<Pair<A, A>> = product(obj, obj)
 }
