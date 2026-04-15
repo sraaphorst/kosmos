@@ -14,5 +14,5 @@ object NonAssociativeMonoids {
 
     fun <A : Any> double(
         obj: NonAssociativeMonoid<A>
-    ) = product(obj, obj)
+    ): NonAssociativeMonoid<Pair<A, A>> = product(obj, obj)
 }

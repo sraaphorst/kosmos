@@ -16,5 +16,5 @@ object Rngs {
 
     fun <A : Any> double(
         obj: Rng<A>
-    ) = product(obj, obj)
+    ): Rng<Pair<A, A>> = product(obj, obj)
 }

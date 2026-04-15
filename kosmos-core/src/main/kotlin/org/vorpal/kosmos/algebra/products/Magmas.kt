@@ -13,5 +13,5 @@ object Magmas {
 
     fun <A : Any> double(
         obj: Magma<A>
-    ) = product(obj, obj)
+    ): Magma<Pair<A, A>> = product(obj, obj)
 }

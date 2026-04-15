@@ -17,5 +17,5 @@ object CommutativeRings {
 
     fun <A : Any> double(
         obj: CommutativeRing<A>
-    ) = product(obj, obj)
+    ): CommutativeRing<Pair<A, A>> = product(obj, obj)
 }
