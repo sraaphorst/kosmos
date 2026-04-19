@@ -10,14 +10,14 @@ import org.vorpal.kosmos.categories.Isomorphism
  * - a categorical [Isomorphism] (as plain functions on carriers), and
  * - a pair of mutually inverse [GroupHomomorphism]s with domain/codomain witnesses.
  */
-interface GroupIsomorphism<A : Any, B : Any> : Isomorphism<A, B> {
+interface GroupIsomorphism<A : Any, B : Any> : MonoidIsomorphism<A, B> {
     override val forward: GroupHomomorphism<A, B>
     override val backward: GroupHomomorphism<B, A>
 
-    val domain: Group<A>
+    override val domain: Group<A>
         get() = forward.domain
 
-    val codomain: Group<B>
+    override val codomain: Group<B>
         get() = forward.codomain
 
     override fun inverse(): GroupIsomorphism<B, A> =
