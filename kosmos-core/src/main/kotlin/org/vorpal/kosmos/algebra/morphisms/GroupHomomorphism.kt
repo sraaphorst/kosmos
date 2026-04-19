@@ -6,11 +6,12 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
 /**
- * A homomorphism from ome [Group] over carrier [A] to [B].
+ * A homomorphism from some [Group] over carrier [A] to [B].
  *
  * This extends the concept of a general [Morphism] by carrying witnesses for the domain / codomain group structures.
  *
  * NOTE: This type does not *enforce* the homomorphism laws; it is a certified/witnessed arrow.
+ *
  * Law checking is a separate concern (tests / verification helpers).
  */
 interface GroupHomomorphism<A : Any, B : Any> : MonoidHomomorphism<A, B> {

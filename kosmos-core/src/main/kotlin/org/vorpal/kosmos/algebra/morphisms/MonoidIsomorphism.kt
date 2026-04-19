@@ -3,13 +3,13 @@ package org.vorpal.kosmos.algebra.morphisms
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.categories.Isomorphism
 
-interface MonoidIsomorphism<A : Any, B : Any> : Isomorphism<A, B> {
+interface MonoidIsomorphism<A : Any, B : Any> : MagmaIsomorphism<A, B> {
     override val forward: MonoidHomomorphism<A, B>
     override val backward: MonoidHomomorphism<B, A>
 
-    val domain: Monoid<A>
+    override val domain: Monoid<A>
         get() = forward.domain
-    val codomain: Monoid<B>
+    override val codomain: Monoid<B>
         get() = forward.codomain
 
     override fun inverse(): MonoidIsomorphism<B, A> =

@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.categories
 
+import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 /** A general morphism from one type to another. */
@@ -89,7 +90,7 @@ interface Isomorphism<A, B> : Morphism<A, B> {
 
 fun interface Endomorphism<A> : Morphism<A, A> {
     companion object {
-        fun <A> id(): Endomorphism<A> = Endomorphism { it }
+        fun <A> id(): Endomorphism<A> = Endomorphism(Identity())
     }
 }
 

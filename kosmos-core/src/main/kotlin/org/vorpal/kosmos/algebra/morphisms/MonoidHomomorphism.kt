@@ -6,16 +6,16 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
 /**
- * A homomorphism from ome [Monoid] over carrier [A] to [B].
+ * A homomorphism from some [Monoid] over carrier [A] to [B].
  *
  * This extends the concept of a general [Morphism] by carrying witnesses for the domain / codomain monoid structures.
  *
  * NOTE: This type does not *enforce* the homomorphism laws; it is a certified/witnessed arrow.
  * Law checking is a separate concern (tests / verification helpers).
  */
-interface MonoidHomomorphism<A : Any, B : Any> : AlgebraHomomorphism<A, B> {
-    val domain: Monoid<A>
-    val codomain: Monoid<B>
+interface MonoidHomomorphism<A : Any, B : Any> : MagmaHomomorphism<A, B> {
+    override val domain: Monoid<A>
+    override val codomain: Monoid<B>
 
     infix fun <C : Any> andThen(other: MonoidHomomorphism<B, C>): MonoidHomomorphism<A, C> =
         of(

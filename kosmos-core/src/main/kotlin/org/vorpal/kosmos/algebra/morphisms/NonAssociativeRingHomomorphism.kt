@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.ops.UnaryOp
  *
  * Note that this extends the concept of a [Morphism] from the category module.
  */
-interface NonAssociativeRingHomomorphism<A: Any, B: Any> : AlgebraHomomorphism<A, B> {
+interface NonAssociativeRingHomomorphism<A: Any, B: Any> : Homomorphism<A, B> {
     val domain: NonAssociativeRing<A>
     val codomain: NonAssociativeRing<B>
     override val map: UnaryOp<A, B>
