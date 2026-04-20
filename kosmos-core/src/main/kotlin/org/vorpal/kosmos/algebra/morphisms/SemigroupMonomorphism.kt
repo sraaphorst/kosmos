@@ -4,11 +4,6 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-/**
- * A [SemigroupMonomorphism] is also a:
- * - [SemigroupHomomorphism]
- * - [MagmaMonomorphism].
- */
 interface SemigroupMonomorphism<A : Any, B : Any> : SemigroupHomomorphism<A, B>, MagmaMonomorphism<A, B> {
     infix fun <C : Any> andThen(other: SemigroupMonomorphism<B, C>): SemigroupMonomorphism<A, C> =
         of(

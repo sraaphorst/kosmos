@@ -3,6 +3,7 @@ package org.vorpal.kosmos.linear.instances
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
 import org.vorpal.kosmos.linear.instance.arbConstMat
@@ -17,7 +18,7 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
 
     "Unital ring isomorphism from RationalField and ConstantMatrixField holds" {
         UnitalRingHomomorphismLaws(
-            hom = iso.forward,
+            hom = iso,
             domain = RationalAlgebras.RationalField,
             codomain = ConstantMatrixAlgebras.ConstantMatrixField(RationalAlgebras.RationalField, 6),
             arb = ArbRational.small,
@@ -41,7 +42,7 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
 
     "backward(forward(x)) = x over RationalField" {
         checkAll(ArbRational.small) { x ->
-            val actual = iso.backward(iso.forward(x))
+            val actual = iso.backward(iso(x))
             RationalAlgebras.eqRational(actual, x) shouldBe true
         }
     }
@@ -50,7 +51,7 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
         val eqMat = DenseMatAlgebras.liftEq(RationalAlgebras.eqRational)
 
         checkAll(arbConstMat(ArbRational.small, 6)) { m ->
-            val actual = iso.forward(iso.backward(m))
+            val actual = iso(iso.backward(m))
             eqMat(actual, m) shouldBe true
         }
     }

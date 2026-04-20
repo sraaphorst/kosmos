@@ -1,32 +1,32 @@
 package org.vorpal.kosmos.laws.homomorphism
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-import org.vorpal.kosmos.algebra.structures.Ring
+import org.vorpal.kosmos.algebra.morphisms.RngHomomorphism
+import org.vorpal.kosmos.algebra.structures.Rng
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 
 /**
- * Ring homomorphism laws:
+ * Rng homomorphism laws:
  *
  *    hom(a + b) = hom(a) + hom(b)
  *    hom(0_A) = 0_B
  *    hom(ab) = hom(a) * hom(b)
  *
  */
-class RingHomomorphismLaws<A : Any, B : Any>(
-    private val hom: RingHomomorphism<A, B>,
-    private val domain: Ring<A>,
-    private val codomain: Ring<B>,
+class RngHomomorphismLaws<A : Any, B : Any>(
+    private val hom: RngHomomorphism<A, B>,
+    private val domain: Rng<A>,
+    private val codomain: Rng<B>,
     private val arb: Arb<A>,
     private val eqB: Eq<B> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
     ) : LawSuite {
     override val name =
-        "ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
+        "rng homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
 
     override fun laws(): List<TestingLaw> = listOf(
         preservesBinaryOpLaw(
@@ -37,7 +37,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "ring homomorphism: addition"
+            label = "rng homomorphism: addition"
         ),
         preservesIdentityLaw(
             domainIdentity = domain.add.identity,
@@ -46,7 +46,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "ring homomorphism: preserves additive identity"
+            label = "rng homomorphism: preserves additive identity"
         ),
 
         preservesBinaryOpLaw(
@@ -57,7 +57,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "ring homomorphism: multiplication"
+            label = "rng homomorphism: multiplication"
         )
     )
 }

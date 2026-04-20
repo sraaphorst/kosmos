@@ -1,17 +1,8 @@
 package org.vorpal.kosmos.algebra.structures
 
-/**
- * NonAssociativeAlgebra is an algebra with an:
- * - additive abelian group
- * - multiplicative nonassociative monoid
- */
-interface NonAssociativeRing<A : Any>: HasFromBigInt<A> {
-    // Unnecessary, but specified for clarity.
-    override val add: AbelianGroup<A>
-    val mul: NonAssociativeMonoid<A>
+interface NonAssociativeRing<A : Any>: NonAssociativeRng<A>, HasFromBigInt<A> {
+    override val mul: NonAssociativeMonoid<A>
 
-    val zero: A
-        get() = add.identity
     override val one: A
         get() = mul.identity
 

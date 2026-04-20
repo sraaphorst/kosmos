@@ -4,7 +4,7 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-interface SemigroupHomomorphism<A : Any, B : Any>: MagmaHomomorphism<A, B> {
+interface SemigroupHomomorphism<A : Any, B : Any> : MagmaHomomorphism<A, B> {
     override val domain: Semigroup<A>
     override val codomain: Semigroup<B>
 

@@ -1,20 +1,10 @@
 package org.vorpal.kosmos.algebra.morphisms
 
 import org.vorpal.kosmos.algebra.structures.Magma
-import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-/**
- * A homomorphism of some [Magma] over carrier [A] to [B].
- *
- * This extends the concept of a general [Morphism] by carrying witnesses for the domain / codomain magma structures.
- *
- * NOTE: This type does not *enforce* the homomorphism laws; it is a certified / witnessed arrow.
- *
- * Law checking is a separate concern (tests / verification helpers).
- */
-interface MagmaHomomorphism<A : Any, B : Any>: Homomorphism<A, B> {
+interface MagmaHomomorphism<A : Any, B : Any> : AlgebraicHomomorphism<A, B> {
     val domain: Magma<A>
     val codomain: Magma<B>
 
