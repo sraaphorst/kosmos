@@ -7,7 +7,7 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
-import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
@@ -23,8 +23,8 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
     val complex = ComplexAlgebras.ComplexStarAlgebra
 
     "QuaternionToComplexMatrixMonomorphism satisfies UnitalRingHomomorphismLaws" {
-        val laws = UnitalRingHomomorphismLaws(
-            hom = mono,
+        val laws = RingHomomorphismLaws(
+            hom = mono::invoke,
             domain = mono.domain,
             codomain = mono.codomain,
             arb = ArbQuaternion.quaternion,

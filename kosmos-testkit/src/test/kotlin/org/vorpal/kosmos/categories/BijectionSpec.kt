@@ -82,11 +82,11 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: all generated bijections are valid") {
-            checkAll(100, generateArbBijection(Arb.int(1..100), Arb.string(1..5), 2, 10)) { bij ->
+            checkAll(100,generateArbBijection(Arb.int(1..100), Arb.string(1..5), 2, 10)) { bij ->
                 // Domain and codomain same size
                 bij.domain.size shouldBe bij.codomain.size
 
-                // All elements map somewhere
+                // All the elements map to somewhere
                 bij.domain.all { a -> bij.apply(a) in bij.codomain } shouldBe true
 
                 // Image equals codomain (surjective)
@@ -109,17 +109,17 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: forward then backward is identity") {
-            checkAll(100, generateArbEndoBijection(Arb.int(1..100), 2, 15)) { bij ->
+            checkAll(100,generateArbEndoBijection(Arb.int(1..100), 2, 15)) { bij ->
                 bij.domain.all { a ->
-                    bij.backward.apply(bij.forward.apply(a)) == a
+                    bij.backward.apply(bij.apply(a)) == a
                 } shouldBe true
             }
         }
 
         test("property: backward then forward is identity") {
-            checkAll(100, generateArbEndoBijection(Arb.int(1..100), 2, 15)) { bij ->
+            checkAll(100,generateArbEndoBijection(Arb.int(1..100), 2, 15)) { bij ->
                 bij.codomain.all { b ->
-                    bij.forward.apply(bij.backward.apply(b)) == b
+                    bij.apply(bij.backward.apply(b)) == b
                 } shouldBe true
             }
         }
@@ -172,20 +172,20 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: identity bijection preserves all elements") {
-            checkAll(50, generateArbIdentityBijection(Arb.int(1..100), 2, 12)) { bij ->
+            checkAll(50,generateArbIdentityBijection(Arb.int(1..100), 2, 12)) { bij ->
                 bij.domain.all { a -> bij.apply(a) == a } shouldBe true
             }
         }
 
         test("property: identity is self-inverse") {
-            checkAll(50, generateArbIdentityBijection(Arb.int(1..100), 2, 12)) { bij ->
+            checkAll(50,generateArbIdentityBijection(Arb.int(1..100), 2, 12)) { bij ->
                 bij.isIdentity() shouldBe true
                 bij.inverse().isIdentity() shouldBe true
             }
         }
 
         test("property: permutation composition preserves bijection properties") {
-            checkAll(50, BijectionTestingCombinations.arbEndoBijectionPair(Arb.int(1..100), 6)) { (perm1, perm2) ->
+            checkAll(50,BijectionTestingCombinations.arbEndoBijectionPair(Arb.int(1..100), 6)) { (perm1, perm2) ->
                 val composed = perm1 andThen perm2
 
                 // Image equals domain (still a permutation)
@@ -215,7 +215,7 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: double inverse returns to original") {
-            checkAll(80, generateArbEndoBijection(Arb.int(1..100), 2, 12)) { bij ->
+            checkAll(80,generateArbEndoBijection(Arb.int(1..100), 2, 12)) { bij ->
                 val doubleInv = bij.inverse().inverse()
 
                 bij.domain.all { a -> doubleInv.apply(a) == bij.apply(a) } shouldBe true
@@ -223,11 +223,11 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: inverse swaps forward and backward") {
-            checkAll(80, generateArbEndoBijection(Arb.int(1..100), 2, 12)) { bij ->
+            checkAll(80,generateArbEndoBijection(Arb.int(1..100), 2, 12)) { bij ->
                 val inv = bij.inverse()
 
                 bij.domain.all { a ->
-                    inv.backward.apply(a) == bij.forward.apply(a)
+                    inv.backward.apply(a) == bij.apply(a)
                 } shouldBe true
             }
         }
@@ -253,14 +253,14 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: composition maintains inverse property") {
-            checkAll(60, BijectionTestingCombinations.arbComposablePair(
+            checkAll(60,BijectionTestingCombinations.arbComposablePair(
                 Arb.int(1..100), Arb.string(1..5), Arb.char('a'..'z'), 5
             )) { (bij1, bij2) ->
                 val composed = bij1 andThen bij2
 
                 // Forward then backward is identity
                 bij1.domain.all { a ->
-                    composed.backward.apply(composed.forward.apply(a)) == a
+                    composed.backward.apply(composed.apply(a)) == a
                 } shouldBe true
             }
         }
@@ -312,7 +312,7 @@ class BijectionSpec : FunSpec({
         }
 
         test("property: orbit is closed under application") {
-            checkAll(80, BijectionTestingCombinations.arbEndoBijectionWithElement(Arb.int(1..100), 2, 10)) { (bij, elem) ->
+            checkAll(BijectionTestingCombinations.arbEndoBijectionWithElement(Arb.int(1..100), 2, 10)) { (bij, elem) ->
                 val orbit = bij.orbit(elem)
 
                 // All orbit elements map to orbit elements

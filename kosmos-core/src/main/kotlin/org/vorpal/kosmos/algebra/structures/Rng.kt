@@ -5,9 +5,12 @@ package org.vorpal.kosmos.algebra.structures
  *
  * Equivalently: a hemiring whose additive commutative monoid is an abelian group.
  */
-interface Rng<A : Any> : Hemiring<A> {
+interface Rng<A : Any> : Hemiring<A>, NonAssociativeRng<A> {
     override val add: AbelianGroup<A>
     override val mul: Semigroup<A>
+
+    override val zero: A
+        get() = add.identity
 
     companion object {
         fun <A : Any> of(

@@ -104,7 +104,7 @@ object PermutationMatrixIsomorphisms {
         val iso1 = snPermutationToPermMat(n)
         val iso2 = snPermMatToDenseMat(semiring, n, eq)
 
-        val forward = iso1.forward andThen iso2.forward
+        val forward = iso1 andThen iso2
         val backward = iso2.backward andThen iso1.backward
 
         return GroupIsomorphism.of(forward, backward)
@@ -195,7 +195,7 @@ object PermutationMatrixIsomorphisms {
         val iso1 = anPermutationToPermMat(n)
         val iso2 = anPermMatToDenseMat(semiring, n, eq)
 
-        val forward = iso1.forward andThen iso2.forward
+        val forward = iso1 andThen iso2
         val backward = iso2.backward andThen iso1.backward
 
         return GroupIsomorphism.of(forward, backward)

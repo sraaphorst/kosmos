@@ -8,11 +8,7 @@ package org.vorpal.kosmos.algebra.structures
 interface Ring<A : Any>:
     NonAssociativeRing<A>,
     Semiring<A>,
-    Rng<A>,
-    HasFromBigInt<A> {
-
-    // Not needed, but specified for clarity.
-    override val add: AbelianGroup<A>
+    Rng<A> {
     override val mul: Monoid<A>
 
     override val zero: A

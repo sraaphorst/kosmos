@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.categories
 
+import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 
 /** A general morphism from one type to another. */
@@ -8,15 +9,18 @@ fun interface Morphism<A, B> {
 
     /** Morphism composition: note (f then g)(x) = g(f(x)). */
     infix fun <C> andThen(g: Morphism<B, C>): Morphism<A, C> =
-        Morphism { g.apply(apply(it)) }
+        Morphism { a -> g.apply(apply(a)) }
 
     infix fun <C> compose(g: Morphism<C, A>): Morphism<C, B> =
         g andThen this
 
-    /** Create an equality checker for a given morphism from domain (a set of A) to B.
-     * This produces a function that takes another morphism from A to B and determines if they are equal over the domain. */
+    /**
+     * Create an equality checker for a given finite domain.
+     * This produces a function that takes another morphism from A to B
+     * and determines if they are equal over the domain.
+     */
     fun eqOn(domain: FiniteSet<A>, eqB: (B, B) -> Boolean): (Morphism<A, B>) -> Boolean =
-        { other -> domain.all { a -> eqB(this.apply(a), other.apply(a)) } }
+        { other -> domain.all { a -> eqB(apply(a), other.apply(a)) } }
 
     companion object {
         fun <A> id(): Morphism<A, A> = Morphism { it }
@@ -25,92 +29,120 @@ fun interface Morphism<A, B> {
 
 /**
  * An injective (one-to-one) morphism from one type to another.
+ *
+ * This interface is a semantic refinement only; injectivity is not enforced here.
  */
-fun interface Monomorphism<A, B>: Morphism<A, B> {
+interface Monomorphism<A, B> : Morphism<A, B> {
     infix fun <C> andThen(g: Monomorphism<B, C>): Monomorphism<A, C> =
-        Monomorphism { g.apply(apply(it)) }
+        object : Monomorphism<A, C> {
+            override fun apply(a: A): C = g.apply(this@Monomorphism.apply(a))
+        }
 
     infix fun <C> compose(g: Monomorphism<C, A>): Monomorphism<C, B> =
         g andThen this
 
     companion object {
-        fun <A> id(): Monomorphism<A, A> = Monomorphism { it }
+        fun <A> id(): Monomorphism<A, A> = object : Monomorphism<A, A> {
+            override fun apply(a: A): A = a
+        }
     }
 }
 
 /**
  * A surjective (onto) morphism from one type to another.
+ *
+ * This interface is a semantic refinement only; surjectivity is not enforced here.
  */
-fun interface Epimorphism<A, B>: Morphism<A, B> {
+interface Epimorphism<A, B> : Morphism<A, B> {
     infix fun <C> andThen(g: Epimorphism<B, C>): Epimorphism<A, C> =
-        Epimorphism { g.apply(apply(it)) }
+        object : Epimorphism<A, C> {
+            override fun apply(a: A): C = g.apply(this@Epimorphism.apply(a))
+        }
 
     infix fun <C> compose(g: Epimorphism<C, A>): Epimorphism<C, B> =
         g andThen this
 
-
     companion object {
-        fun <A> id(): Epimorphism<A, A> = Epimorphism { it }
+        fun <A> id(): Epimorphism<A, A> = object : Epimorphism<A, A> {
+            override fun apply(a: A): A = a
+        }
     }
 }
 
 /**
- * Isomorphism: a bijective morphism from one type to another.
+ * A bijective morphism from one type to another.
+ *
+ * The isomorphism itself is the forward map.
+ * The inverse direction is witnessed by [backward].
  */
 interface Isomorphism<A, B> : Morphism<A, B> {
-    val forward: Morphism<A, B>
     val backward: Morphism<B, A>
 
-    override fun apply(a: A): B = forward.apply(a)
-
-    /** Composition of two isomorphisms: (A ≅ B) ∘ (B ≅ C) = (A ≅ C). */
-    infix fun <C> andThen(g: Isomorphism<B, C>): Isomorphism<A, C> = of(
-        forward = { a -> g.forward.apply(forward.apply(a)) },
-        backward = { c -> backward.apply(g.backward.apply(c)) }
-    )
+    infix fun <C> andThen(g: Isomorphism<B, C>): Isomorphism<A, C> =
+        of(
+            forward = { a -> g.apply(apply(a)) },
+            backward = { c -> backward.apply(g.backward.apply(c)) }
+        )
 
     infix fun <C> compose(g: Isomorphism<C, A>): Isomorphism<C, B> =
         g andThen this
 
-    /** Inverse isomorphism: (A ≅ B)^(-1) = (B ≅ A). */
-    fun inverse(): Isomorphism<B, A> = of(backward, forward)
+    fun inverse(): Isomorphism<B, A> =
+        of(
+            forward = backward,
+            backward = this
+        )
 
     companion object {
-        /** Factory function for convenience. */
-        fun <A, B> of(forward: Morphism<A, B>, backward: Morphism<B, A>): Isomorphism<A, B> = object : Isomorphism<A, B> {
-            override val forward = forward
+        fun <A, B> of(
+            forward: Morphism<A, B>,
+            backward: Morphism<B, A>
+        ): Isomorphism<A, B> = object : Isomorphism<A, B> {
             override val backward = backward
+
+            override fun apply(a: A): B = forward.apply(a)
         }
 
-        /** Identity isomorphism on any type A. */
         fun <A> id(): Isomorphism<A, A> = of(Morphism.id(), Morphism.id())
     }
 }
 
 fun interface Endomorphism<A> : Morphism<A, A> {
     companion object {
-        fun <A> id(): Endomorphism<A> = Endomorphism { it }
+        fun <A> id(): Endomorphism<A> = Endomorphism(Identity())
     }
 }
 
 interface Automorphism<A> : Isomorphism<A, A>, Endomorphism<A> {
-    /** Composition of automorphisms: still an automorphism. */
-    infix fun andThen(g: Automorphism<A>): Automorphism<A> = of(
-        forward andThen g.forward, g.backward andThen backward
-    )
+    override val backward: Endomorphism<A>
+
+    infix fun andThen(g: Automorphism<A>): Automorphism<A> =
+        of(
+            forward = { a -> g.apply(apply(a)) },
+            backward = { a -> backward.apply(g.backward.apply(a)) }
+        )
+
 
     infix fun compose(g: Automorphism<A>): Automorphism<A> =
         g andThen this
 
-    override fun inverse(): Automorphism<A> = of(backward, forward)
+    override fun inverse(): Automorphism<A> =
+        of(
+            forward = backward,
+            backward = this
+        )
 
     companion object {
-        fun <A> of(forward: Morphism<A, A>, backward: Morphism<A, A>): Automorphism<A> = object : Automorphism<A> {
-            override val forward = forward
+        fun <A> of(
+            forward: Endomorphism<A>,
+            backward: Endomorphism<A>
+        ): Automorphism<A> = object : Automorphism<A> {
             override val backward = backward
+
+            override fun apply(a: A): A = forward.apply(a)
         }
 
-        fun <A> id(): Automorphism<A> = of(Morphism.id(), Morphism.id())
+        fun <A> id(): Automorphism<A> = of(Endomorphism.id(), Endomorphism.id())
     }
 }
 
@@ -159,7 +191,8 @@ fun <A> Automorphism<A>.cycleDecomposition(domain: FiniteSet<A>): List<List<A>> 
         val start = unvisited.first()
         val cycle = orbit(start, domain).toList()
 
-        if (cycle.size > 1) { // Only include non-trivial cycles
+        // Only include non-trivial cycles
+        if (cycle.size > 1) {
             cycles.add(cycle)
         }
 
