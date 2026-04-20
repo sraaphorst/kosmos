@@ -29,7 +29,7 @@ class UnitalRingHomomorphismLaws<A : Any, B : Any>(
     override val name =
         "unital ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
 
-    private val base = RingHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
+    private val base = RngHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
 
     override fun laws(): List<TestingLaw> =
         base.laws() + listOf(

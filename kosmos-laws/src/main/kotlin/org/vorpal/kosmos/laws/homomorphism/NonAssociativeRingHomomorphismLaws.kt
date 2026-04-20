@@ -23,7 +23,8 @@ class NonAssociativeRingHomomorphismLaws<A : Any, B : Any>(
     override fun laws(): List<TestingLaw> = listOf(
         preservesBinaryOpLaw(
             domainOp = domain.add.op,
-            codomainOp = codomain.add.op, hom,
+            codomainOp = codomain.add.op,
+            hom = hom,
             arbA = arb,
             eqB = eqB,
             prA = prA,

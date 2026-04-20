@@ -1,19 +1,10 @@
 package org.vorpal.kosmos.algebra.morphisms
 
 import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.categories.Morphism
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-/**
- * A homomorphism from some [Monoid] over carrier [A] to [B].
- *
- * This extends the concept of a general [Morphism] by carrying witnesses for the domain / codomain monoid structures.
- *
- * NOTE: This type does not *enforce* the homomorphism laws; it is a certified/witnessed arrow.
- * Law checking is a separate concern (tests / verification helpers).
- */
-interface MonoidHomomorphism<A : Any, B : Any> : MagmaHomomorphism<A, B> {
+interface MonoidHomomorphism<A : Any, B : Any> : SemigroupHomomorphism<A, B> {
     override val domain: Monoid<A>
     override val codomain: Monoid<B>
 
