@@ -4,7 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.rational.toRational
-import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 
 class ZToQMonomorphismSpec: StringSpec({
@@ -16,8 +16,8 @@ class ZToQMonomorphismSpec: StringSpec({
     val prQ = RationalAlgebras.printableRationalPretty
 
     "ZToQMonomorphism satisfies UnitalRingHomomorphismLaws" {
-        UnitalRingHomomorphismLaws(
-            hom = mono,
+        RingHomomorphismLaws(
+            hom = mono::invoke,
             domain = mono.domain,
             codomain = mono.codomain,
             arb = arbZ,

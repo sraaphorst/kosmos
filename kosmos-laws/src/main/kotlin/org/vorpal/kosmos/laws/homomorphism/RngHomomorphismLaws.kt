@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.laws.homomorphism
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.morphisms.RngHomomorphism
 import org.vorpal.kosmos.algebra.structures.Rng
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
@@ -17,7 +16,7 @@ import org.vorpal.kosmos.laws.TestingLaw
  *
  */
 class RngHomomorphismLaws<A : Any, B : Any>(
-    private val hom: RngHomomorphism<A, B>,
+    private val hom: (A) -> B,
     private val domain: Rng<A>,
     private val codomain: Rng<B>,
     private val arb: Arb<A>,
@@ -32,7 +31,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
         preservesBinaryOpLaw(
             domainOp = domain.add.op,
             codomainOp = codomain.add.op,
-            hom = hom::invoke,
+            hom = hom,
             arbA = arb,
             eqB = eqB,
             prA = prA,
@@ -42,7 +41,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
         preservesIdentityLaw(
             domainIdentity = domain.add.identity,
             codomainIdentity = codomain.add.identity,
-            hom = hom::invoke,
+            hom = hom,
             eqB = eqB,
             prA = prA,
             prB = prB,
@@ -52,7 +51,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
         preservesBinaryOpLaw(
             domainOp = domain.mul.op,
             codomainOp = codomain.mul.op,
-            hom = hom::invoke,
+            hom = hom,
             arbA = arb,
             eqB = eqB,
             prA = prA,

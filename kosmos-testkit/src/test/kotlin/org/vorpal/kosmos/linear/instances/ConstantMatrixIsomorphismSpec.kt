@@ -3,9 +3,8 @@ package org.vorpal.kosmos.linear.instances
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.laws.homomorphism.UnitalRingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.linear.instance.arbConstMat
 import org.vorpal.kosmos.core.rational.ArbRational
 
@@ -16,9 +15,9 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
         n = 6
     )
 
-    "Unital ring isomorphism from RationalField and ConstantMatrixField holds" {
-        UnitalRingHomomorphismLaws(
-            hom = iso,
+    "Ring isomorphism from RationalField and ConstantMatrixField holds" {
+        RingHomomorphismLaws(
+            hom = iso::invoke,
             domain = RationalAlgebras.RationalField,
             codomain = ConstantMatrixAlgebras.ConstantMatrixField(RationalAlgebras.RationalField, 6),
             arb = ArbRational.small,
@@ -28,9 +27,9 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
         ).fullTest().throwIfFailed()
     }
 
-    "Unital ring isomorphism from ConstantMatrixField and RationalField holds" {
-        UnitalRingHomomorphismLaws(
-            hom = iso.backward,
+    "Ring isomorphism from ConstantMatrixField and RationalField holds" {
+        RingHomomorphismLaws(
+            hom = iso.backward::invoke,
             domain = ConstantMatrixAlgebras.ConstantMatrixField(RationalAlgebras.RationalField, 6),
             codomain = RationalAlgebras.RationalField,
             arb = arbConstMat(ArbRational.small, 6),
