@@ -8,7 +8,7 @@ import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 object ComplexToRank2RMatrixMonomorphismSpec : StringSpec({
     "ComplexToRank2RMatrixMonomorphism satisfies RingHomomorphismLaws" {
         RngHomomorphismLaws(
-            hom = ComplexAlgebras.ComplexToRank2RMatrixMonomorphism,
+            hom = ComplexAlgebras.ComplexToRank2RMatrixMonomorphism::invoke,
             domain = ComplexAlgebras.ComplexField,
             codomain = DenseMatAlgebras.DenseMatRing(RealAlgebras.RealField, 2),
             arb = ArbComplex.complex,

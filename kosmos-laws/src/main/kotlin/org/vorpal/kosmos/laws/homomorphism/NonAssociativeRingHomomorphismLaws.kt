@@ -11,43 +11,27 @@ class NonAssociativeRingHomomorphismLaws<A : Any, B : Any>(
     private val hom: (A) -> B,
     private val domain: NonAssociativeRing<A>,
     private val codomain: NonAssociativeRing<B>,
-    private val arb: Arb<A>,
+    arb: Arb<A>,
     private val eqB: Eq<B> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
 ) : LawSuite {
 
     override val name =
-        "non-associative ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
+        "unital non-associative ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
 
-    override fun laws(): List<TestingLaw> = listOf(
-        preservesBinaryOpLaw(
-            domainOp = domain.add.op,
-            codomainOp = codomain.add.op,
-            hom = hom,
-            arbA = arb,
-            eqB = eqB,
-            prA = prA,
-            prB = prB,
-            label = "non-associative ring homomorphism: addition"
-        ),
-        preservesIdentityLaw(
-            domainIdentity = domain.add.identity,
-            codomainIdentity = codomain.add.identity,
-            hom = hom,
-            eqB = eqB,
-            prA = prA,
-            prB = prB,
-            label = "non-associative ring hom: preserves additive identity"
-        ),
-        preservesBinaryOpLaw(
-            domainOp = domain.mul.op,
-            codomainOp = codomain.mul.op, hom,
-            arbA = arb,
-            eqB = eqB,
-            prA = prA,
-            prB = prB,
-            label = "non-associative ring hom: multiplication"
+    private val base = NonAssociativeRngHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
+
+    override fun laws(): List<TestingLaw> =
+        base.laws() + listOf(
+            preservesIdentityLaw(
+                domainIdentity = domain.mul.identity,
+                codomainIdentity = codomain.mul.identity,
+                hom = hom,
+                eqB = eqB,
+                prA = prA,
+                prB = prB,
+                label = "non-associative ring homomorphism: preserves multiplicative identity"
+            )
         )
-    )
 }

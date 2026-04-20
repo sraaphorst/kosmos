@@ -1,31 +1,24 @@
 package org.vorpal.kosmos.laws.homomorphism
 
 import io.kotest.property.Arb
-import org.vorpal.kosmos.algebra.structures.Rng
+import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 
-/**
- * Rng homomorphism laws:
- *
- *    hom(a + b) = hom(a) + hom(b)
- *    hom(0_A) = 0_B
- *    hom(ab) = hom(a) * hom(b)
- *
- */
-class RngHomomorphismLaws<A : Any, B : Any>(
+class NonAssociativeRngHomomorphismLaws<A : Any, B : Any>(
     private val hom: (A) -> B,
-    private val domain: Rng<A>,
-    private val codomain: Rng<B>,
+    private val domain: NonAssociativeRing<A>,
+    private val codomain: NonAssociativeRing<B>,
     private val arb: Arb<A>,
     private val eqB: Eq<B> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
-    ) : LawSuite {
+) : LawSuite {
+
     override val name =
-        "rng homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
+        "non-associative ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
 
     override fun laws(): List<TestingLaw> = listOf(
         preservesBinaryOpLaw(
@@ -36,7 +29,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "rng homomorphism: addition"
+            label = "non-associative ring homomorphism: addition"
         ),
         preservesIdentityLaw(
             domainIdentity = domain.add.identity,
@@ -45,9 +38,8 @@ class RngHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "rng homomorphism: preserves additive identity"
+            label = "non-associative ring hom: preserves additive identity"
         ),
-
         preservesBinaryOpLaw(
             domainOp = domain.mul.op,
             codomainOp = codomain.mul.op,
@@ -56,7 +48,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
             eqB = eqB,
             prA = prA,
             prB = prB,
-            label = "rng homomorphism: multiplication"
+            label = "non-associative ring hom: multiplication"
         )
     )
 }
