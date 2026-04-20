@@ -51,13 +51,13 @@ class PermutationSpec : FreeSpec({
 
         "forward then backward is identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
-                base.all { x -> perm.backward.apply(perm.forward.apply(x)) == x } shouldBe true
+                base.all { x -> perm.backward.apply(perm.apply(x)) == x } shouldBe true
             }
         }
 
         "backward then forward is identity" {
             checkAll(generateArbPermutation(Arb.int(), 3, 10)) { (base, perm) ->
-                base.all { x -> perm.forward.apply(perm.backward.apply(x)) == x } shouldBe true
+                base.all { x -> perm.apply(perm.backward.apply(x)) == x } shouldBe true
             }
         }
     }

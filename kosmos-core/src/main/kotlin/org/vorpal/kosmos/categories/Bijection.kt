@@ -11,28 +11,26 @@ interface Bijection<A, B> : Isomorphism<A, B> {
 
     /**
      * Compose with another bijection, preserving the Bijection type.
-     * Note: This shadows the Isomorphism.then to maintain type precision.
      */
-    infix fun <C> andThen(g: Bijection<B, C>): Bijection<A, C> = of(
-        domain = this.domain,
-        codomain = g.codomain,
-        forward = domain.associateWith { a -> g.apply(this.apply(a)) }
-    )
+    infix fun <C> andThen(g: Bijection<B, C>): Bijection<A, C> =
+        of(
+            domain = this.domain,
+            codomain = g.codomain,
+            forward = domain.associateWith { a -> g.apply(this.apply(a)) }
+        )
 
-    infix fun <C> compose(g: Bijection<C, A>): Bijection<C, B> = of(
-        domain = g.domain,
-        codomain = this.codomain,
-        forward = g.domain.associateWith { c -> apply(g.apply(c)) }
-    )
+    infix fun <C> compose(g: Bijection<C, A>): Bijection<C, B> =
+        g andThen this
 
     /**
      * Inverse bijection with domain and codomain swapped.
      */
-    override fun inverse(): Bijection<B, A> = of(
-        domain = this.codomain,
-        codomain = this.domain,
-        forward = codomain.associateWith(backward::apply)
-    )
+    override fun inverse(): Bijection<B, A> =
+        of(
+            domain = this.codomain,
+            codomain = this.domain,
+            forward = codomain.associateWith(backward::apply)
+        )
 
     /**
      * Check if this is an endomorphism (domain == codomain).
@@ -41,28 +39,24 @@ interface Bijection<A, B> : Isomorphism<A, B> {
         domain.size == codomain.size && domain.toSet() == codomain.toSet()
 
     /**
-     * Convert to Automorphism if this is an endomorphism.
-     */
-    fun toAutomorphismOrNull(): Automorphism<A>? =
-        if (isEndomorphism()) {
-            @Suppress("UNCHECKED_CAST")
-            Automorphism.of(
-                this.forward as Morphism<A, A>,
-                this.backward as Morphism<A, A>
-            )
-        } else null
-
-    /**
      * Get the image of a subset under this bijection.
      */
     fun image(subset: FiniteSet<A>): FiniteSet<B> =
-        subset.filter(domain::contains).map(::apply)
+        FiniteSet.ordered(
+            subset
+                .filter(domain::contains)
+                .map(::apply)
+        )
 
     /**
      * Get the preimage of a subset under this bijection.
      */
     fun preimage(subset: FiniteSet<B>): FiniteSet<A> =
-        subset.filter(codomain::contains).map(backward::apply)
+        FiniteSet.ordered(
+            subset
+                .filter(codomain::contains)
+                .map(backward::apply)
+        )
 
     companion object {
         /**
@@ -80,25 +74,28 @@ interface Bijection<A, B> : Isomorphism<A, B> {
             require(forward.keys == domain.toSet()) {
                 "Forward map must cover the entire domain. Missing: ${domain.toSet() - forward.keys}"
             }
+
             val image = forward.values.toSet()
+
             require(image == codomain.toSet()) {
                 "Forward map must be surjective onto the codomain. " +
-                        "Image size: ${image.size}, Codomain size: ${codomain.size}. " +
-                        "Missing from image: ${codomain.toSet() - image}"
+                    "Image size: ${image.size}, Codomain size: ${codomain.size}. " +
+                    "Missing from image: ${codomain.toSet() - image}"
             }
+
             require(image.size == forward.size) {
                 "Forward map must be injective (no collisions)."
             }
 
-            val f: Morphism<A, B> = Morphism(forward::getValue)
             val backMap: Map<B, A> = forward.entries.associate { (a, b) -> b to a }
             val g: Morphism<B, A> = Morphism(backMap::getValue)
 
             return object : Bijection<A, B> {
                 override val domain = domain
                 override val codomain = codomain
-                override val forward = f
                 override val backward = g
+
+                override fun apply(a: A): B = forward.getValue(a)
             }
         }
 
@@ -139,6 +136,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
             require(domain.size == codomain.size) {
                 "Domain and codomain must have equal size. Domain: ${domain.size}, Codomain: ${codomain.size}."
             }
+
             return of(domain, codomain, domain.zip(codomain).toMap())
         }
 
@@ -153,6 +151,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
                 require(cycle.all(base::contains)) {
                     "All cycle elements must be in the base set"
                 }
+
                 require(cycle.size == cycle.toSet().size) {
                     "Cycle must not contain duplicates"
                 }
@@ -171,12 +170,13 @@ interface Bijection<A, B> : Isomorphism<A, B> {
 }
 
 /**
- * Extension: Convert a permutation bijection to an automorphism.
- * Throws if not an endomorphism.
+ * Convert to Automorphism if this is an endomorphism.
  */
 fun <A> Bijection<A, A>.toAutomorphism(): Automorphism<A> =
-    toAutomorphismOrNull()
-        ?: error("Cannot convert non-endomorphic bijection to automorphism")
+    Automorphism.of(
+        forward = { a -> apply(a) },
+        backward = { a -> backward.apply(a) }
+    )
 
 /**
  * Extension: Compute the orbit of an element under repeated application.
@@ -219,7 +219,7 @@ fun <A> Bijection<A, A>.cycleDecomposition(): List<List<A>> {
         val start = unvisited.first()
         val cycle = orbit(start).toList()
 
-        if (cycle.size > 1) { // Only include non-trivial cycles
+        if (cycle.size > 1) {
             cycles.add(cycle)
         }
 

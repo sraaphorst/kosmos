@@ -1,42 +1,42 @@
 package org.vorpal.kosmos.algebra.morphisms
 
 import org.vorpal.kosmos.algebra.structures.Ring
-import org.vorpal.kosmos.categories.Isomorphism
 
-/**
- * An isomorphism in the category of rings.
- *
- * This is both:
- * - a categorical [Isomorphism] (as plain functions on carriers), and
- * - a pair of mutually inverse [RingHomomorphism]s with domain/codomain witnesses.
- */
-interface RingIsomorphism<A : Any, B : Any> : Isomorphism<A, B> {
-    override val forward: RingHomomorphism<A, B>
+interface RingIsomorphism<A : Any, B : Any> :
+    RingMonomorphism<A, B>, NonAssociativeRingIsomorphism<A, B>, SemiringIsomorphism<A, B>, RngIsomorphism<A, B> {
     override val backward: RingHomomorphism<B, A>
 
-    val domain: Ring<A>
-        get() = forward.domain
-
-    val codomain: Ring<B>
-        get() = forward.codomain
+    override val domain: Ring<A>
+    override val codomain: Ring<B>
 
     override fun inverse(): RingIsomorphism<B, A> =
-        of(backward, forward)
+        of(backward, this)
+
+    infix fun <C : Any> andThen(other: RingIsomorphism<B, C>): RingIsomorphism<A, C> =
+        of(
+            forward = RingHomomorphism.of(
+                domain = domain,
+                codomain = other.codomain,
+                map = map andThen other.map
+            ),
+            backward = other.backward andThen backward
+        )
+
+    infix fun <C : Any> compose(other: RingIsomorphism<C, A>): RingIsomorphism<C, B> =
+        other andThen this
 
     companion object {
         fun <A : Any, B : Any> of(
             forward: RingHomomorphism<A, B>,
-            backward: RingHomomorphism<B, A>,
+            backward: RingHomomorphism<B, A>
         ): RingIsomorphism<A, B> = object : RingIsomorphism<A, B> {
             init {
-                require(forward.codomain === backward.domain) {
-                    "codomain/domain mismatch: forward.codomain != backward.domain"
-                }
-                require(forward.domain === backward.codomain) {
-                    "domain/codomain mismatch: forward.domain != backward.codomain"
-                }
+                require(forward.codomain === backward.domain) { "codomain / domain mismatch" }
+                require(forward.domain === backward.codomain) { "domain / codomain mismatch" }
             }
-            override val forward = forward
+            override val domain = forward.domain
+            override val codomain = forward.codomain
+            override val map = forward.map
             override val backward = backward
         }
     }

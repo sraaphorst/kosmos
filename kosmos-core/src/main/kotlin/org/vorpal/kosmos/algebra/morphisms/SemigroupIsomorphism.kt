@@ -1,19 +1,19 @@
 package org.vorpal.kosmos.algebra.morphisms
 
-import org.vorpal.kosmos.algebra.structures.Monoid
+import org.vorpal.kosmos.algebra.structures.Semigroup
 
-interface MonoidIsomorphism<A : Any, B : Any> : MonoidMonomorphism<A, B>, SemigroupIsomorphism<A, B> {
-    override val backward: MonoidHomomorphism<B, A>
+interface SemigroupIsomorphism<A : Any, B : Any> : SemigroupMonomorphism<A, B>, MagmaIsomorphism<A, B> {
+    override val backward: SemigroupHomomorphism<B, A>
 
-    override val domain: Monoid<A>
-    override val codomain: Monoid<B>
+    override val domain: Semigroup<A>
+    override val codomain: Semigroup<B>
 
-    override fun inverse(): MonoidIsomorphism<B, A> =
+    override fun inverse(): SemigroupIsomorphism<B, A> =
         of(backward, this)
 
-    infix fun <C : Any> andThen(other: MonoidIsomorphism<B, C>): MonoidIsomorphism<A, C> =
+    infix fun <C : Any> andThen(other: SemigroupIsomorphism<B, C>): SemigroupIsomorphism<A, C> =
         of(
-            forward = MonoidHomomorphism.of(
+            forward = SemigroupHomomorphism.of(
                 domain = domain,
                 codomain = other.codomain,
                 map = map andThen other.map
@@ -21,14 +21,14 @@ interface MonoidIsomorphism<A : Any, B : Any> : MonoidMonomorphism<A, B>, Semigr
             backward = other.backward andThen backward
         )
 
-    infix fun <C : Any> compose(other: MonoidIsomorphism<C, A>): MonoidIsomorphism<C, B> =
+    infix fun <C : Any> compose(other: SemigroupIsomorphism<C, A>): SemigroupIsomorphism<C, B> =
         other andThen this
 
     companion object {
         fun <A : Any, B : Any> of(
-            forward: MonoidHomomorphism<A, B>,
-            backward: MonoidHomomorphism<B, A>
-        ): MonoidIsomorphism<A, B> = object : MonoidIsomorphism<A, B> {
+            forward: SemigroupHomomorphism<A, B>,
+            backward: SemigroupHomomorphism<B, A>
+        ): SemigroupIsomorphism<A, B> = object : SemigroupIsomorphism<A, B> {
             init {
                 require(forward.codomain === backward.domain) { "codomain / domain mismatch" }
                 require(forward.domain === backward.codomain) { "domain / codomain mismatch" }
