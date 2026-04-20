@@ -4,7 +4,8 @@ import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.UnaryOp
 
-interface RingHomomorphism<A: Any, B: Any> : NonAssociativeRingHomomorphism<A, B>, RngHomomorphism<A, B> {
+interface RingHomomorphism<A: Any, B: Any> :
+    NonAssociativeRingHomomorphism<A, B>, SemiringHomomorphism<A, B>, RngHomomorphism<A, B> {
     override val domain: Ring<A>
     override val codomain: Ring<B>
 

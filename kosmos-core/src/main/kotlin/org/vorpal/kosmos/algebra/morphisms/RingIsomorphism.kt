@@ -3,7 +3,7 @@ package org.vorpal.kosmos.algebra.morphisms
 import org.vorpal.kosmos.algebra.structures.Ring
 
 interface RingIsomorphism<A : Any, B : Any> :
-    RingMonomorphism<A, B>, NonAssociativeRingIsomorphism<A, B>, RngIsomorphism<A, B> {
+    RingMonomorphism<A, B>, NonAssociativeRingIsomorphism<A, B>, SemiringIsomorphism<A, B>, RngIsomorphism<A, B> {
     override val backward: RingHomomorphism<B, A>
 
     override val domain: Ring<A>
