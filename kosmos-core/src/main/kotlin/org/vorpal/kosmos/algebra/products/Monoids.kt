@@ -1,10 +1,7 @@
 package org.vorpal.kosmos.algebra.products
 
-import org.vorpal.kosmos.algebra.morphisms.GroupHomomorphism
-import org.vorpal.kosmos.algebra.morphisms.GroupMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.MonoidHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.MonoidMonomorphism
-import org.vorpal.kosmos.algebra.structures.Group
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.ops.pairOp
