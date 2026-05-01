@@ -32,7 +32,7 @@ object DualModules {
      */
     fun <F : Any, V : Any> over(
         base: VectorSpace<F, V>,
-        dual: DualAlgebras.DualRing<F>,
+        dual: DualAlgebras.DualCommutativeRingWithReciprocal<F>,
     ): RModule<Dual<F>, Pair<V, V>> =
         object : RModule<Dual<F>, Pair<V, V>> {
 
