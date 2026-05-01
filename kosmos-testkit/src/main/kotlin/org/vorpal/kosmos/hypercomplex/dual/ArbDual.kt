@@ -21,6 +21,22 @@ fun arbNonZeroDualReal(): Arb<Real> =
     arbDualReal().filter { Eqs.realApprox().neqv(it, 0.0) }
 
 /**
+ * Generate a Real that is safely invertible for dual number operations (real part > 1e-4).
+ */
+private fun arbSafelyInvertibleDualReal(): Arb<Real> =
+    arbDualReal().filter { kotlin.math.abs(it) > 1e-4 }
+
+/**
+ * Generate a Dual that is safely invertible for dual number operations (real part > 1e-4).
+ */
+fun arbSafelyInvertibleDual(): Arb<Dual<Real>> = arbitrary {
+    dual(
+        f = arbSafelyInvertibleDualReal().bind(),
+        df = arbDualReal().bind()
+    )
+}
+
+/**
  * Arbitrary for dual numbers over Real.
  */
 fun arbDual(): Arb<Dual<Real>> = arbitrary {
