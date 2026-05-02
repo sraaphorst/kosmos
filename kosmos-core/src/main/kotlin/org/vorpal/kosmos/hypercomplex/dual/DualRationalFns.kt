@@ -1,9 +1,13 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.rational.toRational
 
 /**
  * Elementary algebraic functions on dual numbers over [Rational].
+ *
+ *  In this file, `f` denotes the primal part `a`, and `df` denotes the
+ *  tangent / infinitesimal coefficient `b`.
  *
  * For a dual number
  * ```text
@@ -31,14 +35,14 @@ object DualRationalFns {
      * Requires `a != 0`.
      */
     fun inv(x: Dual<Rational>): Dual<Rational> {
-        require(x.a != Rational.ZERO) { "inv requires nonzero real part, got ${x.a}" }
+        require(x.f != Rational.ZERO) { "inv requires nonzero real part, got ${x.f}" }
 
-        val invA = x.a.reciprocal()
+        val invA = x.f.reciprocal()
         val invA2 = invA * invA
 
-        return Dual(
-            a = invA,
-            b = -x.b * invA2
+        return dual(
+            f = invA,
+            df = -x.df * invA2
         )
     }
 
@@ -50,16 +54,15 @@ object DualRationalFns {
      * Requires `n >= 0`.
      */
     fun pow(x: Dual<Rational>, n: Int): Dual<Rational> {
-        require(n >= 0) { "pow requires n >= 0" }
+        require(n != Int.MIN_VALUE) { "pow exponent Int.MIN_VALUE is not supported" }
+        if (n == 0) return dual(f = Rational.ONE, df = Rational.ZERO)
 
-        val aPow = x.a.powInt(n)
-        val bPart =
-            if (n == 0) Rational.ZERO
-            else Rational.of(n.toBigInteger()) * x.b * x.a.powInt(n - 1)
+        val aPow = x.f.pow(n)
+        val bPart = n.toRational() * x.df * x.f.pow(n - 1)
 
-        return Dual(
-            a = aPow,
-            b = bPart
+        return dual(
+            f = aPow,
+            df = bPart
         )
     }
 
@@ -70,9 +73,9 @@ object DualRationalFns {
      * ```
      */
     fun square(x: Dual<Rational>): Dual<Rational> =
-        Dual(
-            a = x.a * x.a,
-            b = Rational.TWO * x.a * x.b
+        dual(
+            f = x.f * x.f,
+            df = Rational.TWO * x.f * x.df
         )
 
     /**
@@ -82,24 +85,31 @@ object DualRationalFns {
      * ```
      */
     fun cube(x: Dual<Rational>): Dual<Rational> =
-        Dual(
-            a = x.a * x.a * x.a,
-            b = Rational.of(3.toBigInteger()) * x.a * x.a * x.b
+        dual(
+            f = x.f * x.f * x.f,
+            df = 3.toRational() * x.f * x.f * x.df
         )
 
-    private fun Rational.powInt(n: Int): Rational {
-        require(n >= 0) { "n must be >= 0" }
-
-        var base = this
-        var exp = n
-        var acc = Rational.ONE
-
-        while (exp > 0) {
-            if ((exp and 1) == 1) acc *= base
-            base *= base
-            exp = exp ushr 1
+    /**
+     *
+     */
+    fun mobius(
+        x: Dual<Rational>,
+        a: Rational,
+        b: Rational,
+        c: Rational,
+        d: Rational
+    ): Dual<Rational> {
+        val denominator = c * x.f + d
+        require(denominator != Rational.ZERO) {
+            "mobius undefined when c*f + d = 0, got f=${x.f}"
         }
-
-        return acc
+        val numerator = a * x.f + b
+        val value = numerator / denominator
+        val derivative = (a * d - b * c) / (denominator * denominator)
+        return dual(
+            f = value,
+            df = x.df * derivative
+        )
     }
 }
