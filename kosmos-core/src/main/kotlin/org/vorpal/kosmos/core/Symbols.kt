@@ -143,6 +143,7 @@ object Symbols {
     const val SET_UNION = "∪"
     const val SET_UNION_DISJOINT = "⊔"
     const val SHARP = "♯"
+    const val SHUFFLE = "⧢"
     const val SLASH = "/"
     const val SQRT = "√"
     const val SQUARE = "²"

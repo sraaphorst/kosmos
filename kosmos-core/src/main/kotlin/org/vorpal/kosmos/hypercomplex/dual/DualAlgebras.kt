@@ -15,6 +15,66 @@ import org.vorpal.kosmos.core.render.Printable
 import java.math.BigInteger
 
 object DualAlgebras {
+
+    open class DualCommutativeRing<F : Any>(
+        protected val base: CommutativeRing<F>
+    ) : CommutativeRing<Dual<F>> {
+
+        override val add = AbelianGroup.of(
+            identity = dual(base.zero, base.zero),
+            op = BinOp(Symbols.PLUS) { x, y ->
+                dual(
+                    base.add(x.a, y.a),
+                    base.add(x.b, y.b)
+                )
+            },
+            inverse = Endo(Symbols.MINUS) { x ->
+                dual(
+                    base.add.inverse(x.a),
+                    base.add.inverse(x.b)
+                )
+            }
+        )
+
+        override val mul = CommutativeMonoid.of(
+            identity = dual(base.one, base.zero),
+            op = BinOp(Symbols.ASTERISK) { x, y ->
+                val ac = base.mul(x.a, y.a)
+                val ad = base.mul(x.a, y.b)
+                val bc = base.mul(x.b, y.a)
+
+                dual(
+                    ac,
+                    base.add(ad, bc)
+                )
+            }
+        )
+
+        /**
+         * Embed an element a ∈ F as a + 0ε.
+         */
+        fun lift(a: F): Dual<F> =
+            dual(a, base.zero)
+
+        /**
+         * Build a pure infinitesimal 0 + bε.
+         */
+        fun eps(b: F): Dual<F> =
+            dual(base.zero, b)
+
+        /**
+         * The canonical infinitesimal ε = 0 + 1ε.
+         */
+        val epsOne: Dual<F>
+            get() = eps(base.one)
+
+        fun variable(a: F): Dual<F> =
+            dual(a, base.one)
+
+        override fun fromBigInt(n: BigInteger): Dual<F> =
+            lift(base.fromBigInt(n))
+    }
+
     /**
      * Dual numbers over a base field [F].
      *
@@ -23,11 +83,11 @@ object DualAlgebras {
      * The duals form a commutative ring with:
      * - addition:
      * ```text
-     * (a,b) + (c,d) = (a+c, b+d)
+     * (a,b) + (c,d) = (a + c, b + d)
      * ```
      * - multiplication:
      * ```text
-     * (a,b)(c,d) = (ac, ad+bc)
+     * (a,b)(c,d) = (ac, ad + bc)
      * ```
      * A dual number is invertible iff its real part `a` is nonzero in the base field.
      *
@@ -47,51 +107,11 @@ object DualAlgebras {
      * ```
      * since `ε² = 0`, and this is how the autodifferentiation is achieved.
      */
-    class DualRing<F : Any>(
-        private val base: Field<F>,
-        private val isZero: (F) -> Boolean = { it == base.zero }
-    ) : CommutativeRing<Dual<F>>, HasReciprocal<Dual<F>> {
-
-        override val add = AbelianGroup.of(
-            identity = Dual(base.add.identity, base.add.identity),
-            op = BinOp(Symbols.PLUS) { x, y ->
-                Dual(base.add(x.a, y.a), base.add(x.b, y.b))
-            },
-            inverse = Endo(Symbols.MINUS) { x ->
-                Dual(base.add.inverse(x.a), base.add.inverse(x.b))
-            }
-        )
-
-        override val mul = CommutativeMonoid.of(
-            identity = Dual(base.mul.identity, base.add.identity),
-            op = BinOp(Symbols.ASTERISK) { x, y ->
-                // (a + bε)(c + dε) = ac + (ad + bc)ε
-                val ac = base.mul(x.a, y.a)
-                val ad = base.mul(x.a, y.b)
-                val bc = base.mul(x.b, y.a)
-                val eps = base.add(ad, bc)
-
-                Dual(ac, eps)
-            }
-        )
-
-        /**
-         * Embed an element a ∈ F as a + 0ε.
-         */
-        fun lift(a: F): Dual<F> =
-            Dual(a, base.add.identity)
-
-        /**
-         * Build a pure infinitesimal 0 + bε.
-         */
-        fun eps(b: F): Dual<F> =
-            Dual(base.add.identity, b)
-
-        /**
-         * The canonical infinitesimal ε = 0 + 1ε.
-         */
-        val epsOne: Dual<F>
-            get() = eps(base.mul.identity)
+    class DualCommutativeRingWithReciprocal<F : Any>(
+        private val field: Field<F>,
+        private val isZero: (F) -> Boolean = { it == field.zero }
+    ) : DualCommutativeRing<F>(field),
+        HasReciprocal<Dual<F>> {
 
         override fun hasReciprocal(a: Dual<F>): Boolean =
             !isZero(a.a)
@@ -99,7 +119,7 @@ object DualAlgebras {
         override val reciprocal: Endo<Dual<F>> = Endo(Symbols.INVERSE) { x ->
             if (!hasReciprocal(x)) throw ArithmeticException("Cannot invert dual number with zero real part: $x")
 
-            val invA = base.reciprocal(x.a)
+            val invA = field.reciprocal(x.a)
             val invA2 = base.mul(invA, invA)
 
             val minusB = base.add.inverse(x.b)
@@ -113,12 +133,18 @@ object DualAlgebras {
     }
 
     /**
+     * Convenience function to build the dual ring over a base commutative ring.
+     */
+    fun <F : Any> CommutativeRing<F>.dualRing(): DualCommutativeRing<F> =
+        DualCommutativeRing(this)
+
+    /**
      * Convenience function to build the dual ring over a base field.
      */
-    fun <F : Any> Field<F>.dual(
+    fun <F : Any> Field<F>.dualRingWithReciprocal(
         isZero: (F) -> Boolean = { it == zero }
-    ): DualRing<F> =
-        DualRing(this, isZero)
+    ): DualCommutativeRingWithReciprocal<F> =
+        DualCommutativeRingWithReciprocal(this, isZero)
 
     /**
      * Differentiate a function represented on dual numbers, corresponding to a scalar map `F → F`
@@ -129,16 +155,19 @@ object DualAlgebras {
     fun <F : Any> diffAt(
         field: Field<F>,
         f: (Dual<F>) -> Dual<F>,
-        x: F
+        x: F,
+        isZero: (F) -> Boolean = { it == field.zero }
     ): Pair<F, F> {
-        val d = field.dual()
-        val xDual = d.add(d.lift(x), d.epsOne)
-        val y = f(xDual)
-        return y.a to y.b
+        val d = field.dualRingWithReciprocal(isZero)
+        val y = f(d.variable(x))
+        return y.f to y.df
     }
 
     /**
-     * Differentiate a function `f` represented on dual numbers, corresponding to a scalar map `Real → Real`
+     * Differentiate a function `f` represented on dual numbers, corresponding to a scalar map:
+     * ```text
+     * Real → Real
+     * ```
      * at a point `x`.
      *
      * Returns `f(x), f'(x)`.
@@ -147,7 +176,12 @@ object DualAlgebras {
         f: (Dual<Real>) -> Dual<Real>,
         x: Real
     ): Pair<Real, Real> =
-        diffAt(RealAlgebras.RealField, f, x)
+        diffAt(
+            field = RealAlgebras.RealField,
+            f = f,
+            x = x,
+            isZero = { RealAlgebras.eqRealApprox(it, 0.0) }
+        )
 
     fun <A : Any> dualEq(
         eqA: Eq<A>
