@@ -11,7 +11,8 @@ internal object PolyKernel {
      * - A [Poly] over [A]
      * - An [Eq] over [A]
      * - A [zeroA] in [A] representing zero
-     * find the normalization of [Poly], i.e. the representation where the coefficients of [Poly]
+     *
+     * Find the normalization of [Poly], i.e. the representation where the coefficients of [Poly]
      * do not end in [zeroA].
      */
     fun <A : Any> normalize(

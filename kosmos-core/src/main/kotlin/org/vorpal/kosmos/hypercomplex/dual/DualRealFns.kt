@@ -21,6 +21,9 @@ import kotlin.math.tanh
 /**
  * Elementary functions on dual numbers over [Real].
  *
+ * In this file, `f` denotes the primal part `a`, and `df` denotes the
+ * tangent / infinitesimal coefficient `b`.
+ *
  * For a dual number
  * ```text
  * x = a + bε
@@ -55,9 +58,9 @@ object DualRealFns {
         f: (Real) -> Real,
         df: (Real) -> Real
     ): Dual<Real> =
-        Dual(
-            a = f(x.a),
-            b = x.b * df(x.a)
+        dual(
+            f = f(x.f),
+            df = x.df * df(x.f)
         )
 
     /**
@@ -67,7 +70,11 @@ object DualRealFns {
      * ```
      */
     fun sin(x: Dual<Real>): Dual<Real> =
-        liftUnary(x, ::sin, ::cos)
+        liftUnary(
+            x = x,
+            f = ::sin,
+            df = ::cos
+        )
 
     /**
      * Cosine.
@@ -79,7 +86,7 @@ object DualRealFns {
         liftUnary(
             x = x,
             f = ::cos,
-            df = { a -> -sin(a) }
+            df = { -sin(it) }
         )
 
     /**
@@ -87,19 +94,16 @@ object DualRealFns {
      * ```text
      * tan(a + bε) = tan(a) + b sec²(a) ε
      * ```
-     * The derivative is undefined when `cos(a) = 0`.
+     * The function is undefined when `cos(a) = 0`.
      */
     fun tan(x: Dual<Real>): Dual<Real> {
-        val ca = cos(x.a)
-        if (x.b != 0.0) {
-            require(ca != 0.0) { "tan derivative undefined when cos(a)=0, got a=${x.a}" }
-        }
+        val ca = cos(x.f)
+        require(ca != 0.0) { "tan undefined when cos(a)=0, got a=${x.f}" }
 
         val sec2 = 1.0 / (ca * ca)
-
-        return Dual(
-            a = tan(x.a),
-            b = x.b * sec2
+        return dual(
+            f = tan(x.f),
+            df = x.df * sec2
         )
     }
 
@@ -111,15 +115,15 @@ object DualRealFns {
      * The function is undefined when `cos(a) = 0`.
      */
     fun sec(x: Dual<Real>): Dual<Real> {
-        val ca = cos(x.a)
-        require(ca != 0.0) { "sec undefined when cos(a)=0, got a=${x.a}" }
+        val ca = cos(x.f)
+        require(ca != 0.0) { "sec undefined when cos(a)=0, got a=${x.f}" }
 
         val sa = 1.0 / ca
-        val d = sa * tan(x.a)
+        val d = sa * tan(x.f)
 
-        return Dual(
-            a = sa,
-            b = x.b * d
+        return dual(
+            f = sa,
+            df = x.df * d
         )
     }
 
@@ -131,15 +135,15 @@ object DualRealFns {
      * The function is undefined when `sin(a) = 0`.
      */
     fun cot(x: Dual<Real>): Dual<Real> {
-        val sa = sin(x.a)
-        require(sa != 0.0) { "cot undefined when sin(a)=0, got a=${x.a}" }
+        val sa = sin(x.f)
+        require(sa != 0.0) { "cot undefined when sin(a)=0, got a=${x.f}" }
 
-        val cotA = cos(x.a) / sa
+        val cotA = cos(x.f) / sa
         val csc2 = 1.0 / (sa * sa)
 
-        return Dual(
-            a = cotA,
-            b = -x.b * csc2
+        return dual(
+            f = cotA,
+            df = -x.df * csc2
         )
     }
 
@@ -152,15 +156,15 @@ object DualRealFns {
      * The function is undefined when `sin(a) = 0`.
      */
     fun csc(x: Dual<Real>): Dual<Real> {
-        val sa = sin(x.a)
-        require(sa != 0.0) { "csc undefined when sin(a)=0, got a=${x.a}" }
+        val sa = sin(x.f)
+        require(sa != 0.0) { "csc undefined when sin(a)=0, got a=${x.f}" }
 
         val cscA = 1.0 / sa
-        val cotA = cos(x.a) / sa
+        val cotA = cos(x.f) / sa
 
-        return Dual(
-            a = cscA,
-            b = -x.b * cscA * cotA
+        return dual(
+            f = cscA,
+            df = -x.df * cscA * cotA
         )
     }
 
@@ -180,9 +184,9 @@ object DualRealFns {
      * ```
      */
     fun expm1(x: Dual<Real>): Dual<Real> =
-        Dual(
-            a = expm1(x.a),
-            b = x.b * exp(x.a)
+        dual(
+            f = expm1(x.f),
+            df = x.df * exp(x.f)
         )
 
     /**
@@ -193,11 +197,11 @@ object DualRealFns {
      * Requires `a > 0`.
      */
     fun log(x: Dual<Real>): Dual<Real> {
-        require(x.a > 0.0) { "log requires positive real part, got ${x.a}" }
+        require(x.f > 0.0) { "log requires positive real part, got ${x.f}" }
 
-        return Dual(
-            a = ln(x.a),
-            b = x.b / x.a
+        return dual(
+            f = ln(x.f),
+            df = x.df / x.f
         )
     }
 
@@ -209,11 +213,11 @@ object DualRealFns {
      * Requires `a > -1`.
      */
     fun log1p(x: Dual<Real>): Dual<Real> {
-        require(x.a > -1.0) { "log1p requires real part > -1, got ${x.a}" }
+        require(x.f > -1.0) { "log1p requires real part > -1, got ${x.f}" }
 
-        return Dual(
-            a = ln1p(x.a),
-            b = x.b / (1.0 + x.a)
+        return dual(
+            f = ln1p(x.f),
+            df = x.df / (1.0 + x.f)
         )
     }
 
@@ -222,19 +226,24 @@ object DualRealFns {
      * ```text
      * sqrt(a + bε) = sqrt(a) + b / (2 sqrt(a)) ε
      * ```
-     * Requires `a >= 0`. The derivative is undefined at `a = 0` unless `b = 0`.
+     * Requires `a >= 0`.
+     * At `a = 0`, this returns `0 + 0ε` only when `b = 0`.
      */
     fun sqrt(x: Dual<Real>): Dual<Real> {
-        require(x.a >= 0.0) { "sqrt requires nonnegative real part, got ${x.a}" }
-        if (x.b != 0.0) {
-            require(x.a > 0.0) { "sqrt derivative undefined at a=0 unless b=0" }
+        require(x.f >= 0.0) { "sqrt requires nonnegative real part, got ${x.f}" }
+
+        if (x.f == 0.0) {
+            require(x.df == 0.0) { "sqrt derivative undefined at a=0 unless b=0" }
+            return dual(
+                f = 0.0,
+                df = 0.0
+            )
         }
 
-        val sa = sqrt(x.a)
-
-        return Dual(
-            a = sa,
-            b = x.b / (2.0 * sa)
+        val sa = sqrt(x.f)
+        return dual(
+            f = sa,
+            df = x.df / (2.0 * sa)
         )
     }
 
@@ -247,16 +256,20 @@ object DualRealFns {
      * Requires `a ∈ [-1, 1]`. The derivative is undefined at `a = ±1` unless `b = 0`.
      */
     fun asin(x: Dual<Real>): Dual<Real> {
-        require(x.a in -1.0..1.0) { "asin requires real part in [-1,1], got ${x.a}" }
+        require(x.f in -1.0..1.0) { "asin requires real part in [-1,1], got ${x.f}" }
 
-        val denom2 = 1.0 - x.a * x.a
-        if (x.b != 0.0) {
-            require(denom2 > 0.0) { "asin derivative undefined at a=±1 unless b=0" }
+        val denom2 = 1.0 - x.f * x.f
+        if (denom2 == 0.0) {
+            require(x.df == 0.0) { "asin derivative undefined at a=±1 unless b=0" }
+            return dual(
+                f = asin(x.f),
+                df = 0.0
+            )
         }
 
-        return Dual(
-            a = asin(x.a),
-            b = x.b / sqrt(denom2)
+        return dual(
+            f = asin(x.f),
+            df = x.df / sqrt(denom2)
         )
     }
 
@@ -268,16 +281,20 @@ object DualRealFns {
      * Requires `a ∈ [-1, 1]`. The derivative is undefined at `a = ±1` unless `b = 0`.
      */
     fun acos(x: Dual<Real>): Dual<Real> {
-        require(x.a in -1.0..1.0) { "acos requires real part in [-1,1], got ${x.a}" }
+        require(x.f in -1.0..1.0) { "acos requires real part in [-1,1], got ${x.f}" }
 
-        val denom2 = 1.0 - x.a * x.a
-        if (x.b != 0.0) {
-            require(denom2 > 0.0) { "acos derivative undefined at a=±1 unless b=0" }
+        val denom2 = 1.0 - x.f * x.f
+        if (denom2 == 0.0) {
+            require(x.df == 0.0) { "acos derivative undefined at a=±1 unless b=0" }
+            return dual(
+                f = acos(x.f),
+                df = 0.0
+            )
         }
 
-        return Dual(
-            a = acos(x.a),
-            b = -x.b / sqrt(denom2)
+        return dual(
+            f = acos(x.f),
+            df = -x.df / sqrt(denom2)
         )
     }
 
@@ -319,12 +336,12 @@ object DualRealFns {
      * ```
      */
     fun tanh(x: Dual<Real>): Dual<Real> {
-        val ta = tanh(x.a)
+        val ta = tanh(x.f)
         val sech2 = 1.0 - ta * ta
 
-        return Dual(
-            a = ta,
-            b = x.b * sech2
+        return dual(
+            f = ta,
+            df = x.df * sech2
         )
     }
 
@@ -335,13 +352,13 @@ object DualRealFns {
      * ```
      */
     fun sech(x: Dual<Real>): Dual<Real> {
-        val ca = cosh(x.a)
+        val ca = cosh(x.f)
         val sechA = 1.0 / ca
-        val d = -sechA * tanh(x.a)
+        val d = -sechA * tanh(x.f)
 
-        return Dual(
-            a = sechA,
-            b = x.b * d
+        return dual(
+            f = sechA,
+            df = x.df * d
         )
     }
 
@@ -353,15 +370,15 @@ object DualRealFns {
      * The function is undefined when `sinh(a) = 0`.
      */
     fun coth(x: Dual<Real>): Dual<Real> {
-        val sa = sinh(x.a)
-        require(sa != 0.0) { "coth undefined when sinh(a)=0, got a=${x.a}" }
+        val sa = sinh(x.f)
+        require(sa != 0.0) { "coth undefined when sinh(a)=0, got a=${x.f}" }
 
-        val cothA = cosh(x.a) / sa
+        val cothA = cosh(x.f) / sa
         val csch2 = 1.0 / (sa * sa)
 
-        return Dual(
-            a = cothA,
-            b = -x.b * csch2
+        return dual(
+            f = cothA,
+            df = -x.df * csch2
         )
     }
 
@@ -373,15 +390,15 @@ object DualRealFns {
      * The function is undefined when `sinh(a) = 0`.
      */
     fun csch(x: Dual<Real>): Dual<Real> {
-        val sa = sinh(x.a)
-        require(sa != 0.0) { "csch undefined when sinh(a)=0, got a=${x.a}" }
+        val sa = sinh(x.f)
+        require(sa != 0.0) { "csch undefined when sinh(a)=0, got a=${x.f}" }
 
         val cschA = 1.0 / sa
-        val cothA = cosh(x.a) / sa
+        val cothA = cosh(x.f) / sa
 
-        return Dual(
-            a = cschA,
-            b = -x.b * cschA * cothA
+        return dual(
+            f = cschA,
+            df = -x.df * cschA * cothA
         )
     }
 
@@ -393,14 +410,14 @@ object DualRealFns {
      * Requires `a != 0`.
      */
     fun inv(x: Dual<Real>): Dual<Real> {
-        require(x.a != 0.0) { "inv requires nonzero real part, got ${x.a}" }
+        require(x.f != 0.0) { "inv requires nonzero real part, got ${x.f}" }
 
-        val invA = 1.0 / x.a
+        val invA = 1.0 / x.f
         val invA2 = invA * invA
 
-        return Dual(
-            a = invA,
-            b = -x.b * invA2
+        return dual(
+            f = invA,
+            df = -x.df * invA2
         )
     }
 
@@ -411,14 +428,23 @@ object DualRealFns {
      * ```
      */
     fun sigmoid(x: Dual<Real>): Dual<Real> {
-        val s = 1.0 / (1.0 + exp(-x.a))
+        val s = sigmoidReal(x.f)
         val ds = s * (1.0 - s)
 
-        return Dual(
-            a = s,
-            b = x.b * ds
+        return dual(
+            f = s,
+            df = x.df * ds
         )
     }
+
+    private fun sigmoidReal(x: Real): Real =
+        if (x >= 0.0) {
+            val z = exp(-x)
+            1.0 / (1.0 + z)
+        } else {
+            val z = exp(x)
+            z / (1.0 + z)
+        }
 
     /**
      * Integer power with nonnegative exponent.
@@ -430,14 +456,14 @@ object DualRealFns {
     fun pow(x: Dual<Real>, n: Int): Dual<Real> {
         require(n >= 0) { "pow requires n >= 0" }
 
-        val aPow = x.a.powInt(n)
+        val aPow = x.f.powInt(n)
         val bPart =
             if (n == 0) 0.0
-            else n * x.b * x.a.powInt(n - 1)
+            else n.toDouble() * x.df * x.f.powInt(n - 1)
 
-        return Dual(
-            a = aPow,
-            b = bPart
+        return dual(
+            f = aPow,
+            df = bPart
         )
     }
 
@@ -449,14 +475,14 @@ object DualRealFns {
      * This uses the principal real branch and therefore requires `a > 0`.
      */
     fun pow(x: Dual<Real>, r: Real): Dual<Real> {
-        require(x.a > 0.0) { "pow(x, r) requires positive real part for the principal real branch, got ${x.a}" }
+        require(x.f > 0.0) { "pow(x, r) requires positive real part for the principal real branch, got ${x.f}" }
 
-        val aPow = x.a.pow(r)
-        val deriv = r * x.a.pow(r - 1.0)
+        val aPow = x.f.pow(r)
+        val deriv = r * x.f.pow(r - 1.0)
 
-        return Dual(
-            a = aPow,
-            b = x.b * deriv
+        return dual(
+            f = aPow,
+            df = x.df * deriv
         )
     }
 }
