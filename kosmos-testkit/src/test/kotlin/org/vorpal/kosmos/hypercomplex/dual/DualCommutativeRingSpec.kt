@@ -91,7 +91,7 @@ class DualCommutativeRingSpec : FunSpec({
         test("DualCommutativeRing satisfies CommutativeRingLaws") {
             CommutativeRingLaws(
                 ring = dualRing,
-                arb = arbDual(),
+                arb = arbDual,
                 eq = eqDual,
                 pr = prDual
             ).fullTest().throwIfFailed()
@@ -106,7 +106,7 @@ class DualCommutativeRingSpec : FunSpec({
 
     context("Lift is a unital ring homomorphism") {
         val baseField = RealAlgebras.RealField
-        val baseArb = arbDualReal()
+        val baseArb = arbDualReal
         val prReal = Printables.real
 
         test("lift preserves addition: lift(a + b) = lift(a) + lift(b)") {
@@ -148,7 +148,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("lifted elements commute with epsilon") {
-            checkAll(arbDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbDualReal, arbDualReal) { a, b ->
                 val lifted = dualRing.lift(a)
                 val eps = dualRing.eps(b)
                 (lifted * eps) shouldBeApproximately (eps * lifted)
@@ -161,7 +161,7 @@ class DualCommutativeRingSpec : FunSpec({
     context("Dual number construction") {
 
         test("dual number stores components correctly") {
-            checkAll(arbDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbDualReal, arbDualReal) { a, b ->
                 val d = dual(a, b)
                 d.a shouldBe a
                 d.b shouldBe b
@@ -169,7 +169,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("component destructuring works") {
-            checkAll(arbDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbDualReal, arbDualReal) { a, b ->
                 val d = dual(a, b)
                 val (c1, c2) = d
                 c1 shouldBe a
@@ -178,7 +178,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("lift creates dual number with zero infinitesimal part") {
-            checkAll(arbDualReal()) { a ->
+            checkAll(arbDualReal) { a ->
                 val d = dualRing.lift(a)
                 d.a shouldBe a
                 d.b shouldBe 0.0
@@ -186,7 +186,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("eps creates dual number with zero real part") {
-            checkAll(arbDualReal()) { b ->
+            checkAll(arbDualReal) { b ->
                 val d = dualRing.eps(b)
                 d.a shouldBe 0.0
                 d.b shouldBe b
@@ -203,7 +203,7 @@ class DualCommutativeRingSpec : FunSpec({
     context("Concrete component formulas") {
 
         test("multiplication formula: (a+bε)(c+dε) = ac + (ad+bc)ε") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c, d ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal, arbDualReal) { a, b, c, d ->
                 val product = dual(a, b) * dual(c, d)
                 product.a shouldBeApproximately (a * c)
                 product.b shouldBeApproximately (a * d + b * c)
@@ -211,7 +211,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("negation negates both components") {
-            checkAll(arbDual()) { d ->
+            checkAll(arbDual) { d ->
                 val neg = -d
                 neg.a shouldBeApproximately -d.a
                 neg.b shouldBeApproximately -d.b
@@ -219,7 +219,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("subtraction components: (a₁+b₁ε) - (a₂+b₂ε) = (a₁-a₂) + (b₁-b₂)ε") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal(), arbDualReal()) { a1, b1, a2, b2 ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal, arbDualReal) { a1, b1, a2, b2 ->
                 val diff = dual(a1, b1) - dual(a2, b2)
                 diff.a shouldBeApproximately (a1 - a2)
                 diff.b shouldBeApproximately (b1 - b2)
@@ -227,7 +227,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("self-subtraction gives zero: d - d = 0") {
-            checkAll(arbDual()) { d ->
+            checkAll(arbDual) { d ->
                 (d - d) shouldBeApproximately zero
             }
         }
@@ -240,7 +240,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("pure infinitesimal squared is zero: (0+bε)² = 0") {
-            checkAll(arbDualReal()) { b ->
+            checkAll(arbDualReal) { b ->
                 (dualRing.eps(b) * dualRing.eps(b)) shouldBeApproximately zero
             }
         }
@@ -249,19 +249,19 @@ class DualCommutativeRingSpec : FunSpec({
     context("Invertibility") {
 
         test("dual number is invertible iff real part is non-zero") {
-            checkAll(arbDual()) { d ->
+            checkAll(arbDual) { d ->
                 d.isInvertible() shouldBe (RealAlgebras.eqRealApprox.neqv(d.a, 0.0) && d.a.isFinite())
             }
         }
 
         test("lifted non-zero elements are invertible") {
-            checkAll(arbNonZeroDualReal()) { a ->
+            checkAll(arbNonZeroDualReal) { a ->
                 dualRing.lift(a).isInvertible() shouldBe true
             }
         }
 
         test("pure infinitesimals are not invertible") {
-            checkAll(arbNonZeroDualReal()) { b ->
+            checkAll(arbNonZeroDualReal) { b ->
                 dualRing.eps(b).isInvertible() shouldBe false
             }
         }
@@ -274,13 +274,13 @@ class DualCommutativeRingSpec : FunSpec({
     context("Reciprocal") {
 
         test("reciprocal of invertible dual: d * d⁻¹ = 1") {
-            checkAll(arbSafelyInvertibleDual()) { d ->
+            checkAll(arbSafelyInvertibleDual) { d ->
                 (d * d.reciprocal()) shouldBeApproximately one
             }
         }
 
         test("reciprocal formula: (a+bε)⁻¹ = a⁻¹ - ba⁻²ε") {
-            checkAll(arbNonZeroDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbNonZeroDualReal, arbDualReal) { a, b ->
                 val inv = dual(a, b).reciprocal()
 
                 inv.a shouldBeApproximately (1.0 / a)
@@ -289,20 +289,20 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("reciprocalOption returns None for non-invertible elements") {
-            checkAll(arbNonInvertibleDual()) { d ->
+            checkAll(arbNonInvertibleDual) { d ->
                 dualRing.reciprocalOption(d) shouldBe Option.None
             }
         }
 
         test("reciprocalOption returns Some for invertible elements") {
-            checkAll(arbInvertibleDual()) { d ->
+            checkAll(arbInvertibleDual) { d ->
                 val inv = dualRing.reciprocalOption(d).expectSome()
                 (d * inv) shouldBeApproximately one
             }
         }
 
         test("double reciprocal: (d⁻¹)⁻¹ = d") {
-            checkAll(arbInvertibleDual()) { d ->
+            checkAll(arbInvertibleDual) { d ->
                 d.reciprocal().reciprocal() shouldBeApproximately d
             }
         }
@@ -311,19 +311,19 @@ class DualCommutativeRingSpec : FunSpec({
     context("Division") {
 
         test("division by one is identity: d / 1 = d") {
-            checkAll(arbDual()) { d ->
+            checkAll(arbDual) { d ->
                 (d / one) shouldBeApproximately d
             }
         }
 
         test("self-division gives one: d / d = 1") {
-            checkAll(arbSafelyInvertibleDual()) { d ->
+            checkAll(arbSafelyInvertibleDual) { d ->
                 (d / d) shouldBeApproximately one
             }
         }
 
         test("division is multiplication by reciprocal: d1 / d2 = d1 * d2⁻¹") {
-            checkAll(arbDual(), arbSafelyInvertibleDual()) { d1, d2 ->
+            checkAll(arbDual, arbSafelyInvertibleDual) { d1, d2 ->
                 val d2Inv = dualRing.reciprocalOption(d2).expectSome()
                 (d1 / d2) shouldBeApproximately (d1 * d2Inv)
             }
@@ -333,7 +333,7 @@ class DualCommutativeRingSpec : FunSpec({
     context("Scalar operations") {
 
         test("dual plus scalar: (a+bε) + c = (a+c) + bε") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal) { a, b, c ->
                 val result = dual(a, b) + dualRing.lift(c)
                 result.a shouldBeApproximately (a + c)
                 result.b shouldBeApproximately b
@@ -341,7 +341,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("dual minus scalar: (a+bε) - c = (a-c) + bε") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal) { a, b, c ->
                 val result = dual(a, b) - dualRing.lift(c)
                 result.a shouldBeApproximately (a - c)
                 result.b shouldBeApproximately b
@@ -349,7 +349,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("dual times scalar: (a+bε) * c = (ac) + (bc)ε") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { a, b, c ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal) { a, b, c ->
                 val result = dual(a, b) * dualRing.lift(c)
                 result.a shouldBeApproximately (a * c)
                 result.b shouldBeApproximately (b * c)
@@ -357,7 +357,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("dual divided by scalar: (a+bε) / c = (a/c) + (b/c)ε") {
-            checkAll(arbDualReal(), arbDualReal(), arbNonZeroDualReal()) { a, b, c ->
+            checkAll(arbDualReal, arbDualReal, arbNonZeroDualReal) { a, b, c ->
                 val result = dual(a, b) / dualRing.lift(c)
                 result.a shouldBeApproximately (a / c)
                 result.b shouldBeApproximately (b / c)
@@ -372,7 +372,7 @@ class DualCommutativeRingSpec : FunSpec({
     context("Complex expressions") {
 
         test("polynomial evaluation: (a+bε)² = a² + 2abε") {
-            checkAll(arbDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbDualReal, arbDualReal) { a, b ->
                 val d2 = dual(a, b) * dual(a, b)
                 d2.a shouldBeApproximately (a * a)
                 d2.b shouldBeApproximately (2.0 * a * b)
@@ -380,7 +380,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("polynomial: (a+bε)³ = a³ + 3a²bε") {
-            checkAll(arbDualReal(), arbDualReal()) { a, b ->
+            checkAll(arbDualReal, arbDualReal) { a, b ->
                 val d = dual(a, b)
                 val d3 = d * d * d
                 d3.a shouldBeApproximately (a * a * a)
@@ -389,7 +389,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("sum of products: d1*d2 + d3*d4") {
-            checkAll(arbDual(), arbDual(), arbDual(), arbDual()) { d1, d2, d3, d4 ->
+            checkAll(arbDual, arbDual, arbDual, arbDual) { d1, d2, d3, d4 ->
                 val sum = d1 * d2 + d3 * d4
 
                 val expectedA = d1.a * d2.a + d3.a * d4.a
@@ -401,7 +401,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("mixed operations: (d1 + 5.0) * (d2 - 3.0)") {
-            checkAll(arbDual(), arbDual()) { d1, d2 ->
+            checkAll(arbDual, arbDual) { d1, d2 ->
                 val result = (d1 + dualRing.lift(5.0)) * (d2 - dualRing.lift(3.0))
 
                 val expectedLeft = dual(d1.a + 5.0, d1.b)
@@ -416,7 +416,7 @@ class DualCommutativeRingSpec : FunSpec({
     context("Automatic differentiation") {
 
         test("linear function derivative: f(x) = mx + b, f'(x) = m") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal()) { x, m, b ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal) { x, m, b ->
                 val input = dual(x, 1.0)
                 val result = dualRing.lift(m) * input + dualRing.lift(b)
 
@@ -426,7 +426,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("quadratic function derivative: f(x) = x², f'(x) = 2x") {
-            checkAll(arbDualReal()) { x ->
+            checkAll(arbDualReal) { x ->
                 val input = dual(x, 1.0)
                 val result = input * input
 
@@ -436,7 +436,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("cubic function derivative: f(x) = x³, f'(x) = 3x²") {
-            checkAll(arbDualReal()) { x ->
+            checkAll(arbDualReal) { x ->
                 val input = dual(x, 1.0)
                 val result = input * input * input
 
@@ -446,7 +446,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("product rule: (fg)' = f'g + fg'") {
-            checkAll(arbDualReal(), arbDualReal(), arbDualReal(), arbDualReal()) { _, f0, g0, fPrime ->
+            checkAll(arbDualReal, arbDualReal, arbDualReal, arbDualReal) { _, f0, g0, fPrime ->
                 val f = dual(f0, fPrime)
                 val g = dual(g0, 1.0)
 
@@ -458,7 +458,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("chain rule through composition") {
-            checkAll(arbDualReal()) { x ->
+            checkAll(arbDualReal) { x ->
                 val input = dual(x, 1.0)
                 val u = dualRing.lift(3.0) * input
                 val result = u * u
@@ -489,7 +489,7 @@ class DualCommutativeRingSpec : FunSpec({
         }
 
         test("very small infinitesimal parts") {
-            checkAll(arbDualReal()) { a ->
+            checkAll(arbDualReal) { a ->
                 val d = dual(a, 1e-10)
                 val d2 = d * d
 

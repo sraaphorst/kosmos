@@ -4,17 +4,31 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.VectorSpace
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.render.Printable
+
+data class DualVector<V : Any>(
+    val primal: V,
+    val tangent: V
+)
+
+fun <V : Any> eqDualVector(eqV: Eq<V>): Eq<DualVector<V>> =
+    Eq { x, y -> eqV(x.primal, y.primal) && eqV(x.tangent, y.tangent) }
+
+fun <V : Any> printableDualVector(prV: Printable<V>): Printable<DualVector<V>> =
+    Printable { v -> "DualVector(primal=${prV(v.primal)}, tangent=${prV(v.tangent)})"}
+
 
 object DualModules {
     /**
-     * Given a base vector space V over a field F and the dual ring Dual(F),
+     * Given a base vector space `V` over a field `F` and the dual ring `Dual(F)`,
      * build the scalar-extension module:
      * ```text
-     * V ⊗_F Dual(F) ≅ V × V
+     * V ⊗_F Dual(F) = V ⊗_F F[ε]/(ε²) ≅ V × V
      * ```
      * with action:
      * ```text
@@ -24,41 +38,56 @@ object DualModules {
      * ```text
      * (x, y) corresponds to x + εy.
      * ```
-     * Thus, this module gives the structure behind the formula:
+     * Thus, this module is the algebraic setting behind dual-number directional
+     * derivatives, where `p + εv` is represented by `(p, v)`.
+     *
+     * For suitable differentiable maps, this supports the familiar expression:
      * ```text
-     * f(p + εv) = f(p) + D_vf(p)
+     * f(p + εv) = f(p) + ε D_v f(p).
      * ```
-     * where `p + εv` is represented by `(p, v)`.
      */
-    fun <F : Any, V : Any> over(
+    fun <F : Any, V : Any> scalarExtension(
         base: VectorSpace<F, V>,
-        dual: DualAlgebras.DualCommutativeRingWithReciprocal<F>,
-    ): RModule<Dual<F>, Pair<V, V>> =
-        object : RModule<Dual<F>, Pair<V, V>> {
+        dual: DualAlgebras.DualCommutativeRing<F>,
+    ): RModule<Dual<F>, DualVector<V>> =
+        object : RModule<Dual<F>, DualVector<V>> {
 
             override val scalars: CommutativeRing<Dual<F>> = dual
 
             private val zeroV = base.add.identity
 
-            override val add: AbelianGroup<Pair<V, V>> = AbelianGroup.of(
-                identity = zeroV to zeroV,
-                op = BinOp(Symbols.PLUS) { (x1, x2), (y1, y2) ->
-                    base.add(x1, y1) to base.add(x2, y2)
+            override val add: AbelianGroup<DualVector<V>> = AbelianGroup.of(
+                identity = DualVector(
+                    primal = zeroV,
+                    tangent = zeroV
+                ),
+                op = BinOp(Symbols.PLUS) { (primal1, tangent1), (primal2, tangent2) ->
+                    DualVector(
+                        primal = base.add(primal1, primal2),
+                        tangent = base.add(tangent1, tangent2)
+                    )
                 },
-                inverse = Endo(Symbols.MINUS) { (x, y) ->
-                    base.add.inverse(x) to base.add.inverse(y)
+                inverse = Endo(Symbols.MINUS) { (primal, tangent) ->
+                    DualVector(
+                        primal = base.add.inverse(primal),
+                        tangent = base.add.inverse(tangent)
+                    )
                 }
             )
 
-            override val leftAction: LeftAction<Dual<F>, Pair<V, V>> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, (x, y) ->
-                val a = s.a
-                val b = s.b
+            override val leftAction: LeftAction<Dual<F>, DualVector<V>> =
+                LeftAction(Symbols.TRIANGLE_RIGHT) { s, (primal, tangent) ->
+                    val a = s.f
+                    val b = s.df
 
-                val ax = base.leftAction(a, x)
-                val ay = base.leftAction(a, y)
-                val bx = base.leftAction(b, x)
+                    val ax = base.leftAction(a, primal)
+                    val ay = base.leftAction(a, tangent)
+                    val bx = base.leftAction(b, primal)
 
-                ax to base.add(ay, bx)
-            }
+                    DualVector(
+                        primal = ax,
+                        tangent = base.add(ay, bx)
+                    )
+                }
         }
 }
