@@ -155,7 +155,7 @@ object ComplexAlgebras {
     )
 
     /**
-     * Canonical monomorphism from the complex numbers into `M_2(ℝ)`, given by:
+     * Canonical monomorphism from the complex numbers into `M₂(ℝ)`, given by:
      * - `1 ↦ [[1, 0], [0, 1]]`
      * - `i ↦ [[0, -1], [1, 0]]`
      *

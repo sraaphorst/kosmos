@@ -75,6 +75,7 @@ object Symbols {
     const val FOURTH_ROOT = "∜"
     const val GREATER_THAN = ">"
     const val GREATER_THAN_EQ = "≥"
+    const val HYPERBOLIC_J = "J"
     const val IFF = "↔"
     const val IFF_BB = "⇔"
     const val IMAGINARY_I = "I"
