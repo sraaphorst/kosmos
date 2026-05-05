@@ -1,6 +1,9 @@
 package org.vorpal.kosmos.hypercomplex.splitcomplex
 
 import io.kotest.core.spec.style.StringSpec
+import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras.diagPlusMinus
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 
@@ -29,5 +32,14 @@ object RealSplitComplexRingSpec : StringSpec({
             eq = SplitComplexAlgebras.eqSplitComplex,
             pr = SplitComplexAlgebras.printableSplitComplexPretty
         ).fullTest().throwIfFailed()
+    }
+
+    "Diagonal basis converts in both directions" {
+        val eq = SplitComplexAlgebras.eqSplitComplex
+        checkAll(ArbSplitComplex.splitComplex) { splitComplex ->
+            val (diagPlus, diagMinus) = splitComplex.diagPlusMinus()
+            val roundTrip = SplitComplexAlgebras.fromDiagonal(diagPlus, diagMinus)
+            check(eq(roundTrip, splitComplex))
+        }
     }
 })
