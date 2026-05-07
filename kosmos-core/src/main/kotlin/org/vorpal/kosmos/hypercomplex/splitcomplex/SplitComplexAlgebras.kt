@@ -270,6 +270,50 @@ object SplitComplexAlgebras {
             splitComplexLeftAction(RealAlgebras.RealField)
     }
 
+    /**
+     * The `e₊` coordinate of this split-complex number in the diagonal / idempotent basis.
+     *
+     * If `z = x + yj`, then:
+     * ```text
+     * z = (x + y)e₊ + (x - y)e₋
+     * ```
+     * so this returns `x + y`.
+     */
+    fun SplitComplex<Real>.diagPlus(): Real =
+        RealAlgebras.RealField.add(re, hy)
+
+    /**
+     * The `e₋` coordinate of this split-complex number in the diagonal / idempotent basis.
+     *
+     * If `z = x + yj`, then:
+     * ```text
+     * z = (x + y)e₊ + (x - y)e₋
+     * ```
+     * so this returns `x - y`.
+     */
+    fun SplitComplex<Real>.diagMinus(): Real =
+        RealAlgebras.RealField.add(re, RealAlgebras.RealField.add.inverse(hy))
+
+    /**
+     * The diagonal / idempotent-basis coordinates `(x + y, x - y)` of `x + yj`.
+     */
+    fun SplitComplex<Real>.diagPlusMinus(): Pair<Real, Real> =
+        diagPlus() to diagMinus()
+
+    /**
+     * Conversion from idempotent basis elements to a SplitComplex<Real> in standard form.
+     */
+    fun fromDiagonal(
+        ePlus: Real,
+        eMinus: Real
+    ): SplitComplex<Real> {
+        val real = RealAlgebras.RealField
+        return splitComplex(
+            re = real.mul(real.add(ePlus, eMinus), real.reciprocal(2.0)),
+            hy = real.mul(real.add(ePlus, real.add.inverse(eMinus)), real.reciprocal(2.0))
+        )
+    }
+
     object SplitComplexRealVectorSpace : FiniteVectorSpace<Real, SplitComplex<Real>> {
         override val scalars = RealAlgebras.RealField
         override val add = RealSplitComplexRing.add
