@@ -8,6 +8,7 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printables
 import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.expectSome
 import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.dualRingWithReciprocal
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.homomorphism.preservesBinaryOpLaw
@@ -72,12 +73,6 @@ class DualCommutativeRingSpec : FunSpec({
 
     fun Dual<Real>.isInvertible(): Boolean =
         dualRing.hasReciprocal(this)
-
-    fun <A : Any> Option<A>.expectSome(): A =
-        when (this) {
-            is Option.Some -> value
-            Option.None -> error("Expected Option.Some, but got None")
-        }
 
     // ── Structural axioms via the law suite ────────────────────────────────
     //

@@ -11,12 +11,12 @@ private val set09 = FiniteSet.ordered(0..9)
 
 class MonoEpiSpec : StringSpec({
     "identity on 0..4 is mono (injective)" {
-        val id = Morphisms.identity<Int>()
+        val id = Morphism.id<Int>()
         isMonoSet(id, set04, Int::equals) shouldBe true
     }
 
     "mono cancellability holds for identity" {
-        val id = Morphisms.identity<Int>()
+        val id = Morphism.id<Int>()
         val pairs = samplePairs(allFunctions(set04, set04), 16)
         MonoEpi.monoLawHolds(
             f = id,
@@ -48,7 +48,12 @@ class MonoEpiSpec : StringSpec({
     }
 })
 
-private fun <X, A> samplePairs(
+private fun <X : Any, A : Any> samplePairs(
     from: Sequence<Morphism<X, A>>,
-    maxPairs: Int): Sequence<Pair<Morphism<X, A>, Morphism<X, A>>> =
-    from.take(maxPairs).flatMap { g1 -> from.take(maxPairs).map { g2 -> g1 to g2 } }
+    maxPairs: Int
+): Sequence<Pair<Morphism<X, A>, Morphism<X, A>>> =
+    from.take(maxPairs)
+        .flatMap { g1 ->
+            from.take(maxPairs)
+                .map { g2 -> g1 to g2 }
+        }
