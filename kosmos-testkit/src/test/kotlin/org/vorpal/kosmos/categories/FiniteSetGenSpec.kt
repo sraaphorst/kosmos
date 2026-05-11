@@ -13,17 +13,17 @@ class FiniteSetGenSpec : StringSpec({
     "identity is mono for arbitrary FiniteSet<Int>" {
         val id = Morphism<Int, Int> { it }
         checkAll(Arb.int().finiteSet(0..6)) { A ->
-            isMonoSet(id, A, Int::equals) shouldBe true
+            isMonoSet(id, A) shouldBe true
         }
     }
 
     "surjectivity to residues holds iff |A| >= k" {
         checkAll(Arb.int().finiteSet(0..12), Arb.int(1..6)) { A, k ->
-            val B = FiniteSet.ordered(0 until k)              // canonical residues 0..k-1
+            val B = FiniteSet.ordered(0 until k)         // canonical residues 0..k-1
             val table = A.toList().mapIndexed { i, a -> a to (i % k) }.toMap()
             val f = Morphism<Int, Int> { a -> table.getValue(a) }  // total on A
 
-            isEpiSet(f, A, B, Int::equals) shouldBe (A.size >= k)
+            isEpiSet(f, A, B) shouldBe (A.size >= k)
         }
     }
 })

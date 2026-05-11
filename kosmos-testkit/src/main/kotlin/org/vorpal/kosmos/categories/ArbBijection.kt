@@ -10,7 +10,7 @@ import kotlin.random.Random
  * Generate an Arb<Bijection<A, B>> between two sets of the same size.
  * Creates a random bijection by pairing elements from domain and codomain.
  */
-fun <A, B> generateArbBijection(
+fun <A : Any, B : Any> generateArbBijection(
     arbA: Arb<A>,
     arbB: Arb<B>,
     lowerBound: Int = 1,
@@ -36,7 +36,7 @@ fun <A, B> generateArbBijection(
  * Generate an Arb<Bijection<A, A>> (permutation) on a finite set.
  * Creates random permutations of elements in the domain.
  */
-fun <A> generateArbEndoBijection(
+fun <A : Any> generateArbEndoBijection(
     arb: Arb<A>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -58,7 +58,7 @@ fun <A> generateArbEndoBijection(
 /**
  * Generate an Arb<Bijection<A, A>> of exact size.
  */
-fun <A> generateArbEndoBijectionOfSize(
+fun <A : Any> generateArbEndoBijectionOfSize(
     arb: Arb<A>,
     exactSize: Int
 ): Arb<Bijection<A, A>> {
@@ -75,7 +75,7 @@ fun <A> generateArbEndoBijectionOfSize(
 /**
  * Generate identity bijections for testing.
  */
-fun <A> generateArbIdentityBijection(
+fun <A : Any> generateArbIdentityBijection(
     arb: Arb<A>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -89,7 +89,7 @@ fun <A> generateArbIdentityBijection(
  * Generate bijections constructed from cycle notation.
  * Useful for testing group properties and cycle decomposition.
  */
-fun <A> generateArbCyclicEndoBijection(
+fun <A: Any> generateArbCyclicEndoBijection(
     arb: Arb<A>,
     minCycleLength: Int = 2,
     maxCycleLength: Int = 8
@@ -108,7 +108,7 @@ fun <A> generateArbCyclicEndoBijection(
 /**
  * Generate bijections with multiple disjoint cycles.
  */
-fun <A> generateArbMultiCycleEndoBijection(
+fun <A : Any> generateArbMultiCycleEndoBijection(
     arb: Arb<A>,
     setSize: Int = 10,
     maxCycles: Int = 3
@@ -145,7 +145,7 @@ fun <A> generateArbMultiCycleEndoBijection(
  * Generate involutions (self-inverse permutations).
  * These are permutations where f(f(x)) = x for all x.
  */
-fun <A> generateArbInvolutionBijection(
+fun <A : Any> generateArbInvolutionBijection(
     arb: Arb<A>,
     lowerBound: Int = 2,
     upperBoundInclusive: Int = 10
@@ -208,15 +208,15 @@ object ArbBijection {
 /**
  * Extension functions for easier usage.
  */
-fun <A> Arb<A>.toEndoBijectionArb(
+fun <A : Any> Arb<A>.toEndoBijectionArb(
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
 ): Arb<Bijection<A, A>> = generateArbEndoBijection(this, lowerBound, upperBoundInclusive)
 
-fun <A> Arb<A>.toPermutationOfSize(exactSize: Int): Arb<Bijection<A, A>> =
+fun <A : Any> Arb<A>.toPermutationOfSize(exactSize: Int): Arb<Bijection<A, A>> =
     generateArbEndoBijectionOfSize(this, exactSize)
 
-fun <A, B> Arb<A>.toBijectionArb(
+fun <A : Any, B : Any> Arb<A>.toBijectionArb(
     arbB: Arb<B>,
     lowerBound: Int = 1,
     upperBoundInclusive: Int = 10
@@ -230,7 +230,7 @@ object BijectionTestingCombinations {
     /**
      * Generate pairs of composable bijections: (A → B) and (B → C).
      */
-    fun <A, B, C> arbComposablePair(
+    fun <A : Any, B : Any, C : Any> arbComposablePair(
         arbA: Arb<A>,
         arbB: Arb<B>,
         arbC: Arb<C>,
@@ -254,7 +254,7 @@ object BijectionTestingCombinations {
     /**
      * Generate pairs of permutations for testing composition.
      */
-    fun <A> arbEndoBijectionPair(
+    fun <A : Any> arbEndoBijectionPair(
         arb: Arb<A>,
         size: Int = 5
     ): Arb<Pair<Bijection<A, A>, Bijection<A, A>>> {
@@ -272,7 +272,7 @@ object BijectionTestingCombinations {
     /**
      * Generate a bijection and an element from its domain.
      */
-    fun <A> arbEndoBijectionWithElement(
+    fun <A : Any> arbEndoBijectionWithElement(
         arb: Arb<A>,
         lowerBound: Int = 2,
         upperBoundInclusive: Int = 10
@@ -284,29 +284,3 @@ object BijectionTestingCombinations {
         }
     }
 }
-
-// Usage examples in comments:
-/*
-// Basic usage:
-val permArb = generateArbEndoBijection(Arb.int(), 3, 8)
-val bijArb = Arb.int().toBijectionArb(Arb.string(), 2, 6)
-
-// For property testing:
-checkAll(permArb) { perm ->
-    perm.domain.all { a ->
-        perm.backward.apply(perm.forward.apply(a)) == a
-    }
-}
-
-// Testing composition:
-checkAll(BijectionTestingCombinations.arbEndoBijectionPair(Arb.int(), 5)) { (f, g) ->
-    val composed = f then g
-    // Test properties of composed bijections
-}
-
-// Testing orbits:
-checkAll(BijectionTestingCombinations.arbBijectionWithElement(Arb.int())) { (bij, elem) ->
-    val orbit = bij.orbit(elem)
-    orbit.all { it in bij.domain }
-}
-*/
