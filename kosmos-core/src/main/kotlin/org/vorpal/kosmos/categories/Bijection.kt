@@ -5,21 +5,21 @@ import org.vorpal.kosmos.core.finiteset.FiniteSet
 /**
  * A bijection between finite sets: an isomorphism with domain / codomain witnesses.
  */
-interface Bijection<A, B> : Isomorphism<A, B> {
+interface Bijection<A : Any, B : Any> : Isomorphism<A, B> {
     val domain: FiniteSet<A>
     val codomain: FiniteSet<B>
 
     /**
      * Compose with another bijection, preserving the Bijection type.
      */
-    infix fun <C> andThen(g: Bijection<B, C>): Bijection<A, C> =
+    infix fun <C : Any> andThen(g: Bijection<B, C>): Bijection<A, C> =
         of(
             domain = this.domain,
             codomain = g.codomain,
             forward = domain.associateWith { a -> g.apply(this.apply(a)) }
         )
 
-    infix fun <C> compose(g: Bijection<C, A>): Bijection<C, B> =
+    infix fun <C : Any> compose(g: Bijection<C, A>): Bijection<C, B> =
         g andThen this
 
     /**
@@ -66,7 +66,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
          *  - surjective: image == codomain
          *  - injective: image size == domain size
          */
-        fun <A, B> of(
+        fun <A : Any, B : Any> of(
             domain: FiniteSet<A>,
             codomain: FiniteSet<B>,
             forward: Map<A, B>
@@ -102,13 +102,13 @@ interface Bijection<A, B> : Isomorphism<A, B> {
         /**
          * Identity bijection on a set.
          */
-        fun <A> id(base: FiniteSet<A>): Bijection<A, A> =
+        fun <A : Any> id(base: FiniteSet<A>): Bijection<A, A> =
             of(base, base, base.associateWith { it })
 
         /**
          * Convenience for endomorphic bijections, i.e. permutations at the set level.
          */
-        fun <A> endo(
+        fun <A : Any> endo(
             base: FiniteSet<A>,
             forward: Map<A, A>
         ): Bijection<A, A> = of(base, base, forward)
@@ -116,7 +116,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
         /**
          * Tiny DSL for readability on small sets.
          */
-        fun <A, B> build(
+        fun <A : Any, B : Any> build(
             domain: FiniteSet<A>,
             codomain: FiniteSet<B>,
             builder: MutableMap<A, B>.() -> Unit
@@ -129,7 +129,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
          * Create a bijection from two equal-length ordered finite sets,
          * mapping elements by position.
          */
-        fun <A, B> fromOrdering(
+        fun <A : Any, B : Any> fromOrdering(
             domain: FiniteSet.Ordered<A>,
             codomain: FiniteSet.Ordered<B>
         ): Bijection<A, B> {
@@ -144,7 +144,7 @@ interface Bijection<A, B> : Isomorphism<A, B> {
          * Create a permutation (endomorphic bijection) from a list of cycles.
          * Each cycle is a list [a₁, a₂, ..., aₙ] meaning a₁ → a₂ → ... → aₙ → a₁.
          */
-        fun <A> fromCycles(base: FiniteSet<A>, vararg cycles: List<A>): Bijection<A, A> {
+        fun <A : Any> fromCycles(base: FiniteSet<A>, vararg cycles: List<A>): Bijection<A, A> {
             val mapping = base.associateWith { it }.toMutableMap()
 
             cycles.forEach { cycle ->
@@ -172,17 +172,17 @@ interface Bijection<A, B> : Isomorphism<A, B> {
 /**
  * Convert to Automorphism if this is an endomorphism.
  */
-fun <A> Bijection<A, A>.toAutomorphism(): Automorphism<A> =
+fun <A : Any> Bijection<A, A>.toAutomorphism(): Automorphism<A> =
     Automorphism.of(
         forward = { a -> apply(a) },
         backward = { a -> backward.apply(a) }
     )
 
 /**
- * Extension: Compute the orbit of an element under repeated application.
+ * Extension: Compute the orbit of an element under its repeated application.
  * Returns the set of all elements reachable by repeatedly applying this bijection.
  */
-fun <A> Bijection<A, A>.orbit(element: A): FiniteSet<A> {
+fun <A : Any> Bijection<A, A>.orbit(element: A): FiniteSet<A> {
     require(element in domain) { "Element must be in domain" }
 
     val seen = mutableSetOf<A>()
@@ -199,19 +199,19 @@ fun <A> Bijection<A, A>.orbit(element: A): FiniteSet<A> {
 /**
  * Extension: Compute the order (period) of an element under this permutation.
  */
-fun <A> Bijection<A, A>.orderOf(element: A): Int =
+fun <A : Any> Bijection<A, A>.orderOf(element: A): Int =
     orbit(element).size
 
 /**
  * Extension: Check if this permutation is the identity.
  */
-fun <A> Bijection<A, A>.isIdentity(): Boolean =
+fun <A : Any> Bijection<A, A>.isIdentity(): Boolean =
     domain.all { apply(it) == it }
 
 /**
  * Extension: Get all cycles in a permutation as a cycle decomposition.
  */
-fun <A> Bijection<A, A>.cycleDecomposition(): List<List<A>> {
+fun <A : Any> Bijection<A, A>.cycleDecomposition(): List<List<A>> {
     val unvisited = domain.toSet().toMutableSet()
     val cycles = mutableListOf<List<A>>()
 
