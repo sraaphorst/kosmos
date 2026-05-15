@@ -11,8 +11,9 @@ import org.vorpal.kosmos.laws.TestingLaw
 
 /**
  * Associativity Law
- *
- *    a(bc) == (ab)c
+ * ```text
+ * a(bc) == (ab)c
+ * ```
  */
 class AssociativityLaw<A : Any>(
     private val op: BinOp<A>,

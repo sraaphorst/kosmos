@@ -6,12 +6,14 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
+import org.vorpal.kosmos.algebra.structures.Heap
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
@@ -22,6 +24,7 @@ import java.math.BigInteger
 /**
  * Main structures:
  * - [IntegerCommutativeRing]: the integers.
+ * - [IntegerHeap]: the integers as a heap.
  *
  * Homomorphisms:
  * - [ZToQMonomorphism]: from integers to rationals.
@@ -62,6 +65,10 @@ object IntegerAlgebras {
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
 
         override fun fromBigInt(n: BigInteger): BigInteger = n
+    }
+
+    object IntegerHeap: Heap<BigInteger> {
+        override val op: TernOp<BigInteger> = TernOp { x, y, z -> x - y + z }
     }
 
     object SignedInteger : LinearCombinationPrintable.SignedOps<BigInteger> {
