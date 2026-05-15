@@ -31,7 +31,7 @@ class BiunitaryLaw<H : Any>(
             val rhs = op(k, h, h)
 
             withClue(failureMessage(h, k, lhs, rhs)) {
-                eq(lhs, k) && eq(rhs, k)
+                check(eq(lhs, k) && eq(rhs, k))
             }
         }
     }
