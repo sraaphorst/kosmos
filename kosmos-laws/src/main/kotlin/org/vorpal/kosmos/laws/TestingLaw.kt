@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.laws
 
 import io.kotest.core.Tuple4
+import io.kotest.core.Tuple5
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.pair
@@ -39,6 +40,12 @@ fun interface TestingLaw {
          */
         fun <A> arbQuadruple(arb: Arb<A>): Arb<Tuple4<A, A, A, A>> =
             Arb.bind(arb, arb, arb, arb) { a, b, c, d -> Tuple4(a, b, c, d) }
+
+        /**
+         * Quintuples will be necessary for heap testing.
+         */
+        fun <A> arbQuintuple(arb: Arb<A>): Arb<Tuple5<A, A, A, A, A>> =
+            Arb.bind(arb, arb, arb, arb, arb) { a, b, c, d, e -> Tuple5(a, b, c, d, e) }
     }
 }
 
