@@ -3,10 +3,10 @@ package org.vorpal.kosmos.algebra.structures.instances
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.AbelianHeap
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.HasNormSq
-import org.vorpal.kosmos.algebra.structures.Heap
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Identity
@@ -24,7 +24,7 @@ import java.math.BigInteger
 /**
  * Main structures:
  * - [IntegerCommutativeRing]: the integers.
- * - [IntegerHeap]: the integers as a heap.
+ * - [IntegerAbelianHeap]: the integers as an abelian heap.
  *
  * Homomorphisms:
  * - [ZToQMonomorphism]: from integers to rationals.
@@ -67,7 +67,7 @@ object IntegerAlgebras {
         override fun fromBigInt(n: BigInteger): BigInteger = n
     }
 
-    object IntegerHeap: Heap<BigInteger> {
+    object IntegerAbelianHeap: AbelianHeap<BigInteger> {
         override val op: TernOp<BigInteger> = TernOp { x, y, z -> x - y + z }
     }
 
