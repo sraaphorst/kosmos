@@ -2,7 +2,7 @@ package org.vorpal.kosmos.algebra.products
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.core.ops.pairEndo
-import org.vorpal.kosmos.core.ops.pairOp
+import org.vorpal.kosmos.core.ops.pairBinOp
 
 object AbelianGroups {
     fun <L : Any, R : Any> product(
@@ -10,7 +10,7 @@ object AbelianGroups {
         right: AbelianGroup<R>
     ): AbelianGroup<Pair<L, R>> = object : AbelianGroup<Pair<L, R>> {
         override val identity = Pair(left.identity, right.identity)
-        override val op = pairOp(left.op, right.op)
+        override val op = pairBinOp(left.op, right.op)
         override val inverse = pairEndo(left.inverse, right.inverse)
     }
 

@@ -35,3 +35,14 @@ fun <A : Any> TernOp(
 
 fun <A : Any> TernOp(apply: (A, A, A) -> A): TernOp<A> =
     TernOp(Symbols.DOT, apply)
+
+fun <L : Any, R : Any> pairTernOp(
+    leftOp: TernOp<L>,
+    rightOp: TernOp<R>
+): TernOp<Pair<L, R>> =
+    TernOp("${leftOp.symbol}${Symbols.TIMES}${rightOp.symbol}") { x, y, z ->
+        Pair(
+            leftOp(x.first, y.first, z.first),
+            rightOp(x.second, y.second, z.second)
+        )
+    }

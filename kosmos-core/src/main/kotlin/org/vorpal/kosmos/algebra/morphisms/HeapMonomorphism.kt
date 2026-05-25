@@ -1,0 +1,39 @@
+package org.vorpal.kosmos.algebra.morphisms
+
+import org.vorpal.kosmos.algebra.structures.Heap
+import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.UnaryOp
+
+interface HeapMonomorphism<A : Any, B : Any> : HeapHomomorphism<A, B>, AlgebraicMonomorphism<A, B> {
+    infix fun <C : Any> andThen(other: HeapMonomorphism<B, C>): HeapMonomorphism<A, C> =
+        of(
+            domain = domain,
+            codomain = other.codomain,
+            map = map andThen other.map
+        )
+
+    infix fun <C : Any> compose(other: HeapMonomorphism<C, A>): HeapMonomorphism<C, B> =
+        other andThen this
+
+    companion object {
+        fun <A : Any, B : Any> of(
+            domain: Heap<A>,
+            codomain: Heap<B>,
+            map: UnaryOp<A, B>
+        ): HeapMonomorphism<A, B> = object : HeapMonomorphism<A, B> {
+            override val domain = domain
+            override val codomain = codomain
+            override val map = map
+        }
+
+        fun <A : Any, B : Any> of(
+            domain: Heap<A>,
+            codomain: Heap<B>,
+            map: (A) -> B
+        ): HeapMonomorphism<A, B> = object : HeapMonomorphism<A, B> {
+            override val domain = domain
+            override val codomain = codomain
+            override val map = UnaryOp(Symbols.PHI,map)
+        }
+    }
+}
