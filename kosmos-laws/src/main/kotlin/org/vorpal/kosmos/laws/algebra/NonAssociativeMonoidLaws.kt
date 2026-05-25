@@ -11,7 +11,7 @@ import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [NonAssociativeMonoid] laws:
- * - [NonAssociativeSemigroupLaws]
+ * - [MagmaLaws]
  * - [IdentityLaw]
  */
 class NonAssociativeMonoidLaws<A : Any>(
@@ -24,7 +24,7 @@ class NonAssociativeMonoidLaws<A : Any>(
     override val name = suiteName("NonAssociativeMonoid", monoid.op.symbol)
 
     override fun laws(): List<TestingLaw> =
-        NonAssociativeSemigroupLaws(monoid, arb, pr).laws() + listOf(
+        MagmaLaws(monoid, arb, pr).laws() + listOf(
             IdentityLaw(monoid.op, monoid.identity, arb, eq, pr)
         )
 }

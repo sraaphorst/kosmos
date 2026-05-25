@@ -8,7 +8,7 @@ import org.vorpal.kosmos.core.ops.BinOp
  * Thus, we enforce the law: `op(op(x, y), z) == op(x, op(y, z))`.
  *
  * No new members added. */
-interface Semigroup<A : Any> : Magma<A>, NonAssociativeSemigroup<A> {
+interface Semigroup<A : Any> : Magma<A> {
     companion object {
         fun <A: Any> of(
             op: BinOp<A>
