@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.algebra.products
 
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
-import org.vorpal.kosmos.core.ops.pairOp
+import org.vorpal.kosmos.core.ops.pairBinOp
 
 object CommutativeMonoids {
     fun <L : Any, R : Any> product(
@@ -9,7 +9,7 @@ object CommutativeMonoids {
         right: CommutativeMonoid<R>
     ): CommutativeMonoid<Pair<L, R>> = object : CommutativeMonoid<Pair<L, R>> {
         override val identity = Pair(left.identity, right.identity)
-        override val op = pairOp(left.op, right.op)
+        override val op = pairBinOp(left.op, right.op)
     }
 
     fun <A : Any> double(
