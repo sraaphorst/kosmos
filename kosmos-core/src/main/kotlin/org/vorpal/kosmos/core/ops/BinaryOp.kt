@@ -108,7 +108,7 @@ fun <A : Any> BinOp(combine: (A, A) -> A): BinOp<A> =
 /**
  * Combine two [BinOp] on types [L] and [R] to create a joint [BinOp] on [Pair<L, R>].
  */
-fun <L : Any, R : Any> pairOp(
+fun <L : Any, R : Any> pairBinOp(
     leftOp: BinOp<L>,
     rightOp: BinOp<R>
 ): BinOp<Pair<L, R>> =

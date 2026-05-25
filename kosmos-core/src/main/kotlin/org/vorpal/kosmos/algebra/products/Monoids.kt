@@ -4,7 +4,7 @@ import org.vorpal.kosmos.algebra.morphisms.MonoidHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.MonoidMonomorphism
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.ops.UnaryOp
-import org.vorpal.kosmos.core.ops.pairOp
+import org.vorpal.kosmos.core.ops.pairBinOp
 
 object Monoids {
     fun <L : Any, R : Any> product(
@@ -12,7 +12,7 @@ object Monoids {
         right: Monoid<R>
     ): Monoid<Pair<L, R>> = object : Monoid<Pair<L, R>> {
         override val identity: Pair<L, R> = left.identity to right.identity
-        override val op = pairOp(left.op, right.op)
+        override val op = pairBinOp(left.op, right.op)
     }
 
     fun <L : Any, R : Any> leftProjection(
