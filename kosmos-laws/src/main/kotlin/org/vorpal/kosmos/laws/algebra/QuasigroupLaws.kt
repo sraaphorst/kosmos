@@ -14,7 +14,7 @@ import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [Quasigroup] laws:
- * - [NonAssociativeSemigroupLaws]
+ * - [MagmaLaws]
  * - [TotalityLaw] on left division
  * - [TotalityLaw] on right division
  * - [LeftDivisionLaw] on left division
@@ -32,7 +32,7 @@ class QuasigroupLaws<A : Any>(
         quasigroup.op.symbol, quasigroup.leftDiv.symbol, quasigroup.rightDiv.symbol)
 
     override fun laws(): List<TestingLaw> =
-        NonAssociativeSemigroupLaws(quasigroup, arb, pr).laws() +
+        MagmaLaws(quasigroup, arb, pr).laws() +
             listOf(
                 TotalityLaw(quasigroup.leftDiv, arb, pr),
                 TotalityLaw(quasigroup.rightDiv, arb, pr),

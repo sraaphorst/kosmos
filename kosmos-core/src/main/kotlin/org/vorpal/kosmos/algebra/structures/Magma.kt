@@ -12,4 +12,12 @@ interface Magma<A : Any> {
 
     operator fun invoke(a1: A, a2: A): A =
         op(a1, a2)
+
+    companion object {
+        fun <A: Any> of(
+            op: BinOp<A>
+        ): Magma<A> = object : Magma<A> {
+            override val op = op
+        }
+    }
 }
