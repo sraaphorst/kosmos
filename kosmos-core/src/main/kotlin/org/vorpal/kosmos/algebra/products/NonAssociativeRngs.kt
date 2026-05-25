@@ -3,8 +3,8 @@ package org.vorpal.kosmos.algebra.products
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRngHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRngMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.Magma
 import org.vorpal.kosmos.algebra.structures.NonAssociativeRng
-import org.vorpal.kosmos.algebra.structures.NonAssociativeSemigroup
 import org.vorpal.kosmos.core.ops.UnaryOp
 
 object NonAssociativeRngs {
@@ -14,7 +14,7 @@ object NonAssociativeRngs {
     ): NonAssociativeRng<Pair<L, R>> = object : NonAssociativeRng<Pair<L, R>> {
         override val zero = Pair(left.zero, right.zero)
         override val add: AbelianGroup<Pair<L, R>> = AbelianGroups.product(left.add, right.add)
-        override val mul: NonAssociativeSemigroup<Pair<L, R>> = NonAssociativeSemigroups.product(left.mul, right.mul)
+        override val mul: Magma<Pair<L, R>> = Magmas.product(left.mul, right.mul)
     }
 
     fun <L : Any, R : Any> leftProjection(

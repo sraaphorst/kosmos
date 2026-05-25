@@ -3,10 +3,10 @@ package org.vorpal.kosmos.algebra.structures
 import org.vorpal.kosmos.core.ops.BinOp
 
 /**
- * A NonAssociativeMonoid is an extension of a [NonAssociativeSemigroup] but with
+ * A NonAssociativeMonoid is an extension of a [Magma] but with
  * an identity element.
  */
-interface NonAssociativeMonoid<A : Any> : NonAssociativeSemigroup<A> {
+interface NonAssociativeMonoid<A : Any> : Magma<A> {
     val identity: A
 
     companion object {

@@ -11,7 +11,7 @@ import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [Semigroup] laws:
- * - [NonAssociativeSemigroupLaws]
+ * - [MagmaLaws]
  * - [AssociativityLaw]
  */
 class SemigroupLaws<A : Any>(
@@ -24,6 +24,6 @@ class SemigroupLaws<A : Any>(
     override val name = suiteName("Semigroup", semigroup.op.symbol)
 
     override fun laws(): List<TestingLaw> =
-        NonAssociativeSemigroupLaws(semigroup, arb, pr).laws() +
+        MagmaLaws(semigroup, arb, pr).laws() +
                 listOf(AssociativityLaw(semigroup.op, arb, eq, pr))
 }
