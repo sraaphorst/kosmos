@@ -5,6 +5,7 @@ import io.kotest.property.Arb
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
 
@@ -23,13 +24,13 @@ fun <A : Any, B : Any> preservesBinaryOpLaw(
     eqB: Eq<B> = Eq.default(),
     prA: Printable<A> = Printable.default(),
     prB: Printable<B> = Printable.default(),
-    label: String = "homomorphism: preserves op"
+    label: String = "homomorphism: preserves binary op"
 ): TestingLaw {
-    val pairArb = TestingLaw.arbPair(arbA)
+    val arbPair = TestingLaw.arbPair(arbA)
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
     return TestingLaw.named("$label ($arrow)") {
-        checkAll(pairArb) { (a, b) ->
+        checkAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(a), hom(b))
 
@@ -57,7 +58,7 @@ fun <A : Any> preservesBinaryOpLaw(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
-    label: String = "endomorphism: preserves op"
+    label: String = "endomorphism: preserves binary op"
 ) = preservesBinaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
 
 /**
@@ -75,13 +76,13 @@ fun <A : Any, B : Any> antiPreservesBinaryOpLaw(
     eqB: Eq<B> = Eq.default(),
     prA: Printable<A> = Printable.default(),
     prB: Printable<B> = Printable.default(),
-    label: String = "homomorphism: anti-preserves op"
+    label: String = "homomorphism: anti-preserves binary op"
 ): TestingLaw {
-    val pairArb = TestingLaw.arbPair(arbA)
+    val arbPair = TestingLaw.arbPair(arbA)
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
     return TestingLaw.named("$label ($arrow)") {
-        checkAll(pairArb) { (a, b) ->
+        checkAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(b), hom(a))
 
@@ -109,7 +110,7 @@ fun <A : Any> antiPreservesBinaryOpLaw(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
-    label: String = "endomorphism: anti-preserves op"
+    label: String = "endomorphism: anti-preserves binary op"
 ) = antiPreservesBinaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
 
 /**
@@ -167,10 +168,10 @@ fun <A : Any, B : Any> injectivityLaw(
     prB: Printable<B> = Printable.default(),
     label: String = "monomorphism: injectivity"
 ): TestingLaw {
-    val pairArb = TestingLaw.arbPair(arbA)
+    val arbPair = TestingLaw.arbPair(arbA)
 
     return TestingLaw.named(label) {
-        checkAll(pairArb) { (a, b) ->
+        checkAll(arbPair) { (a, b) ->
             val fa = hom(a)
             val fb = hom(b)
 
@@ -203,3 +204,56 @@ fun <A : Any> injectivityLaw(
     label: String = "injective endomorphism"
 ): TestingLaw =
     injectivityLaw(hom, arb, eq, eq, pr, pr, label)
+
+/**
+ * Op preservation for ternary operations:
+ * ```text
+ * f([x, y, z]) = [f(x), f(y), f(z)]
+ * ```
+ */
+fun <A : Any, B : Any> preservesTernaryOpLaw(
+    domainOp: TernOp<A>,
+    codomainOp: TernOp<B>,
+    hom: (A) -> B,
+    arbA: Arb<A>,
+    eqB: Eq<B> = Eq.default(),
+    prA: Printable<A> = Printable.default(),
+    prB: Printable<B> = Printable.default(),
+    label: String = "homomorphism: preserves ternary op"
+): TestingLaw {
+    val arbTriple = TestingLaw.arbTriple(arbA)
+    val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
+
+    return TestingLaw.named("$label ($arrow)") {
+        checkAll(arbTriple) { (x, y, z) ->
+            val left = hom(domainOp(x, y, z))
+            val right = codomainOp(hom(x), hom(y), hom(z))
+
+            withClue(
+                buildString {
+                    val sx = prA(x)
+                    val sy = prA(y)
+                    val sz = prA(z)
+                    appendLine("Op preservation failed:")
+                    appendLine("f([$sx, $sy, $sz]) = ${prB(left)}")
+                    appendLine("[f($sx), f($sy), f($sz)] = ${prB(right)}")
+                }
+            ) {
+                check(eqB(left, right))
+            }
+        }
+    }
+}
+
+/**
+ * Simplified version for when the domain and codomain are the same.
+ */
+fun <A : Any> preservesTernaryOpLaw(
+    domainOp: TernOp<A>,
+    hom: (A) -> A,
+    arb: Arb<A>,
+    eq: Eq<A> = Eq.default(),
+    pr: Printable<A> = Printable.default(),
+    label: String = "endomorphism: preserves binary op"
+) = preservesTernaryOpLaw(domainOp, domainOp, hom, arb, eq, pr, pr, label)
+

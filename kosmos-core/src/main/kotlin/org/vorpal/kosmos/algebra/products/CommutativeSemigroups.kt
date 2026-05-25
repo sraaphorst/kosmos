@@ -1,14 +1,14 @@
 package org.vorpal.kosmos.algebra.products
 
 import org.vorpal.kosmos.algebra.structures.CommutativeSemigroup
-import org.vorpal.kosmos.core.ops.pairOp
+import org.vorpal.kosmos.core.ops.pairBinOp
 
 object CommutativeSemigroups {
     fun <L : Any, R : Any> product(
         left: CommutativeSemigroup<L>,
         right: CommutativeSemigroup<R>
     ): CommutativeSemigroup<Pair<L, R>> = object : CommutativeSemigroup<Pair<L, R>> {
-        override val op = pairOp(left.op, right.op)
+        override val op = pairBinOp(left.op, right.op)
     }
 
     fun <A : Any> double(

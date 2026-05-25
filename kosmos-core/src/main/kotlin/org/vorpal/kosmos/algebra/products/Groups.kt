@@ -5,7 +5,7 @@ import org.vorpal.kosmos.algebra.morphisms.GroupMonomorphism
 import org.vorpal.kosmos.algebra.structures.Group
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.ops.pairEndo
-import org.vorpal.kosmos.core.ops.pairOp
+import org.vorpal.kosmos.core.ops.pairBinOp
 
 object Groups {
     fun <L : Any, R : Any> product(
@@ -13,7 +13,7 @@ object Groups {
         right: Group<R>
     ): Group<Pair<L, R>> = object : Group<Pair<L, R>> {
         override val identity = Pair(left.identity, right.identity)
-        override val op = pairOp(left.op, right.op)
+        override val op = pairBinOp(left.op, right.op)
         override val inverse = pairEndo(left.inverse, right.inverse)
     }
 
