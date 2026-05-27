@@ -9,7 +9,11 @@ interface NonAssociativeTrussHomomorphism<A : Any, B : Any> : AlgebraicHomomorph
     val codomain: NonAssociativeTruss<B>
 
     infix fun <C : Any> andThen(other: NonAssociativeTrussHomomorphism<B, C>): NonAssociativeTrussHomomorphism<A, C> =
-        of(domain, other.codomain, map andThen other.map)
+        of(
+            domain = domain,
+            codomain = other.codomain,
+            map = map andThen other.map
+        )
 
     infix fun <C : Any> compose(other: NonAssociativeTrussHomomorphism<C, A>): NonAssociativeTrussHomomorphism<C, B> =
         other andThen this

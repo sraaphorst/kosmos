@@ -7,14 +7,14 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 interface RingMonomorphism<A : Any, B: Any> :
     RingHomomorphism<A, B>, NonAssociativeRingMonomorphism<A, B>, SemiringMonomorphism<A, B>, RngMonomorphism<A, B> {
 
-    infix fun <C: Any> andThen(other: RingMonomorphism<B, C>): RingMonomorphism<A, C> =
+    infix fun <C : Any> andThen(other: RingMonomorphism<B, C>): RingMonomorphism<A, C> =
         of(
             domain = domain,
             codomain = other.codomain,
             map = map andThen other.map
         )
 
-    infix fun <C: Any> compose(other: RingMonomorphism<C, A>): RingMonomorphism<C, B> =
+    infix fun <C : Any> compose(other: RingMonomorphism<C, A>): RingMonomorphism<C, B> =
         other andThen this
 
     companion object {
