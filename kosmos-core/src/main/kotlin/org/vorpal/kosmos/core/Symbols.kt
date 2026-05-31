@@ -49,6 +49,7 @@ object Symbols {
     const val CUBE_ROOT = "∛"
     const val CUBED = "³"
     const val DAGGER = "†"
+    const val DELTA = "δ"
     const val DIAMOND = "⋄"
     const val DIAMOND_BIG = "◇"
     const val DIVISION = "÷"
@@ -110,6 +111,7 @@ object Symbols {
     const val O_TIMES = "⊗"
     const val O_TIMES_BIG = "⨂"
     const val OMEGA = "ω"
+    const val OMEGA_UPPER = "Ω"
     const val ONE = "1"
     const val OPEN_CIRCLE = "∘"
     const val PARTIAL = "∂"
@@ -151,6 +153,8 @@ object Symbols {
     const val SUM = "∑"
     const val TENSOR = "⊗"
     const val THEREFORE = "∴"
+    const val THETA = "θ"
+    const val THETA_SCRIPT= "ϑ"
     const val THREE_SUB = "₃"
     const val TIMES = "×"
     const val TOMBSTONE = "▯"
@@ -175,7 +179,6 @@ object Symbols {
     const val DIV_RIGHT = SLASH
     const val HADAMARD = O_DOT
     const val INJECTION = MAPS_INTO
-    const val KRONECKER = O_TIMES
     const val LEXICOGRAPHIC = BIG_DOT
     const val PROJECTION = PI
     const val SET_MINUS = BACKSLASH
