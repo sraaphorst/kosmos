@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algorithms.combinatorial
+package org.vorpal.kosmos.combinatorics.algorithms
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -10,13 +10,13 @@ import io.kotest.matchers.ints.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.*
+import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.combinatorics.Factorial
-import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.combinatorics.Permutation
-import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 import org.vorpal.kosmos.combinatorics.generateArbPermutationOfSize
+import org.vorpal.kosmos.core.finiteset.FiniteSet
+import org.vorpal.kosmos.core.generateArbOrderedFiniteSetOfSize
 import java.math.BigInteger
 import java.util.Random
 

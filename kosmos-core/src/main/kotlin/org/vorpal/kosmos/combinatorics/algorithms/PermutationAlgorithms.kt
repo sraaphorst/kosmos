@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.algorithms.combinatorial
+package org.vorpal.kosmos.combinatorics.algorithms
 
 import org.vorpal.kosmos.combinatorics.Factorial
 import org.vorpal.kosmos.core.finiteset.FiniteSet

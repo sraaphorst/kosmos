@@ -413,18 +413,3 @@ inline fun <A, B> FiniteSet<A>.bind(transform: (A) -> FiniteSet<B>): FiniteSet<B
     is FiniteSet.Unordered ->
         FiniteSet.unordered( backing.flatMap { transform(it).backing })
 }
-
-// Add to FiniteSet
-fun <A> FiniteSet<A>.powerSet(): Set<FiniteSet.Unordered<A>> {
-    val backing = this.backing
-    return backing.subsets().map { FiniteSet.unordered(it) }.toSet()
-}
-
-// Helper to generate all subsets
-private fun <A> Set<A>.subsets(): Set<Set<A>> {
-    if (isEmpty()) return setOf(emptySet())
-    val elem = first()
-    val rest = this - elem
-    val restSubsets = rest.subsets()
-    return restSubsets + restSubsets.map { it + elem }
-}
