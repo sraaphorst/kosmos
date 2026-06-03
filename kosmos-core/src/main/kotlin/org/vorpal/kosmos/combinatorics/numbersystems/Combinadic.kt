@@ -32,10 +32,13 @@ data class Combinadic internal constructor(
     /**
      * Decode to the colex rank: Σ C(indices[i], i+1).
      */
-    fun decode(): BigInteger =
-        indices.withIndex().fold(BigInteger.ZERO) { acc, (idx, a) ->
-            acc + Binomial(a, idx + 1)
+    fun decode(): BigInteger {
+        var acc = BigInteger.ZERO
+        for (i in indices.indices) {
+            acc += Binomial(indices[i], i + 1)
         }
+        return acc
+    }
 
     override fun toString(): String =
         if (indices.isEmpty()) "{}"
