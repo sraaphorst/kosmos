@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -12,6 +13,8 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
+import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 
 object DualAlgebras {
@@ -181,6 +184,25 @@ object DualAlgebras {
             f = f,
             x = x,
             isZero = { RealAlgebras.eqRealApprox(it, 0.0) }
+        )
+
+    /**
+     * The matrix embedding into M₂(F).
+     */
+    fun <F : Any> dualToRank2MatrixMonomorphism(
+        field: Field<F>
+    ): RingMonomorphism<Dual<F>, DenseMat<F>> =
+        RingMonomorphism.of(
+            domain = field.dualRing(),
+            codomain = DenseMatAlgebras.DenseMatRing(field, 2),
+            map = { (a, b) ->
+                DenseMat.ofRows(
+                    listOf(
+                        listOf(a, b),
+                        listOf(field.zero, a)
+                    )
+                )
+            }
         )
 
     fun <A : Any> dualEq(
