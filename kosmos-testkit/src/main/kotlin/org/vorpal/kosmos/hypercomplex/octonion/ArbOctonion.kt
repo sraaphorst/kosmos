@@ -10,7 +10,7 @@ object ArbOctonion {
     private val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal
 
     val octonion: Arb<Octonion> =
-        Arb.Companion.bind(
+        Arb.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -30,8 +30,8 @@ object ArbOctonion {
         }
 
     val octonionTriple: Arb<Triple<Octonion, Octonion, Octonion>> =
-        Arb.Companion.triple(octonion, octonion, octonion)
+        Arb.triple(octonion, octonion, octonion)
 
     val reciprocalTriple: Arb<Triple<Octonion, Octonion, Octonion>> =
-        Arb.Companion.triple(reciprocalSafeOctonion, reciprocalSafeOctonion, reciprocalSafeOctonion)
+        Arb.triple(reciprocalSafeOctonion, reciprocalSafeOctonion, reciprocalSafeOctonion)
 }
