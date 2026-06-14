@@ -85,7 +85,10 @@ class RightMoufangLaw<A: Any>(
 /**
  * Middle Moufang:
  *
- *     (x ⋆ y) ⋆ (z ⋆ x) = x ⋆ (y ⋆ (z ⋆ x))
+ *     (x ⋆ y) ⋆ (z ⋆ x) = x ⋆ ((y ⋆ z) ⋆ x)
+ *
+ * The right-hand side is the flexible expression `x ⋆ (y ⋆ z) ⋆ x`; since alternative algebras are
+ * flexible, `x ⋆ ((y ⋆ z) ⋆ x) = (x ⋆ (y ⋆ z)) ⋆ x`, so the parenthesization chosen here is immaterial.
  */
 class MiddleMoufangLaw<A: Any>(
     override val op: BinOp<A>,
@@ -98,8 +101,9 @@ class MiddleMoufangLaw<A: Any>(
     override suspend fun test() {
         checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
             val zx = op(z, x)
+            val yz = op(y, z)
             val lhs = op(op(x, y), zx)
-            val rhs = op(x, op(y, zx))
+            val rhs = op(x, op(yz, x))
 
             withClue(failMsg("middle", x, y, z, lhs, rhs)) {
                 check(eq(lhs, rhs))

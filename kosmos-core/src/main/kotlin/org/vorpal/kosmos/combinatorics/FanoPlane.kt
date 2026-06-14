@@ -27,6 +27,9 @@ object FanoPlane : FiniteProjectivePlane<Int> {
             val s = FiniteSet.of(a, b, c)
             s.cartesianProduct(s).mapNotNull { if (it.first == it.second) null else it }
         }
+
+        fun toFiniteSet() = FiniteSet.unordered(a, b, c)
+        fun toList() = listOf(a, b, c)
     }
 
     val lines: FiniteSet<Line> = FiniteSet.of(

@@ -12,7 +12,7 @@ object ArbQuaternion {
      * Generic quaternion with reasonably small components.
      */
     val quaternion: Arb<Quaternion> =
-        Arb.Companion.bind(
+        Arb.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -31,8 +31,8 @@ object ArbQuaternion {
         }
 
     val quaternionTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
-        Arb.Companion.triple(quaternion, quaternion, quaternion)
+        Arb.triple(quaternion, quaternion, quaternion)
 
     val reciprocalTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
-        Arb.Companion.triple(reciprocalSafeQuaternion, reciprocalSafeQuaternion, reciprocalSafeQuaternion)
+        Arb.triple(reciprocalSafeQuaternion, reciprocalSafeQuaternion, reciprocalSafeQuaternion)
 }
