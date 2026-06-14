@@ -7,8 +7,9 @@ import io.kotest.core.spec.style.StringSpec
  * Confirms that [OctonionAlgebras.OctonionDivisionAlgebraReal] is *genuinely* non-associative, i.e. that
  * the Cayley-Dickson doubling of the quaternions did not collapse into something accidentally associative.
  *
- * The alternativity and Moufang law suites confirm the *weak* associativity that the octonions DO satisfy;
- * this spec is the complementary negative check: it exhibits an explicit associator that does not vanish.
+ * [OctonionAlternativitySpec] confirms the *weak* associativity that the octonions DO satisfy
+ * (alternativity and the Moufang identities); this spec is the complementary negative check: it
+ * exhibits an explicit associator that does not vanish.
  *
  * Witness: three imaginary units that do NOT share a Fano line, e.g. e1, e2, e4 (the line through 1 and 2
  * is {1,2,3}, which excludes 4). For such a triple the associator
