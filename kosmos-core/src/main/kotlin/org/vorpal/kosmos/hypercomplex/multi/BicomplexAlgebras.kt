@@ -206,10 +206,11 @@ object BicomplexAlgebras {
          * or `j ↦ -i`.
          */
         val normByConj1: UnaryOp<Bicomplex, Bicomplex> = UnaryOp("normByConj1") { z ->
-            val complex = ComplexAlgebras.ComplexStarAlgebra
+            val field = ComplexAlgebras.ComplexField
+            val star = ComplexAlgebras.ComplexStarAlgebra
             Bicomplex.ofIdempotent(
-                complex.mul(z.alpha, complex.conj(z.beta)),
-                complex.mul(z.beta, complex.conj(z.alpha))
+                field.mul(z.alpha, star.conj(z.beta)),
+                field.mul(z.beta, star.conj(z.alpha))
             )
         }
 

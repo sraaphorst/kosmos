@@ -2,12 +2,15 @@ package org.vorpal.kosmos.hypercomplex.multi
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.ArbComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 
 class BicomplexSpec: StringSpec({
     val ring = BicomplexAlgebras.BicomplexCommutativeRing
+    val complexField = ComplexAlgebras.ComplexField
     val eqB = BicomplexAlgebras.eqBicomplex
     val eqC = ComplexAlgebras.eqComplex
     val eqR = RealAlgebras.eqRealApprox
@@ -127,11 +130,52 @@ class BicomplexSpec: StringSpec({
         check(eqB(sum, one))
     }
 
-    "zero is a zero divisor under the chosen convention" {
-        zero.isZeroDivisor() shouldBe true
-    }
-
     "one is a unit" {
         one.isUnit() shouldBe true
+    }
+
+    "zero lies in the null cone but is not a nonzero zero divisor" {
+        check(Bicomplex.ZERO.isInNullCone())
+        check(!Bicomplex.ZERO.isZeroDivisor())
+        check(!Bicomplex.ZERO.isUnit())
+    }
+
+    "idempotent axes lie in the null cone" {
+        checkAll(ArbComplex.boundedComplex) { alpha ->
+            val z = Bicomplex.ofIdempotent(alpha, complexField.zero)
+            check(z.isInNullCone())
+            if (alpha != complexField.zero) {
+                check(z.isZeroDivisor())
+            }
+        }
+    }
+
+    "units are exactly elements outside the null cone" {
+        checkAll(ArbComplex.boundedComplex, ArbComplex.boundedComplex) { alpha, beta ->
+            val z = Bicomplex.ofIdempotent(alpha, beta)
+            check(z.isUnit() == !z.isInNullCone())
+            check(ring.hasReciprocal(z) == z.isUnit())
+        }
+        // boundedComplex never has a vanishing projection, so exercise the null-cone side too:
+        checkAll(ArbComplex.boundedComplex) { alpha ->
+            val onAxis = Bicomplex.ofIdempotent(alpha, complexField.zero)
+            check(!onAxis.isUnit())
+            check(!ring.hasReciprocal(onAxis))
+        }
+    }
+
+    "null cone equals vanishing of normByConj2" {
+        checkAll(ArbComplex.boundedComplex, ArbComplex.boundedComplex) { alpha, beta ->
+            val z = Bicomplex.ofIdempotent(alpha, beta)
+            val n2 = ring.normByConj2(z)
+            check(z.isInNullCone() == eqC(n2, complexField.zero))
+        }
+        // explicit null-cone witnesses (a vanishing projection): normByConj2 must vanish.
+        checkAll(ArbComplex.boundedComplex) { alpha ->
+            val zPlus = Bicomplex.ofIdempotent(alpha, complexField.zero)
+            val zMinus = Bicomplex.ofIdempotent(complexField.zero, alpha)
+            check(zPlus.isInNullCone() && eqC(ring.normByConj2(zPlus), complexField.zero))
+            check(zMinus.isInNullCone() && eqC(ring.normByConj2(zMinus), complexField.zero))
+        }
     }
 })
