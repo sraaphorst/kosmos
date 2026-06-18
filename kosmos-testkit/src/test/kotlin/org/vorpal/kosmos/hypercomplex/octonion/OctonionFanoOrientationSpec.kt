@@ -21,7 +21,7 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
  * would spuriously fail a structural comparison even though the values are mathematically equal. The
  * algebra's own `Eq` compares through real equality, where `0.0 == -0.0`.
  */
-object OctonionFanoOrientationSpec : StringSpec({
+class OctonionFanoOrientationSpec : StringSpec({
 
     val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
     val eq = OctonionAlgebras.eqOctonionStrict

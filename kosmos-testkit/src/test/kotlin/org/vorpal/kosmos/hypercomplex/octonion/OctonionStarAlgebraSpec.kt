@@ -15,7 +15,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
  * the central real action), the conjugation laws (involution and the order-reversing `(xy)* = y* x*`), and
  * commutation of the star with the scalar action.
  */
-object OctonionStarAlgebraSpec : StringSpec({
+class OctonionStarAlgebraSpec : StringSpec({
     "OctonionStarAlgebra satisfies NonAssociativeStarAlgebraLaws" {
         NonAssociativeStarAlgebraLaws(
             algebra = OctonionAlgebras.OctonionStarAlgebra,

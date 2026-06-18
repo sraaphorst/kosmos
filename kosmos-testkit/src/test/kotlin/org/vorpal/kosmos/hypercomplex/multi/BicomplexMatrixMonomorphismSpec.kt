@@ -2,43 +2,71 @@ package org.vorpal.kosmos.hypercomplex.multi
 
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
-import org.vorpal.kosmos.hypercomplex.complex.complex
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 
+/**
+ * Property tests for the two ring monomorphisms `𝔹 ↪ M₂(ℂ)`:
+ *  - [BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism] (canonical basis), and
+ *  - [BicomplexAlgebras.BicomplexToDiagonalMatrixMonomorphism] (orthogonal-idempotent basis).
+ *
+ * For each we exercise the full unital ring-homomorphism law suite (preserves +, ×, the additive
+ * and multiplicative identities) together with injectivity — the property that makes them
+ * *mono*morphisms in the first place.
+ */
 class BicomplexMatrixMonomorphismSpec : StringSpec({
-    val ring = BicomplexAlgebras.BicomplexCommutativeRing
     val canonical = BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism
     val diagonal = BicomplexAlgebras.BicomplexToDiagonalMatrixMonomorphism
-    val eqMat = org.vorpal.kosmos.linear.instances.DenseMatAlgebras.liftEq(
-        ComplexAlgebras.eqComplex
-    )
 
-    "canonical matrix map preserves addition" {
-        val x = Bicomplex.ofStandard(1.0, 2.0, 3.0, 4.0)
-        val y = Bicomplex.ofStandard(-2.0, 1.5, 0.5, -3.0)
+    val eqB = BicomplexAlgebras.eqBicomplex
+    val prB = BicomplexAlgebras.printableBicomplexPretty
+    val eqM = DenseMatAlgebras.liftEq(ComplexAlgebras.eqComplex)
+    val prM = DenseMatAlgebras.liftPrintablePretty(ComplexAlgebras.printableComplexPretty)
 
-        val left = canonical(ring.add(x, y))
-        val right = canonical.codomain.add(canonical(x), canonical(y))
-
-        check(eqMat(left, right))
+    "BicomplexToComplexMatrixMonomorphism (canonical basis) satisfies UnitalRingHomomorphismLaws" {
+        RingHomomorphismLaws(
+            hom = canonical::invoke,
+            domain = canonical.domain,
+            codomain = canonical.codomain,
+            arb = ArbBicomplex.bicomplex,
+            eqB = eqM,
+            prA = prB,
+            prB = prM
+        ).fullTest().throwIfFailed()
     }
 
-    "canonical matrix map preserves multiplication" {
-        val x = Bicomplex.ofStandard(1.0, 2.0, 3.0, 4.0)
-        val y = Bicomplex.ofStandard(-2.0, 1.5, 0.5, -3.0)
-
-        val left = canonical(ring.mul(x, y))
-        val right = canonical.codomain.mul(canonical(x), canonical(y))
-
-        check(eqMat(left, right))
+    "BicomplexToComplexMatrixMonomorphism (canonical basis) is injective" {
+        injectivityLaw(
+            hom = canonical::invoke,
+            arbA = ArbBicomplex.bicomplex,
+            eqA = eqB,
+            eqB = eqM,
+            prA = prB,
+            prB = prM
+        ).test()
     }
 
-    "diagonal matrix map preserves multiplication" {
-        val x = Bicomplex.ofIdempotent(complex(1.0, 2.0), complex(3.0, 4.0))
-        val y = Bicomplex.ofIdempotent(complex(-1.0, 0.5), complex(2.0, -3.0))
+    "BicomplexToDiagonalMatrixMonomorphism (idempotent basis) satisfies UnitalRingHomomorphismLaws" {
+        RingHomomorphismLaws(
+            hom = diagonal::invoke,
+            domain = diagonal.domain,
+            codomain = diagonal.codomain,
+            arb = ArbBicomplex.bicomplex,
+            eqB = eqM,
+            prA = prB,
+            prB = prM
+        ).fullTest().throwIfFailed()
+    }
 
-        val left = diagonal(ring.mul(x, y))
-        val right = diagonal.codomain.mul(diagonal(x), diagonal(y))
-
-        check(eqMat(left, right))
+    "BicomplexToDiagonalMatrixMonomorphism (idempotent basis) is injective" {
+        injectivityLaw(
+            hom = diagonal::invoke,
+            arbA = ArbBicomplex.bicomplex,
+            eqA = eqB,
+            eqB = eqM,
+            prA = prB,
+            prB = prM
+        ).test()
     }
 })

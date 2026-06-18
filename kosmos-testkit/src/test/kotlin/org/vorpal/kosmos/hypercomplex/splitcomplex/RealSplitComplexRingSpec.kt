@@ -15,7 +15,7 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
  * (it has zero divisors on the null cone `a² = b²`), so the strongest abstract
  * laws we can test here are those of a commutative involutive ring.
  */
-object RealSplitComplexRingSpec : StringSpec({
+class RealSplitComplexRingSpec : StringSpec({
     "RealSplitComplexRing satisfies CommutativeRingLaws" {
         CommutativeRingLaws(
             ring = SplitComplexAlgebras.RealSplitComplexRing,
