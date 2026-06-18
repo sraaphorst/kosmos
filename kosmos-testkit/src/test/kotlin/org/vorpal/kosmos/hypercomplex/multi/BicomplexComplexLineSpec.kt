@@ -18,7 +18,7 @@ import org.vorpal.kosmos.hypercomplex.complex.complex
  * `complexToBicomplexAlongJ` is a ring monomorphism (`j² = -1`, just like `i²`); `cjToComplex` is
  * its left inverse and an isomorphism on the `ℂ(j)` line.
  */
-object BicomplexComplexLineSpec : StringSpec({
+class BicomplexComplexLineSpec : StringSpec({
     val ring = BicomplexAlgebras.BicomplexCommutativeRing
     val complexField = ComplexAlgebras.ComplexField
     val complexStar = ComplexAlgebras.ComplexStarAlgebra

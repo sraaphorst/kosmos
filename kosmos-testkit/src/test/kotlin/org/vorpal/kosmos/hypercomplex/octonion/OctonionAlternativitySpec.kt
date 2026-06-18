@@ -18,7 +18,7 @@ import org.vorpal.kosmos.laws.property.MoufangLaw
  * `.test()` directly. We use the plain octonion generator (no reciprocal needed) and the approximate
  * octonion equality, since these identities are exact algebraically but evaluated in floating point.
  */
-object OctonionAlternativitySpec : StringSpec({
+class OctonionAlternativitySpec : StringSpec({
 
     val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
     val op = ring.mul.op

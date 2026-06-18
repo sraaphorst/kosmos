@@ -3,7 +3,7 @@ package org.vorpal.kosmos.hypercomplex.complex
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.laws.algebra.FieldLaws
 
-object ComplexFieldSpec : StringSpec({
+class ComplexFieldSpec : StringSpec({
     "ComplexField satisfies FieldLaws" {
         FieldLaws(
             field = ComplexAlgebras.ComplexField,

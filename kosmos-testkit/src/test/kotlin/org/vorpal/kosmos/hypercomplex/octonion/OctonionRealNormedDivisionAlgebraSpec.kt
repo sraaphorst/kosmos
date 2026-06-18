@@ -17,7 +17,7 @@ import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
  * We draw from [ArbOctonion.reciprocalSafeOctonion] so that the invertibility law never hits the
  * `normSq ≈ 0` guard in the reciprocal, and the multiplicative norm law stays numerically well-conditioned.
  */
-object OctonionRealNormedDivisionAlgebraSpec : StringSpec({
+class OctonionRealNormedDivisionAlgebraSpec : StringSpec({
     "OctonionDivisionAlgebraReal satisfies RealNormedDivisionAlgebraLaws" {
         RealNormedDivisionAlgebraLaws(
             algebra = OctonionAlgebras.OctonionDivisionAlgebraReal,

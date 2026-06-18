@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.algebra.RModuleLaws
  * exercising the module laws on their own gives a clean target when only
  * the additive / scalar-action structure is being investigated.
  */
-object SplitComplexRealModuleSpec : StringSpec({
+class SplitComplexRealModuleSpec : StringSpec({
     "splitComplexModule(Real) satisfies RModuleLaws" {
         RModuleLaws(
             module = SplitComplexAlgebras.splitComplexModule(RealAlgebras.RealField),

@@ -15,7 +15,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
  * [org.vorpal.kosmos.laws.property.AssociativityLaw] on the product — which is exactly the property
  * that distinguishes ℍ from 𝕆.
  */
-object QuaternionStarAlgebraSpec : StringSpec({
+class QuaternionStarAlgebraSpec : StringSpec({
     "QuaternionStarAlgebra satisfies StarAlgebraLaws" {
         StarAlgebraLaws(
             algebra = QuaternionAlgebras.QuaternionStarAlgebra,
