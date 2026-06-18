@@ -22,7 +22,7 @@ import io.kotest.core.spec.style.StringSpec
  * Octonion products are compared with [OctonionAlgebras.eqOctonionStrict] (signed-zero-safe), never the
  * structural `shouldBe`; see [OctonionFanoOrientationSpec].
  */
-object OctonionNonAssociativitySpec : StringSpec({
+class OctonionNonAssociativitySpec : StringSpec({
 
     val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
     val eq = OctonionAlgebras.eqOctonionStrict

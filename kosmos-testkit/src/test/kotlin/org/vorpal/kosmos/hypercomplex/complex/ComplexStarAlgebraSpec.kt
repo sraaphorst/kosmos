@@ -7,7 +7,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 
 // TODO: ComplexStarAlgebra also implements InvolutiveRing and RealNormedDivisionAlgebra.
 // TODO: We should test these as well.
-object ComplexStarAlgebraSpec : StringSpec({
+class ComplexStarAlgebraSpec : StringSpec({
     "ComplexStarAlgebra satisfies StarAlgebraLaws" {
         StarAlgebraLaws(
             algebra = ComplexAlgebras.ComplexStarAlgebra,

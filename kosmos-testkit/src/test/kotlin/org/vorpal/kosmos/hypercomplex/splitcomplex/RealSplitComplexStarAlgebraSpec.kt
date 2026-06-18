@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
  * (split-complex numbers have zero divisors and the quadratic form is indefinite).
  * So we only verify the abstract `StarAlgebra` laws here.
  */
-object RealSplitComplexStarAlgebraSpec : StringSpec({
+class RealSplitComplexStarAlgebraSpec : StringSpec({
     "RealSplitComplexStarAlgebra satisfies StarAlgebraLaws" {
         StarAlgebraLaws(
             algebra = SplitComplexAlgebras.RealSplitComplexStarAlgebra,

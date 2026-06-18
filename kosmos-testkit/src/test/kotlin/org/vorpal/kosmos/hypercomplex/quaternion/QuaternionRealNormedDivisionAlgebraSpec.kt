@@ -17,7 +17,7 @@ import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
  * We draw from [ArbQuaternion.reciprocalSafeQuaternion] so the invertibility law never hits the
  * `normSq ≈ 0` guard in the reciprocal and the multiplicative-norm law stays well-conditioned.
  */
-object QuaternionRealNormedDivisionAlgebraSpec : StringSpec({
+class QuaternionRealNormedDivisionAlgebraSpec : StringSpec({
     "QuaternionDivisionRing satisfies RealNormedDivisionAlgebraLaws" {
         RealNormedDivisionAlgebraLaws(
             algebra = QuaternionAlgebras.QuaternionDivisionRing,
