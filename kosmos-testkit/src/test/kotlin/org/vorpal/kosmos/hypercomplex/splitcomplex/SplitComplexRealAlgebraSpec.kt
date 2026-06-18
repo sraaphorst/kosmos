@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.algebra.AlgebraLaws
  * and scalar action, but it is still useful to exercise the plain `Algebra`
  * laws independently of conjugation.
  */
-object SplitComplexRealAlgebraSpec : StringSpec({
+class SplitComplexRealAlgebraSpec : StringSpec({
     "splitComplexAlgebra(Real) satisfies AlgebraLaws" {
         AlgebraLaws(
             algebra = SplitComplexAlgebras.splitComplexAlgebra(RealAlgebras.RealField),

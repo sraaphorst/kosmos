@@ -5,7 +5,7 @@ import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 
-object ComplexRealVectorSpaceSpec : StringSpec({
+class ComplexRealVectorSpaceSpec : StringSpec({
     "ComplexRealVectorSpace satisfies VectorSpaceLaws" {
         VectorSpaceLaws(
             space = ComplexAlgebras.ComplexRealVectorSpace,

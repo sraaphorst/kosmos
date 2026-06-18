@@ -13,7 +13,7 @@ import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
  * `R`-module axioms over a field, so this is essentially the module spec
  * with a stronger scalar requirement.
  */
-object SplitComplexRealVectorSpaceSpec : StringSpec({
+class SplitComplexRealVectorSpaceSpec : StringSpec({
     "SplitComplexRealVectorSpace satisfies VectorSpaceLaws" {
         VectorSpaceLaws(
             space = SplitComplexAlgebras.SplitComplexRealVectorSpace,

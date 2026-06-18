@@ -12,7 +12,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
  * - witnesses that the ring is not an integral domain (zero divisors on the null cone),
  * - the canonical 2×2 matrix images of `1` and `j`.
  */
-object SplitComplexBehaviorSpec : StringSpec({
+class SplitComplexBehaviorSpec : StringSpec({
     val ring = SplitComplexAlgebras.RealSplitComplexRing
     val starAlg = SplitComplexAlgebras.RealSplitComplexStarAlgebra
     val eqSC = SplitComplexAlgebras.eqSplitComplex

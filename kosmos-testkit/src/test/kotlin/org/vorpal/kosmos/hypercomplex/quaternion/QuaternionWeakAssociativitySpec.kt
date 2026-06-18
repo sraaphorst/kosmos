@@ -18,7 +18,7 @@ import org.vorpal.kosmos.laws.property.MoufangLaw
  *     acting as a regression guard — in particular for [MoufangLaw], whose middle identity was recently
  *     corrected, and for the [BolIdentityLaw]/[FlexibilityLaw] formulas.
  */
-object QuaternionWeakAssociativitySpec : StringSpec({
+class QuaternionWeakAssociativitySpec : StringSpec({
 
     val op = QuaternionAlgebras.QuaternionDivisionRing.mul.op
     val arb = ArbQuaternion.quaternion

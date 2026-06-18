@@ -9,7 +9,7 @@ import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
  * Tests that `scalarEmbedding(RealField): RingMonomorphism<Real, SplitComplex<Real>>`
  * is a unital ring homomorphism. Sends `r ↦ r + 0j`.
  */
-object ScalarEmbeddingSpec : StringSpec({
+class ScalarEmbeddingSpec : StringSpec({
     val embedding = SplitComplexAlgebras.scalarEmbedding(RealAlgebras.RealField)
 
     "scalarEmbedding(Real) satisfies RingHomomorphismLaws" {
