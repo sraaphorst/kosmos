@@ -826,7 +826,29 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.copy(mat)
 
     /**
-     * Computes the determinant using Kosmos's default exact algorithm for matrices
+     * Computes the permanent using Kosmos' default exact algorithm for matrices
+     * over a [Semiring].
+     *
+     * For a 0/1 matrix, the permanent counts the number of ways to choose exactly
+     * one 1 from every row and every column.
+     */
+    fun <A : Any> perm(
+        semiring: Semiring<A>,
+        mat: MatLike<A>
+    ): A = DenseMatKernel.permByPermutation(semiring, mat)
+
+    /**
+     * Computes the permanent using the unsigned permutation formula.
+     *
+     * This is factorial-time and intended mainly for small matrices.
+     */
+    fun <A : Any> permByPermutation(
+        semiring: Semiring<A>,
+        mat: MatLike<A>
+    ): A = DenseMatKernel.permByPermutation(semiring, mat)
+
+    /**
+     * Computes the determinant using Kosmos' default exact algorithm for matrices
      * over a [CommutativeRing].
      *
      * Currently, this delegates to [detByPermutation], but future versions may use
