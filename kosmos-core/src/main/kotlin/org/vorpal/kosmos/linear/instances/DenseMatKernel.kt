@@ -2,6 +2,7 @@ package org.vorpal.kosmos.linear.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
+import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semigroup
@@ -1036,4 +1037,74 @@ internal object DenseMatKernel {
         order: TotalOrder<M>,
         strict: Boolean = false
     ): Boolean = isRowDiagonallyDominant(mat.transposeView(), mag, add, order, strict)
+
+    /**
+     * Calculates the Leibniz / permutation determinant over a [CommutativeRing].
+     *
+     * This works for every commutative ring because it requires only addition,
+     * additive inverse, multiplication, zero, and one. It is intended mainly as
+     * a correctness oracle and small-matrix implementation.
+     *
+     * Complexity: O(n · n!), since each of the n! permutation terms multiplies n entries.
+     */
+    fun <A : Any> detByPermutation(
+        ring: CommutativeRing<A>,
+        mat: MatLike<A>
+    ): A {
+        require(isSquare(mat)) {
+            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+        }
+        val n = mat.rows
+        if (n == 0) return ring.mul.identity
+        if (n == 1) return mat[0, 0]
+        if (n == 2) return ring.add(
+            ring.mul(mat[0, 0], mat[1, 1]),
+            ring.add.inverse(ring.mul(mat[0, 1], mat[1, 0]))
+        )
+
+        // We use an internal permutation generator here to avoid all the work of the outward facing
+        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
+        var acc = ring.add.identity
+        val perm = IntArray(n) { it }
+
+        fun permutationProduct(): A {
+            var prod = ring.mul.identity
+            for (i in perm.indices) {
+                prod = ring.mul(prod, mat[i, perm[i]])
+            }
+            return prod
+        }
+
+        fun addCurrentPermutationTerm(even: Boolean) {
+            val term = permutationProduct()
+            acc =
+                if (even) ring.add(acc, term)
+                else ring.add(acc, ring.add.inverse(term))
+        }
+
+        fun swap(i: Int, j: Int) {
+            val tmp = perm[i]
+            perm[i] = perm[j]
+            perm[j] = tmp
+        }
+
+        fun generate(k: Int, even: Boolean) {
+            if (k == n) {
+                addCurrentPermutationTerm(even)
+                return
+            }
+
+            for (i in k until n) {
+                swap(k, i)
+
+                // Swapping equal positions does not change the parity of the permutation.
+                generate(k + 1, if (i == k) even else !even)
+
+                swap(k, i)
+            }
+        }
+
+        generate(0, true)
+        return acc
+    }
 }
