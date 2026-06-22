@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.map
@@ -846,4 +847,19 @@ object DenseMatOps {
         ring: CommutativeRing<A>,
         mat: MatLike<A>
     ): A = DenseMatKernel.detByPermutation(ring, mat)
+
+    /**
+     * Add an O(n^3) fraction-free determinant algorithm for dense matrices over a CommutativeRing when an exact division BinOp is supplied.
+     *
+     * The API should not require Field and should not add exact division to CommutativeRing. Instead, Bareiss should accept exactDiv:
+     * BinOp<A> as an explicit proof-of-capability.
+     *
+     * The implementation should be tested against the existing Leibniz/permutation determinant on small matrices.
+     */
+    fun <A : Any> detBareiss(
+        ring: CommutativeRing<A>,
+        exactDiv: BinOp<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): A = DenseMatKernel.detBareiss(ring, exactDiv, mat, eq)
 }

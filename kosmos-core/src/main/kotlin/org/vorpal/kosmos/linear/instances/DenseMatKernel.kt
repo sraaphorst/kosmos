@@ -9,6 +9,7 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.ops.MatOp
@@ -18,6 +19,7 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
+import javax.management.Query.eq
 import kotlin.math.min
 
 /**
@@ -1106,5 +1108,97 @@ internal object DenseMatKernel {
 
         generate(0, true)
         return acc
+    }
+
+    /**
+     * Computes the determinant using the Bareiss fraction-free elimination algorithm.
+     *
+     * This requires a [CommutativeRing] plus an exact-division operation [exactDiv].
+     *
+     * The operation `exactDiv(a, b)` must return `q` such that:
+     * ```text
+     * a = b * q
+     * ```
+     * whenever Bareiss calls it. If division is not exact, [exactDiv] should throw.
+     *
+     * Complexity: O(n^3) ring operations.
+     */
+    fun <A : Any> detBareiss(
+        ring: CommutativeRing<A>,
+        exactDiv: BinOp<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): A {
+        require(isSquare(mat)) {
+            "Determinant (Bareiss) is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+        }
+
+        val n = mat.rows
+        if (n == 0) return ring.mul.identity
+        if (n == 1) return mat[0, 0]
+        if (n == 2) return ring.add(
+            ring.mul(mat[0, 0], mat[1, 1]),
+            ring.add.inverse(ring.mul(mat[0, 1], mat[1, 0]))
+        )
+
+        val data = allocateMatrix(n, n)
+        for (r in 0 until n) {
+            for (c in 0 until n) {
+                data[r * n + c] = mat[r, c]
+            }
+        }
+
+        @Suppress("UNCHECKED_CAST")
+        fun get(row: Int, col: Int): A =
+            data[row * n + col] as A
+
+        fun set(row: Int, col: Int, value: A) {
+            data[row * n + col] = value
+        }
+
+        fun swapRows(i : Int, j : Int) {
+            if (i == j) return
+            for (c in 0 until n) {
+                val tmp = get(i, c)
+                set(i, c, get(j, c))
+                set(j, c, tmp)
+            }
+        }
+
+        var sign = ring.mul.identity
+        var previousPivot = ring.mul.identity
+
+        for (k in 0 until (n-1)) {
+            if (eq(get(k, k), ring.add.identity)) {
+                var pivotRow = k + 1
+                while (pivotRow < n && eq(get(pivotRow, k), ring.add.identity))
+                    pivotRow++
+                if (pivotRow == n)
+                    return ring.add.identity
+
+                swapRows(k, pivotRow)
+                sign = ring.add.inverse(sign)
+            }
+
+            val pivot = get(k, k)
+
+            for (i in (k+1) until n) {
+                for (j in (k+1) until n) {
+                    val left = ring.mul(pivot, get(i, j))
+                    val right = ring.mul(get(i, k), get(k, j))
+                    val numerator = ring.add(left, ring.add.inverse(right))
+                    val updated =
+                        if (k == 0) numerator
+                        else exactDiv(numerator, previousPivot)
+
+                    set(i, j, updated)
+                }
+                set(i, k, ring.add.identity)
+            }
+
+            previousPivot = pivot
+        }
+
+        return ring.mul(sign, get(n-1, n-1))
     }
 }
