@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.linear.ops
 
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
+import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.Semiring
@@ -822,4 +823,27 @@ object DenseMatOps {
     fun <A : Any> copy(
         mat: MatLike<A>
     ): DenseMat<A> = DenseMatKernel.copy(mat)
+
+    /**
+     * Computes the determinant using Kosmos's default exact algorithm for matrices
+     * over a [CommutativeRing].
+     *
+     * Currently, this delegates to [detByPermutation], but future versions may use
+     * small unrolled formulas or other exact algorithms where appropriate.
+     */
+    fun <A : Any> det(
+        ring: CommutativeRing<A>,
+        mat: MatLike<A>
+    ): A = DenseMatKernel.detByPermutation(ring, mat)
+
+    /**
+     * Computes the determinant using the Leibniz signed-permutation formula.
+     *
+     * This is factorial-time and intended mainly for small matrices and as a
+     * correctness oracle for other determinant algorithms.
+     */
+    fun <A : Any> detByPermutation(
+        ring: CommutativeRing<A>,
+        mat: MatLike<A>
+    ): A = DenseMatKernel.detByPermutation(ring, mat)
 }
