@@ -19,7 +19,6 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
-import javax.management.Query.eq
 import kotlin.math.min
 
 /**
@@ -86,16 +85,13 @@ internal object DenseMatKernel {
         require(mat.rows != 0 && mat.cols != 0) { "Matrix cannot be empty." }
         val elem = mat[0, 0]
         require(elem != zero) { "Expected constant nonzero matrix, but got: $zero" }
-        var r = 0
-        while (r < mat.rows) {
-            var c = 0
-            while (c < mat.cols) {
+
+        for (r in 0 until mat.rows) {
+            for (c in 0 until mat.cols) {
                 require(mat[r, c] == elem) {
                     "Expected constant ${mat.rows}${Symbols.TIMES}${mat.cols} matrix of $elem, but found ${mat[r, c]}."
                 }
-                c += 1
             }
-            r += 1
         }
         return elem
     }
@@ -115,7 +111,6 @@ internal object DenseMatKernel {
     ): DenseMat<A> =
         identity(semiring.add.identity, semiring.mul.identity, n)
 
-
     /**
      * Given:
      * - A matrix [mat1] of shape `m×n` over [A]
@@ -132,14 +127,10 @@ internal object DenseMatKernel {
         requireSize(mat2, rows, cols)
         val out = allocateMatrix(rows, cols)
 
-        var r = 0
-        while (r < rows) {
-            var c = 0
-            while (c < cols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 out[r * cols + c] = semigroup(mat1[r, c], mat2[r, c])
-                c += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
@@ -158,23 +149,15 @@ internal object DenseMatKernel {
 
         val out = allocateMatrix(rows, p)
 
-        var r = 0
-        while (r < rows) {
-            var j = 0
-            while (j < p) {
+        for (r in 0 until rows) {
+            for (j in 0 until p) {
                 var acc = semiring.add.identity
-
-                var k = 0
-                while (k < cols) {
+                for (k in 0 until cols) {
                     val term = semiring.mul(mat1[r, k], mat2[k, j])
                     acc = semiring.add(acc, term)
-                    k += 1
                 }
-
                 out[r * p + j] = acc
-                j += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(rows, p, out)
@@ -191,18 +174,13 @@ internal object DenseMatKernel {
 
         val out = arrayOfNulls<Any?>(rows)
 
-        var r = 0
-        while (r < rows) {
+        for (r in 0 until rows) {
             var acc = semiring.add.identity
-
-            var c = 0
-            while (c < cols) {
+            for (c in 0 until cols) {
                 val term = semiring.mul(mat[r, c], vec[c])
                 acc = semiring.add(acc, term)
-                c += 1
             }
             out[r] = acc
-            r += 1
         }
 
         return DenseVec.fromArrayUnsafe(out)
@@ -212,14 +190,10 @@ internal object DenseMatKernel {
         field: Field<A>,
         mat: MatLike<A>,
     ): Boolean {
-        var r = 0
-        while (r < mat.rows) {
-            var c = 0
-            while (c < mat.cols) {
+        for (r in 0 until mat.rows) {
+            for (c in 0 until mat.cols) {
                 if (mat[r, c] == field.zero) return false
-                c += 1
             }
-            r += 1
         }
         return true
     }
@@ -238,27 +212,18 @@ internal object DenseMatKernel {
         val outCols = Math.multiplyExact(n, q)
         val out = allocateMatrix(outRows, outCols)
 
-        var i = 0
-        while (i < m) {
-            var j = 0
-            while (j < n) {
+        for (i in 0 until m) {
+            for (j in 0 until n) {
                 val aij = mat1[i, j]
-
-                var r = 0
-                while (r < p) {
-                    var c = 0
-                    while (c < q) {
+                for (r in 0 until p) {
+                    for (c in 0 until q) {
                         val row = i * p + r
                         val col = j * q + c
                         val dest = row * outCols + col
                         out[dest] = semiring.mul(aij, mat2[r, c])
-                        c += 1
                     }
-                    r += 1
                 }
-                j += 1
             }
-            i += 1
         }
         return DenseMat.fromArrayUnsafe(outRows, outCols, out)
     }
@@ -274,14 +239,10 @@ internal object DenseMatKernel {
         val cols = mat.cols
         val out = allocateMatrix(rows, cols)
 
-        var r = 0
-        while (r < rows) {
-            var c = 0
-            while (c < cols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 out[r * cols + c] = group.inverse(mat[r, c])
-                c += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
@@ -297,14 +258,10 @@ internal object DenseMatKernel {
         val cols = mat.cols
         val out = allocateMatrix(rows, cols)
 
-        var r = 0
-        while (r < rows) {
-            var c = 0
-            while (c < cols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 out[r * cols + c] = mat[r, c]
-                c += 1
             }
-            r += 1
         }
 
         return DenseVec.fromArrayUnsafe(out)
@@ -322,10 +279,8 @@ internal object DenseMatKernel {
         DenseKernel.requireSize(x.size, size)
         val out = allocateMatrix(rows, cols)
 
-        var i = 0
-        while (i < size) {
+        for (i in 0 until size) {
             out[i] = x[i]
-            i += 1
         }
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
@@ -349,24 +304,20 @@ internal object DenseMatKernel {
         mat: MatLike<A>,
         order: TotalOrder<A>
     ): Option<Pair<Int, Int>> {
-            if (mat.rows == 0 || mat.cols == 0) return Option.None
-            var minRow = 0
-            var minCol = 0
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
+        var minRow = 0
+        var minCol = 0
 
-            var i = 0
-            while (i < mat.rows) {
-                var j = 0
-                while (j < mat.cols) {
-                    if (order.lt(mat[i, j], mat[minRow, minCol])) {
-                        minRow = i
-                        minCol = j
-                    }
-                    j += 1
+        for (i in 0 until mat.rows) {
+            for (j in 0 until mat.cols) {
+                if (order.lt(mat[i, j], mat[minRow, minCol])) {
+                    minRow = i
+                    minCol = j
                 }
-                i += 1
             }
-            return Option.Some(minRow to minCol)
         }
+        return Option.Some(minRow to minCol)
+    }
 
     fun <A : Any> argmax(
         mat: MatLike<A>,
@@ -376,17 +327,13 @@ internal object DenseMatKernel {
         var maxRow = 0
         var maxCol = 0
 
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
+        for (i in 0 until mat.rows) {
+            for (j in 0 until mat.cols) {
                 if (order.gt(mat[i, j], mat[maxRow, maxCol])) {
                     maxRow = i
                     maxCol = j
                 }
-                j += 1
             }
-            i += 1
         }
         return Option.Some(maxRow to maxCol)
     }
@@ -402,19 +349,15 @@ internal object DenseMatKernel {
         var minCol = 0
         var minVal = f(mat[0, 0])
 
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
+        for (i in 0 until mat.rows) {
+            for (j in 0 until mat.cols) {
                 val vij = f(mat[i, j])
                 if (order.lt(vij, minVal)) {
                     minRow = i
                     minCol = j
                     minVal = vij
                 }
-                j += 1
             }
-            i += 1
         }
         return Option.Some(minRow to minCol)
     }
@@ -424,42 +367,34 @@ internal object DenseMatKernel {
         f: (A) -> B,
         order: TotalOrder<B>
     ): Option<Pair<Int, Int>> {
-            if (mat.rows == 0 || mat.cols == 0) return Option.None
+        if (mat.rows == 0 || mat.cols == 0) return Option.None
 
-            var maxRow = 0
-            var maxCol = 0
-            var maxVal = f(mat[0, 0])
+        var maxRow = 0
+        var maxCol = 0
+        var maxVal = f(mat[0, 0])
 
-            var i = 0
-            while (i < mat.rows) {
-                var j = 0
-                while (j < mat.cols) {
-                    val vij = f(mat[i, j])
-                    if (order.gt(vij, maxVal)) {
-                        maxRow = i
-                        maxCol = j
-                        maxVal = vij
-                    }
-                    j += 1
+        for (i in 0 until mat.rows) {
+            for (j in 0 until mat.cols) {
+                val vij = f(mat[i, j])
+                if (order.gt(vij, maxVal)) {
+                    maxRow = i
+                    maxCol = j
+                    maxVal = vij
                 }
-                i += 1
             }
-            return Option.Some(maxRow to maxCol)
         }
+        return Option.Some(maxRow to maxCol)
+    }
 
     fun <A : Any> isAll(
         mat: MatLike<A>,
         a: A,
         eq: Eq<A> = Eq.default()
     ): Boolean {
-        var i = 0
-        while (i < mat.rows) {
-            var j = 0
-            while (j < mat.cols) {
+        for (i in 0 until mat.rows) {
+            for (j in 0 until mat.cols) {
                 if (!eq(mat[i, j], a)) return false
-                j += 1
             }
-            i += 1
         }
         return true
     }
@@ -474,10 +409,8 @@ internal object DenseMatKernel {
 
         val n = mat.rows
         var t = semiring.add.identity
-        var i = 0
-        while (i < n) {
+        for (i in 0 until n) {
             t = semiring.add(t, mat[i, i])
-            i += 1
         }
         return t
     }
@@ -488,10 +421,8 @@ internal object DenseMatKernel {
     ): A {
         val n = min(mat.rows, mat.cols)
         var t = semiring.add.identity
-        var i = 0
-        while (i < n) {
+        for (i in 0 until n) {
             t = semiring.add(t, mat[i, i])
-            i += 1
         }
         return t
     }
@@ -503,14 +434,10 @@ internal object DenseMatKernel {
         val outCols = mat.rows
         val out = allocateMatrix(outRows, outCols)
 
-        var r = 0
-        while (r < mat.rows) {
-            var c = 0
-            while (c < mat.cols) {
+        for (r in 0 until mat.rows) {
+            for (c in 0 until mat.cols) {
                 out[c * outCols + r] = mat[r, c]
-                c += 1
             }
-            r += 1
         }
         return DenseMat.fromArrayUnsafe(outRows, outCols, out)
     }
@@ -523,17 +450,12 @@ internal object DenseMatKernel {
         val cols = mat.cols
         val out = arrayOfNulls<Any?>(rows)
 
-        var r = 0
-        while (r < rows) {
+        for (r in 0 until rows) {
             var rowSum = semiring.add.identity
-
-            var c = 0
-            while (c < cols) {
+            for (c in 0 until cols) {
                 rowSum = semiring.add(rowSum, mat[r, c])
-                c += 1
             }
             out[r] = rowSum
-            r += 1
         }
         return DenseVec.fromArrayUnsafe(out)
     }
@@ -552,14 +474,10 @@ internal object DenseMatKernel {
         val cols = mat.cols
         val out = allocateMatrix(rows, cols)
 
-        var r = 0
-        while (r < rows) {
-            var c = 0
-            while (c < cols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 out[r * cols + c] = semiring.mul(s, mat[r, c])
-                c += 1
             }
-            r += 1
         }
         return DenseMat.fromArrayUnsafe(rows, cols, out)
     }
@@ -570,16 +488,12 @@ internal object DenseMatKernel {
         f: (A) -> B
     ): DenseVec<B> {
         val out = arrayOfNulls<Any?>(mat.rows)
-        var r = 0
-        while (r < mat.rows) {
+        for (r in 0 until mat.rows) {
             var acc = add.identity
-            var c = 0
-            while (c < mat.cols) {
+            for (c in 0 until mat.cols) {
                 acc = add(acc, f(mat[r, c]))
-                c += 1
             }
             out[r] = acc
-            r += 1
         }
         return DenseVec.fromArrayUnsafe(out)
     }
@@ -605,16 +519,12 @@ internal object DenseMatKernel {
         }
 
         val n = mat.rows
-        var r = 0
-        while (r < n) {
-            var c = 0
-            while (c < n) {
+        for (r in 0 until n) {
+            for (c in 0 until n) {
                 if (r != c && !eq(mat[r, c], zero)) {
                     return false
                 }
-                c += 1
             }
-            r += 1
         }
         return true
     }
@@ -627,10 +537,8 @@ internal object DenseMatKernel {
         }
         val n = mat.rows
         val out = arrayOfNulls<Any?>(n)
-        var i = 0
-        while (i < n) {
+        for (i in 0 until n) {
             out[i] = mat[i, i]
-            i += 1
         }
         return DenseVec.fromArrayUnsafe(out)
     }
@@ -679,21 +587,17 @@ internal object DenseMatKernel {
             eq(a, zero) || eq(a, one)
 
         fun checkRowsAllOne(currMat: MatLike<A>): Boolean {
-            var r = 0
-            while (r < currMat.rows) {
+            for (r in 0 until currMat.rows) {
                 var ones = 0
-                var c = 0
-                while (c < currMat.cols) {
+                for (c in 0 until currMat.cols) {
                     val entry = currMat[r, c]
                     if (!isBinary(entry)) return false
                     if (eq(entry, one)) {
                         ones += 1
                         if (ones > 1) return false
                     }
-                    c += 1
                 }
                 if (ones != 1) return false
-                r += 1
             }
             return true
         }
@@ -735,12 +639,10 @@ internal object DenseMatKernel {
         // tmp = aV * x
         val tmp = matVec(semiring, aV, xVec)
         val out = arrayOfNulls<Any?>(m)
-        var i = 0
-        while (i < m) {
+        for (i in 0 until m) {
             val left = semiring.mul(alpha, tmp[i])
             val right = semiring.mul(beta, yVec[i])
             out[i] = semiring.add(left, right)
-            i += 1
         }
         return DenseVec.fromArrayUnsafe(out)
     }
@@ -764,12 +666,10 @@ internal object DenseMatKernel {
         // tmp = aV * x
         val tmp = matVec(ring, aV, xVec)
         val out = arrayOfNulls<Any?>(m)
-        var i = 0
-        while (i < m) {
+        for (i in 0 until m) {
             val left = ring.mul(alpha, tmp[i])
             val right = ring.mul(beta, yVec[i])
             out[i] = ring.add(left, right)
-            i += 1
         }
         return DenseVec.fromArrayUnsafe(out)// Normal/Trans/ConjTrans
     }
@@ -803,25 +703,17 @@ internal object DenseMatKernel {
 
         val out = allocateMatrix(m, n)
 
-        var r = 0
-        while (r < m) {
-            var j = 0
-            while (j < n) {
+        for (r in 0 until m) {
+            for (j in 0 until n) {
                 var acc = semiring.add.identity
-
-                var t = 0
-                while (t < k) {
+                for (t in 0 until k) {
                     acc = semiring.add(acc, semiring.mul(aV[r, t], bV[t, j]))
-                    t += 1
                 }
 
                 val scaledProd = semiring.mul(alpha, acc)
                 val scaledC = semiring.mul(beta, cMat[r, j])
                 out[r * n + j] = semiring.add(scaledProd, scaledC)
-
-                j += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(m, n, out)
@@ -852,25 +744,17 @@ internal object DenseMatKernel {
 
         val out = allocateMatrix(m, n)
 
-        var r = 0
-        while (r < m) {
-            var j = 0
-            while (j < n) {
+        for (r in 0 until m) {
+            for (j in 0 until n) {
                 var acc = ring.add.identity
 
-                var t = 0
-                while (t < k) {
+                for (t in 0 until k)
                     acc = ring.add(acc, ring.mul(aV[r, t], bV[t, j]))
-                    t += 1
-                }
 
                 val scaledProd = ring.mul(alpha, acc)
                 val scaledC = ring.mul(beta, cMat[r, j])
                 out[r * n + j] = ring.add(scaledProd, scaledC)
-
-                j += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(m, n, out)
@@ -885,45 +769,29 @@ internal object DenseMatKernel {
         val totalCols = matrices.fold(0) { size, mat -> Math.addExact(size, mat.cols )}
         val out = allocateMatrix(totalRows, totalCols)
 
-        // The index of the row we are filling in out.
-        var outRowIdx = 0
-
-        // The index of the matrix in matrices we are processing.
-        var matIdx = 0
-
-        // The starting row and column where matrices[matIdx] is being copied.
         var startRowIdx = 0
         var startColIdx = 0
 
-        while (matIdx < matrices.size) {
-            // We start copying matrix at startRowIdx and startColIdx
+        for (matIdx in matrices.indices) {
             val matrix = matrices[matIdx]
             val endRowIdx = startRowIdx + matrix.rows
             val endColIdx = startColIdx + matrix.cols
+            val inRange = startColIdx..<endColIdx
 
-            // Fill in the row of out's outRowIdx, which contains matrix matIdx's matrixRow.
-            while (outRowIdx < endRowIdx) {
-                var outColIdx = 0
-
+            for (outRowIdx in startRowIdx until endRowIdx) {
                 val matrixRow = outRowIdx - startRowIdx
-                val inRange = startColIdx..<endColIdx
-                while (outColIdx < totalCols) {
+                for (outColIdx in 0 until totalCols) {
                     if (outColIdx in inRange) {
                         val matrixCol = outColIdx - startColIdx
                         out[outRowIdx * totalCols + outColIdx] = matrix[matrixRow, matrixCol]
                     } else {
                         out[outRowIdx * totalCols + outColIdx] = zero
                     }
-                    outColIdx += 1
                 }
-                outRowIdx += 1
             }
 
-            // We have finished copying the rows corresponding to matrix matIdx.
-            // Advance the row index and column index to where the next matrix will be copied.
             startRowIdx = endRowIdx
             startColIdx = endColIdx
-            matIdx += 1
         }
 
         return DenseMat.fromArrayUnsafe(totalRows, totalCols, out)
@@ -937,14 +805,10 @@ internal object DenseMatKernel {
         if (mat.rows != mat.cols) return false
         val n = mat.rows
 
-        var i = 0
-        while (i < n) {
-            var j = i + 1
-            while (j < n) {
+        for (i in 0 until n) {
+            for (j in i + 1 until n) {
                 if (!eq(mat[i, j], zero)) return false
-                j += 1
             }
-            i += 1
         }
         return true
     }
@@ -964,14 +828,10 @@ internal object DenseMatKernel {
         val rows = mat1.rows
         val cols = mat1.cols
 
-        var i = 0
-        while (i < rows) {
-            var j = 0
-            while (j < cols) {
+        for (i in 0 until rows) {
+            for (j in 0 until cols) {
                 if (!eq(mat1[i, j], mat2[i, j])) return false
-                j += 1
             }
-            i += 1
         }
         return true
     }
@@ -988,14 +848,10 @@ internal object DenseMatKernel {
         val cols = mat.cols
         val out = allocateMatrix(rows, cols)
 
-        var r = 0
-        while (r < rows) {
-            var c = 0
-            while (c < cols) {
+        for (r in 0 until rows) {
+            for (c in 0 until cols) {
                 out[r * cols + c] = mat[r, c]
-                c += 1
             }
-            r += 1
         }
 
         return DenseMat.fromArrayUnsafe(rows, cols, out)
@@ -1012,13 +868,10 @@ internal object DenseMatKernel {
             "Diagonal dominance is defined for square matrices, got ${mat.rows}${Symbols.TIMES}${mat.cols}"
         }
 
-        var row = 0
-        while (row < mat.rows) {
+        for (row in 0 until mat.rows) {
             var total = add.identity
-            var col = 0
-            while (col < mat.cols) {
+            for (col in 0 until mat.cols) {
                 if (col != row) total = add(total, mag(mat[row, col]))
-                col += 1
             }
 
             val diag = mag(mat[row, row])
@@ -1027,7 +880,6 @@ internal object DenseMatKernel {
             } else {
                 if (order.lt(diag, total)) return false
             }
-            row += 1
         }
         return true
     }
@@ -1039,6 +891,67 @@ internal object DenseMatKernel {
         order: TotalOrder<M>,
         strict: Boolean = false
     ): Boolean = isRowDiagonallyDominant(mat.transposeView(), mag, add, order, strict)
+
+    /**
+     * Calculates the permanent of a matrix over a [Semiring].
+     *
+     * This is the best we can do with a semiring since we do not have a negation operation on
+     * the additive operator.
+     */
+    fun <A : Any> permByPermutation(
+        ring: Semiring<A>,
+        mat: MatLike<A>
+    ): A {
+        require(isSquare(mat)) {
+            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+        }
+        val n = mat.rows
+        if (n == 0) return ring.mul.identity
+        if (n == 1) return mat[0, 0]
+        if (n == 2) return ring.add(
+            ring.mul(mat[0, 0], mat[1, 1]),
+            ring.mul(mat[0, 1], mat[1, 0])
+        )
+
+        // We use an internal permutation generator here to avoid all the work of the outward facing
+        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
+        var acc = ring.add.identity
+        val perm = IntArray(n) { it }
+
+        fun permutationProduct(): A {
+            var prod = ring.mul.identity
+            for (i in perm.indices) {
+                prod = ring.mul(prod, mat[i, perm[i]])
+            }
+            return prod
+        }
+
+        fun addCurrentPermutationTerm() {
+            acc = ring.add(acc, permutationProduct())
+        }
+
+        fun swap(i: Int, j: Int) {
+            val tmp = perm[i]
+            perm[i] = perm[j]
+            perm[j] = tmp
+        }
+
+        fun generate(k: Int) {
+            if (k == n) {
+                addCurrentPermutationTerm()
+                return
+            }
+
+            for (i in k until n) {
+                swap(k, i)
+                generate(k + 1)
+                swap(k, i)
+            }
+        }
+
+        generate(0)
+        return acc
+    }
 
     /**
      * Calculates the Leibniz / permutation determinant over a [CommutativeRing].
@@ -1054,7 +967,7 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): A {
         require(isSquare(mat)) {
-            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+            "Permanent is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
         }
         val n = mat.rows
         if (n == 0) return ring.mul.identity
@@ -1065,7 +978,7 @@ internal object DenseMatKernel {
         )
 
         // We use an internal permutation generator here to avoid all the work of the outward facing
-        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
+        // PermutationAlgorithm.permutations method. Accumulate the permanent in acc.
         var acc = ring.add.identity
         val perm = IntArray(n) { it }
 
