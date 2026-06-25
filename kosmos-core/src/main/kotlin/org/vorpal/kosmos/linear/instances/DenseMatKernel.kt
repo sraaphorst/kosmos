@@ -12,10 +12,12 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
+import org.vorpal.kosmos.linear.values.RowEchelonForm
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
@@ -36,7 +38,7 @@ import kotlin.math.min
  */
 internal object DenseMatKernel {
     /**
-     * Allocator for a new matrix that ensures that rows * cols does not overflow an Int.
+     * Allocator for a new matrix that ensures that (rows * cols) does not overflow an Int.
      *
      * If it overflows an int, [ArithmeticException] is thrown.
      */
@@ -47,7 +49,7 @@ internal object DenseMatKernel {
     }
 
     /**
-     * Calls require to make sure the size of `mat` is `rows×cols`.
+     * Calls required to make sure the size of `mat` is `rows×cols`.
      *
      * Throws an [IllegalArgumentException] if the check fails.
      */
@@ -1114,4 +1116,112 @@ internal object DenseMatKernel {
 
         return ring.mul(sign, get(n-1, n-1))
     }
+
+    fun <A : Any> rowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowEchelonForm<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+
+        // Make a mutable copy of the matrix.
+        val data = allocateMatrix(rows, cols)
+
+        @Suppress("UNCHECKED_CAST")
+        fun get(row: Int, col: Int): A =
+            data[row * cols + col] as A
+
+        fun set(row: Int, col: Int, value: A) {
+            data[row * cols + col] = value
+        }
+
+        for (row in 0 until rows)
+            for (col in 0 until cols)
+                set(row, col, mat[row, col])
+
+        fun swapRows(i: Int, j: Int) {
+            if (i == j) return
+
+            for (k in 0 until cols) {
+                val temp = get(i, k)
+                set(i, k, get(j, k))
+                set(j, k, temp)
+            }
+        }
+
+        fun scaleRow(row: Int, factor: A, startCol: Int = 0) {
+            for (k in startCol until cols)
+                set(row, k, field.mul(factor, get(row, k)))
+        }
+
+        // Set dst <- dst + factor * src.
+        fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            for (k in startCol until cols)
+                set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+        }
+
+        var rowSwaps = 0
+        val pivots = mutableListOf<Pair<Int, Int>>()
+        var currentRow = 0
+
+        for (col in 0 until cols) {
+            if (currentRow == rows) break
+
+            var searchRow = currentRow
+            while (searchRow < rows && eq(get(searchRow, col), field.zero))
+                searchRow++
+
+            if (searchRow == rows)
+                continue
+
+            if (searchRow != currentRow) {
+                swapRows(currentRow, searchRow)
+                rowSwaps++
+            }
+
+            val pivot = get(currentRow, col)
+
+            if (!eq(pivot, field.one)) {
+                val invPivot = field.reciprocalOption(pivot).getOrElse {
+                    throw ArithmeticException("Pivot was selected as nonzero but has no reciprocal: $pivot")
+                }
+
+                scaleRow(currentRow, invPivot, col)
+            }
+
+            // Canonicalize the pivot entry. This is not a row operation for history purposes.
+            set(currentRow, col, field.one)
+
+            for (row in currentRow + 1 until rows) {
+                val entry = get(row, col)
+
+                if (!eq(entry, field.zero)) {
+                    val factor = field.add.inverse(entry)
+
+                    addRowMultiple(
+                        src = currentRow,
+                        dst = row,
+                        factor = factor,
+                        startCol = col
+                    )
+
+                    // Canonicalize the cleared entry.
+                    set(row, col, field.zero)
+                }
+            }
+
+            pivots.add(currentRow to col)
+            currentRow++
+        }
+
+        val refMatrix = DenseMat.fromArrayUnsafe<A>(rows, cols, data)
+        return RowEchelonForm(refMatrix, pivots, rowSwaps)
+    }
+
+    fun <A : Any> reducedRowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowEchelonForm<A> = TODO()
 }
