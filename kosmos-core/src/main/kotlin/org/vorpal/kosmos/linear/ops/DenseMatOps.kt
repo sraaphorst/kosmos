@@ -14,6 +14,7 @@ import org.vorpal.kosmos.linear.instances.DenseMatKernel
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
+import org.vorpal.kosmos.linear.values.RowEchelonForm
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
 
@@ -884,4 +885,34 @@ object DenseMatOps {
         mat: MatLike<A>,
         eq: Eq<A> = Eq.default()
     ): A = DenseMatKernel.detBareiss(ring, exactDiv, mat, eq)
+
+    /**
+     * Calculate the row echelon form of a matrix over a [Field].
+     */
+    fun <A : Any> rowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowEchelonForm<A> = DenseMatKernel.rowEchelonForm(field, mat, eq)
+
+    /**
+     * Calculate the reduced row echelon form of a matrix over a [Field].
+     */
+    fun <A : Any> reducedRowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowEchelonForm<A> = DenseMatKernel.reducedRowEchelonForm(field, mat, eq)
+
+    /**
+     * Calculate the rank of a matrix over a [Field].
+     *
+     * Note that the rank is the number of pivot columns in the reduced row echelon form: thus, if any other
+     * properties of the REF / RREF are needed, [rowEchelonForm] and [reducedRowEchelonForm] should be used instead.
+     */
+    fun <A : Any> rank(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Int = reducedRowEchelonForm(field, mat, eq).rank
 }
