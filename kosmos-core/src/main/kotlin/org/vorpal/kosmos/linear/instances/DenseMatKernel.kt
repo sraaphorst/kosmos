@@ -1117,6 +1117,20 @@ internal object DenseMatKernel {
         return ring.mul(sign, get(n-1, n-1))
     }
 
+    /**
+     * Computes the row echelon form of the given matrix.
+     *
+     * The row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
+     * right of the leading entry of the row above it, and in this case, the leading entry is always one. All the
+     * other entries in the rows below this column are zero.
+     *
+     * Note that we need a [Field] to perform the required row operations.
+     *
+     * @param field The field over which the matrix is defined.
+     * @param mat The matrix of which to compute the row echelon form.
+     * @param eq The equality function for the field.
+     * @return The row echelon form of the given matrix.
+     */
     fun <A : Any> rowEchelonForm(
         field: Field<A>,
         mat: MatLike<A>,
@@ -1219,9 +1233,73 @@ internal object DenseMatKernel {
         return RowEchelonForm(refMatrix, pivots, rowSwaps)
     }
 
+    /**
+     * Computes the reduced row echelon form of the given matrix.
+     *
+     * The reduced row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
+     * right of the leading entry of the row above it, and is one.
+     * All the other entries in the rows of this column are zero.
+     *
+     * Note that we need a [Field] to perform the required row operations.
+     *
+     * @param field The field over which the matrix is defined.
+     * @param mat The matrix of which to compute the reduced row echelon form.
+     * @param eq The equality function for the field.
+     * @return The row echelon form of the given matrix.
+     */
     fun <A : Any> reducedRowEchelonForm(
         field: Field<A>,
         mat: MatLike<A>,
         eq: Eq<A> = Eq.default()
-    ): RowEchelonForm<A> = TODO()
+    ): RowEchelonForm<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val data = allocateMatrix(rows, cols)
+
+        @Suppress("UNCHECKED_CAST")
+        fun get(row: Int, col: Int): A =
+            data[row * cols + col] as A
+
+        fun set(row: Int, col: Int, value: A) {
+            data[row * cols + col] = value
+        }
+
+        // Get the matrix in REF form. Then reduce rows above pivots from bottom to top, left to right.
+        val ref = rowEchelonForm(field, mat, eq)
+
+        // Set dst <- dst + factor * src.
+        fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            for (k in startCol until cols)
+                set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+        }
+
+        for (row in 0 until rows)
+            for (col in 0 until cols)
+                set(row, col, ref.matrix[row, col])
+
+        for ((refRow, refCol) in ref.pivots.asReversed()) {
+            val pivotEntry = get(refRow, refCol)
+            require(eq(pivotEntry, field.one)) {
+                "The leading entry in the pivot row should be one but is: $pivotEntry"
+            }
+
+            for (row in refRow - 1 downTo 0) {
+                val entry = get(row, refCol)
+                if (eq(entry, field.zero)) continue
+
+                // Since pivotEntry is one, we can reduce the row by subtracting the entry * refRow.
+                addRowMultiple(
+                    src = refRow,
+                    dst = row,
+                    factor = field.add.inverse(entry),
+                    startCol = refCol
+                )
+
+                // Canonicalize the cleared entry.
+                set(row, refCol, field.zero)
+            }
+        }
+
+        return RowEchelonForm(DenseMat.fromArrayUnsafe(rows, cols, data), ref.pivots, ref.rowSwaps)
+    }
 }
