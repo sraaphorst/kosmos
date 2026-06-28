@@ -12,10 +12,14 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
+import org.vorpal.kosmos.linear.values.ReducedRowEchelonForm
+import org.vorpal.kosmos.linear.values.RowEchelonForm
+import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
@@ -36,7 +40,7 @@ import kotlin.math.min
  */
 internal object DenseMatKernel {
     /**
-     * Allocator for a new matrix that ensures that rows * cols does not overflow an Int.
+     * Allocator for a new matrix that ensures that (rows * cols) does not overflow an Int.
      *
      * If it overflows an int, [ArithmeticException] is thrown.
      */
@@ -47,7 +51,7 @@ internal object DenseMatKernel {
     }
 
     /**
-     * Calls require to make sure the size of `mat` is `rows×cols`.
+     * Calls required to make sure the size of `mat` is `rows×cols`.
      *
      * Throws an [IllegalArgumentException] if the check fails.
      */
@@ -189,10 +193,11 @@ internal object DenseMatKernel {
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
         mat: MatLike<A>,
+        eq: Eq<A>
     ): Boolean {
         for (r in 0 until mat.rows) {
             for (c in 0 until mat.cols) {
-                if (mat[r, c] == field.zero) return false
+                if (eq(mat[r, c], field.zero)) return false
             }
         }
         return true
@@ -903,7 +908,7 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): A {
         require(isSquare(mat)) {
-            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+            "Permanent is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
         }
         val n = mat.rows
         if (n == 0) return ring.mul.identity
@@ -914,7 +919,7 @@ internal object DenseMatKernel {
         )
 
         // We use an internal permutation generator here to avoid all the work of the outward facing
-        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
+        // PermutationAlgorithm.permutations method. Accumulate the permanent in acc.
         var acc = ring.add.identity
         val perm = IntArray(n) { it }
 
@@ -967,7 +972,7 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): A {
         require(isSquare(mat)) {
-            "Permanent is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
         }
         val n = mat.rows
         if (n == 0) return ring.mul.identity
@@ -978,7 +983,7 @@ internal object DenseMatKernel {
         )
 
         // We use an internal permutation generator here to avoid all the work of the outward facing
-        // PermutationAlgorithm.permutations method. Accumulate the permanent in acc.
+        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
         var acc = ring.add.identity
         val perm = IntArray(n) { it }
 
@@ -1113,5 +1118,180 @@ internal object DenseMatKernel {
         }
 
         return ring.mul(sign, get(n-1, n-1))
+    }
+
+    /**
+     * The engine that calculates the row echelon form of a matrix, and optionally,
+     * the row operations that were performed.
+     */
+    fun <A : Any> rowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A>,
+        operations: MutableList<RowOp<A>>?
+    ): RowEchelonForm<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+
+        // Make a mutable copy of the matrix.
+        val data = allocateMatrix(rows, cols)
+
+        @Suppress("UNCHECKED_CAST")
+        fun get(row: Int, col: Int): A =
+            data[row * cols + col] as A
+
+        fun set(row: Int, col: Int, value: A) {
+            data[row * cols + col] = value
+        }
+
+        for (row in 0 until rows)
+            for (col in 0 until cols)
+                set(row, col, mat[row, col])
+
+        fun swapRows(i: Int, j: Int) {
+            if (i == j) return
+
+            for (k in 0 until cols) {
+                val temp = get(i, k)
+                set(i, k, get(j, k))
+                set(j, k, temp)
+            }
+            operations?.add(RowOp.Swap(i, j))
+        }
+
+        fun scaleRow(row: Int, factor: A, startCol: Int = 0) {
+            if (eq(factor, field.one)) return
+            for (k in startCol until cols)
+                set(row, k, field.mul(factor, get(row, k)))
+            operations?.add(RowOp.Scale(row, factor))
+        }
+
+        // Set dst <- dst + factor * src.
+        fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            if (eq(factor, field.zero)) return
+            for (k in startCol until cols)
+                set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+            operations?.add(RowOp.AddMultiple(src, dst, factor))
+        }
+
+        var rowSwaps = 0
+        val pivots = mutableListOf<Pair<Int, Int>>()
+        var currentRow = 0
+
+        for (col in 0 until cols) {
+            if (currentRow == rows) break
+
+            var searchRow = currentRow
+            while (searchRow < rows && eq(get(searchRow, col), field.zero))
+                searchRow++
+
+            if (searchRow == rows)
+                continue
+
+            if (searchRow != currentRow) {
+                swapRows(currentRow, searchRow)
+                rowSwaps++
+            }
+
+            val pivot = get(currentRow, col)
+
+            if (!eq(pivot, field.one)) {
+                val invPivot = field.reciprocalOption(pivot).getOrElse {
+                    throw ArithmeticException("Pivot was selected as nonzero but has no reciprocal: $pivot")
+                }
+
+                scaleRow(currentRow, invPivot, col)
+            }
+
+            // Canonicalize the pivot entry. This is not a row operation for history purposes.
+            set(currentRow, col, field.one)
+
+            for (row in currentRow + 1 until rows) {
+                val entry = get(row, col)
+
+                if (!eq(entry, field.zero)) {
+                    val factor = field.add.inverse(entry)
+
+                    addRowMultiple(
+                        src = currentRow,
+                        dst = row,
+                        factor = factor,
+                        startCol = col
+                    )
+
+                    // Canonicalize the cleared entry.
+                    set(row, col, field.zero)
+                }
+            }
+
+            pivots.add(currentRow to col)
+            currentRow++
+        }
+
+        val refMatrix = DenseMat.fromArrayUnsafe<A>(rows, cols, data)
+        return RowEchelonForm(refMatrix, pivots, rowSwaps)
+    }
+
+    /**
+     * The engine that calculates the reduced row echelon form of a matrix, and optionally,
+     * the row operations that were performed.
+     */
+    fun <A : Any> reducedRowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A>,
+        operations: MutableList<RowOp<A>>?
+    ): ReducedRowEchelonForm<A> {
+        val rows = mat.rows
+        val cols = mat.cols
+        val data = allocateMatrix(rows, cols)
+
+        @Suppress("UNCHECKED_CAST")
+        fun get(row: Int, col: Int): A =
+            data[row * cols + col] as A
+
+        fun set(row: Int, col: Int, value: A) {
+            data[row * cols + col] = value
+        }
+
+        // Get the matrix in REF form. Then reduce rows above pivots from bottom to top.
+        val ref = rowEchelonForm(field, mat, eq, operations)
+
+        // Set dst <- dst + factor * src.
+        fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            if (eq(factor, field.zero)) return
+            for (k in startCol until cols)
+                set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+            operations?.add(RowOp.AddMultiple(src, dst, factor))
+        }
+
+        for (row in 0 until rows)
+            for (col in 0 until cols)
+                set(row, col, ref.matrix[row, col])
+
+        for ((refRow, refCol) in ref.pivots.asReversed()) {
+            val pivotEntry = get(refRow, refCol)
+            require(eq(pivotEntry, field.one)) {
+                "The leading entry in the pivot row should be one but is: $pivotEntry"
+            }
+
+            for (row in refRow - 1 downTo 0) {
+                val entry = get(row, refCol)
+                if (eq(entry, field.zero)) continue
+
+                // Since pivotEntry is one, we can reduce the row by subtracting the entry * refRow.
+                addRowMultiple(
+                    src = refRow,
+                    dst = row,
+                    factor = field.add.inverse(entry),
+                    startCol = refCol
+                )
+
+                // Canonicalize the cleared entry.
+                set(row, refCol, field.zero)
+            }
+        }
+
+        return ReducedRowEchelonForm(DenseMat.fromArrayUnsafe(rows, cols, data), ref.pivots, ref.rowSwaps)
     }
 }
