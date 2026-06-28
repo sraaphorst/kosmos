@@ -2,7 +2,6 @@ package org.vorpal.kosmos.linear.instances
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.constant
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
@@ -10,13 +9,13 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.linear.values.Vec0
-import org.vorpal.kosmos.linear.values.Vec2
-import org.vorpal.kosmos.linear.values.Vec3
-import org.vorpal.kosmos.linear.values.Vec4
+import org.vorpal.kosmos.linear.values.arbVec2
+import org.vorpal.kosmos.linear.values.arbVec3
+import org.vorpal.kosmos.linear.values.arbVec4
 
 /**
  * Algebraic-law coverage for the fixed-arity tuple structures in [FixedTupleAlgebras],
- * over the rationals. The [Vec0]..[Vec4] types are data classes, so the default structural
+ * over the rationals. The [Vec0]..Vec4 types are data classes, so the default structural
  * equality is used.
  */
 class FixedTupleAlgebrasSpec : StringSpec({
@@ -25,11 +24,9 @@ class FixedTupleAlgebrasSpec : StringSpec({
     val eqQ = RationalAlgebras.eqRational
     val prQ = RationalAlgebras.printableRationalPretty
 
-    val arbVec2 = Arb.bind(ArbRational.small, ArbRational.small) { x, y -> Vec2(x, y) }
-    val arbVec3 = Arb.bind(ArbRational.small, ArbRational.small, ArbRational.small) { x, y, z -> Vec3(x, y, z) }
-    val arbVec4 = Arb.bind(
-        ArbRational.small, ArbRational.small, ArbRational.small, ArbRational.small
-    ) { x, y, z, w -> Vec4(x, y, z, w) }
+    val arbVec2 = arbVec2(ArbRational.small)
+    val arbVec3 = arbVec3(ArbRational.small)
+    val arbVec4 = arbVec4(ArbRational.small)
 
     "dim0Group satisfies AbelianGroupLaws" {
         AbelianGroupLaws(
