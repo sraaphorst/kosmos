@@ -4,10 +4,10 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.algebra.GroupLaws
 import org.vorpal.kosmos.linear.instance.arbPermMat
 import org.vorpal.kosmos.linear.instance.eqPermMat
+import org.vorpal.kosmos.linear.instance.prPermMat
 import org.vorpal.kosmos.linear.values.PermMat
 
 /**
@@ -17,8 +17,6 @@ import org.vorpal.kosmos.linear.values.PermMat
  * [PermMat] does not override `equals`, so all structural comparisons use [eqPermMat].
  */
 class PermMatAlgebrasSpec : FunSpec({
-
-    val prPermMat: Printable<PermMat> = Printable { p -> p.toIntArray().toList().toString() }
 
     context("symmetric group S_n") {
         test("symmetricGroup satisfies GroupLaws") {

@@ -6,6 +6,7 @@ import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.shuffle
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.linear.values.PermMat
 
 /**
@@ -16,6 +17,12 @@ import org.vorpal.kosmos.linear.values.PermMat
  */
 val eqPermMat: Eq<PermMat> =
     Eq { a, b -> a.toIntArray().contentEquals(b.toIntArray()) }
+
+/**
+ * Printable for [PermMat] in one-line notation, e.g. `[2, 0, 1, 3]`.
+ */
+val prPermMat: Printable<PermMat> =
+    Printable { p -> p.toIntArray().toList().toString() }
 
 /**
  * Generate a uniformly random `n×n` permutation matrix (Fisher–Yates over `0 until n`).
