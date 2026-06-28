@@ -14,6 +14,10 @@ import org.vorpal.kosmos.linear.instances.DenseMatKernel
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
+import org.vorpal.kosmos.linear.values.ReducedRowEchelonForm
+import org.vorpal.kosmos.linear.values.RowEchelonForm
+import org.vorpal.kosmos.linear.values.RowOp
+import org.vorpal.kosmos.linear.values.RowReductionTrace
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
 
@@ -111,7 +115,8 @@ object DenseMatOps {
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
         mat: MatLike<A>,
-    ): Boolean = DenseMatKernel.isHadamardUnit(field, mat)
+        eq: Eq<A> = Eq.default()
+    ): Boolean = DenseMatKernel.isHadamardUnit(field, mat, eq)
 
     /**
      * Kronecker product A⊗B: given two matrices
@@ -884,4 +889,86 @@ object DenseMatOps {
         mat: MatLike<A>,
         eq: Eq<A> = Eq.default()
     ): A = DenseMatKernel.detBareiss(ring, exactDiv, mat, eq)
+
+    /**
+     * Computes the row echelon form of the given matrix.
+     *
+     * The row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
+     * right of the leading entry of the row above it, and in this case, the leading entry is always one. All the
+     * other entries in the rows below this column are zero.
+     *
+     * Note that we need a [Field] to perform the required row operations.
+     *
+     * @param field The field over which the matrix is defined.
+     * @param mat The matrix of which to compute the row echelon form.
+     * @param eq The equality function for the field.
+     * @return The row echelon form of the given matrix.
+     */
+    fun <A : Any> rowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowEchelonForm<A> =
+        DenseMatKernel.rowEchelonForm(field, mat, eq, null)
+
+
+    /**
+     * Calculate the row echelon form of a matrix along with the row operations that were performed to obtain it.
+     */
+    fun <A : Any> rowEchelonFormTrace(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowReductionTrace<A, RowEchelonForm<A>> {
+        val ops = mutableListOf<RowOp<A>>()
+        val form = DenseMatKernel.rowEchelonForm(field, mat, eq, ops)
+        return RowReductionTrace(form, ops.toList())
+    }
+
+    /**
+     * Computes the reduced row echelon form of the given matrix.
+     *
+     * The reduced row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
+     * right of the leading entry of the row above it, and is one.
+     * All the other entries in the rows of this column are zero.
+     *
+     * Note that we need a [Field] to perform the required row operations.
+     *
+     * @param field The field over which the matrix is defined.
+     * @param mat The matrix of which to compute the reduced row echelon form.
+     * @param eq The equality function for the field.
+     * @return The row echelon form of the given matrix.
+     */
+    fun <A : Any> reducedRowEchelonForm(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): ReducedRowEchelonForm<A> =
+        DenseMatKernel.reducedRowEchelonForm(field, mat, eq, null)
+
+    /**
+     * Calculate the reduced row echelon form of a matrix along with the row operations that were performed to
+     * obtain it.
+     */
+    fun <A : Any> reducedRowEchelonFormTrace(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): RowReductionTrace<A, ReducedRowEchelonForm<A>> {
+        val ops = mutableListOf<RowOp<A>>()
+        val form = DenseMatKernel.reducedRowEchelonForm(field, mat, eq, ops)
+        return RowReductionTrace(form, ops.toList())
+    }
+
+    /**
+     * Calculate the rank of a matrix over a [Field].
+     *
+     * Note that the rank is the number of pivot columns in the row echelon form: thus, if any other
+     * properties of the REF / RREF are needed, [rowEchelonForm] and [reducedRowEchelonForm] should be used instead.
+     */
+    fun <A : Any> rank(
+        field: Field<A>,
+        mat: MatLike<A>,
+        eq: Eq<A> = Eq.default()
+    ): Int = rowEchelonForm(field, mat, eq).rank
 }
