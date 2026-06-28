@@ -3,21 +3,24 @@ package org.vorpal.kosmos.linear.ops
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.bind
-import io.kotest.property.arbitrary.flatMap
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
-import org.vorpal.kosmos.linear.instance.arbDenseMat
+import org.vorpal.kosmos.linear.instance.arbRationalMat
+import org.vorpal.kosmos.linear.instance.arbSquareRationalMat
 import org.vorpal.kosmos.linear.values.DenseMat
-import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.ReducedRowEchelonForm
 import org.vorpal.kosmos.linear.values.RowEchelonForm
 import org.vorpal.kosmos.linear.values.RowOp
+import org.vorpal.kosmos.linear.values.arePivotsNormalized
+import org.vorpal.kosmos.linear.values.areZeroRowsAtBottom
+import org.vorpal.kosmos.linear.values.isAbovePivotsZero
+import org.vorpal.kosmos.linear.values.isBelowPivotsZero
+import org.vorpal.kosmos.linear.values.isPivotLeading
+import org.vorpal.kosmos.linear.values.isStaircase
+import org.vorpal.kosmos.linear.values.replay
 
 /**
  * Property tests for the row-reduction operations on [DenseMatOps]:
@@ -32,7 +35,8 @@ import org.vorpal.kosmos.linear.values.RowOp
  *
  * The trace variants are validated by **replaying** the recorded row operations on the
  * original matrix and checking that the result matches the returned form — this is the
- * key contract for the trace API.
+ * key contract for the trace API. Replay machinery and structural predicates live in
+ * `kosmos-testkit/.../linear/values/`.
  */
 class DenseMatRowReductionSpec : FunSpec({
 
@@ -40,96 +44,9 @@ class DenseMatRowReductionSpec : FunSpec({
     val zero = Rational.ZERO
     val one = Rational.ONE
 
-    // ── Helpers ───────────────────────────────────────────────────────────
-
     /** Build a rational matrix from rows of `Int`s. */
     fun qm(vararg rows: List<Int>): DenseMat<Rational> =
         DenseMat.ofRows(rows.map { row -> row.map { it.toRational() } })
-
-    /**
-     * Replay a sequence of [RowOp]s on a starting matrix, returning the resulting matrix.
-     * This is what the trace variants of REF / RREF promise: starting from the input matrix,
-     * applying the recorded operations in order yields the returned form's matrix.
-     */
-    fun <A : Any> replay(
-        field: Field<A>,
-        mat: MatLike<A>,
-        ops: List<RowOp<A>>
-    ): DenseMat<A> {
-        val rows = (0 until mat.rows).map { r ->
-            (0 until mat.cols).map { c -> mat[r, c] }.toMutableList()
-        }.toMutableList()
-
-        ops.forEach { op ->
-            when (op) {
-                is RowOp.Swap<A> -> {
-                    val tmp = rows[op.i]
-                    rows[op.i] = rows[op.j]
-                    rows[op.j] = tmp
-                }
-                is RowOp.Scale<A> -> {
-                    for (c in 0 until mat.cols) {
-                        rows[op.row][c] = field.mul(rows[op.row][c], op.factor)
-                    }
-                }
-                is RowOp.AddMultiple<A> -> {
-                    for (c in 0 until mat.cols) {
-                        rows[op.dst][c] = field.add(
-                            rows[op.dst][c],
-                            field.mul(op.factor, rows[op.src][c])
-                        )
-                    }
-                }
-            }
-        }
-
-        return DenseMat.ofRows(rows)
-    }
-
-    /** Every entry of the matrix below each pivot's row, in the pivot's column, is zero. */
-    fun isBelowPivotsZero(mat: DenseMat<Rational>, pivots: List<Pair<Int, Int>>): Boolean =
-        pivots.all { (pr, pc) ->
-            (pr + 1 until mat.rows).all { r -> mat[r, pc] == zero }
-        }
-
-    /** Every entry of the matrix above each pivot's row, in the pivot's column, is zero. */
-    fun isAbovePivotsZero(mat: DenseMat<Rational>, pivots: List<Pair<Int, Int>>): Boolean =
-        pivots.all { (pr, pc) ->
-            (0 until pr).all { r -> mat[r, pc] == zero }
-        }
-
-    /** Each pivot entry equals one. */
-    fun arePivotsNormalized(mat: DenseMat<Rational>, pivots: List<Pair<Int, Int>>): Boolean =
-        pivots.all { (pr, pc) -> mat[pr, pc] == one }
-
-    /** Pivot rows and columns are both strictly increasing — staircase shape. */
-    fun isStaircase(pivots: List<Pair<Int, Int>>): Boolean =
-        pivots.zipWithNext().all { (a, b) -> b.first > a.first && b.second > a.second }
-
-    /** All entries to the left of each pivot in its row are zero — leading entry. */
-    fun isPivotLeading(mat: DenseMat<Rational>, pivots: List<Pair<Int, Int>>): Boolean =
-        pivots.all { (pr, pc) ->
-            (0 until pc).all { c -> mat[pr, c] == zero }
-        }
-
-    /** Zero rows (if any) occur only after the last pivot row. */
-    fun areZeroRowsAtBottom(mat: DenseMat<Rational>, pivots: List<Pair<Int, Int>>): Boolean {
-        val lastPivotRow = pivots.lastOrNull()?.first ?: -1
-        return (lastPivotRow + 1 until mat.rows).all { r ->
-            (0 until mat.cols).all { c -> mat[r, c] == zero }
-        }
-    }
-
-    // ── Arbs ──────────────────────────────────────────────────────────────
-
-    /** Random rational matrix with both dimensions chosen in [1, maxDim]. */
-    fun arbRationalMat(maxDim: Int = 5): Arb<DenseMat<Rational>> =
-        Arb.bind(Arb.int(1..maxDim), Arb.int(1..maxDim)) { r, c -> r to c }
-            .flatMap { (r, c) -> arbDenseMat(ArbRational.small, r, c) }
-
-    /** Random square rational matrix of size in [1, maxDim]. */
-    fun arbSquareRationalMat(maxDim: Int = 5): Arb<DenseMat<Rational>> =
-        Arb.int(1..maxDim).flatMap { n -> arbDenseMat(ArbRational.small, n, n) }
 
     // ── rowEchelonForm: concrete examples ─────────────────────────────────
 
@@ -156,8 +73,8 @@ class DenseMatRowReductionSpec : FunSpec({
             val ref = DenseMatOps.rowEchelonForm(q, m)
             ref.rank shouldBe 2
             ref.pivots shouldBe listOf(0 to 0, 1 to 1)
-            arePivotsNormalized(ref.matrix, ref.pivots) shouldBe true
-            isBelowPivotsZero(ref.matrix, ref.pivots) shouldBe true
+            arePivotsNormalized(ref.matrix, ref.pivots, one) shouldBe true
+            isBelowPivotsZero(ref.matrix, ref.pivots, zero) shouldBe true
         }
 
         test("3×3 with a duplicated row has rank 2") {
@@ -168,7 +85,6 @@ class DenseMatRowReductionSpec : FunSpec({
             )
             val ref = DenseMatOps.rowEchelonForm(q, m)
             ref.rank shouldBe 2
-            // The last row collapses to zero.
             (0 until 3).all { c -> ref.matrix[2, c] == zero } shouldBe true
         }
 
@@ -180,11 +96,10 @@ class DenseMatRowReductionSpec : FunSpec({
             val ref = DenseMatOps.rowEchelonForm(q, m)
             ref.rank shouldBe 2
             ref.pivots shouldBe listOf(0 to 0, 1 to 1)
-            arePivotsNormalized(ref.matrix, ref.pivots) shouldBe true
+            arePivotsNormalized(ref.matrix, ref.pivots, one) shouldBe true
         }
 
         test("matrix with a non-pivot leading column") {
-            // First column is all zeros, so the first pivot is in column 1.
             val m = qm(
                 listOf(0, 1, 2),
                 listOf(0, 2, 4),
@@ -203,21 +118,21 @@ class DenseMatRowReductionSpec : FunSpec({
         test("pivot entries are all one") {
             checkAll(arbRationalMat()) { mat ->
                 val ref = DenseMatOps.rowEchelonForm(q, mat)
-                arePivotsNormalized(ref.matrix, ref.pivots) shouldBe true
+                arePivotsNormalized(ref.matrix, ref.pivots, one) shouldBe true
             }
         }
 
         test("each entry below a pivot's column is zero") {
             checkAll(arbRationalMat()) { mat ->
                 val ref = DenseMatOps.rowEchelonForm(q, mat)
-                isBelowPivotsZero(ref.matrix, ref.pivots) shouldBe true
+                isBelowPivotsZero(ref.matrix, ref.pivots, zero) shouldBe true
             }
         }
 
         test("each entry to the left of a pivot in its row is zero") {
             checkAll(arbRationalMat()) { mat ->
                 val ref = DenseMatOps.rowEchelonForm(q, mat)
-                isPivotLeading(ref.matrix, ref.pivots) shouldBe true
+                isPivotLeading(ref.matrix, ref.pivots, zero) shouldBe true
             }
         }
 
@@ -231,7 +146,7 @@ class DenseMatRowReductionSpec : FunSpec({
         test("zero rows occur only after the last pivot row") {
             checkAll(arbRationalMat()) { mat ->
                 val ref = DenseMatOps.rowEchelonForm(q, mat)
-                areZeroRowsAtBottom(ref.matrix, ref.pivots) shouldBe true
+                areZeroRowsAtBottom(ref.matrix, ref.pivots, zero) shouldBe true
             }
         }
 
@@ -286,8 +201,7 @@ class DenseMatRowReductionSpec : FunSpec({
             val rref = DenseMatOps.reducedRowEchelonForm(q, m)
             rref.rank shouldBe 2
             rref.pivots shouldBe listOf(0 to 0, 1 to 2)
-            // Above-pivot entries are zero — distinct from REF.
-            isAbovePivotsZero(rref.matrix, rref.pivots) shouldBe true
+            isAbovePivotsZero(rref.matrix, rref.pivots, zero) shouldBe true
         }
     }
 
@@ -298,21 +212,21 @@ class DenseMatRowReductionSpec : FunSpec({
         test("pivot entries are all one") {
             checkAll(arbRationalMat()) { mat ->
                 val rref = DenseMatOps.reducedRowEchelonForm(q, mat)
-                arePivotsNormalized(rref.matrix, rref.pivots) shouldBe true
+                arePivotsNormalized(rref.matrix, rref.pivots, one) shouldBe true
             }
         }
 
         test("each entry below a pivot's column is zero") {
             checkAll(arbRationalMat()) { mat ->
                 val rref = DenseMatOps.reducedRowEchelonForm(q, mat)
-                isBelowPivotsZero(rref.matrix, rref.pivots) shouldBe true
+                isBelowPivotsZero(rref.matrix, rref.pivots, zero) shouldBe true
             }
         }
 
         test("each entry above a pivot's column is also zero (the RREF distinction)") {
             checkAll(arbRationalMat()) { mat ->
                 val rref = DenseMatOps.reducedRowEchelonForm(q, mat)
-                isAbovePivotsZero(rref.matrix, rref.pivots) shouldBe true
+                isAbovePivotsZero(rref.matrix, rref.pivots, zero) shouldBe true
             }
         }
 
@@ -326,7 +240,7 @@ class DenseMatRowReductionSpec : FunSpec({
         test("zero rows occur only after the last pivot row") {
             checkAll(arbRationalMat()) { mat ->
                 val rref = DenseMatOps.reducedRowEchelonForm(q, mat)
-                areZeroRowsAtBottom(rref.matrix, rref.pivots) shouldBe true
+                areZeroRowsAtBottom(rref.matrix, rref.pivots, zero) shouldBe true
             }
         }
 
@@ -341,10 +255,6 @@ class DenseMatRowReductionSpec : FunSpec({
     }
 
     // ── Trace replay: the key contract ────────────────────────────────────
-    //
-    // The trace variants of REF / RREF return both a reduced form AND a list of
-    // recorded row operations. The invariant: starting from the original matrix
-    // and applying those operations in order should reproduce the form's matrix.
 
     context("rowEchelonFormTrace — replay invariant") {
 
@@ -470,7 +380,6 @@ class DenseMatRowReductionSpec : FunSpec({
         }
 
         test("trace replay is empty-ops-safe for the identity matrix") {
-            // The identity is already in RREF, so the operation list should reproduce it.
             val id3 = DenseMatOps.identity(q, 3)
             val traced = DenseMatOps.reducedRowEchelonFormTrace(q, id3)
             replay(q, id3, traced.operations) shouldBe id3
