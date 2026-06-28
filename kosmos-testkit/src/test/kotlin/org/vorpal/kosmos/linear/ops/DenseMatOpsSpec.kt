@@ -5,6 +5,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.relations.TotalOrder
@@ -12,6 +15,7 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import java.math.BigInteger
+import kotlin.math.abs
 
 /**
  * Tests for the public matrix operations in [DenseMatOps], which delegate to the
@@ -218,6 +222,19 @@ class DenseMatOpsSpec : FunSpec({
         test("isHadamardUnit over a field detects zero entries") {
             DenseMatOps.isHadamardUnit(q, qm(listOf(Rational.ONE, 2.toRational()))) shouldBe true
             DenseMatOps.isHadamardUnit(q, qm(listOf(Rational.ONE, Rational.ZERO))) shouldBe false
+        }
+
+        test("isHadamardUnit honours the supplied Eq for the zero comparison") {
+            // A matrix whose only "suspicious" entry is 1e-15: nonzero exactly, but indistinguishable
+            // from zero under a reasonable approximate equality.
+            val almostZero: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-15)))
+            val approxZero: Eq<Real> = Eq { a, b -> abs(a - b) < 1e-10 }
+
+            // Default Eq is `==`, so 1e-15 ≠ 0.0 exactly → the matrix is a Hadamard unit.
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero) shouldBe true
+
+            // Approximate Eq treats 1e-15 as zero → the matrix is NOT a Hadamard unit.
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero, approxZero) shouldBe false
         }
 
         test("diagonal dominance") {
