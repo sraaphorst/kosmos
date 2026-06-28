@@ -460,7 +460,7 @@ data class UndirectedEdge<V: Any>(val u: V, val v: V): Edge<V> {
         require(from in this) { "Vertex $from not in edge $this." }
         return when(from) {
             u -> DirectedEdge(u, v)
-            v -> DirectedEdge(v, from)
+            v -> DirectedEdge(v, u)
             else -> throw IllegalArgumentException("Vertex $from not in edge $this.")
         }
     }
