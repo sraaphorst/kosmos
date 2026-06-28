@@ -1,9 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
 import io.kotest.core.spec.style.StringSpec
-import io.kotest.property.Arb
-import io.kotest.property.arbitrary.bind
-import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
@@ -13,17 +10,10 @@ class BicomplexCommutativeRingSpec : StringSpec({
     val eqB = BicomplexAlgebras.eqBicomplex
     val prB = BicomplexAlgebras.printableBicomplex
 
-    val arbReal = ArbReal.smallReal
-
-    val arbBicomplex =
-        Arb.bind(arbReal, arbReal, arbReal, arbReal) { a, b, c, d ->
-            Bicomplex.ofStandard(a, b, c, d)
-        }
-
     "BicomplexCommutativeRing satisfies CommutativeRingLaws" {
         CommutativeRingLaws(
             ring = ring,
-            arb = arbBicomplex,
+            arb = ArbBicomplex.bicomplex,
             eq = eqB,
             pr = prB
         ).fullTest().throwIfFailed()

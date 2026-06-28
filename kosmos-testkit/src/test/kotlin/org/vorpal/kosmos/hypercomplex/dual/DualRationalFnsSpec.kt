@@ -5,38 +5,12 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.arbitrary
-import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.int
-import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 
 class DualRationalFnsSpec : FunSpec({
-
-    val arbRational: Arb<Rational> =
-        Arb.int(-20, 20)
-            .map { it.toRational() }
-
-    val arbNonZeroRational: Arb<Rational> =
-        arbRational
-            .filter { it != Rational.ZERO }
-
-    val arbDualRational: Arb<Dual<Rational>> =
-        arbitrary {
-            dual(
-                f = arbRational.bind(),
-                df = arbRational.bind()
-            )
-        }
-
-    val arbInvertibleDualRational: Arb<Dual<Rational>> =
-        arbitrary {
-            dual(
-                f = arbNonZeroRational.bind(),
-                df = arbRational.bind()
-            )
-        }
 
     data class MobiusCase(
         val x: Dual<Rational>,
