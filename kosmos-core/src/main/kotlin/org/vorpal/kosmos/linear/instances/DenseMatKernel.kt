@@ -17,7 +17,9 @@ import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
+import org.vorpal.kosmos.linear.values.ReducedRowEchelonForm
 import org.vorpal.kosmos.linear.values.RowEchelonForm
+import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
@@ -191,10 +193,11 @@ internal object DenseMatKernel {
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
         mat: MatLike<A>,
+        eq: Eq<A>
     ): Boolean {
         for (r in 0 until mat.rows) {
             for (c in 0 until mat.cols) {
-                if (mat[r, c] == field.zero) return false
+                if (eq(mat[r, c], field.zero)) return false
             }
         }
         return true
@@ -905,7 +908,7 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): A {
         require(isSquare(mat)) {
-            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+            "Permanent is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
         }
         val n = mat.rows
         if (n == 0) return ring.mul.identity
@@ -916,7 +919,7 @@ internal object DenseMatKernel {
         )
 
         // We use an internal permutation generator here to avoid all the work of the outward facing
-        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
+        // PermutationAlgorithm.permutations method. Accumulate the permanent in acc.
         var acc = ring.add.identity
         val perm = IntArray(n) { it }
 
@@ -969,7 +972,7 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): A {
         require(isSquare(mat)) {
-            "Permanent is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
+            "Determinant is defined for square matrices: got ${mat.rows}${Symbols.TIMES}${mat.cols}."
         }
         val n = mat.rows
         if (n == 0) return ring.mul.identity
@@ -980,7 +983,7 @@ internal object DenseMatKernel {
         )
 
         // We use an internal permutation generator here to avoid all the work of the outward facing
-        // PermutationAlgorithm.permutations method. Accumulate the permanent in acc.
+        // PermutationAlgorithm.permutations method. Accumulate the determinant in acc.
         var acc = ring.add.identity
         val perm = IntArray(n) { it }
 
@@ -1118,23 +1121,14 @@ internal object DenseMatKernel {
     }
 
     /**
-     * Computes the row echelon form of the given matrix.
-     *
-     * The row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
-     * right of the leading entry of the row above it, and in this case, the leading entry is always one. All the
-     * other entries in the rows below this column are zero.
-     *
-     * Note that we need a [Field] to perform the required row operations.
-     *
-     * @param field The field over which the matrix is defined.
-     * @param mat The matrix of which to compute the row echelon form.
-     * @param eq The equality function for the field.
-     * @return The row echelon form of the given matrix.
+     * The engine that calculates the row echelon form of a matrix, and optionally,
+     * the row operations that were performed.
      */
     fun <A : Any> rowEchelonForm(
         field: Field<A>,
         mat: MatLike<A>,
-        eq: Eq<A> = Eq.default()
+        eq: Eq<A>,
+        operations: MutableList<RowOp<A>>?
     ): RowEchelonForm<A> {
         val rows = mat.rows
         val cols = mat.cols
@@ -1162,17 +1156,22 @@ internal object DenseMatKernel {
                 set(i, k, get(j, k))
                 set(j, k, temp)
             }
+            operations?.add(RowOp.Swap(i, j))
         }
 
         fun scaleRow(row: Int, factor: A, startCol: Int = 0) {
+            if (eq(factor, field.one)) return
             for (k in startCol until cols)
                 set(row, k, field.mul(factor, get(row, k)))
+            operations?.add(RowOp.Scale(row, factor))
         }
 
         // Set dst <- dst + factor * src.
         fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            if (eq(factor, field.zero)) return
             for (k in startCol until cols)
                 set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+            operations?.add(RowOp.AddMultiple(src, dst, factor))
         }
 
         var rowSwaps = 0
@@ -1234,24 +1233,15 @@ internal object DenseMatKernel {
     }
 
     /**
-     * Computes the reduced row echelon form of the given matrix.
-     *
-     * The reduced row echelon form is a matrix in which each leading entry (the first nonzero entry in a row) is to the
-     * right of the leading entry of the row above it, and is one.
-     * All the other entries in the rows of this column are zero.
-     *
-     * Note that we need a [Field] to perform the required row operations.
-     *
-     * @param field The field over which the matrix is defined.
-     * @param mat The matrix of which to compute the reduced row echelon form.
-     * @param eq The equality function for the field.
-     * @return The row echelon form of the given matrix.
+     * The engine that calculates the reduced row echelon form of a matrix, and optionally,
+     * the row operations that were performed.
      */
     fun <A : Any> reducedRowEchelonForm(
         field: Field<A>,
         mat: MatLike<A>,
-        eq: Eq<A> = Eq.default()
-    ): RowEchelonForm<A> {
+        eq: Eq<A>,
+        operations: MutableList<RowOp<A>>?
+    ): ReducedRowEchelonForm<A> {
         val rows = mat.rows
         val cols = mat.cols
         val data = allocateMatrix(rows, cols)
@@ -1264,13 +1254,15 @@ internal object DenseMatKernel {
             data[row * cols + col] = value
         }
 
-        // Get the matrix in REF form. Then reduce rows above pivots from bottom to top, left to right.
-        val ref = rowEchelonForm(field, mat, eq)
+        // Get the matrix in REF form. Then reduce rows above pivots from bottom to top.
+        val ref = rowEchelonForm(field, mat, eq, operations)
 
         // Set dst <- dst + factor * src.
         fun addRowMultiple(src: Int, dst: Int, factor: A, startCol: Int) {
+            if (eq(factor, field.zero)) return
             for (k in startCol until cols)
                 set(dst, k, field.add(get(dst, k), field.mul(factor, get(src, k))))
+            operations?.add(RowOp.AddMultiple(src, dst, factor))
         }
 
         for (row in 0 until rows)
@@ -1300,6 +1292,6 @@ internal object DenseMatKernel {
             }
         }
 
-        return RowEchelonForm(DenseMat.fromArrayUnsafe(rows, cols, data), ref.pivots, ref.rowSwaps)
+        return ReducedRowEchelonForm(DenseMat.fromArrayUnsafe(rows, cols, data), ref.pivots, ref.rowSwaps)
     }
 }

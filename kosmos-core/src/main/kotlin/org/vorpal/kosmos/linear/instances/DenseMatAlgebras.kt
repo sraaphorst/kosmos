@@ -408,6 +408,7 @@ object DenseMatAlgebras {
         private val field: Field<A>,
         override val rows: Int,
         override val cols: Int,
+        private val eq: Eq<A> = Eq.default()
     ) : AbelianGroup<DenseMat<A>>, MatrixDimensionality {
 
         init {
@@ -419,7 +420,7 @@ object DenseMatAlgebras {
 
         private fun requireUnit(x: DenseMat<A>) {
             DenseMatKernel.requireSize(x, rows, cols)
-            require(DenseMatKernel.isHadamardUnit(field, x)) {
+            require(DenseMatKernel.isHadamardUnit(field, x, eq)) {
                 "Hadamard unit required (no zero entries allowed)."
             }
         }
