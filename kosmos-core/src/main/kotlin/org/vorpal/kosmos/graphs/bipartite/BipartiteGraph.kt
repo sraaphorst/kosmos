@@ -9,10 +9,12 @@ import org.vorpal.kosmos.graphs.UndirectedGraph
  * A finite bipartite graph with a distinguished left vertex set L and right vertex set R.
  *
  * Edges are undirected but always run between the parts:
+ * ```
  *   edges ⊆ L × R
+ * ```
  *
- * This structure is first-class (not encoded as Either<L,R>),
- * but provides a bridge to an UndirectedGraph<Either<L,R>> when you want generic graph algorithms.
+ * This structure is first-class (not encoded as `[Either]<L,R>`),
+ * but provides a bridge to an `[UndirectedGraph]<[Either]<L,R>>` when you want generic graph algorithms.
  */
 interface BipartiteGraph<L : Any, R : Any> {
     val leftVertices: FiniteSet.Unordered<L>
@@ -24,21 +26,22 @@ interface BipartiteGraph<L : Any, R : Any> {
         get() = !isEmpty
 
     val isComplete: Boolean
-        get() = edgeCount == leftOrder * rightOrder
+        get() = edgeCount == leftVertexCount * rightVertexCount
+
     val isNotComplete: Boolean
         get() = !isComplete
 
     /** Edge set as pairs (l, r). */
     val edges: FiniteSet.Unordered<Pair<L, R>>
 
-    val leftOrder: Int
-        get() = leftVertices.size
+    val leftVertexCount: Long
+        get() = leftVertices.size.toLong()
 
-    val rightOrder: Int
-        get() = rightVertices.size
+    val rightVertexCount: Long
+        get() = rightVertices.size.toLong()
 
-    val edgeCount: Int
-        get() = edges.size
+    val edgeCount: Long
+        get() = edges.size.toLong()
 
     /** Right-neighbors of a left vertex. */
     fun rightNeighbors(of: L): FiniteSet.Unordered<R>
@@ -56,8 +59,8 @@ interface BipartiteGraph<L : Any, R : Any> {
         (l to r) in edges
 
     /**
-     * Bridge: view this as an undirected graph on the disjoint union L ⊔ R,
-     * represented as Either<L,R>.
+     * Bridge: view this as an undirected graph on the disjoint union `L ⊔ R`,
+     * represented as `[Either]<L,R>`.
      */
     fun asUndirectedEitherGraph(): UndirectedGraph<Either<L, R>>
 

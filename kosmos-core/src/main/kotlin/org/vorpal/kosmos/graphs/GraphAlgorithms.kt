@@ -10,6 +10,26 @@ import org.vorpal.kosmos.functional.datastructures.isEmpty
 import kotlin.math.max
 import kotlin.math.min
 
+/*
+ * Whole-graph algorithms: distances, eccentricities, radius/diameter, connected
+ * and strongly connected components, bridges/articulations, and bipartiteness.
+ *
+ * Scope note (see issue #221): everything in this file is Ω(|V|) — most of it
+ * Θ(|V| + |E|) — *by definition of what it computes*, regardless of how the
+ * graph is backed. Capability interfaces (FastNeighbors and friends) reduce
+ * constant factors and allocations, but cannot change these asymptotics: a
+ * diameter, an SCC decomposition, or a bipartition inherently visits every
+ * vertex. These functions are therefore intended for materialized or
+ * materializable graphs, not for huge implicit/rule-defined graphs (e.g. a
+ * symbolic hypercube Q_40): such graphs support cheap *local* and *counting*
+ * queries (vertexCount, edgeCount, degree, hasEdge, neighbors), but running a
+ * whole-graph algorithm on one will attempt to traverse it in full.
+ *
+ * Internal `.size` comparisons in this file (e.g. a distance map against
+ * `vertices.size`) are intentional: they compare collections this code has
+ * itself materialized, and mark the code as materialization-bound. See the
+ * KDoc on Graph.vertexCount for the usage rule.
+ */
 
 // ---------- Connected components (UNDIRECTED) ----------
 internal fun <V: Any> UndirectedGraph<V>.computeConnectedComponentVertexSets(): FiniteSet<FiniteSet<V>> {
