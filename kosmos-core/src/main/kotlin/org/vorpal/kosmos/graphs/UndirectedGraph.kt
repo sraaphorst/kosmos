@@ -27,6 +27,9 @@ import org.vorpal.kosmos.functional.datastructures.Option
 sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     val edges: FiniteSet.Unordered<UndirectedEdge<V>>
 
+    override val edgeCount: Long
+        get() = edges.size.toLong()
+
     val isEmpty: Boolean
         get() = vertices.isEmpty
     val isNotEmpty: Boolean
@@ -113,8 +116,13 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      * Since this representation forbids loops and parallel edges,
      * having this many edges is equivalent to every unordered pair
      * of distinct vertices being joined by an edge.
+     *
+     * Note:
+     *
+     * `vertexCount ≤ Int.MAX_VALUE` (materialized vertices), so `n(n-1) < 2^62` fits in [Long].
      */
-    fun isComplete(): Boolean = edges.size == order * (order - 1) / 2
+    fun isComplete(): Boolean =
+        edgeCount == vertexCount * (vertexCount - 1) / 2
 
     /**
      * Returns `true` iff this graph is connected:
@@ -159,7 +167,8 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      *
      *    `|E| > |V| - (#components)`.
      */
-    fun hasCycle(): Boolean = edges.size > vertices.size - connectedComponents().size
+    fun hasCycle(): Boolean =
+        edgeCount > vertexCount - connectedComponents().size
 
     /**
      * Returns `true` iff this graph is a tree:
@@ -168,7 +177,8 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      * Equivalently, a tree on `n` vertices has exactly `n - 1` edges
      * and a single connected component.
      */
-    fun isTree(): Boolean = connectedComponents().size == 1 && edges.size == vertices.size - 1
+    fun isTree(): Boolean =
+        connectedComponents().size == 1 && edgeCount == vertexCount - 1
 
     /**
      * Returns `true` iff this graph is a forest:
@@ -179,7 +189,8 @@ sealed interface UndirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
      *
      * This predicate checks that identity.
      */
-    fun isForest(): Boolean = edges.size == vertices.size - connectedComponents().size
+    fun isForest(): Boolean =
+        edgeCount == vertexCount - connectedComponents().size
 
     /**
      * Given a subset of vertices `W`, calculate the subgraph of this graph on `W`.

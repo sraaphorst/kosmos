@@ -33,6 +33,9 @@ import org.vorpal.kosmos.functional.datastructures.Either
 sealed interface DirectedGraph<V: Any>: Graph<V>, Neighborhood<V> {
     val edges: FiniteSet.Unordered<DirectedEdge<V>>
 
+    override val edgeCount: Long
+        get() = edges.size.toLong()
+
     fun outEdges(of: V): FiniteSet.Unordered<DirectedEdge<V>> =
         edges.filter { it.from == of }.toUnordered()
 
