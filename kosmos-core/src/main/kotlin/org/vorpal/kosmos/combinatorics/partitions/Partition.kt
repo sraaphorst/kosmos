@@ -1,5 +1,14 @@
 package org.vorpal.kosmos.combinatorics.partitions
 
+import java.math.BigInteger
+
+/**
+ * An integer partition represented canonically as a finite nonincreasing
+ * list of positive parts.
+ *
+ * Its weight is the sum of its parts. The empty list is the unique
+ * partition of zero.
+ */
 class Partition private constructor(
     val parts: List<Int>
 ) {
@@ -8,17 +17,16 @@ class Partition private constructor(
             "An integer partition must have only positive parts: $parts"
         }
         require(parts.zipWithNext().all { (a, b) -> a >= b }) {
-            "An integer partition must have parts in strictly nonincreasing order: $parts"
+            "An integer partition must have parts in nonincreasing order: $parts"
         }
     }
 
-    // Note: Kotlin's by lazy defaults to LazyThreadSafetyMode.SYNCHRONIZED, which pays a lock on every first access.
-    // If we end up generating large numbers of Partitions in tight loops (partitionsOf(n) for largeish n) and it's
-    // single-threaded, by lazy(LazyThreadSafetyMode.NONE) { ... } avoids that cost.
-    val weight: Int by lazy {
-        parts.sum()
-    }
+    val weight: BigInteger = parts.sumOf(Int::toBigInteger)
+    val length: Int = parts.size
 
+    /**
+     * Determines, using lazy computation, if the parts comprise only odd elements.
+     */
     val hasOnlyOddParts: Boolean by lazy {
         parts.all { it % 2 == 1 }
     }
@@ -48,7 +56,7 @@ class Partition private constructor(
 
     companion object {
         fun of(parts: Iterable<Int>): Partition =
-            Partition(parts.sortedDescending())
+            Partition(parts.toList())
 
         fun of(vararg parts: Int): Partition =
             of(parts.asIterable())
