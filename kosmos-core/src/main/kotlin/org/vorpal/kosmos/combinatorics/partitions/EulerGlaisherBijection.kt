@@ -1,66 +1,31 @@
 package org.vorpal.kosmos.combinatorics.partitions
 
 /**
- * The Euler–Glaisher bijection between partitions into odd parts and
- * partitions into distinct parts of the same weight.
+ * The Euler–Glaisher bijection between partitions into odd parts and partitions
+ * into distinct parts of the same weight: interpreting each odd part's multiplicity
+ * as a binary expansion (forward), or writing every part as `2^k * q` with `q` odd
+ * (backward).
  *
- * The functions reject partitions outside their respective domains.
+ * This is exactly [GlaisherBijection] at `k = 2` (odd parts are the k-regular parts,
+ * distinct parts are the parts with multiplicities bounded by k, for k = 2); this
+ * object is now a thin, named delegator to it, kept for the more familiar odd/distinct
+ * vocabulary. See [GlaisherBijection] for the general theorem, the algorithm, and the
+ * `@throws` documentation that applies equally here.
  */
 object EulerGlaisherBijection {
     /**
      * Given a partition into odd parts, convert it to the corresponding partition
-     * into distinct parts by interpreting each odd part's multiplicity as a binary expansion.
+     * into distinct parts. Delegates to [GlaisherBijection.kRegularToBoundedMultiplicities]
+     * with k = 2.
      */
-    fun oddPartitionToDistinctPartition(partition: Partition): Partition {
-        require(partition.hasOnlyOddParts) {
-            "Expected a partition only containing odd parts, but got: $partition"
-        }
-
-        val result = buildList {
-            partition.parts
-                .groupingBy { it }
-                .eachCount()
-                .forEach { (oddPart, multiplicity) ->
-                    var remaining = multiplicity
-                    var powerTwo = 1
-
-                    while (remaining > 0) {
-                        if (remaining and 1 == 1)
-                            add(oddPart * powerTwo)
-                        remaining = remaining ushr 1
-                        powerTwo *= 2
-                    }
-                }
-        }
-
-        return Partition.of(result.sortedDescending())
-    }
+    fun oddPartitionToDistinctPartition(partition: Partition): Partition =
+        GlaisherBijection.kRegularToBoundedMultiplicities(partition, 2)
 
     /**
      * Given a partition into distinct parts, convert it to the corresponding partition
-     * into odd parts by writing every part as 2^k q, where q is odd.
+     * into odd parts. Delegates to [GlaisherBijection.boundedMultiplicitiesToKRegular]
+     * with k = 2.
      */
-    fun distinctPartitionToOddPartition(partition: Partition): Partition {
-        require(partition.hasDistinctParts) {
-            "Expected a partition only containing distinct parts, but got: $partition"
-        }
-
-        val result = buildList {
-            for (part in partition.parts) {
-                var oddPart = part
-                var multiplicity = 1
-
-                while (oddPart and 1 == 0) {
-                    oddPart = oddPart shr 1
-                    multiplicity = multiplicity shl 1
-                }
-
-                repeat(multiplicity) {
-                    add(oddPart)
-                }
-            }
-        }
-
-        return Partition.of(result.sortedDescending())
-    }
+    fun distinctPartitionToOddPartition(partition: Partition): Partition =
+        GlaisherBijection.boundedMultiplicitiesToKRegular(partition, 2)
 }

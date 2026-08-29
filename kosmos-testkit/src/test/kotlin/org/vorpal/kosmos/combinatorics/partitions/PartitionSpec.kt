@@ -144,6 +144,70 @@ class PartitionSpec : StringSpec({
         }
     }
 
+    // ---- hasNoPartDivisibleBy (general k; hasOnlyOddParts is the k = 2 case) ----
+
+    "hasNoPartDivisibleBy is true when no part is divisible by k" {
+        Partition.of(5, 4, 1).hasNoPartDivisibleBy(3) shouldBe true
+    }
+
+    "hasNoPartDivisibleBy is false when some part is divisible by k" {
+        Partition.of(6, 4, 1).hasNoPartDivisibleBy(3) shouldBe false
+    }
+
+    "hasNoPartDivisibleBy is vacuously true for the empty partition, for any k" {
+        Partition.of().hasNoPartDivisibleBy(3) shouldBe true
+        Partition.of().hasNoPartDivisibleBy(5) shouldBe true
+    }
+
+    "hasNoPartDivisibleBy rejects k < 2" {
+        shouldThrow<IllegalArgumentException> { Partition.of(3, 1).hasNoPartDivisibleBy(1) }
+        shouldThrow<IllegalArgumentException> { Partition.of(3, 1).hasNoPartDivisibleBy(0) }
+    }
+
+    "hasNoPartDivisibleBy(2) agrees with hasOnlyOddParts" {
+        checkAll(ArbPartition.arbSmall()) { p ->
+            p.hasNoPartDivisibleBy(2) shouldBe p.hasOnlyOddParts
+        }
+    }
+
+    "hasNoPartDivisibleBy holds for arbitrary k-regular partitions, for several k" {
+        checkAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
+            p.hasNoPartDivisibleBy(k) shouldBe true
+        }
+    }
+
+    // ---- hasMultiplicitiesLessThan (general k; hasDistinctParts is the k = 2 case) --
+
+    "hasMultiplicitiesLessThan is true when every part occurs fewer than k times" {
+        Partition.of(5, 5, 3, 1).hasMultiplicitiesLessThan(3) shouldBe true
+    }
+
+    "hasMultiplicitiesLessThan is false when some part occurs k or more times" {
+        Partition.of(5, 5, 5, 3).hasMultiplicitiesLessThan(3) shouldBe false
+    }
+
+    "hasMultiplicitiesLessThan is vacuously true for the empty partition, for any k" {
+        Partition.of().hasMultiplicitiesLessThan(3) shouldBe true
+        Partition.of().hasMultiplicitiesLessThan(5) shouldBe true
+    }
+
+    "hasMultiplicitiesLessThan rejects k < 2" {
+        shouldThrow<IllegalArgumentException> { Partition.of(3, 1).hasMultiplicitiesLessThan(1) }
+        shouldThrow<IllegalArgumentException> { Partition.of(3, 1).hasMultiplicitiesLessThan(0) }
+    }
+
+    "hasMultiplicitiesLessThan(2) agrees with hasDistinctParts" {
+        checkAll(ArbPartition.arbSmall()) { p ->
+            p.hasMultiplicitiesLessThan(2) shouldBe p.hasDistinctParts
+        }
+    }
+
+    "hasMultiplicitiesLessThan holds for arbitrary bounded-multiplicity partitions, for several k" {
+        checkAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
+            q.hasMultiplicitiesLessThan(k) shouldBe true
+        }
+    }
+
     // ---- equals / hashCode ------------------------------------------------------
 
     "partitions built independently from the same parts are equal" {
