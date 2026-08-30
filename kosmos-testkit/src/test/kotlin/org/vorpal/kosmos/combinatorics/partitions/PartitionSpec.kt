@@ -5,6 +5,8 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.laws.property.InvolutionLaw
 import java.math.BigInteger
 
 /**
@@ -205,6 +207,48 @@ class PartitionSpec : StringSpec({
     "hasMultiplicitiesLessThan holds for arbitrary bounded-multiplicity partitions, for several k" {
         checkAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
             q.hasMultiplicitiesLessThan(k) shouldBe true
+        }
+    }
+
+    // ---- conjugate (transpose of the Ferrers diagram; an involution) -----------
+
+    "conjugates a known partition" {
+        Partition.of(4, 4, 2, 1, 1).conjugate() shouldBe Partition.of(5, 3, 2, 2)
+    }
+
+    "conjugation swaps a single row with a single column" {
+        Partition.of(5).conjugate() shouldBe Partition.of(1, 1, 1, 1, 1)
+        Partition.of(1, 1, 1, 1, 1).conjugate() shouldBe Partition.of(5)
+    }
+
+    "a self-conjugate partition is fixed by conjugation" {
+        // A "staircase" partition (n, n-1, ..., 1) is always self-conjugate.
+        Partition.of(3, 2, 1).conjugate() shouldBe Partition.of(3, 2, 1)
+        // But self-conjugate partitions aren't only staircases.
+        Partition.of(3, 1, 1).conjugate() shouldBe Partition.of(3, 1, 1)
+    }
+
+    "the empty partition is self-conjugate" {
+        Partition.of().conjugate() shouldBe Partition.of()
+    }
+
+    "conjugation is an involution" {
+        InvolutionLaw(
+            Endo("conjugate", Partition::conjugate),
+            ArbPartition.arbSmall()
+        ).test()
+    }
+
+    "conjugation preserves weight" {
+        checkAll(ArbPartition.arbSmall()) { partition ->
+            partition.conjugate().weight shouldBe partition.weight
+        }
+    }
+
+    "conjugation exchanges width and height" {
+        checkAll(ArbPartition.arbSmall(1..8)) { partition ->
+            partition.conjugate().length shouldBe partition.parts.first()
+            partition.conjugate().parts.first() shouldBe partition.length
         }
     }
 
