@@ -65,6 +65,20 @@ class Partition private constructor(
             .all { multiplicity -> multiplicity < k }
     }
 
+    /**
+     * Determine the conjugation of the partition, which is an involutive operation equivalent to taking
+     * the transposition of the Ferrers diagram for the partition.
+     */
+    fun conjugate(): Partition {
+        if (parts.isEmpty()) return this
+
+        val conjugateParts = (1..parts.first()).map { column ->
+            parts.count { rowLength -> rowLength >= column }
+        }
+
+        return Partition.of(conjugateParts)
+    }
+
     /** True if all parts are distinct, i.e. no part is repeated. Equivalent to [hasMultiplicitiesLessThan] with k = 2. */
     val hasDistinctParts: Boolean
         get() = hasMultiplicitiesLessThan(2)
