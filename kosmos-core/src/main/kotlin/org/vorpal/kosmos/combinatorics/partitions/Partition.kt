@@ -72,11 +72,18 @@ class Partition private constructor(
     fun conjugate(): Partition {
         if (parts.isEmpty()) return this
 
-        val conjugateParts = (1..parts.first()).map { column ->
-            parts.count { rowLength -> rowLength >= column }
+        val conjugateParts = buildList(parts.first()) {
+            for (idx in parts.indices.reversed()) {
+                val nextPart = parts.getOrElse(idx + 1) { 0 }
+                val multiplicity = parts[idx] - nextPart
+
+                repeat(multiplicity) {
+                    add(idx + 1)
+                }
+            }
         }
 
-        return Partition.of(conjugateParts)
+        return of(conjugateParts)
     }
 
     /** True if all parts are distinct, i.e. no part is repeated. Equivalent to [hasMultiplicitiesLessThan] with k = 2. */
@@ -90,6 +97,25 @@ class Partition private constructor(
         if (parts != other.parts) return false
 
         return true
+    }
+
+    /**
+     * The side length of the Durfee square of this partition's Ferrers diagram.
+     *
+     * For a nonempty partition λ, this is:
+     *
+     * ```
+     * max { i ∈ {1, …, length(λ)} | λᵢ ≥ i }
+     * ```
+     *
+     * The empty partition has Durfee side zero.
+     */
+    val durfeeSide: Int by lazy {
+        parts
+            .asSequence()
+            .withIndex()
+            .takeWhile { (idx, part) -> part >= idx + 1 }
+            .count()
     }
 
     override fun hashCode(): Int =
