@@ -252,6 +252,35 @@ class PartitionSpec : StringSpec({
         }
     }
 
+    // ---- durfeeSide -------------------------------------------------------------
+
+    "durfeeSide of known partitions" {
+        Partition.of().durfeeSide shouldBe 0
+        Partition.of(5).durfeeSide shouldBe 1
+        Partition.of(5, 3, 3, 1).durfeeSide shouldBe 3
+        Partition.of(4, 4, 2, 2).durfeeSide shouldBe 2
+    }
+
+    "durfeeSide can equal length, when every part is at least as large as the number of parts" {
+        Partition.of(5, 5, 5).durfeeSide shouldBe 3
+    }
+
+    "durfeeSide can equal the largest part, when the largest part is small relative to length" {
+        Partition.of(1, 1, 1, 1).durfeeSide shouldBe 1
+    }
+
+    "durfeeSide is invariant under conjugation" {
+        checkAll(ArbPartition.arbSmall()) { p ->
+            p.durfeeSide shouldBe p.conjugate().durfeeSide
+        }
+    }
+
+    "durfeeSide is bounded by both length and the largest part" {
+        checkAll(ArbPartition.arbSmall()) { p ->
+            (p.durfeeSide in 0..minOf(p.length, p.parts.firstOrNull() ?: 0)) shouldBe true
+        }
+    }
+
     // ---- equals / hashCode ------------------------------------------------------
 
     "partitions built independently from the same parts are equal" {
