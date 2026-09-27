@@ -5,7 +5,6 @@ import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
-import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.core.math.Real
 
@@ -16,7 +15,7 @@ object ArbSplitComplex {
      */
     fun <R : Any> splitComplexOf(arbR: Arb<R>): Arb<SplitComplex<R>> =
         Arb.pair(arbR, arbR)
-            .map { (re, hy) -> CD(re, hy) }
+            .map { (re, hy) -> SplitComplex(re, hy) }
 
     /**
      * Generic split-complex values, componentwise from `ArbReal.real`.
@@ -44,7 +43,7 @@ object ArbSplitComplex {
      * — split-complex numbers have zero divisors on the null cone `a² = b²`.
      */
     val nonZeroSplitComplex: Arb<SplitComplex<Real>> =
-        splitComplex.filter { z -> z.a != 0.0 || z.b != 0.0 }
+        splitComplex.filter { z -> z.re != 0.0 || z.hy != 0.0 }
 
     /**
      * Split-complex values strictly off the null cone `a² = b²`,
@@ -53,7 +52,7 @@ object ArbSplitComplex {
      */
     val unitSplitComplex: Arb<SplitComplex<Real>> =
         boundedSplitComplex.filter { z ->
-            val n = z.a * z.a - z.b * z.b
+            val n = z.re * z.re - z.hy * z.hy
             kotlin.math.abs(n) > 0.01 && n.isFinite()
         }
 

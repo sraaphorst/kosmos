@@ -29,7 +29,6 @@ import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.complex.im
 import org.vorpal.kosmos.hypercomplex.complex.re
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
-import org.vorpal.kosmos.hypercomplex.splitcomplex.re
 import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
@@ -296,10 +295,16 @@ object BicomplexAlgebras {
         }
 
         /**
-         * Determine if [a] has a reciprocal, i.e. is not a zero divisor.
+         * Determine if [a] has a *numerically safe* reciprocal.
+         *
+         * Algebraically, `w` is invertible iff it is off the null cone ([Bicomplex.isUnit]), i.e. iff
+         * `N2(w) = z1² + z2² = 𝛂𝜷 ≠ 0`. Following the floating-point policy of [HasReciprocal], the
+         * predicate used for inversion is that `N2(w)` is invertible in [ComplexAlgebras.ComplexField]
+         * (finite and not approximately zero), which is exactly what [reciprocal] needs. It can differ
+         * from [Bicomplex.isUnit] only on elements within rounding distance of the null cone.
          */
         override fun hasReciprocal(a: Bicomplex): Boolean =
-            a.isUnit()
+            complexField.hasReciprocal(normByConj2(a))
 
         /**
          * The reciprocal via the Cayley-Dickson conjugation, exactly as for `ℂ`, `ℍ` and `𝕆`,
@@ -310,9 +315,7 @@ object BicomplexAlgebras {
          * `N2(w) = 𝛂𝜷` is invertible iff `w` is off the null cone.
          */
         override val reciprocal: Endo<Bicomplex> = Endo(Symbols.INVERSE) { z ->
-            if (!hasReciprocal(z)) {
-                throw ArithmeticException("Cannot take reciprocal of a non-invertible bicomplex number.")
-            }
+            if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the bicomplex numbers")
             val scale = complexField.reciprocal(normByConj2(z))
             BicomplexComplexVectorSpace.leftAction(scale, conj2(z))
         }
@@ -405,7 +408,7 @@ object BicomplexAlgebras {
             coefficientRing = ComplexAlgebras.ComplexField,
             s = ComplexAlgebras.ComplexField.add.inverse(ComplexAlgebras.ComplexField.one),
             t = ComplexAlgebras.ComplexField.zero,
-            coeffs = { z -> z.standard() }
+            coeffs = UnaryOp { z -> z.standard() }
         )
 
     /**

@@ -7,7 +7,7 @@ import io.kotest.property.arbitrary.triple
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 
 object ArbOctonion {
-    private val octonions = OctonionAlgebras.OctonionDivisionAlgebraReal
+    private val octonions = OctonionAlgebras.OctonionDivisionAlgebra
 
     val octonion: Arb<Octonion> =
         Arb.bind(

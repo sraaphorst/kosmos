@@ -4,7 +4,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.StringSpec
 
 /**
- * Confirms that [OctonionAlgebras.OctonionDivisionAlgebraReal] is *genuinely* non-associative, i.e. that
+ * Confirms that [OctonionAlgebras.OctonionDivisionAlgebra] is *genuinely* non-associative, i.e. that
  * the Cayley-Dickson doubling of the quaternions did not collapse into something accidentally associative.
  *
  * [OctonionAlternativitySpec] confirms the *weak* associativity that the octonions DO satisfy
@@ -24,7 +24,7 @@ import io.kotest.core.spec.style.StringSpec
  */
 class OctonionNonAssociativitySpec : StringSpec({
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    val ring = OctonionAlgebras.OctonionDivisionAlgebra
     val eq = OctonionAlgebras.eqOctonionStrict
     val pr = OctonionAlgebras.printableOctonionStrict
 

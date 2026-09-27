@@ -6,5 +6,5 @@ A list of things to do as they come up so they are not forgotten.
 - [ ] Implement new expression model.
 - [ ] Polynomial operations.
 - [ ] Scopes for calculations of algebraic objects.
-- [ ] Octonion Fano Plane orientation.
+- [x] Octonion Fano Plane orientation.
 - [ ] Octonion matrices.

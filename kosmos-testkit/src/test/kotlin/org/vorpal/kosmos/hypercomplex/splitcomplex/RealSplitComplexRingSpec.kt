@@ -2,7 +2,6 @@ package org.vorpal.kosmos.hypercomplex.splitcomplex
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras.diagPlusMinus
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
