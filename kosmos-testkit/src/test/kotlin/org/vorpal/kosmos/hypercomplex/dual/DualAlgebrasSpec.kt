@@ -24,7 +24,7 @@ class DualAlgebrasSpec : FunSpec({
     val field = RealAlgebras.RealField
     val eqMat = DenseMatAlgebras.liftEq(RealAlgebras.eqRealApprox)
     val prMat = DenseMatAlgebras.liftPrintablePretty(RealAlgebras.printableRealPretty)
-    val prDual = DualAlgebras.printableDualRealSigned
+    val prDual = DualAlgebras.printableDualRealPretty
 
     val mono = dualToRank2MatrixMonomorphism(field)
 
@@ -129,12 +129,12 @@ class DualAlgebrasSpec : FunSpec({
 
         context("matrix structure") {
 
-            test("a + bε maps to [[a, b], [0, a]]") {
+            test("a + bε maps to its regular representation [[a, 0], [b, a]]") {
                 checkAll(arbDualReal, arbDualReal) { a, b ->
                     val m = mono.map(Dual(a, b))
                     m[0, 0] shouldBeApproximately a
-                    m[0, 1] shouldBeApproximately b
-                    m[1, 0] shouldBeApproximately 0.0
+                    m[0, 1] shouldBeApproximately 0.0
+                    m[1, 0] shouldBeApproximately b
                     m[1, 1] shouldBeApproximately a
                 }
             }

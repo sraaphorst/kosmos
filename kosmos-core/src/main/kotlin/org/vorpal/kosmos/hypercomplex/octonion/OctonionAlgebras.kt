@@ -83,15 +83,26 @@ object OctonionAlgebras {
         override val conj: Endo<Octonion> = base.conj
 
         override val zero = add.identity
-        override val one = mul.identity                                                             // quaternion 1 in "a"
-        val e1 = octonion(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) // quaternion i in "a"
-        val e2 = octonion(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0) // quaternion j in "a"
-        val e3 = octonion(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0) // quaternion k in "a"
-        val e4 = octonion(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0) // quaternion 1 in "b"
-        val e5 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0) // quaternion i in "b"
-        val e6 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0) // quaternion j in "b"
-        val e7 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0) // quaternion k in "b"
-        val basisMap = mapOf(0 to one, 1 to e1, 2 to e2, 3 to e3, 4 to e4, 5 to e5, 6 to e6, 7 to e7)
+        override val one = mul.identity
+
+        /**
+         * The standard basis `1, e₁, …, e₇`, obtained by doubling the basis `1, i, j, k` of ℍ:
+         * `e₁, e₂, e₃` are `i, j, k` in the first slot and `e₄, …, e₇` are `1, i, j, k` in the second.
+         */
+        val basis: List<Octonion> =
+            CayleyDickson.doubledBasis(
+                zero = QuaternionDivisionRing.zero,
+                baseBasis = QuaternionDivisionRing.basis
+            )
+        val basisMap: Map<Int, Octonion> = basis.withIndex().associate { (idx, e) -> idx to e }
+
+        val e1: Octonion = basis[1]
+        val e2: Octonion = basis[2]
+        val e3: Octonion = basis[3]
+        val e4: Octonion = basis[4]
+        val e5: Octonion = basis[5]
+        val e6: Octonion = basis[6]
+        val e7: Octonion = basis[7]
 
         override val normSq: UnaryOp<Octonion, Real> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) {o -> mul(o, conj(o)).a.w }

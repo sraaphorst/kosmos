@@ -7,7 +7,7 @@ import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
-import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
@@ -22,6 +22,7 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
@@ -55,17 +56,19 @@ object ComplexAlgebras {
 
     val i: Complex = complex(0.0, 1.0)
 
-    private val base: NonAssociativeInvolutiveRing<Complex> =
-        CayleyDickson.usual(RealAlgebras.RealStarField)
+    /**
+     * `ℂ = ℝ[i]/(i² + 1)`: the Cayley-Dickson doubling of ℝ (trivial involution) at `σ = 1`.
+     *
+     * This is the same construction, one level down, as the bicomplex numbers `𝔹 = ℂ[j]/(j² + 1)`.
+     */
+    private val base: CommutativeInvolutiveRing<Complex> =
+        CayleyDickson.commutative(RealAlgebras.RealField, 1.0)
 
     object ComplexField : Field<Complex> {
 
         override val add = base.add
 
-        override val mul: CommutativeMonoid<Complex> = CommutativeMonoid.of(
-            identity = base.mul.identity,
-            op = base.mul.op
-        )
+        override val mul: CommutativeMonoid<Complex> = base.mul
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.INVERSE) { c ->
             val n2 = c.re * c.re + c.im * c.im
@@ -144,13 +147,15 @@ object ComplexAlgebras {
     ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
         domain = ComplexField,
         codomain = QuaternionAlgebras.QuaternionDivisionRing,
-        map = UnaryOp { (re, im) ->
-            val s = emb.sign.factor.toDouble()
-            when (emb.axis) {
-                AxisSignEmbeddings.ImagAxis.I -> quaternion(re, s * im, 0.0, 0.0)
-                AxisSignEmbeddings.ImagAxis.J -> quaternion(re, 0.0, s * im, 0.0)
-                AxisSignEmbeddings.ImagAxis.K -> quaternion(re, 0.0, 0.0, s * im)
-            }
+        map = UnaryOp { z ->
+            QuaternionEmbeddingKit.embedComplexLike(
+                axisSign = emb,
+                re = z.re,
+                im = z.im,
+                zero = 0.0,
+                negate = Double::unaryMinus,
+                mkQuaternion = ::quaternion
+            )
         }
     )
 

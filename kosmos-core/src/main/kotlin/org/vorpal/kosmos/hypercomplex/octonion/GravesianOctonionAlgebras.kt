@@ -38,13 +38,15 @@ import java.math.BigInteger
  */
 object GravesianOctonionAlgebras {
 
-    // Use CayleyDickson to double the LipschitzQuaternions to get the GravesianOctonions.
-    internal val base =
-        CayleyDickson.usual(LipschitzQuaternionAlgebras.LipschitzQuaternionRing)
-
     object GravesianOctonionNonAssociativeInvolutiveRing:
         NonAssociativeInvolutiveRing<GravesianOctonion>,
         HasNormSq<GravesianOctonion, BigInteger> {
+
+        // Use CayleyDickson to double the LipschitzQuaternions to get the GravesianOctonions.
+        // This lives inside the object (not in the enclosing GravesianOctonionAlgebras) so that
+        // initializing this object never recursively initializes GravesianOctonionAlgebras.
+        private val base =
+            CayleyDickson.usual(LipschitzQuaternionAlgebras.LipschitzQuaternionRing)
 
         override val add = base.add
         override val mul = base.mul
@@ -59,20 +61,18 @@ object GravesianOctonionAlgebras {
                 prod.a.w
             }
 
-        val basisMap: Map<Int, GravesianOctonion> = run {
-            val z = BigInteger.ZERO
-            val o = BigInteger.ONE
-            mapOf(
-                0 to gravesianOctonion(o,z,z, z, z,z,z,z),
-                1 to gravesianOctonion(z,o,z, z, z,z,z,z),
-                2 to gravesianOctonion(z,z,o, z, z,z,z,z),
-                3 to gravesianOctonion(z,z,z,o, z,z,z,z),
-                4 to gravesianOctonion(z,z,z, z, o,z,z,z),
-                5 to gravesianOctonion(z,z,z, z, z,o,z,z),
-                6 to gravesianOctonion(z,z,z, z, z,z,o,z),
-                7 to gravesianOctonion(z,z,z, z, z,z,z,o)
+        /**
+         * The standard basis `1, e₁, …, e₇`, obtained by doubling the basis `1, i, j, k` of the
+         * Lipschitz quaternions. It is also a `ℤ`-basis of the Gravesian lattice `ℤ⁸`.
+         */
+        val basis: List<GravesianOctonion> =
+            CayleyDickson.doubledBasis(
+                zero = LipschitzQuaternionAlgebras.LipschitzQuaternionRing.zero,
+                baseBasis = LipschitzQuaternionAlgebras.LipschitzQuaternionRing.basis
             )
-        }
+
+        val basisMap: Map<Int, GravesianOctonion> =
+            basis.withIndex().associate { (idx, e) -> idx to e }
     }
 
     /**
@@ -82,8 +82,8 @@ object GravesianOctonionAlgebras {
      */
     object ZModuleGravesianOctonion: ZModule<GravesianOctonion> {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
-        override val add = base.add
-        override val leftAction: LeftAction<BigInteger, GravesianOctonion> = LeftAction { n, co ->
+        override val add = GravesianOctonionNonAssociativeInvolutiveRing.add
+        override val leftAction: LeftAction<BigInteger, GravesianOctonion> = LeftAction(Symbols.TRIANGLE_RIGHT) { n, co ->
             gravesianOctonion(
                 n * co.w, n * co.x, n * co.y, n * co.z,
                 n * co.u, n * co.v, n * co.s, n * co.t

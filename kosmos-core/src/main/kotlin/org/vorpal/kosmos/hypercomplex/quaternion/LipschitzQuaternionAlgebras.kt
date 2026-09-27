@@ -13,6 +13,7 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.Endo
@@ -92,6 +93,15 @@ object LipschitzQuaternionAlgebras {
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { q ->
                 q.w * q.w + q.x * q.x + q.y * q.y + q.z * q.z
             }
+
+        /**
+         * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `ℤ[i]`.
+         */
+        val basis: List<LipschitzQuaternion> =
+            CayleyDickson.doubledBasis(
+                zero = GaussianInt.ZERO,
+                baseBasis = listOf(GaussianInt.ONE, GaussianInt(BigInteger.ZERO, BigInteger.ONE))
+            )
     }
 
     // Used by both the module and the lattice.
@@ -118,12 +128,8 @@ object LipschitzQuaternionAlgebras {
         /**
          * A `ℤ`-basis of the Lipschitz quaternion lattice is `[1, I, J, K]`.
          */
-        override val basis: List<LipschitzQuaternion> = listOf(
-            LipschitzQuaternions.ONE,
-            LipschitzQuaternions.I,
-            LipschitzQuaternions.J,
-            LipschitzQuaternions.K
-        )
+        override val basis: List<LipschitzQuaternion> =
+            LipschitzQuaternionRing.basis
 
         override val addV: AbelianGroup<LipschitzQuaternion> = ring.add
         override val scale: LeftAction<BigInteger, LipschitzQuaternion> = zScaling
@@ -139,21 +145,26 @@ object LipschitzQuaternionAlgebras {
         private val _validated = validate()
     }
 
-    object LipschitzToHurwitzQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, HurwitzQuaternion> {
-        override val domain = LipschitzQuaternionRing
-        override val codomain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing
-        override val map = UnaryOp<LipschitzQuaternion, HurwitzQuaternion> { lq ->
-            HurwitzQuaternion(
-                lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational()
-            )
-        }
-    }
-
+    /**
+     * The inclusion of the Lipschitz order into `ℍ_ℚ`.
+     */
     object LipschitzToRationalQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, RationalQuaternion> {
         override val domain = LipschitzQuaternionRing
         override val codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
         override val map = UnaryOp<LipschitzQuaternion, RationalQuaternion> { lq ->
             rationalQuaternion(lq.w.toRational(), lq.x.toRational(), lq.y.toRational(), lq.z.toRational())
+        }
+    }
+
+    /**
+     * The inclusion of orders `ℤ⟨i, j, k⟩ ⊂ 𝓗`: a Lipschitz quaternion has integer coordinates, so its
+     * image in `ℍ_ℚ` is trivially Hurwitz and is wrapped without re-checking.
+     */
+    object LipschitzToHurwitzQuaternionMonomorphism: RingMonomorphism<LipschitzQuaternion, HurwitzQuaternion> {
+        override val domain = LipschitzQuaternionRing
+        override val codomain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing
+        override val map = UnaryOp<LipschitzQuaternion, HurwitzQuaternion> { lq ->
+            HurwitzQuaternion.wrap(LipschitzToRationalQuaternionMonomorphism(lq))
         }
     }
 

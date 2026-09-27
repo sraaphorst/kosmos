@@ -36,15 +36,26 @@ private val arbSafelyInvertibleDualReal: Arb<Real> =
         .filter { abs(it) > 1e-4 }
 
 /**
+ * Dual numbers `a + bε` with primal part drawn from [primal] and tangent part drawn from [tangent].
+ *
+ * This is the generic building block for every dual-number generator below.
+ */
+fun <F : Any> arbDualOf(
+    primal: Arb<F>,
+    tangent: Arb<F> = primal
+): Arb<Dual<F>> =
+    arbitrary {
+        dual(
+            f = primal.bind(),
+            df = tangent.bind()
+        )
+    }
+
+/**
  * Arbitrary for dual numbers over Real.
  */
 val arbDual: Arb<Dual<Real>> =
-    arbitrary {
-        dual(
-            f = arbDualReal.bind(),
-            df = arbDualReal.bind()
-        )
-    }
+    arbDualOf(arbDualReal)
 
 /**
  * Arbitrary for invertible dual numbers.
@@ -52,12 +63,7 @@ val arbDual: Arb<Dual<Real>> =
  * The real part is non-zero according to approximate real equality.
  */
 val arbInvertibleDual: Arb<Dual<Real>> =
-    arbitrary {
-        dual(
-            f = arbNonZeroDualReal.bind(),
-            df = arbDualReal.bind()
-        )
-    }
+    arbDualOf(arbNonZeroDualReal, arbDualReal)
 
 /**
  * Arbitrary for safely invertible dual numbers.
@@ -65,12 +71,7 @@ val arbInvertibleDual: Arb<Dual<Real>> =
  * The real part is bounded away from zero to keep reciprocal tests stable.
  */
 val arbSafelyInvertibleDual: Arb<Dual<Real>> =
-    arbitrary {
-        dual(
-            f = arbSafelyInvertibleDualReal.bind(),
-            df = arbDualReal.bind()
-        )
-    }
+    arbDualOf(arbSafelyInvertibleDualReal, arbDualReal)
 
 /**
  * Arbitrary for non-invertible dual numbers.
@@ -79,13 +80,7 @@ val arbSafelyInvertibleDual: Arb<Dual<Real>> =
  * always generating the additive zero element.
  */
 val arbNonInvertibleDual: Arb<Dual<Real>> =
-    arbitrary {
-        val b = arbNonZeroDualReal.bind()
-        dual(
-            f = 0.0,
-            df = b
-        )
-    }
+    arbNonZeroDualReal.map { b -> dual(f = 0.0, df = b) }
 
 val arbRational: Arb<Rational> =
     Arb.int(-20, 20)
@@ -96,21 +91,10 @@ val arbNonZeroRational: Arb<Rational> =
         .filter { it != Rational.ZERO }
 
 val arbDualRational: Arb<Dual<Rational>> =
-    arbitrary {
-        dual(
-            f = arbRational.bind(),
-            df = arbRational.bind()
-        )
-    }
+    arbDualOf(arbRational)
 
 val arbInvertibleDualRational: Arb<Dual<Rational>> =
-    arbitrary {
-        dual(
-            f = arbNonZeroRational.bind(),
-            df = arbRational.bind()
-        )
-    }
-
+    arbDualOf(arbNonZeroRational, arbRational)
 
 fun <V : Any> arbDualVector(arbV: Arb<V>): Arb<DualVector<V>> =
     arbitrary {

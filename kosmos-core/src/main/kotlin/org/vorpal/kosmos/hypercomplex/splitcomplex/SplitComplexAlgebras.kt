@@ -2,12 +2,10 @@ package org.vorpal.kosmos.hypercomplex.splitcomplex
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
-import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
@@ -17,7 +15,6 @@ import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
@@ -25,7 +22,6 @@ import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.linear.values.DenseMat
-import java.math.BigInteger
 
 /**
  * Algebraic structures and utilities for split-complex numbers.
@@ -84,9 +80,10 @@ object SplitComplexAlgebras {
     /**
      * The ordinary split-complex ring over a commutative base ring.
      *
-     * By not using the generic Cayley-Dickson construction here, we avoid requiring
-     * an involution on the base: rationals, finite fields, etc. can all be used
-     * directly.
+     * This is the Cayley-Dickson doubling of [base] equipped with the *trivial* involution at
+     * `σ = -1` (see [CayleyDickson.commutative]), i.e. `R[j] / (j² - 1)`. Because the base
+     * involution is trivial, no involution is required of the base: rationals, finite fields,
+     * etc. can all be used directly.
      *
      * Multiplication is:
      * ```text
@@ -94,73 +91,18 @@ object SplitComplexAlgebras {
      * ```
      * so `j² = 1`.
      *
-     * The involution is:
+     * The involution is the Cayley-Dickson conjugation:
      * ```text
      * conj(a + bj) = a - bj
      * ```
      */
     fun <R : Any> splitComplexRing(
         base: CommutativeRing<R>
-    ): CommutativeInvolutiveRing<SplitComplex<R>> = object : CommutativeInvolutiveRing<SplitComplex<R>> {
-        override val zero: SplitComplex<R> =
-            splitComplex(
-                re = base.zero,
-                hy = base.zero
-            )
-
-        override val one: SplitComplex<R> =
-            splitComplex(
-                re = base.one,
-                hy = base.zero
-            )
-
-        override val add: AbelianGroup<SplitComplex<R>> =
-            AbelianGroup.of(
-                identity = zero,
-                op = BinOp(Symbols.PLUS) { (re1, hy1), (re2, hy2) ->
-                    splitComplex(
-                        re = base.add(re1, re2),
-                        hy = base.add(hy1, hy2)
-                    )
-                },
-                inverse = Endo(Symbols.MINUS) { x ->
-                    splitComplex(
-                        re = base.add.inverse(x.re),
-                        hy = base.add.inverse(x.hy)
-                    )
-                }
-            )
-
-        override val mul: CommutativeMonoid<SplitComplex<R>> =
-            CommutativeMonoid.of(
-                identity = one,
-                op = BinOp(Symbols.ASTERISK) { (re1, hy1), (re2, hy2) ->
-                    val ac = base.mul(re1, re2)
-                    val bd = base.mul(hy1, hy2)
-                    val ad = base.mul(re1, hy2)
-                    val bc = base.mul(hy1, re2)
-
-                    splitComplex(
-                        re = base.add(ac, bd),
-                        hy = base.add(ad, bc)
-                    )
-                }
-            )
-
-        override val conj: Endo<SplitComplex<R>> =
-            Endo(Symbols.CONJ) { (re, hy) ->
-                splitComplex(
-                    re = re,
-                    hy = base.add.inverse(hy)
-                )
-            }
-
-        override fun fromBigInt(n: BigInteger): SplitComplex<R> =
-            splitComplex(
-                re = base.fromBigInt(n),
-                hy = base.zero
-            )
-    }
+    ): CommutativeInvolutiveRing<SplitComplex<R>> =
+        CayleyDickson.commutative(
+            base = base,
+            sigma = base.negOne
+        )
 
     /**
      * Norm-like quadratic form for a generic commutative ring:

@@ -109,6 +109,71 @@ class CayleyDickson<A : Any> private constructor(
         }
 
         /**
+         * The Cayley-Dickson doubling of a commutative ring equipped with the *trivial* involution.
+         *
+         * With `x* = x` on the base, the doubling formula collapses to
+         * ```text
+         * (a, b)(c, d) = (ac - σbd, ad + bc),
+         * ```
+         * i.e. writing `(a, b) = a + bx`, this is the commutative quadratic extension
+         * ```text
+         * R[x] / (x² + σ)
+         * ```
+         * which is again commutative and associative, so the result is typed as a
+         * [CommutativeInvolutiveRing]. Its involution is the Cayley-Dickson conjugation
+         * `a + bx ↦ a - bx`.
+         *
+         * The three classical choices of `σ` give:
+         * - `σ = 1`:  `x² = -1` (complex type: ℂ over ℝ, the bicomplex numbers over ℂ).
+         * - `σ = -1`: `x² = 1`  (split type: the split-complex numbers).
+         * - `σ = 0`:  `x² = 0`  (the dual numbers).
+         *
+         * Contrast [usual] and [split] on a base with a *nontrivial* involution (e.g. ℂ with complex
+         * conjugation), which produce noncommutative algebras such as the quaternions.
+         */
+        fun <A : Any> commutative(
+            base: CommutativeRing<A>,
+            sigma: A
+        ): CommutativeInvolutiveRing<CD<A>> {
+            val doubled = withSigma(CommutativeInvolutiveRing.trivial(base), sigma)
+            val ring = CommutativeRing.of(
+                add = doubled.add,
+                mul = CommutativeMonoid.of(
+                    identity = doubled.mul.identity,
+                    op = doubled.mul.op
+                )
+            )
+            return object : CommutativeInvolutiveRing<CD<A>> {
+                override val add = ring.add
+                override val mul = ring.mul
+                override val conj = doubled.conj
+                override val one = ring.one
+
+                override fun fromBigInt(n: BigInteger): CD<A> =
+                    doubled.fromBigInt(n)
+            }
+        }
+
+        /**
+         * The standard basis of a Cayley-Dickson double, given a basis of the base.
+         *
+         * If `e₀, …, e_{n-1}` is a basis of `A` (as a module over the scalars), then
+         * ```text
+         * (e₀, 0), …, (e_{n-1}, 0), (0, e₀), …, (0, e_{n-1})
+         * ```
+         * is a basis of `CD<A>`. Iterating from `ℝ` with basis `[1]` reproduces the usual
+         * orderings of the tower:
+         * - `ℂ`: `1, i`
+         * - `ℍ`: `1, i, j, k`
+         * - `𝕆`: `1, e₁, …, e₇`
+         */
+        fun <A : Any> doubledBasis(
+            zero: A,
+            baseBasis: List<A>
+        ): List<CD<A>> =
+            baseBasis.map { e -> CD(e, zero) } + baseBasis.map { e -> CD(zero, e) }
+
+        /**
          * The universal property of the Cayley-Dickson construction:
          *
          * For any `A` and `CD<A>`, the first-slot injection `a ↦ (a, 0)` is a ring monomorphism where 0 is

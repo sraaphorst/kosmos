@@ -57,7 +57,7 @@ class DualModulesSpec : FunSpec({
     val prVec = printableDualVector(Printables.real)
 
     val eqDual = DualAlgebras.eqDualReal
-    val prDual = DualAlgebras.printableDualRealSigned
+    val prDual = DualAlgebras.printableDualRealPretty
 
     // ── Convenience constructors and operators ─────────────────────────────
 

@@ -7,6 +7,7 @@ import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.w
@@ -57,20 +58,17 @@ object RationalOctonionAlgebras {
         override val normSq: UnaryOp<RationalOctonion, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { co -> mul(co, conj(co)).a.w }
 
-        val basisMap: Map<Int, RationalOctonion> = run {
-            val z = Rational.ZERO
-            val o = Rational.ONE
-            mapOf(
-                0 to rationalOctonion(o,z,z,z, z,z,z,z),
-                1 to rationalOctonion(z,o,z,z, z,z,z,z),
-                2 to rationalOctonion(z,z,o,z, z,z,z,z),
-                3 to rationalOctonion(z,z,z,o, z,z,z,z),
-                4 to rationalOctonion(z,z,z,z, o,z,z,z),
-                5 to rationalOctonion(z,z,z,z, z,o,z,z),
-                6 to rationalOctonion(z,z,z,z, z,z,o,z),
-                7 to rationalOctonion(z,z,z,z, z,z,z,o)
+        /**
+         * The standard basis `1, e₁, …, e₇`, obtained by doubling the basis `1, i, j, k` of `ℍ_ℚ`.
+         */
+        val basis: List<RationalOctonion> =
+            CayleyDickson.doubledBasis(
+                zero = RationalQuaternionAlgebras.RationalQuaternionDivisionRing.zero,
+                baseBasis = RationalQuaternionAlgebras.RationalQuaternionDivisionRing.basis
             )
-        }
+
+        val basisMap: Map<Int, RationalOctonion> =
+            basis.withIndex().associate { (idx, e) -> idx to e }
     }
 
     /**
@@ -95,7 +93,7 @@ object RationalOctonionAlgebras {
         )
 
     val HurwitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<HurwitzQuaternion, RationalOctonion> =
-        RationalQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism andThen RationalQuaternionToRationalOctonionMonomorphism
+        HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism andThen RationalQuaternionToRationalOctonionMonomorphism
 
     /**
      * RationalOctonion to Octonion ring monomorphism.

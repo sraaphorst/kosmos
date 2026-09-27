@@ -17,46 +17,101 @@ hence a division algebra structure.
 
 ---
 
+## One Construction, Many Algebras
+
+Every algebra in this package is carried by the Cayley–Dickson pair `CD<A>` and gets its
+arithmetic from `CayleyDickson` (in `algebra.structures`). Nothing re-implements a doubling
+product by hand. The variations come from two choices: the involution on the base, and `σ`.
+
+**Base with a nontrivial involution** (`CayleyDickson.usual` / `split`) gives the
+noncommutative tower:
+
+| Algebra | Carrier | Construction |
+|---------|---------|--------------|
+| ℍ, ℍ_ℚ, Lip | `Quaternion`, `RationalQuaternion`, `LipschitzQuaternion` (typealiases of `CD<…>`) | `CD⟨ℂ⟩`, `CD⟨ℚ(i)⟩`, `CD⟨ℤ[i]⟩` |
+| 𝕆, 𝕆_ℚ, Gravesian | `Octonion`, `RationalOctonion`, `GravesianOctonion` | `CD⟨ℍ⟩`, `CD⟨ℍ_ℚ⟩`, `CD⟨Lip⟩` |
+
+**Commutative base with the *trivial* involution** (`CayleyDickson.commutative(base, σ)`)
+gives the commutative quadratic extension `R[x]/(x² + σ)`:
+
+| σ | x² | Algebra | Carrier |
+|---|----|---------|---------|
+| 1  | −1 | ℂ = ℝ[i]/(i² + 1) | `Complex` (typealias of `CD<Real>`) |
+| 1  | −1 | 𝔹 = ℂ[j]/(j² + 1) (bicomplex) | `Bicomplex` (value class over `CD<Complex>`) |
+| −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (typealias of `CD<R>`) |
+| 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
+
+`Bicomplex` and `Dual` are value classes, not typealiases. `Bicomplex` and `Quaternion` are
+both carried by `CD<Complex>`, and `Dual<Real>` shares `CD<Real>` with `Complex`. The algebras
+differ, so the Kotlin types must too. Their ring structures are transported from the
+Cayley–Dickson ring along the wrapper with `CarrierTransport`.
+
+**Orders are substructures, not new implementations.** A `HurwitzQuaternion` is an element of
+the Hurwitz order `𝓗 ⊂ ℍ_ℚ`, represented by its underlying `RationalQuaternion`. Its
+constructor is private: checked construction goes through `HurwitzQuaternion(q)`, and the ring
+operations, which provably stay in `𝓗`, use a trusted internal `wrap`. The ring structure of `𝓗`
+is the restriction of `ℍ_ℚ`. Only the 24 units are invertible *in* `𝓗`; every other nonzero
+element is inverted in `ℍ_ℚ` after the inclusion `HurwitzToRationalQuaternionMonomorphism`.
+
+---
+
 ## Package Layout
 
 ```
 hypercomplex/
-├── complex/                  # Level 1: the complex-like rings
-│   ├── Complex.kt                  ℂ  = CD⟨ℝ⟩           (Real coefficients)
+├── complex/                  # ℂ = CD⟨ℝ⟩ (commutative doubling, σ = 1)
+│   ├── Complex.kt
 │   ├── ComplexAlgebras.kt
-│   ├── GaussianInt.kt              ℤ[i]                  (BigInteger coefficients)
-│   ├── GaussianIntAlgebras.kt
-│   ├── GaussianRat.kt              ℚ(i)                  (Rational coefficients)
-│   ├── GaussianRatAlgebras.kt
-│   ├── EisensteinInt.kt            ℤ[ω], ω = e^{2πi/3}  (BigInteger coefficients)
-│   └── EisensteinIntAlgebras.kt
+│   └── ComplexPrintable.kt
 │
-├── quaternion/               # Level 2: the quaternion-like rings
-│   ├── Quaternion.kt               ℍ  = CD⟨ℂ⟩           (Real coefficients)
+├── splitcomplex/             # SplitComplex<R> = CD⟨R⟩ (commutative doubling, σ = -1)
+│   ├── SplitComplex.kt
+│   └── SplitComplexAlgebras.kt
+│
+├── dual/                     # Dual<F>: value class over CD⟨F⟩ (commutative doubling, σ = 0)
+│   ├── Dual.kt
+│   ├── DualAlgebras.kt             ring, reciprocal, autodiff, matrix embedding
+│   ├── DualModules.kt              scalar extension V ⊗ F[ε]
+│   ├── DualRealFns.kt              elementary functions on Dual<Real>
+│   └── DualRationalFns.kt          rational functions on Dual<Rational>
+│
+├── multi/                    # Bicomplex: value class over CD⟨ℂ⟩ (commutative doubling, σ = 1)
+│   ├── Bicomplex.kt                standard basis z1 + z2·j; idempotent (𝛂, 𝜷) views
+│   ├── BicomplexAlgebras.kt
+│   └── Multicomplex.md             design notes for the general multicomplex case
+│
+├── quaternion/               # ℍ-like rings
+│   ├── Quaternion.kt               ℍ   = CD⟨ℂ⟩             (Real coefficients)
 │   ├── QuaternionAlgebras.kt
-│   ├── LipschitzQuaternion.kt      Lip = CD⟨ℤ[i]⟩       (BigInteger coefficients)
+│   ├── RationalQuaternion.kt       ℍ_ℚ = CD⟨ℚ(i)⟩          (Rational coefficients)
+│   ├── RationalQuaternionAlgebras.kt
+│   ├── LipschitzQuaternion.kt      Lip = CD⟨ℤ[i]⟩          (BigInteger coefficients)
 │   ├── LipschitzQuaternionAlgebras.kt
-│   ├── HurwitzQuaternion.kt        Hur ⊃ Lip             (Rational half-integer coefficients)
+│   ├── HurwitzQuaternion.kt        𝓗 ⊂ ℍ_ℚ, the Hurwitz order (value class over RationalQuaternion)
 │   ├── HurwitzQuaternionAlgebras.kt
-│   ├── RationalQuaternion.kt       ℍ_ℚ = CD⟨ℚ(i)⟩       (Rational coefficients)
-│   └── RationalQuaternionAlgebras.kt
+│   ├── AxisSignEmbeddings.kt       the 6 specs for complex-like ↪ quaternion-like
+│   ├── QuaternionEmbeddingKit.kt   generic complex-like → quaternion builder
+│   └── QuaternionPrintable.kt
 │
-├── octonion/                 # Level 3: the octonion-like rings
-│   ├── Octonion.kt                 𝕆  = CD⟨ℍ⟩           (Real coefficients)
-│   ├── OctonionAlgebras.kt
-│   ├── CayleyOctonion.kt           Cay = CD⟨Lip⟩         (BigInteger coefficients)
-│   ├── CayleyOctonionAlgebras.kt
-│   ├── RationalOctonion.kt         𝕆_ℚ = CD⟨ℍ_ℚ⟩        (Rational coefficients)
-│   └── RationalOctonionAlgebras.kt
-│
-├── embeddings/               # Embedding machinery
-│   ├── AxisSignEmbeddings.kt       6-embedding specs for complex ↪ quaternion
-│   ├── QuaternionEmbeddingKit.kt   Generic complex-like → quaternion builder
-│   └── OctonionEmbeddingKit.kt     Generic quaternion → octonion builder (Fano plane)
-│
-├── CayleyDickson.kt          # The doubling construction itself
-└── HyperComplex.kt           # Shared types (Handedness enum, etc.)
+└── octonion/                 # 𝕆-like rings
+    ├── Octonion.kt                 𝕆   = CD⟨ℍ⟩             (Real coefficients)
+    ├── OctonionAlgebras.kt
+    ├── RationalOctonion.kt         𝕆_ℚ = CD⟨ℍ_ℚ⟩           (Rational coefficients)
+    ├── RationalOctonionAlgebras.kt
+    ├── GravesianOctonion.kt        CD⟨Lip⟩ ≅ ℤ⁸            (BigInteger coefficients)
+    ├── GravesianOctonionAlgebras.kt
+    ├── OctonionEmbeddingKit.kt     generic quaternion → octonion builder (Fano plane)
+    ├── OctonionFanoOrientation(s).kt, OrientedFanoLine.kt, Handedness.kt
+    └── OctonionPrintable.kt
 ```
+
+The Gaussian integers `ℤ[i]`, Gaussian rationals `ℚ(i)` and Eisenstein integers `ℤ[ω]` live in
+`numberfields.quadratic`.
+
+Bases are derived rather than written out: `CayleyDickson.doubledBasis(zero, baseBasis)` doubles
+a basis `e₀, …, e_{n-1}` of `A` to `(e₀, 0), …, (0, e_{n-1})` in `CD<A>`, which reproduces
+`1, i, j, k` for ℍ and `1, e₁, …, e₇` for 𝕆. Each quaternion and octonion ring exposes it as
+`basis`.
 
 ---
 
@@ -81,15 +136,15 @@ Level 2 (quaternion)    Lip ──→ Hur ───────────→ �
                         │  ╲  (×84)               │  ╲  (×84)             │  ╲  (×84)
                         │   ╲                     │   ╲                   │   ╲
                         ↓    ↘                    ↓    ↘                  ↓    ↘
-Level 3 (octonion)      Cay ──────────────────→ 𝕆_ℚ ─ ─ ─ ─ ─ ─ ─ ─ → 𝕆
+Level 3 (octonion)      Grav ─────────────────→ 𝕆_ℚ ─ ─ ─ ─ ─ ─ ─ ─ → 𝕆
 ```
 
 Dashed arrows (─ ─ →) pass through floating-point conversion (`toReal()`)
 and are therefore not exact monomorphisms in the strict algebraic sense.
 
 The Eisenstein integers $\mathbb{Z}[\omega]$ sit beside $\mathbb{Z}[i]$ at Level 1
-with a homomorphism $\mathbb{Z}[\omega] \to \mathbb{C}$, but they do **not** embed
-into any quaternion subring (see [below](#why-eisenstein-integers-dont-embed-into-quaternions)).
+with a homomorphism $\mathbb{Z}[\omega] \to \mathbb{C}$. They embed into the Hurwitz order,
+but not into the Lipschitz quaternions (see [below](#eisenstein-integers-and-the-quaternion-orders)).
 
 ---
 
@@ -111,21 +166,21 @@ There are exactly **6 such embeddings**, parameterised by an
 
 ### How to Create Them
 
-Every quaternion-level Algebras object exposes a factory function that
+Each complex-like Algebras object exposes a factory function that
 takes an `AxisSignEmbedding` parameter (defaulting to canonical: $i_{\mathbb{C}} \mapsto +i$).
 
 #### ℂ ↪ ℍ  (Real coefficients)
 
 ```kotlin
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.*
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 
 // Canonical: i_C ↦ +i
-val canonical = QuaternionAlgebras.complexEmbeddingToQuaternion()
+val canonical = ComplexAlgebras.complexToQuaternionEmbedding()
 
 // Pick a specific one: i_C ↦ -k
 val emb = AxisSignEmbedding(ImagAxis.K, Sign.MINUS)
-val phiMinusK = QuaternionAlgebras.complexEmbeddingToQuaternion(emb)
+val phiMinusK = ComplexAlgebras.complexToQuaternionEmbedding(emb)
 
 // Use it:
 val z = complex(3.0, 4.0)
@@ -135,13 +190,13 @@ val q = phiMinusK(z)   // quaternion(3.0, 0.0, 0.0, -4.0)
 #### ℤ[i] ↪ Lip  (BigInteger coefficients)
 
 ```kotlin
-import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 
 // Canonical: i ↦ +i
-val phi = LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion()
+val phi = GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()
 
 // Along j-axis with positive sign: i ↦ +j
-val phiJ = LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion(
+val phiJ = GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding(
     AxisSignEmbedding(ImagAxis.J, Sign.PLUS)
 )
 ```
@@ -149,18 +204,18 @@ val phiJ = LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion(
 #### ℚ(i) ↪ ℍ_ℚ  (Rational coefficients)
 
 ```kotlin
-import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 
-val phi = RationalQuaternionAlgebras.gaussianRatToQuaternionMonomorphism()
+val phi = GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()
 ```
 
 #### ℤ[i] ↪ Hur  (via Lipschitz, then inclusion)
 
 ```kotlin
-import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternionAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 
 // Composes: ℤ[i] ↪ Lip ↪ Hur
-val phi = HurwitzQuaternionAlgebras.gaussianIntEmbeddingToHurwitz(
+val phi = GaussianIntAlgebras.gaussianIntToHurwitzQuaternionEmbedding(
     AxisSignEmbedding(ImagAxis.I, Sign.PLUS)
 )
 ```
@@ -169,7 +224,7 @@ val phi = HurwitzQuaternionAlgebras.gaussianIntEmbeddingToHurwitz(
 
 ```kotlin
 AxisSignEmbedding.all.forEach { emb ->
-    val phi = QuaternionAlgebras.complexEmbeddingToQuaternion(emb)
+    val phi = ComplexAlgebras.complexToQuaternionEmbedding(emb)
     println("${emb.axis}${emb.sign}: phi(1+i) = ${phi(complex(1.0, 1.0))}")
 }
 ```
@@ -213,7 +268,7 @@ instance and an `allQuaternionEmbeddings()` / `allEmbeddings()` method.
 
 ```kotlin
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
-import org.vorpal.kosmos.hypercomplex.HyperComplex.Handedness
+import org.vorpal.kosmos.hypercomplex.octonion.Handedness
 
 // === Method 1: Create one embedding by spec ===
 
@@ -240,16 +295,16 @@ val (_, phiCustom) = all.entries.first { (s, _) ->
 }
 ```
 
-#### Lip ↪ Cay  (BigInteger coefficients)
+#### Lip ↪ Grav  (BigInteger coefficients)
 
 ```kotlin
-import org.vorpal.kosmos.hypercomplex.octonion.CayleyOctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonionAlgebras
 
-// All 84 Lipschitz quaternion → Cayley octonion embeddings:
-val all = CayleyOctonionAlgebras.allQuaternionEmbeddings()
+// All 84 Lipschitz quaternion → Gravesian octonion embeddings:
+val all = GravesianOctonionAlgebras.allQuaternionEmbeddings()
 
 // Or one at a time:
-val (spec, phi) = CayleyOctonionAlgebras.embeddingKit.createEmbedding(
+val (spec, phi) = GravesianOctonionAlgebras.embeddingKit.createEmbedding(
     iIndex = 4, jIndex = 6, handedness = Handedness.RIGHT
 )
 ```
@@ -289,24 +344,27 @@ positive signs.  This matches `Quaternion.asOctonion()` and the
 
 ---
 
-## Why Eisenstein Integers Don't Embed into Quaternions
+## Eisenstein Integers and the Quaternion Orders
 
-The Eisenstein integers $\mathbb{Z}[\omega]$ where $\omega = e^{2\pi i/3}$
-satisfy $\omega^2 + \omega + 1 = 0$.  For a unital ring monomorphism
-$\varphi : \mathbb{Z}[\omega] \hookrightarrow \mathbb{H}_\mathbb{Z}$ (or any
-quaternion ring) to exist, we would need a quaternion $u = \varphi(\omega)$
-satisfying:
+The Eisenstein integers $\mathbb{Z}[\omega]$, $\omega = e^{2\pi i/3}$, satisfy
+$\omega^2 + \omega + 1 = 0$. A unital ring monomorphism
+$\varphi : \mathbb{Z}[\omega] \hookrightarrow \mathcal{O}$ into a quaternion order therefore needs
+an element $u = \varphi(\omega)$ with $u^2 + u + 1 = 0$, i.e. a unit of order 3.
 
-$$
-u^2 + u + 1 = 0 \quad\Longleftrightarrow\quad u = \frac{-1 + \sqrt{-3}}{2}
-$$
+- In the **Lipschitz** quaternions there is none: the only units are $\pm 1, \pm i, \pm j, \pm k$,
+  which have orders 1, 2 and 4.
+- In the **Hurwitz** order there are eight:
+  $$
+  u = \tfrac{1}{2}(-1 \pm i \pm j \pm k)
+  $$
+  all have real part $-\tfrac{1}{2}$ and norm 1, hence $u^2 + u + 1 = 0$. For example
+  $\rho = \omega_{\mathcal{H}} - 1 = \tfrac{1}{2}(-1 + i + j + k)$, where
+  $\omega_{\mathcal{H}} = \tfrac{1}{2}(1 + i + j + k)$ is `HurwitzQuaternion.OMEGA`.
+  So $\mathbb{Z}[\omega] \cong \mathbb{Z}[\rho] \subset \mathcal{H}$ (verified in
+  `HurwitzQuaternionRingSpec`).
 
-This requires half-integer coefficients *and* $\sqrt{-3}$ as a
-quaternion — neither of which lives in the Lipschitz integers, and even
-in the Hurwitz ring the equation $u^2 + u + 1 = 0$ has no solution.
-
-The only available path from Eisenstein integers upward is the
-floating-point homomorphism:
+Kosmos does not yet provide the $\mathbb{Z}[\omega] \hookrightarrow \mathcal{H}$ monomorphisms.
+Today the only path from the Eisenstein integers upward is the floating-point homomorphism
 
 ```
 ℤ[ω] → ℂ → ℍ → 𝕆
@@ -332,9 +390,10 @@ These canonical embeddings are used throughout the tower:
 
 | Arrow                | Embedding                                                    |
 |----------------------|--------------------------------------------------------------|
-| $\mathbb{Z}[i] \hookrightarrow \text{Lip}$ | `LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion()` (canonical default) |
-| $\text{Lip} \hookrightarrow \text{Cay}$     | `CayleyOctonionAlgebras.LipschitzToCayleyMonomorphism`       |
-| $\mathbb{Q}(i) \hookrightarrow \mathbb{H}_\mathbb{Q}$ | `RationalQuaternionAlgebras.gaussianRatToQuaternionMonomorphism()` (canonical default) |
+| $\mathbb{Z}[i] \hookrightarrow \text{Lip}$ | `GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()` (canonical default) |
+| $\text{Lip} \hookrightarrow \text{Grav}$    | `LipschitzQuaternionAlgebras.LipschitzToGravesianOctonionMonomorphism` |
+| $\mathbb{Q}(i) \hookrightarrow \mathbb{H}_\mathbb{Q}$ | `GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()` (canonical default) |
+| $\mathbb{C} \hookrightarrow \mathbb{B}$     | `BicomplexAlgebras.complexToBicomplexMonomorphism`           |
 | $\mathbb{H}_\mathbb{Q} \hookrightarrow \mathbb{O}_\mathbb{Q}$ | `RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism` |
 | $\mathbb{H} \hookrightarrow \mathbb{O}$     | `OctonionAlgebras.QuaternionToOctonionMonomorphism`          |
 
@@ -358,9 +417,11 @@ Each type has an appropriate scalar action:
 | $\mathbb{H}_\mathbb{Q}$ | $\mathbb{Q}$ | `FiniteVectorSpace` (dim 4) |
 | $\mathbb{H}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 4) |
 | $\mathbb{H}$     | $\mathbb{C}$ | `FiniteVectorSpace` (dim 2, per embedding) |
-| Cay  | $\mathbb{Z}$ | `ZModule` |
+| Grav | $\mathbb{Z}$ | `ZModule` |
 | $\mathbb{O}_\mathbb{Q}$ | $\mathbb{Q}$ | `FiniteVectorSpace` (dim 8) |
 | $\mathbb{O}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 8) |
+| $\mathbb{B}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 4) |
+| $\mathbb{B}$     | $\mathbb{C}$ | `FiniteVectorSpace` (dim 2) |
 
 These scalar actions are required by the `OctonionEmbeddingKit`
 to construct embeddings via linear combination of basis elements.
@@ -375,53 +436,69 @@ to construct embeddings via linear combination of basis elements.
 |-------|----------|
 | `ℤ ↪ ℤ[i]` | `GaussianIntAlgebras.ZToGaussianIntMonomorphism` |
 | `ℤ[i] ↪ ℂ` | `GaussianIntAlgebras.GaussianIntToComplexMonomorphism` |
-| `ℚ ↪ ℚ(i)` | `GaussianRatAlgebras.QtoGaussianRatMonomorphism` |
-| `ℤ[i] ↪ ℚ(i)` | `GaussianRatAlgebras.GaussianIntToRatMonomorphism` |
+| `ℚ ↪ ℚ(i)` | `GaussianRatAlgebras.QToGaussianRatMonomorphism` |
+| `ℤ[i] ↪ ℚ(i)` | `GaussianIntAlgebras.GaussianIntToRatMonomorphism` |
 | `ℤ ↪ ℚ(i)` | `GaussianRatAlgebras.ZToGaussianRatMonomorphism` |
-| `ℚ(i) ↪ ℂ` | `GaussianRatAlgebras.GaussianRatToComplexMonomorphism` |
-| `ℝ ↪ ℂ` | `ComplexAlgebras.RealToComplexMonomorphism` |
+| `ℚ(i) → ℂ` | `GaussianRatAlgebras.GaussianRatToComplexHomomorphism` |
+| `ℝ ↪ ℂ` | `RealAlgebras.RealToComplexMonomorphism` |
 | `ℤ[ω] → ℂ` | `EisensteinIntAlgebras.EisensteinIntToCHomomorphism` |
 
 ### Level 1 → Level 2 (×6 families)
 
 | Arrow | Location |
 |-------|----------|
-| `ℂ ↪ ℍ` (×6) | `QuaternionAlgebras.complexEmbeddingToQuaternion(emb)` |
-| `ℤ[i] ↪ Lip` (×6) | `LipschitzQuaternionAlgebras.gaussianIntEmbeddingToQuaternion(emb)` |
-| `ℚ(i) ↪ ℍ_ℚ` (×6) | `RationalQuaternionAlgebras.gaussianRatToQuaternionMonomorphism(emb)` |
-| `ℤ[i] ↪ Hur` (×6) | `HurwitzQuaternionAlgebras.gaussianIntEmbeddingToHurwitz(emb)` |
+| `ℂ ↪ ℍ` (×6) | `ComplexAlgebras.complexToQuaternionEmbedding(emb)` |
+| `ℤ[i] ↪ Lip` (×6) | `GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding(emb)` |
+| `ℚ(i) ↪ ℍ_ℚ` (×6) | `GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding(emb)` |
+| `ℤ[i] ↪ 𝓗` (×6) | `GaussianIntAlgebras.gaussianIntToHurwitzQuaternionEmbedding(emb)` |
+| `ℂ ↪ 𝔹` | `BicomplexAlgebras.complexToBicomplexMonomorphism` (`z ↦ z + 0j`) |
+| `ℂ ↪ ℂ(j) ⊂ 𝔹` | `BicomplexAlgebras.complexToBicomplexAlongJ` |
 
 ### Within Level 2
 
 | Arrow | Location |
 |-------|----------|
-| `Lip ↪ Hur` | `HurwitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism` |
-| `Hur ↪ ℍ_ℚ` | `RationalQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism` |
-| `Lip ↪ ℍ_ℚ` | `RationalQuaternionAlgebras.LipschitzToRationalQuaternionMonomorphism` |
-| `Lip ↪ ℍ` | `HurwitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism` |
-| `Hur ↪ ℍ` | `HurwitzQuaternionAlgebras.HurwitzToQuaternionMonomorphism` |
-| `ℍ_ℚ ↪ ℍ` | `RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism` |
+| `Lip ↪ 𝓗` | `LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism` |
+| `𝓗 ↪ ℍ_ℚ` | `HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism` |
+| `Lip ↪ ℍ_ℚ` | `LipschitzQuaternionAlgebras.LipschitzToRationalQuaternionMonomorphism` |
+| `Lip ↪ ℍ` | `LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism` |
+| `𝓗 ↪ ℍ` | `HurwitzQuaternionAlgebras.HurwitzToQuaternionMonomorphism` |
+| `ℍ_ℚ → ℍ` | `RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism` |
+| `𝔹 → ℂ` (×2) | `BicomplexAlgebras.BicomplexFirstProjectionHomomorphism`, `…SecondProjectionHomomorphism` |
 
 ### Level 2 → Level 3 (×84 families + canonical)
 
 | Arrow | Location |
 |-------|----------|
 | `ℍ ↪ 𝕆` (×84) | `OctonionAlgebras.allQuaternionEmbeddings()` |
-| `Lip ↪ Cay` (×84) | `CayleyOctonionAlgebras.allQuaternionEmbeddings()` |
+| `Lip ↪ Grav` (×84) | `GravesianOctonionAlgebras.allQuaternionEmbeddings()` |
 | `ℍ_ℚ ↪ 𝕆_ℚ` (×84) | `RationalOctonionAlgebras.allEmbeddings()` |
 | `ℍ ↪ 𝕆` (canonical) | `OctonionAlgebras.QuaternionToOctonionMonomorphism` |
-| `Lip ↪ Cay` (canonical) | `CayleyOctonionAlgebras.LipschitzToCayleyMonomorphism` |
+| `Lip ↪ Grav` (canonical) | `LipschitzQuaternionAlgebras.LipschitzToGravesianOctonionMonomorphism` |
 | `ℍ_ℚ ↪ 𝕆_ℚ` (canonical) | `RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism` |
 
 ### Within Level 3 and Cross-Level
 
 | Arrow | Location |
 |-------|----------|
-| `Cay ↪ 𝕆_ℚ` | `RationalOctonionAlgebras.CayleyToRationalOctonionMonomorphism` |
-| `Lip ↪ 𝕆_ℚ` | `RationalOctonionAlgebras.LipschitzToRationalOctonionMonomorphism` |
-| `Hur ↪ 𝕆_ℚ` | `RationalOctonionAlgebras.HurwitzToRationalOctonionMonomorphism` |
-| `Cay ↪ 𝕆` | `CayleyOctonionAlgebras.CayleyToOctonionMonomorphism` |
-| `𝕆_ℚ ↪ 𝕆` | `RationalOctonionAlgebras.RationalToOctonionMonomorphism` |
+| `Grav ↪ 𝕆_ℚ` | `GravesianOctonionAlgebras.GravesianToRationalOctonionMonomorphism` |
+| `Lip ↪ 𝕆_ℚ` | `LipschitzQuaternionAlgebras.LipschitzToRationalOctonionMonomorphism` |
+| `𝓗 ↪ 𝕆_ℚ` | `RationalOctonionAlgebras.HurwitzToRationalOctonionMonomorphism` |
+| `Grav ↪ 𝕆` | `GravesianOctonionAlgebras.GravesianToOctonionMonomorphism` |
+| `𝕆_ℚ → 𝕆` | `RationalOctonionAlgebras.RationalToOctonionMonomorphism` |
+
+### Matrix representations
+
+| Arrow | Location |
+|-------|----------|
+| `ℂ ↪ M₂(ℝ)` | `ComplexAlgebras.ComplexToRank2RMatrixMonomorphism` |
+| `SplitComplex<R> ↪ M₂(R)` | `SplitComplexAlgebras.splitComplexToRank2MatrixMonomorphism(base)` |
+| `Dual<F> ↪ M₂(F)` | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
+| `𝔹 ↪ M₂(ℂ)` | `BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism`, `…ToDiagonalMatrixMonomorphism` |
+| `ℍ ↪ M₂(ℂ)` | `QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism` |
+
+The first four are all `quadraticRank2MatrixEmbedding`: the regular representation of
+`R[x]/(x² − s − tx)` on the basis `{1, x}`.
 
 ---
 

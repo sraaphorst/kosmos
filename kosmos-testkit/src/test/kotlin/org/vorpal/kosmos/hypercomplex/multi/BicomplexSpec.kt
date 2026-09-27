@@ -22,9 +22,36 @@ class BicomplexSpec: StringSpec({
         val beta = complex(-4.0, 5.0)
 
         val z = Bicomplex.ofIdempotent(alpha, beta)
-        val (actualAlpha, actualBeta) = z
+        val (actualAlpha, actualBeta) = z.idempotent()
         check(eqC(actualAlpha, alpha))
         check(eqC(actualBeta, beta))
+    }
+
+    "standard and idempotent coordinates round-trip" {
+        checkAll(ArbBicomplex.bicomplex) { z ->
+            check(eqB(Bicomplex.ofIdempotent(z.alpha, z.beta), z))
+            check(eqB(Bicomplex.ofStandard(z.z1, z.z2), z))
+        }
+    }
+
+    "idempotent coordinates are multiplicative: (zw)_𝛂 = z_𝛂 w_𝛂 and (zw)_𝜷 = z_𝜷 w_𝜷" {
+        checkAll(ArbBicomplex.bicomplex, ArbBicomplex.bicomplex) { z, w ->
+            val zw = ring.mul(z, w)
+            check(eqC(zw.alpha, complexField.mul(z.alpha, w.alpha)))
+            check(eqC(zw.beta, complexField.mul(z.beta, w.beta)))
+        }
+    }
+
+    "standard multiplication is the Cayley-Dickson product (z1 + z2 j)(w1 + w2 j) = (z1w1 - z2w2) + (z1w2 + z2w1) j" {
+        checkAll(ArbBicomplex.bicomplex, ArbBicomplex.bicomplex) { z, w ->
+            val zw = ring.mul(z, w)
+            val first = complexField.add(
+                complexField.mul(z.z1, w.z1),
+                complexField.add.inverse(complexField.mul(z.z2, w.z2))
+            )
+            val second = complexField.add(complexField.mul(z.z1, w.z2), complexField.mul(z.z2, w.z1))
+            check(eqB(zw, Bicomplex.ofStandard(first, second)))
+        }
     }
 
     "ofStandard(z1, z2) preserves standard coordinates" {
