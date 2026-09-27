@@ -4,51 +4,103 @@ import org.vorpal.kosmos.core.rational.Rational
 import java.math.BigInteger
 
 /**
- * A Hurwitz quaternion is a quaternion:
+ * An element of the Hurwitz order
  * ```text
- * q = a + bi + cj + dk
+ * 𝓗 = { a + bi + cj + dk : a, b, c, d ∈ ℤ  or  a, b, c, d ∈ ℤ + 1/2 } ⊂ ℍ_ℚ.
  * ```
- * where either
- * - `a, b, c, d ∈ ℤ` (Lipschitz case); or
- * - `a, b, c, d ∈ ℤ + 1/2` (all half-integers) with the same parity pattern
- *   (equivalently: `a, b, c, d` are all half-integers and `a + b + c + d ∈ ℤ`).
  *
- * This set is the unique "nice" maximal order inside the rational quaternions.
+ * A Hurwitz quaternion *is* a rational quaternion: it is not another quaternion implementation, but
+ * an element of a distinguished subring of [RationalQuaternion]. Accordingly:
+ * - It is represented by its underlying [quaternion] in `ℍ_ℚ`.
+ * - It contributes no quaternion arithmetic of its own. The ring structure of `𝓗`
+ *   ([HurwitzQuaternionAlgebras.HurwitzQuaternionRing]) is the restriction of the
+ *   Cayley-Dickson-built [RationalQuaternionAlgebras.RationalQuaternionDivisionRing] to `𝓗`,
+ *   which is closed under `+`, `-`, `·` and conjugation.
+ * - Operations under which `𝓗` is *not* closed stay in the ambient algebra. For example,
+ *   `2 ∈ 𝓗` but `2⁻¹ = 1/2 ∉ 𝓗`: division is performed in `ℍ_ℚ` after the inclusion
+ *   [HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism].
+ *
+ * Invariant: for every `h: HurwitzQuaternion`, `h.quaternion ∈ 𝓗`.
+ *
+ * The constructor is private, so there is no public route to an invalid instance: external
+ * construction goes through the checked [Companion.invoke] overloads, while the ring operations,
+ * which provably preserve `𝓗`, use the trusted internal [Companion.wrap].
+ *
+ * This set is the unique maximal order of the rational quaternions containing the Lipschitz order.
  */
-data class HurwitzQuaternion(
-    val a: Rational,
-    val b: Rational,
-    val c: Rational,
-    val d: Rational
+@JvmInline
+value class HurwitzQuaternion private constructor(
+    val quaternion: RationalQuaternion
 ) {
-    init {
-        require(isHurwitz(a, b, c, d)) {
-            "Not a Hurwitz quaternion: coordinates must be all integers or all half-integers with even sum."
-        }
-    }
+    override fun toString(): String =
+        "HurwitzQuaternion(w=$w, x=$x, y=$y, z=$z)"
 
     companion object {
         /**
-         * A quaternion (a, b, c, d) is Hurwitz iff:
-         * - `2a`, `2b`, `2c`, `2d` are all integers
-         * - `2a = 2b = 2c = 2d (mod 2)`
+         * Checked construction from a rational quaternion.
+         *
+         * @throws IllegalArgumentException if [q] is not in the Hurwitz order.
          */
-        fun isHurwitz(a: Rational, b: Rational, c: Rational, d: Rational): Boolean {
-            val doubled = listOf(a, b, c, d).map { it * BigInteger.TWO }
-            if (!doubled.all(Rational::isInteger)) return false
-            val p0 = doubled.first().numerator.mod(BigInteger.TWO)
-            return doubled.all { it.numerator.mod(BigInteger.TWO) == p0 }
+        operator fun invoke(q: RationalQuaternion): HurwitzQuaternion {
+            require(isHurwitz(q)) {
+                "Not a Hurwitz quaternion: coordinates must be all integers or all half-integers: $q"
+            }
+            return HurwitzQuaternion(q)
         }
 
-        val ZERO = HurwitzQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ZERO)
-        val ONE = HurwitzQuaternion(Rational.ONE, Rational.ZERO, Rational.ZERO, Rational.ZERO)
-        val I = HurwitzQuaternion(Rational.ZERO, Rational.ONE, Rational.ZERO, Rational.ZERO)
-        val J = HurwitzQuaternion(Rational.ZERO, Rational.ZERO, Rational.ONE, Rational.ZERO)
-        val K = HurwitzQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ONE)
+        /**
+         * Checked construction from coordinates `a + bi + cj + dk`.
+         */
+        operator fun invoke(
+            a: Rational,
+            b: Rational,
+            c: Rational,
+            d: Rational
+        ): HurwitzQuaternion =
+            invoke(rationalQuaternion(a, b, c, d))
+
+        /**
+         * Trusted wrapping for values already known to lie in `𝓗`, e.g. results of the ring
+         * operations of [HurwitzQuaternionAlgebras.HurwitzQuaternionRing] on Hurwitz inputs,
+         * or images of Lipschitz quaternions.
+         *
+         * The membership invariant is *not* re-checked: it has been established once at the
+         * boundary and is preserved by the algebra.
+         */
+        internal fun wrap(q: RationalQuaternion): HurwitzQuaternion =
+            HurwitzQuaternion(q)
+
+        /**
+         * A rational quaternion `(a, b, c, d)` is Hurwitz iff:
+         * - `2a`, `2b`, `2c`, `2d` are all integers; and
+         * - `2a ≡ 2b ≡ 2c ≡ 2d (mod 2)`.
+         */
+        fun isHurwitz(q: RationalQuaternion): Boolean {
+            val doubled = listOf(q.w, q.x, q.y, q.z).map { it * BigInteger.TWO }
+            return doubled.all(Rational::isInteger) &&
+                doubled.map { it.numerator.mod(BigInteger.TWO) }.distinct().size == 1
+        }
+
+        fun isHurwitz(a: Rational, b: Rational, c: Rational, d: Rational): Boolean =
+            isHurwitz(rationalQuaternion(a, b, c, d))
+
+        private val HALF: Rational = Rational.of(1, 2)
+
+        val ZERO: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ZERO))
+        val ONE: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ONE, Rational.ZERO, Rational.ZERO, Rational.ZERO))
+        val I: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ONE, Rational.ZERO, Rational.ZERO))
+        val J: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ONE, Rational.ZERO))
+        val K: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ONE))
+
+        /**
+         * The Hurwitz unit `ω = (1 + i + j + k)/2`, which together with `1, i, j` generates `𝓗`
+         * as a `ℤ`-module.
+         */
+        val OMEGA: HurwitzQuaternion = wrap(rationalQuaternion(HALF, HALF, HALF, HALF))
     }
 }
 
-val HurwitzQuaternion.w: Rational get() = a
-val HurwitzQuaternion.x: Rational get() = b
-val HurwitzQuaternion.y: Rational get() = c
-val HurwitzQuaternion.z: Rational get() = d
+val HurwitzQuaternion.w: Rational get() = quaternion.w
+val HurwitzQuaternion.x: Rational get() = quaternion.x
+val HurwitzQuaternion.y: Rational get() = quaternion.y
+val HurwitzQuaternion.z: Rational get() = quaternion.z

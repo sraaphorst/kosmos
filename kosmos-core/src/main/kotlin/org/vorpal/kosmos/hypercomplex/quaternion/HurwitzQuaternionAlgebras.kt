@@ -2,30 +2,47 @@ package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.HasNormSq
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
-import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.core.rational.times
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.core.render.contramap
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
 import org.vorpal.kosmos.linear.values.Vec4
 import java.math.BigInteger
 
 /**
+ * The inclusion `𝓗 ↪ ℍ_ℚ` and its trusted corestriction, as a [CarrierTransport].
+ *
+ * File-level so that initializing [HurwitzQuaternionAlgebras.HurwitzQuaternionRing] never
+ * recursively initializes [HurwitzQuaternionAlgebras].
+ */
+private val hurwitzInclusion: CarrierTransport<RationalQuaternion, HurwitzQuaternion> =
+    CarrierTransport(
+        wrap = UnaryOp { q -> HurwitzQuaternion.wrap(q) },
+        unwrap = UnaryOp { h -> h.quaternion }
+    )
+
+/**
+ * The ring structure of `𝓗`: the restriction of `ℍ_ℚ` to the order.
+ */
+private val hurwitzRestriction: InvolutiveRing<HurwitzQuaternion> =
+    hurwitzInclusion.involutiveRing(RationalQuaternionAlgebras.RationalQuaternionDivisionRing)
+
+/**
  * Main structures:
- * - [HurwitzQuaternionRing]: the Hurwitz quaternions.
+ * - [HurwitzQuaternionRing]: the Hurwitz order `𝓗 ⊂ ℍ_ℚ`.
  *
  * Vector spaces and modules:
  * - [ZModuleHurwitzQuaternion]: the rank-4 ℤ-module of Hurwitz quaternions.
@@ -34,10 +51,9 @@ import java.math.BigInteger
  * - [HurwitzQuaternionLattice]: the rank-4 Euclidean lattice of Hurwitz quaternions in `ℝ⁴`,
  *   related to the `D₄`/24-cell configuration.
  *
- *
  * Homomorphisms:
- * - [HurwitzToRationalQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the rational quaternions.
- * - [HurwitzToQuaternionMonomorphism]: a ring monomorphism from the Hurwitz quaternions to the quaternions.
+ * - [HurwitzToRationalQuaternionMonomorphism]: the inclusion `𝓗 ↪ ℍ_ℚ`.
+ * - [HurwitzToQuaternionMonomorphism]: `𝓗 ↪ ℍ_ℚ → ℍ`.
  *
  * Eqs:
  * - [eqHurwitzQuaternion]
@@ -62,51 +78,22 @@ object HurwitzQuaternionAlgebras {
      * ```text
      * Lipschitz (ring) ⊂ Hurwitz (ring) ⊂ ℍ(ℚ) (division ring) ⊂ ℍ (division ring)
      * ```
+     *
+     * No quaternion arithmetic is implemented here: `+`, `-`, `·`, conjugation and the norm are
+     * those of [RationalQuaternionAlgebras.RationalQuaternionDivisionRing], restricted to `𝓗`.
+     *
+     * Only the *units* of `𝓗` have reciprocals in `𝓗`. A unit has `N(h) = 1`, so its inverse is its
+     * conjugate. Any other nonzero `h` is invertible only in the ambient `ℍ_ℚ`.
      */
-    object HurwitzQuaternionRing:
-        InvolutiveRing<HurwitzQuaternion>,
-        HasNormSq<HurwitzQuaternion, Rational> {
+    object HurwitzQuaternionRing :
+        InvolutiveRing<HurwitzQuaternion> by hurwitzRestriction,
+        HasNormSq<HurwitzQuaternion, Rational>,
+        HasReciprocal<HurwitzQuaternion> {
 
         override val zero: HurwitzQuaternion = HurwitzQuaternion.ZERO
-        override val one: HurwitzQuaternion = HurwitzQuaternion.ONE
-
-        override val add: AbelianGroup<HurwitzQuaternion> = AbelianGroup.of(
-            identity = zero,
-            op = BinOp(Symbols.PLUS) { hq1, hq2 ->
-                HurwitzQuaternion(
-                    hq1.a + hq2.a, hq1.b + hq2.b,
-                    hq1.c + hq2.c, hq1.d + hq2.d
-                )
-            },
-            inverse = Endo(Symbols.MINUS) { hq ->
-                HurwitzQuaternion(-hq.a, -hq.b, -hq.c, -hq.d)
-            }
-        )
-
-        override val mul: Monoid<HurwitzQuaternion> = Monoid.of(
-            identity = one,
-            op = BinOp(Symbols.ASTERISK) { hq1, hq2 ->
-                HurwitzQuaternion(
-                    hq1.a * hq2.a - hq1.b * hq2.b - hq1.c * hq2.c - hq1.d * hq2.d,
-                    hq1.a * hq2.b + hq1.b * hq2.a + hq1.c * hq2.d - hq1.d * hq2.c,
-                    hq1.a * hq2.c - hq1.b * hq2.d + hq1.c * hq2.a + hq1.d * hq2.b,
-                    hq1.a * hq2.d + hq1.b * hq2.c - hq1.c * hq2.b + hq1.d * hq2.a
-                )
-            }
-        )
-
-        override fun fromBigInt(n: BigInteger): HurwitzQuaternion =
-            HurwitzQuaternion(n.toRational(), Rational.ZERO, Rational.ZERO, Rational.ZERO)
-
-        // This always is a Hurwitz quaternion as:
-        // - doubling maintains integrality; and
-        // - parity mod 2 doesn't change under negation.
-        override val conj: Endo<HurwitzQuaternion> = Endo(Symbols.CONJ) { hq ->
-            HurwitzQuaternion(hq.a, -hq.b, -hq.c, -hq.d)
-        }
 
         /**
-         * normSq always lands in ℤ:
+         * `normSq` always lands in ℤ:
          * 1. If the values are already in ℤ, the calculation remains there.
          * 2. If the values are all half-integers, then they all can be written `n/2` with `n` odd:
          * ```text
@@ -114,19 +101,61 @@ object HurwitzQuaternionAlgebras {
          * ```
          * with each odd square being `1 (mod 8)`, so the numerator is `4 (mod 8)`, and hence divisible by 4.
          */
-        override val normSq: UnaryOp<HurwitzQuaternion, Rational> = UnaryOp(Symbols.NORM_SQ_SYMBOL) {
-            hq -> hq.a * hq.a + hq.b * hq.b + hq.c * hq.c + hq.d * hq.d
+        override val normSq: UnaryOp<HurwitzQuaternion, Rational> =
+            hurwitzInclusion.from(RationalQuaternionAlgebras.RationalQuaternionDivisionRing.normSq)
+
+        /**
+         * `h` is a unit of `𝓗` iff `N(h) = 1`. There are exactly 24 of them: `±1, ±i, ±j, ±k`
+         * and `(±1 ± i ± j ± k)/2`.
+         */
+        override fun hasReciprocal(a: HurwitzQuaternion): Boolean =
+            normSq(a) == Rational.ONE
+
+        /**
+         * The 24 units of `𝓗`: the 8 Lipschitz units `±1, ±i, ±j, ±k` and the 16 half-integer units
+         * `(±1 ± i ± j ± k)/2`. They form the binary tetrahedral group `2T`, and as points of `ℝ⁴`
+         * they are the vertices of the 24-cell.
+         */
+        val units: List<HurwitzQuaternion> by lazy {
+            val half = Rational.of(1, 2)
+            val signs = listOf(Rational.ONE, -Rational.ONE)
+            val lipschitzUnits = (0 until 4).flatMap { axis ->
+                signs.map { sign -> List(4) { idx -> if (idx == axis) sign else Rational.ZERO } }
+            }
+            val halfUnits = (0 until 16).map { mask ->
+                List(4) { bit -> if ((mask shr bit) and 1 == 1) half else -half }
+            }
+            (lipschitzUnits + halfUnits).map { (a, b, c, d) -> HurwitzQuaternion(a, b, c, d) }
+        }
+
+        /**
+         * The reciprocal *within* `𝓗`, defined only on units, where `h⁻¹ = conj(h)`.
+         *
+         * @throws ArithmeticException if `h` is not a unit of `𝓗`. Such an `h` may still be invertible
+         * in `ℍ_ℚ`: use [HurwitzToRationalQuaternionMonomorphism] and the ambient division ring.
+         */
+        override val reciprocal: Endo<HurwitzQuaternion> = Endo(Symbols.INVERSE) { h ->
+            if (!hasReciprocal(h)) {
+                throw ArithmeticException("$h is not a unit of the Hurwitz order; invert it in ℍ_ℚ instead.")
+            }
+            conj(h)
         }
     }
+
+    /**
+     * The `ℤ`-action on `𝓗`: the restriction of the `ℚ`-action on `ℍ_ℚ`.
+     */
+    private val zScaling: LeftAction<BigInteger, HurwitzQuaternion> =
+        LeftAction(Symbols.TRIANGLE_RIGHT) { s, h ->
+            HurwitzQuaternion.wrap(
+                RationalQuaternionAlgebras.RationalQuaternionVectorSpace.leftAction(s.toRational(), h.quaternion)
+            )
+        }
 
     object ZModuleHurwitzQuaternion : ZModule<HurwitzQuaternion> {
         override val scalars = IntegerAlgebras.IntegerCommutativeRing
         override val add = HurwitzQuaternionRing.add
-        override val leftAction: LeftAction<BigInteger, HurwitzQuaternion> =
-            LeftAction(Symbols.TRIANGLE_RIGHT) { s, hq ->
-                val sr = s.toRational()
-                HurwitzQuaternion( sr * hq.a, sr * hq.b, sr * hq.c, sr * hq.d)
-            }
+        override val leftAction: LeftAction<BigInteger, HurwitzQuaternion> = zScaling
     }
 
     /**
@@ -150,39 +179,34 @@ object HurwitzQuaternionAlgebras {
      * i.e. one lattice plus a shifted coset.
      *
      * The 24 norm-1 Hurwitz units form the vertices of the regular 24-cell, equivalently a scaled
-     * `D₄` root configuration. By definition, these units are the roots of the polynomial
-     * `x⁴ - 4x² + 1`, which is the characteristic polynomial of the `D₄` Coxeter group.
-     *
-     * We consider the unit hypersphere, which gives us the number of
+     * `D₄` root configuration.
      */
     object HurwitzQuaternionLattice: EuclideanLattice<HurwitzQuaternion, Rational> {
         override val rank = 4
-        private val ring = HurwitzQuaternionRing
 
-        // Alternatively, we could use the following:
-        // (ring.normSq(ring.add(hq1, hq2)) - ring.normSq(hq1) - ring.normSq(hq2)) / Rational.TWO
-        override val dot: (HurwitzQuaternion, HurwitzQuaternion) -> Rational = { hq1, hq2 ->
-            hq1.a * hq2.a + hq1.b * hq2.b + hq1.c * hq2.c + hq1.d * hq2.d
+        /**
+         * The Euclidean inner product `⟨h₁, h₂⟩ = Re(h₁ · conj(h₂))`, i.e. the polarization of `normSq`.
+         */
+        override val dot: (HurwitzQuaternion, HurwitzQuaternion) -> Rational = { h1, h2 ->
+            val ring = HurwitzQuaternionRing
+            ring.mul(h1, ring.conj(h2)).w
         }
 
         /**
-         * A ℤ-basis of the Hurwitz quaternion lattice is `[1, I, J, (1 + I + J + K) / 2]`.
+         * A ℤ-basis of the Hurwitz quaternion lattice is `[1, I, J, ω]` with `ω = (1 + I + J + K) / 2`.
          */
-        private val HALF = Rational.of(BigInteger.ONE, BigInteger.TWO)
         override val basis: List<HurwitzQuaternion> = listOf(
             HurwitzQuaternion.ONE,
             HurwitzQuaternion.I,
             HurwitzQuaternion.J,
-            HurwitzQuaternion(HALF, HALF, HALF, HALF)
+            HurwitzQuaternion.OMEGA
         )
 
-        override val addV: AbelianGroup<HurwitzQuaternion> = ring.add
-        override val scale: LeftAction<BigInteger, HurwitzQuaternion> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, hq ->
-            HurwitzQuaternion(s * hq.a, s * hq.b, s * hq.c, s * hq.d)
-        }
+        override val addV: AbelianGroup<HurwitzQuaternion> = HurwitzQuaternionRing.add
+        override val scale: LeftAction<BigInteger, HurwitzQuaternion> = zScaling
 
-        val embedR4: UnaryOp<HurwitzQuaternion, Vec4<Real>> = UnaryOp { hq ->
-            Vec4(hq.a.toReal(), hq.b.toReal(), hq.c.toReal(), hq.d.toReal())
+        val embedR4: UnaryOp<HurwitzQuaternion, Vec4<Real>> = UnaryOp { h ->
+            Vec4(h.w.toReal(), h.x.toReal(), h.y.toReal(), h.z.toReal())
         }
 
         /**
@@ -193,38 +217,29 @@ object HurwitzQuaternionAlgebras {
     }
 
     /**
-     * Monomorphism: HurwitzQuaternion to RationalQuaternion.
+     * The inclusion of the order into its ambient division algebra, `𝓗 ↪ ℍ_ℚ`.
      */
     object HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> {
         override val domain = HurwitzQuaternionRing
         override val codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
-        override val map = UnaryOp<HurwitzQuaternion, RationalQuaternion> { (a, b, c, d) ->
-            rationalQuaternion(a, b, c, d)
-        }
+        override val map = UnaryOp<HurwitzQuaternion, RationalQuaternion> { h -> h.quaternion }
     }
 
     /**
-     * Monomorphism: HurwitzQuaternion to Quaternion.
+     * Monomorphism: HurwitzQuaternion to Quaternion, `𝓗 ↪ ℍ_ℚ → ℍ`.
      */
     object HurwitzToQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, Quaternion> {
         override val domain = HurwitzQuaternionRing
         override val codomain = QuaternionAlgebras.QuaternionDivisionRing
-        override val map = UnaryOp<HurwitzQuaternion, Quaternion> { (a, b, c, d) ->
-            quaternion(a.toReal(),  b.toReal(), c.toReal(), d.toReal())
+        override val map = UnaryOp<HurwitzQuaternion, Quaternion> { h ->
+            RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism(h.quaternion)
         }
     }
 
     val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq.default()
 
     val printableHurwitzQuaternion: Printable<HurwitzQuaternion> =
-        QuaternionPrintable.quaternionPrintable(
-            signed = RationalAlgebras.SignedRational,
-            zero = Rational.ZERO,
-            one = Rational.ONE,
-            prA = RationalAlgebras.printableRational,
-            eqA = RationalAlgebras.eqRational,
-            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
-        )
+        RationalQuaternionAlgebras.printableRationalQuaternion.contramap { h: HurwitzQuaternion -> h.quaternion }
 
     val printableHurwitzQuaternionPretty = printableHurwitzQuaternion
 }

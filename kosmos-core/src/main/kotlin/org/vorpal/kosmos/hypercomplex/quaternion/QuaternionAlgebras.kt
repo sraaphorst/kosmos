@@ -37,7 +37,7 @@ import kotlin.isFinite
  * - [QuaternionStarAlgebra]: the quaternion star algebra.
  *
  * We have the following homomorphisms:
- * - [complexEmbeddingToQuaternion]: the unital embeddings from the complex numbers to the quaternions.
+ * - [ComplexAlgebras.complexToQuaternionEmbedding]: the unital embeddings from the complex numbers to the quaternions.
  *
  * We also have the following [Eq]s:
  * - [eqQuaternionStrict]: strict equality on quaternions.
@@ -86,6 +86,15 @@ object QuaternionAlgebras {
 
         override val normSq: UnaryOp<Quaternion, Real> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
+
+        /**
+         * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of ℂ.
+         */
+        val basis: List<Quaternion> =
+            CayleyDickson.doubledBasis(
+                zero = ComplexAlgebras.ComplexField.zero,
+                baseBasis = listOf(ComplexAlgebras.ComplexField.one, ComplexAlgebras.i)
+            )
     }
 
     // Scalars: Real, act componentwise on (a, b)

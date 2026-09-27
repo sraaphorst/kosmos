@@ -11,6 +11,7 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.expectSome
 import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.dualRingWithReciprocal
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
+import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.homomorphism.preservesBinaryOpLaw
 import org.vorpal.kosmos.laws.homomorphism.preservesIdentityLaw
 import org.vorpal.kosmos.testutils.shouldBeApproximately
@@ -47,8 +48,8 @@ class DualCommutativeRingSpec : FunSpec({
     val one = dualRing.mul.identity
 
     val eqDual = DualAlgebras.eqDualReal
-    val prDual = DualAlgebras.printableDualRealSigned
-    val prDualCompact = DualAlgebras.printableDualRealCompactSigned
+    val prDual = DualAlgebras.printableDualReal
+    val prDualPretty = DualAlgebras.printableDualRealPretty
 
     fun dual(a: Real, b: Real): Dual<Real> =
         Dual(a, b)
@@ -90,6 +91,23 @@ class DualCommutativeRingSpec : FunSpec({
                 eq = eqDual,
                 pr = prDual
             ).fullTest().throwIfFailed()
+        }
+
+        test("DualCommutativeRing satisfies InvolutiveRingLaws for conj(a + bε) = a - bε") {
+            InvolutiveRingLaws(
+                ring = dualRing,
+                arb = arbDual,
+                eq = eqDual,
+                pr = prDual
+            ).fullTest().throwIfFailed()
+        }
+
+        test("conjugation formula and norm: (a + bε)·conj(a + bε) = a²") {
+            checkAll(arbDualReal, arbDualReal) { a, b ->
+                val d = dual(a, b)
+                dualRing.conj(d) shouldBeApproximately dual(a, -b)
+                (d * dualRing.conj(d)) shouldBeApproximately dual(a * a, 0.0)
+            }
         }
     }
 
@@ -497,32 +515,38 @@ class DualCommutativeRingSpec : FunSpec({
     context("String representations") {
         val eps = Symbols.EPSILON
 
+        // Dual numbers print as linear combinations over the basis {1, ε}, exactly like
+        // complex (basis {1, i}) and split-complex (basis {1, j}) numbers.
+
         test("Printable format, positive") {
             val d = dual(3.0, 4.0)
             prDual(d) shouldBe "3.0 + 4.0$eps"
-            prDualCompact(d) shouldBe "3.0 + 4.0$eps"
+            prDualPretty(d) shouldBe "3 + 4$eps"
         }
 
         test("Printable format, negative") {
             val d = dual(-3.0, -4.0)
             prDual(d) shouldBe "-3.0 - 4.0$eps"
-            prDualCompact(d) shouldBe "-3.0 - 4.0$eps"
+            prDualPretty(d) shouldBe "-3 - 4$eps"
         }
 
-        test("zero dual toString") {
-            prDual(zero) shouldBe "0.0 + 0.0$eps"
-            prDualCompact(zero) shouldBe "0.0"
+        test("zero dual drops both terms") {
+            prDual(zero) shouldBe "0"
         }
 
-        test("one dual toString") {
-            prDual(one) shouldBe "1.0 + 0.0ε"
-            prDualCompact(one) shouldBe "1.0"
+        test("one dual drops the ε term") {
+            prDual(one) shouldBe "1.0"
+            prDualPretty(one) shouldBe "1"
         }
 
-        test("epsilon toString") {
+        test("epsilon prints as the bare basis symbol") {
             val e = dualRing.epsOne
-            prDual(e) shouldBe "0.0 + 1.0ε"
-            prDualCompact(e) shouldBe eps
+            prDual(e) shouldBe eps
+            prDual(dualRing.add.inverse(e)) shouldBe "-$eps"
+        }
+
+        test("unit ε coefficient is elided") {
+            prDual(dual(2.5, 1.0)) shouldBe "2.5 + $eps"
         }
     }
 })

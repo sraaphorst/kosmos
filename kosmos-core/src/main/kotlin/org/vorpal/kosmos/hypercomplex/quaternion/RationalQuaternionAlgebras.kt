@@ -30,11 +30,12 @@ import java.math.BigInteger
  * - [RationalQuaternionVectorSpace]: the two-dimensional vector space of rational quaternions over the rationals.
  *
  * We have the following homomorphisms:
- * - [gaussianRatToQuaternionMonomorphism]: a ring monomorphism from [GaussianRat] to [RationalQuaternion].
+ * - `ℚ(i) ↪ ℍ_ℚ` lives with the Gaussian rationals: `GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding`.
  * - [RationalQuaternionToQuaternionMonomorphism]: a ring homomorphism from [RationalQuaternion] to [Quaternion].
- * - [HurwitzToRationalQuaternionMonomorphism]: a ring homomorphism from [HurwitzQuaternion] to [RationalQuaternion].
- * - [LipschitzToRationalQuaternionMonomorphism]: a ring homomorphism from [LipschitzQuaternion] to [RationalQuaternion]
- * (passing through the Hurwitz quaternions).
+ *
+ * The inclusions of the integral orders live with the orders themselves:
+ * - [HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism]: `𝓗 ↪ ℍ_ℚ`.
+ * - [LipschitzQuaternionAlgebras.LipschitzToRationalQuaternionMonomorphism]: `ℤ⟨i, j, k⟩ ↪ ℍ_ℚ`.
  *
  * We also have the following [Eq]s:
  * - [eqRationalQuaternion]: equality on rational quaternions.
@@ -87,6 +88,15 @@ object RationalQuaternionAlgebras {
 
         override val normSq: UnaryOp<RationalQuaternion, Rational> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
+
+        /**
+         * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `ℚ(i)`.
+         */
+        val basis: List<RationalQuaternion> =
+            CayleyDickson.doubledBasis(
+                zero = GaussianRat.ZERO,
+                baseBasis = listOf(GaussianRat.ONE, GaussianRat.I)
+            )
     }
 
     /**
@@ -101,28 +111,6 @@ object RationalQuaternionAlgebras {
         }
     )
 
-    private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
-
-    /**
-     * Return the ring monomorphism embedding Gaussian-ℚ into Quaternion-ℚ as determined by [embedding].
-     */
-    fun gaussianRatToQuaternionMonomorphism(
-        embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
-        domain = GaussianRatAlgebras.GaussianRatField,
-        codomain = RationalQuaternionDivisionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = Rational.ZERO,
-                negate = Rational::unaryMinus,
-                mkQuaternion = ::rationalQuaternion
-            )
-        }
-    )
-
     /**
      * This should theoretically be a ring monomorphism, but since we are mapping from rationals to floating point
      * quaternions and may lose precision, we use a ring homomorphism instead.
@@ -134,14 +122,6 @@ object RationalQuaternionAlgebras {
             quaternion(lq.a.re.toReal(), lq.a.im.toReal(), lq.b.re.toReal(), lq.b.im.toReal())
         }
     )
-
-    object HurwitzToRationalQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, RationalQuaternion> {
-        override val domain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing
-        override val codomain = RationalQuaternionDivisionRing
-        override val map = UnaryOp<HurwitzQuaternion, RationalQuaternion> { (a, b, c, d) ->
-            rationalQuaternion(a, b, c, d)
-        }
-    }
 
     val eqRationalQuaternion: Eq<RationalQuaternion> = Eq.default()
 
