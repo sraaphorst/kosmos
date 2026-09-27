@@ -38,20 +38,44 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 |---|----|---------|---------|
 | 1  | −1 | ℂ = ℝ[i]/(i² + 1) | `Complex` (typealias of `CD<Real>`) |
 | 1  | −1 | 𝔹 = ℂ[j]/(j² + 1) (bicomplex) | `Bicomplex` (value class over `CD<Complex>`) |
-| −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (typealias of `CD<R>`) |
+| −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
 | 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
 
-`Bicomplex` and `Dual` are value classes, not typealiases. `Bicomplex` and `Quaternion` are
-both carried by `CD<Complex>`, and `Dual<Real>` shares `CD<Real>` with `Complex`. The algebras
-differ, so the Kotlin types must too. Their ring structures are transported from the
-Cayley–Dickson ring along the wrapper with `CarrierTransport`.
+`Bicomplex`, `Dual` and `SplitComplex` are value classes, not typealiases. `Bicomplex` and
+`Quaternion` are both carried by `CD<Complex>`, and `Dual<Real>` and `SplitComplex<Real>` share
+`CD<Real>` with `Complex`. The algebras differ, so the Kotlin types must too. Their ring
+structures are transported from the Cayley–Dickson ring along the wrapper with
+`CarrierTransport`.
+
+**One construction per tier, three coefficient rings.** ℍ, ℍ_ℚ and the Lipschitz quaternions are
+built by a single internal `QuaternionTier` over ℂ, ℚ(i) and ℤ[i]; 𝕆, 𝕆_ℚ and the Gravesian
+octonions by a single `OctonionTier` over those. A tier supplies the ring, basis, coordinates,
+scalar action, norm, embeddings and printable; the public `*Algebras` objects add only what
+really differs per tier (reciprocals, vector spaces or ℤ-modules, conversions).
+
+**What `CayleyDickson` promises.** `usual`, `split` and `commutative` are the safe factories.
+`withSigma` accepts any `σ`, but the conjugation is an anti-automorphism only when `σ` is central
+and fixed by the base involution (always true for the generalized quaternion algebras `(a, b)_F`,
+where `σ` is a scalar). `associative` types the double of a *commutative* base as an associative
+`InvolutiveRing`; this is the quaternion step. The kernel is tested directly, level by level, in
+`CayleyDicksonSpec`.
 
 **Orders are substructures, not new implementations.** A `HurwitzQuaternion` is an element of
 the Hurwitz order `𝓗 ⊂ ℍ_ℚ`, represented by its underlying `RationalQuaternion`. Its
 constructor is private: checked construction goes through `HurwitzQuaternion(q)`, and the ring
 operations, which provably stay in `𝓗`, use a trusted internal `wrap`. The ring structure of `𝓗`
-is the restriction of `ℍ_ℚ`. Only the 24 units are invertible *in* `𝓗`; every other nonzero
-element is inverted in `ℍ_ℚ` after the inclusion `HurwitzToRationalQuaternionMonomorphism`.
+is the restriction of `ℍ_ℚ`, and its norm lands in ℤ. Only the 24 units are invertible *in* `𝓗`;
+every other nonzero element is inverted in `ℍ_ℚ` after the inclusion
+`HurwitzToRationalQuaternionMonomorphism`. The same holds for the Lipschitz quaternions (8 units)
+and the Gravesian octonions (16 units): their `reciprocal` is defined on the units only.
+
+**Reciprocals follow one contract** (documented on `HasReciprocal`): `hasReciprocal` is the single
+source of truth, `reciprocal` throws `ArithmeticException` exactly where it returns `false`, and
+`reciprocalOption` agrees with both. Exact algebras use exact nonzero-ness. Floating-point
+algebras use *numerical* invertibility: the norm (or, for `Dual<Real>`, the computed inverse) is
+finite and not approximately zero, so `NaN`, `±∞`, subnormal-scale values and the null cone are
+rejected rather than inverted to garbage. `Bicomplex.isUnit()` stays the exact algebraic predicate.
+This is tested uniformly in `ReciprocalPolicySpec`.
 
 ---
 
@@ -78,7 +102,7 @@ hypercomplex/
 ├── multi/                    # Bicomplex: value class over CD⟨ℂ⟩ (commutative doubling, σ = 1)
 │   ├── Bicomplex.kt                standard basis z1 + z2·j; idempotent (𝛂, 𝜷) views
 │   ├── BicomplexAlgebras.kt
-│   └── Multicomplex.md             design notes for the general multicomplex case
+│   (design notes for the general multicomplex case: docs/design/Multicomplex.md)
 │
 ├── quaternion/               # ℍ-like rings
 │   ├── Quaternion.kt               ℍ   = CD⟨ℂ⟩             (Real coefficients)
@@ -89,6 +113,7 @@ hypercomplex/
 │   ├── LipschitzQuaternionAlgebras.kt
 │   ├── HurwitzQuaternion.kt        𝓗 ⊂ ℍ_ℚ, the Hurwitz order (value class over RationalQuaternion)
 │   ├── HurwitzQuaternionAlgebras.kt
+│   ├── QuaternionTier.kt           the one quaternion construction over ℂ, ℚ(i), ℤ[i]
 │   ├── AxisSignEmbeddings.kt       the 6 specs for complex-like ↪ quaternion-like
 │   ├── QuaternionEmbeddingKit.kt   generic complex-like → quaternion builder
 │   └── QuaternionPrintable.kt
@@ -100,8 +125,9 @@ hypercomplex/
     ├── RationalOctonionAlgebras.kt
     ├── GravesianOctonion.kt        CD⟨Lip⟩ ≅ ℤ⁸            (BigInteger coefficients)
     ├── GravesianOctonionAlgebras.kt
-    ├── OctonionEmbeddingKit.kt     generic quaternion → octonion builder (Fano plane)
-    ├── OctonionFanoOrientation(s).kt, OrientedFanoLine.kt, Handedness.kt
+    ├── OctonionTier.kt             the one octonion construction over ℍ, ℍ_ℚ, Lip
+    ├── OctonionEmbeddingKit.kt     the 168 signed-basis-unit quaternion → octonion embeddings
+    ├── OctonionFanoOrientation(s).kt, OrientedFanoLine.kt
     └── OctonionPrintable.kt
 ```
 
@@ -117,7 +143,7 @@ a basis `e₀, …, e_{n-1}` of `A` to `(e₀, 0), …, (0, e_{n-1})` in `CD<A>`
 
 ## The Tower Diagram
 
-All arrows are ring monomorphisms (structure-preserving injections).
+Solid arrows are ring monomorphisms (structure-preserving injections).
 Horizontal arrows stay within one "level" of the tower;
 vertical arrows widen coefficients.
 
@@ -133,14 +159,17 @@ Level 1 (complex)       ℤ[i] ────────────────�
                         │   ╲                     │   ╲                   │   ╲
                         ↓    ↘                    ↓    ↘                  ↓    ↘
 Level 2 (quaternion)    Lip ──→ Hur ───────────→ ℍ_ℚ ─ ─ ─ ─ ─ ─ ─ ─ → ℍ
-                        │  ╲  (×84)               │  ╲  (×84)             │  ╲  (×84)
+                        │  ╲  (×168)              │  ╲  (×168)            │  ╲  (×168)
                         │   ╲                     │   ╲                   │   ╲
                         ↓    ↘                    ↓    ↘                  ↓    ↘
 Level 3 (octonion)      Grav ─────────────────→ 𝕆_ℚ ─ ─ ─ ─ ─ ─ ─ ─ → 𝕆
 ```
 
-Dashed arrows (─ ─ →) pass through floating-point conversion (`toReal()`)
-and are therefore not exact monomorphisms in the strict algebraic sense.
+Dashed arrows (─ ─ →) are floating-point conversions (`toReal()`). They are **not**
+monomorphisms, or even homomorphisms: distinct large integers and rationals collide in
+`Double`, and products are preserved only up to rounding. They are therefore typed as plain
+conversions, `UnaryOp`s named `…Approx` (e.g. `rationalQuaternionToQuaternionApprox`), and are
+tested as homomorphisms *up to approximate equality* only.
 
 The Eisenstein integers $\mathbb{Z}[\omega]$ sit beside $\mathbb{Z}[i]$ at Level 1
 with a homomorphism $\mathbb{Z}[\omega] \to \mathbb{C}$. They embed into the Hurwitz order,
@@ -234,64 +263,73 @@ deterministic order.
 
 ---
 
-## Embeddings: Quaternion → Octonion (×84)
+## Embeddings: Quaternion → Octonion (×168, or ×84 normalized)
 
 ### The Idea
 
-A quaternion $w + xi + yj + zk$ can be embedded into the octonions
-by choosing which three of the seven imaginary octonion units
-$e_1, \ldots, e_7$ will serve as the images of $i$, $j$, $k$.
-
-The constraint is that the chosen triple must form a **line in the
-Fano plane** $\text{PG}(2,2)$ — the unique $(7,3,1)$-design on 7 points —
-so that the quaternion multiplication table is respected:
+A quaternion $w + xi + yj + zk$ can be embedded into the octonions by sending $i$ and $j$ to
+*signed* imaginary basis units:
 
 $$
-\varphi(i) \cdot \varphi(j) = \varphi(k)
+\varphi(i) = \sigma_i\, e_p, \qquad \varphi(j) = \sigma_j\, e_q, \qquad
+\varphi(k) = \varphi(i)\,\varphi(j) = \pm e_r, \qquad p \ne q,\ \sigma_i, \sigma_j \in \{\pm 1\}.
 $$
 
-The Fano plane has **7 lines**.
-For each line $\{p, q, r\}$, there are **6 ordered pairs** $(i \mapsto e_p,\; j \mapsto e_q)$
-(the third index is forced).
-For each ordered pair, there are **2 handedness choices**: whether $\varphi(i) = +e_p$ or $-e_p$.
+Every pair of distinct points $p, q$ lies on exactly one **line of the Fano plane**
+$\text{PG}(2,2)$ (the unique $(7,3,1)$-design), whose third point $r$ is forced. Two distinct
+imaginary units anticommute and square to $-1$, so $(\varphi(i), \varphi(j))$ always generates a
+copy of ℍ, and the quaternion multiplication table is respected.
+
+What gets counted depends on what is allowed to vary:
+
+| Count | What it counts | API |
+|------:|----------------|-----|
+| 1 | the Cayley–Dickson octonions themselves | `OctonionDivisionAlgebra` |
+| 7 | coordinate quaternion subalgebras, one per Fano line | `FanoPlane.lines` |
+| 84 | embeddings normalized so that $j \mapsto +e_q$ | `normalizedQuaternionEmbeddings()` |
+| 168 | all signed-basis-unit embeddings ($\sigma_i$, $\sigma_j$ independent) | `allQuaternionEmbeddings()` |
 
 $$
-\text{Total:}\quad 7 \times 6 \times 2 = 84 \text{ embeddings}
+168 = \underbrace{7 \times 6}_{\text{ordered pairs } (p, q)} \times \underbrace{2 \times 2}_{(\sigma_i,\, \sigma_j)},
+\qquad 84 = 7 \times 6 \times 2.
 $$
+
+The two families differ by an automorphism of ℍ: every embedding with $\sigma_j = -1$ is a
+normalized one precomposed with $i \mapsto i,\ j \mapsto -j,\ k \mapsto -k$. So the 84 are a
+set of representatives of the 168 modulo that automorphism (verified in `OctonionEmbeddingSpec`).
 
 ### How to Create Them
 
-Each octonion-level Algebras object contains an `OctonionEmbeddingKit`
-instance and an `allQuaternionEmbeddings()` / `allEmbeddings()` method.
+Each octonion-level Algebras object exposes an `embeddingKit` and both
+`allQuaternionEmbeddings()` and `normalizedQuaternionEmbeddings()`.
 
 #### ℍ ↪ 𝕆  (Real coefficients)
 
 ```kotlin
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
-import org.vorpal.kosmos.hypercomplex.octonion.Handedness
+import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.Sign
 
 // === Method 1: Create one embedding by spec ===
 
 val (spec, phi) = OctonionAlgebras.embeddingKit.createEmbedding(
-    iIndex = 1,                    // i ↦ e₁
-    jIndex = 2,                    // j ↦ e₂
-    handedness = Handedness.RIGHT  // positive orientation
+    iIndex = 1,            // i ↦ ±e₁
+    jIndex = 2,            // j ↦ ±e₂
+    iSign = Sign.PLUS,
+    jSign = Sign.PLUS
 )
 // spec.k == 3, spec.kSign == +1   (forced: k ↦ +e₃)
 
 val q = quaternion(1.0, 2.0, 3.0, 4.0)
 val o = phi(q)  // 1 + 2e₁ + 3e₂ + 4e₃
 
-// === Method 2: Enumerate all 84 ===
+// === Method 2: Enumerate ===
 
-val all: Map<OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<Quaternion, Octonion>>
-    = OctonionAlgebras.allQuaternionEmbeddings()
-
-assert(all.size == 84)
+val all = OctonionAlgebras.allQuaternionEmbeddings()               // 168
+val normalized = OctonionAlgebras.normalizedQuaternionEmbeddings() // 84
 
 // Find a specific one by filtering:
 val (_, phiCustom) = all.entries.first { (s, _) ->
-    s.i == 3 && s.j == 5 && s.handedness == Handedness.LEFT
+    s.i == 3 && s.j == 5 && s.iSign == Sign.MINUS && s.jSign == Sign.PLUS
 }
 ```
 
@@ -300,12 +338,11 @@ val (_, phiCustom) = all.entries.first { (s, _) ->
 ```kotlin
 import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonionAlgebras
 
-// All 84 Lipschitz quaternion → Gravesian octonion embeddings:
 val all = GravesianOctonionAlgebras.allQuaternionEmbeddings()
 
 // Or one at a time:
 val (spec, phi) = GravesianOctonionAlgebras.embeddingKit.createEmbedding(
-    iIndex = 4, jIndex = 6, handedness = Handedness.RIGHT
+    iIndex = 4, jIndex = 6, iSign = Sign.PLUS, jSign = Sign.MINUS
 )
 ```
 
@@ -314,7 +351,7 @@ val (spec, phi) = GravesianOctonionAlgebras.embeddingKit.createEmbedding(
 ```kotlin
 import org.vorpal.kosmos.hypercomplex.octonion.RationalOctonionAlgebras
 
-val all = RationalOctonionAlgebras.allEmbeddings()
+val all = RationalOctonionAlgebras.allQuaternionEmbeddings()
 ```
 
 ### The `OctonionEmbeddingSpec`
@@ -323,24 +360,23 @@ Each embedding is identified by an `OctonionEmbeddingSpec`:
 
 ```kotlin
 data class OctonionEmbeddingSpec(
-    val i: Int,                        // which e_n does quaternion i map to
-    val j: Int,                        // which e_n does quaternion j map to
-    val k: Int,                        // forced: third point on the Fano line
-    val handedness: Handedness,        // RIGHT: i ↦ +e_i, LEFT: i ↦ -e_i
-    val kSign: Int                     // +1 or -1: φ(k) = kSign · e_k
+    val i: Int,          // which e_p quaternion i maps to (up to sign)
+    val j: Int,          // which e_q quaternion j maps to (up to sign)
+    val k: Int,          // forced: third point on the Fano line through p and q
+    val iSign: Sign,     // φ(i) = iSign · e_p
+    val jSign: Sign,     // φ(j) = jSign · e_q
+    val kSign: Int       // +1 or -1: φ(k) = kSign · e_r
 )
 ```
 
-The `kSign` is not a free parameter — it is *computed* from the
-octonion multiplication table and the Fano plane structure, then
-recorded in the spec for inspection.
+The `kSign` is not a free parameter: it is *computed* from the octonion multiplication table,
+then recorded in the spec for inspection.
 
 ### The Canonical Embedding
 
-The canonical embedding has `iIndex=1, jIndex=2, handedness=RIGHT`,
-giving $i \mapsto e_1,\; j \mapsto e_2,\; k \mapsto e_3$ with all
-positive signs.  This matches `Quaternion.asOctonion()` and the
-`CayleyDickson.canonicalEmbedding()` utility.
+The canonical embedding has `iIndex = 1, jIndex = 2` and both signs `PLUS`, giving
+$i \mapsto e_1,\; j \mapsto e_2,\; k \mapsto e_3$. This is `Quaternion.asOctonion()`, i.e. the
+Cayley–Dickson embedding $q \mapsto (q, 0)$.
 
 ---
 
@@ -397,9 +433,9 @@ These canonical embeddings are used throughout the tower:
 | $\mathbb{H}_\mathbb{Q} \hookrightarrow \mathbb{O}_\mathbb{Q}$ | `RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism` |
 | $\mathbb{H} \hookrightarrow \mathbb{O}$     | `OctonionAlgebras.QuaternionToOctonionMonomorphism`          |
 
-The ×6 and ×84 embedding families *include* the canonical embedding
+The ×6 and ×168 embedding families *include* the canonical embedding
 as a special case (the one with axis=I, sign=PLUS for ×6;
-iIndex=1, jIndex=2, handedness=RIGHT for ×84).
+iIndex=1, jIndex=2, both signs PLUS for ×168).
 
 ---
 
@@ -428,7 +464,10 @@ to construct embeddings via linear combination of basis elements.
 
 ---
 
-## Quick Reference: All Monomorphisms
+## Quick Reference: Monomorphisms and Conversions
+
+Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into floating point
+(named `…Approx`), which round and so preserve the operations only approximately.
 
 ### Level 0 → Level 1
 
@@ -461,18 +500,18 @@ to construct embeddings via linear combination of basis elements.
 | `Lip ↪ 𝓗` | `LipschitzQuaternionAlgebras.LipschitzToHurwitzQuaternionMonomorphism` |
 | `𝓗 ↪ ℍ_ℚ` | `HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism` |
 | `Lip ↪ ℍ_ℚ` | `LipschitzQuaternionAlgebras.LipschitzToRationalQuaternionMonomorphism` |
-| `Lip ↪ ℍ` | `LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism` |
-| `𝓗 ↪ ℍ` | `HurwitzQuaternionAlgebras.HurwitzToQuaternionMonomorphism` |
-| `ℍ_ℚ → ℍ` | `RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism` |
+| `Lip → ℍ` (≈) | `LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox` |
+| `𝓗 → ℍ` (≈) | `HurwitzQuaternionAlgebras.hurwitzToQuaternionApprox` |
+| `ℍ_ℚ → ℍ` (≈) | `RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox` |
 | `𝔹 → ℂ` (×2) | `BicomplexAlgebras.BicomplexFirstProjectionHomomorphism`, `…SecondProjectionHomomorphism` |
 
-### Level 2 → Level 3 (×84 families + canonical)
+### Level 2 → Level 3 (×168 families + canonical)
 
 | Arrow | Location |
 |-------|----------|
-| `ℍ ↪ 𝕆` (×84) | `OctonionAlgebras.allQuaternionEmbeddings()` |
-| `Lip ↪ Grav` (×84) | `GravesianOctonionAlgebras.allQuaternionEmbeddings()` |
-| `ℍ_ℚ ↪ 𝕆_ℚ` (×84) | `RationalOctonionAlgebras.allEmbeddings()` |
+| `ℍ ↪ 𝕆` (×168) | `OctonionAlgebras.allQuaternionEmbeddings()` |
+| `Lip ↪ Grav` (×168) | `GravesianOctonionAlgebras.allQuaternionEmbeddings()` |
+| `ℍ_ℚ ↪ 𝕆_ℚ` (×168) | `RationalOctonionAlgebras.allQuaternionEmbeddings()` |
 | `ℍ ↪ 𝕆` (canonical) | `OctonionAlgebras.QuaternionToOctonionMonomorphism` |
 | `Lip ↪ Grav` (canonical) | `LipschitzQuaternionAlgebras.LipschitzToGravesianOctonionMonomorphism` |
 | `ℍ_ℚ ↪ 𝕆_ℚ` (canonical) | `RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism` |
@@ -484,8 +523,8 @@ to construct embeddings via linear combination of basis elements.
 | `Grav ↪ 𝕆_ℚ` | `GravesianOctonionAlgebras.GravesianToRationalOctonionMonomorphism` |
 | `Lip ↪ 𝕆_ℚ` | `LipschitzQuaternionAlgebras.LipschitzToRationalOctonionMonomorphism` |
 | `𝓗 ↪ 𝕆_ℚ` | `RationalOctonionAlgebras.HurwitzToRationalOctonionMonomorphism` |
-| `Grav ↪ 𝕆` | `GravesianOctonionAlgebras.GravesianToOctonionMonomorphism` |
-| `𝕆_ℚ → 𝕆` | `RationalOctonionAlgebras.RationalToOctonionMonomorphism` |
+| `Grav → 𝕆` (≈) | `GravesianOctonionAlgebras.gravesianToOctonionApprox` |
+| `𝕆_ℚ → 𝕆` (≈) | `RationalOctonionAlgebras.rationalOctonionToOctonionApprox` |
 
 ### Matrix representations
 
@@ -504,7 +543,7 @@ The first four are all `quadraticRank2MatrixEmbedding`: the regular representati
 
 ## The Fano Plane
 
-The 84 octonion embeddings are governed by the Fano plane, the unique
+The 168 octonion embeddings are governed by the Fano plane, the unique
 Steiner triple system $S(2,3,7)$ on points $\{1,\ldots,7\}$.
 Its 7 lines (each a 3-element subset) are:
 

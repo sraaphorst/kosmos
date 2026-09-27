@@ -25,13 +25,12 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 
@@ -192,7 +191,7 @@ object GaussianIntAlgebras {
             coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
             s = -BigInteger.ONE,
             t = BigInteger.ZERO,
-            coeffs = { it.re to it.im }
+            coeffs = UnaryOp { it.re to it.im }
         )
 
     /**
@@ -239,16 +238,7 @@ object GaussianIntAlgebras {
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
         domain = GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = BigInteger.ZERO,
-                negate = BigInteger::negate,
-                mkQuaternion = ::lipschitzQuaternion
-            )
-        }
+        map = lipschitzQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**
@@ -286,15 +276,17 @@ object GaussianIntAlgebras {
 
     /**
      * Apply the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
-     * apply the [LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * the floating-point conversion [LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox]:
      * ```text
-     * GaussianInt ↪ LipschitzQuaternion ↪ Quaternion
+     * GaussianInt ↪ LipschitzQuaternion → Quaternion
      * ```
+     * The result is a plain conversion, not a monomorphism: large integers collide in `Double`.
      */
-    fun gaussianIntToQuaternionEmbedding(
+    fun gaussianIntToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<GaussianInt, Quaternion> =
-        gaussianIntToLipschitzQuaternionEmbedding(embedding) andThen LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism
+    ): UnaryOp<GaussianInt, Quaternion> =
+        gaussianIntToLipschitzQuaternionEmbedding(embedding).map andThen
+            LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox
 
     val eqGaussianInt: Eq<GaussianInt> = Eq.default()
 
@@ -303,8 +295,8 @@ object GaussianIntAlgebras {
             signed = IntegerAlgebras.SignedInteger,
             zero = IntegerAlgebras.IntegerCommutativeRing.zero,
             one = IntegerAlgebras.IntegerCommutativeRing.one,
-            re = { it.re },
-            im = { it.im },
+            re = UnaryOp { it.re },
+            im = UnaryOp { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = IntegerAlgebras.printableInteger,
             eqA = IntegerAlgebras.eqInteger

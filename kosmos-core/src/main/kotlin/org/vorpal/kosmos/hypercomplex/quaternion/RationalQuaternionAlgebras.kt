@@ -1,37 +1,48 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
-import org.vorpal.kosmos.algebra.structures.Monoid
-import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
+import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
-import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.render.Printable
-import java.math.BigInteger
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
+
+/**
+ * `ℍ_ℚ = CD⟨ℚ(i)⟩`: the rational quaternion tier.
+ *
+ * File-level so that initializing [RationalQuaternionAlgebras.RationalQuaternionDivisionRing] never
+ * recursively initializes [RationalQuaternionAlgebras].
+ */
+internal val rationalQuaternionTier: QuaternionTier<Rational, GaussianRat> =
+    QuaternionTier(
+        complexRing = GaussianRatAlgebras.GaussianRatStarAlgebra,
+        scalars = RationalAlgebras.RationalField,
+        re = UnaryOp { z -> z.re },
+        im = UnaryOp { z -> z.im },
+        mkComplex = BinaryOp { a, b -> GaussianRat(a, b) }
+    )
 
 /**
  * [RationalQuaternionAlgebras] contains the algebraic structures over the [RationalQuaternion] type, as well as the
- * homomorphisms and [Eq] instances.
+ * conversions and [Eq] instances.
  *
  * These include:
  * - [RationalQuaternionDivisionRing]: the rational quaternions.
- * - [RationalQuaternionVectorSpace]: the two-dimensional vector space of rational quaternions over the rationals.
+ * - [RationalQuaternionVectorSpace]: the four-dimensional vector space of rational quaternions over the rationals.
  *
- * We have the following homomorphisms:
+ * Maps:
  * - `ℚ(i) ↪ ℍ_ℚ` lives with the Gaussian rationals: `GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding`.
- * - [RationalQuaternionToQuaternionMonomorphism]: a ring homomorphism from [RationalQuaternion] to [Quaternion].
+ * - [rationalQuaternionToQuaternionApprox]: the floating-point conversion `ℍ_ℚ → ℍ`. It is *not* typed as a
+ *   homomorphism: rounding breaks both exact multiplicativity and injectivity.
  *
  * The inclusions of the integral orders live with the orders themselves:
  * - [HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism]: `𝓗 ↪ ℍ_ℚ`.
@@ -47,92 +58,62 @@ object RationalQuaternionAlgebras {
      * - associative
      * - noncommutative
      * - involutive
-     * - a division ring.
+     * - a division ring, with `q⁻¹ = conj(q) / N(q)` for every `q ≠ 0`.
+     *
+     * Arithmetic is exact, so invertibility is exactly `q ≠ 0`.
      */
     object RationalQuaternionDivisionRing:
         DivisionRing<RationalQuaternion>,
-        InvolutiveRing<RationalQuaternion>,
+        InvolutiveRing<RationalQuaternion> by rationalQuaternionTier.ring,
         NormedDivisionAlgebra<Rational, RationalQuaternion> {
 
-        internal val base: NonAssociativeInvolutiveRing<RationalQuaternion> =
-            CayleyDickson.usual(GaussianRatAlgebras.GaussianRatStarAlgebra)
-
-        override val zero = base.add.identity
-        override val one = base.mul.identity
-
-        override val add = base.add
-
-        override val mul: Monoid<RationalQuaternion> = Monoid.of(
-            identity = one,
-            op = base.mul.op
-        )
-
-        override val reciprocal: Endo<RationalQuaternion> = Endo(Symbols.SLASH) { q ->
-            val n2 = normSq(q)
-            require(RationalAlgebras.eqRational.neqv(n2, Rational.ZERO)) {
-                "Zero has no multiplicative inverse in ${Symbols.BB_Q}."
-            }
-
-            val scale = n2.reciprocal()
-            val qc = conj(q)
-            rationalQuaternion(
-                scale * qc.w, scale * qc.x, scale * qc.y, scale * qc.z
-            )
-        }
-
-        override fun fromBigInt(n: BigInteger) =
-            base.fromBigInt(n)
-
-        override val conj: Endo<RationalQuaternion> =
-            base.conj
+        override val zero: RationalQuaternion = rationalQuaternionTier.ring.zero
+        override val one: RationalQuaternion = rationalQuaternionTier.ring.one
 
         override val normSq: UnaryOp<RationalQuaternion, Rational> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL){ q -> mul(q, conj(q)).w }
+            rationalQuaternionTier.normSq
+
+        override val reciprocal: Endo<RationalQuaternion> = Endo(Symbols.INVERSE) { q ->
+            if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, "ℍ_${Symbols.BB_Q}")
+            rationalQuaternionTier.scalarAction(normSq(q).reciprocal(), conj(q))
+        }
 
         /**
          * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `ℚ(i)`.
          */
         val basis: List<RationalQuaternion> =
-            CayleyDickson.doubledBasis(
-                zero = GaussianRat.ZERO,
-                baseBasis = listOf(GaussianRat.ONE, GaussianRat.I)
-            )
+            rationalQuaternionTier.basis
     }
 
     /**
-     * Scalars: rationals, act componentwise on `(a, b)`.
+     * `ℍ_ℚ` as a four-dimensional vector space over ℚ; the scalars act coordinatewise.
      */
     val RationalQuaternionVectorSpace: FiniteVectorSpace<Rational, RationalQuaternion> = FiniteVectorSpace.of(
         scalars = RationalAlgebras.RationalField,
         add = RationalQuaternionDivisionRing.add,
         dimension = 4,
-        leftAction = LeftAction { q, rq ->
-            rationalQuaternion(q * rq.w, q * rq.x, q * rq.y, q * rq.z)
-        }
+        leftAction = rationalQuaternionTier.scalarAction
     )
 
     /**
-     * This should theoretically be a ring monomorphism, but since we are mapping from rationals to floating point
-     * quaternions and may lose precision, we use a ring homomorphism instead.
+     * The floating-point conversion `ℍ_ℚ → ℍ`, coordinatewise `Rational.toReal()`.
+     *
+     * This is deliberately a plain conversion rather than a ring homomorphism: distinct rationals can
+     * round to the same `Double`, and products are only preserved up to rounding. Tests check it as a
+     * homomorphism *up to approximate equality*.
      */
-    val RationalQuaternionToQuaternionMonomorphism: RingHomomorphism<RationalQuaternion, Quaternion> = RingHomomorphism.of(
-        domain = RationalQuaternionDivisionRing,
-        codomain = QuaternionAlgebras.QuaternionDivisionRing,
-        map = UnaryOp { lq ->
-            quaternion(lq.a.re.toReal(), lq.a.im.toReal(), lq.b.re.toReal(), lq.b.im.toReal())
+    val rationalQuaternionToQuaternionApprox: UnaryOp<RationalQuaternion, Quaternion> =
+        UnaryOp(Symbols.APPROX) { q ->
+            realQuaternionTier.fromCoordinates(rationalQuaternionTier.coordinates(q).map(Rational::toReal))
         }
-    )
 
     val eqRationalQuaternion: Eq<RationalQuaternion> = Eq.default()
 
     val printableRationalQuaternion: Printable<RationalQuaternion> =
-        QuaternionPrintable.quaternionPrintable(
-            signed = RationalAlgebras.SignedRational,
-            zero = Rational.ZERO,
-            one = Rational.ONE,
-            prA = RationalAlgebras.printableRational,
-            eqA = RationalAlgebras.eqRational,
-            decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
+        rationalQuaternionTier.printable(
+            RationalAlgebras.SignedRational,
+            RationalAlgebras.printableRational,
+            RationalAlgebras.eqRational
         )
 
     val printableRationalQuaternionPretty = printableRationalQuaternion

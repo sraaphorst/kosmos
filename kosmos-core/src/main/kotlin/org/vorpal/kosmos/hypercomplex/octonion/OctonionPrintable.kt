@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.basisPrintable
 import org.vorpal.kosmos.core.render.Printable
@@ -15,11 +16,11 @@ internal object OctonionPrintable {
         one: A,
         prA: Printable<A>,
         eqA: Eq<A>,
-        decompose: (O) -> List<A>
+        decompose: UnaryOp<O, List<A>>
     ): Printable<O> =
         basisPrintable(
             labels = listOf("", "e1", "e2", "e3", "e4", "e5", "e6", "e7"),
-            decompose = decompose,
+            decompose = { decompose(it) },
             signed = signed,
             zero = zero,
             one = one,

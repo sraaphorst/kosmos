@@ -122,9 +122,9 @@ object DualAlgebras {
      * ```
      * since `ε² = 0`, and this is how the autodifferentiation is achieved.
      */
-    class DualCommutativeRingWithReciprocal<F : Any>(
+    open class DualCommutativeRingWithReciprocal<F : Any>(
         private val field: Field<F>,
-        private val isZero: (F) -> Boolean = { it == field.zero }
+        private val isZero: UnaryOp<F, Boolean> = UnaryOp { it == field.zero }
     ) : DualCommutativeRing<F>(field),
         HasReciprocal<Dual<F>> {
 
@@ -135,7 +135,7 @@ object DualAlgebras {
             !isZero(a.a)
 
         override val reciprocal: Endo<Dual<F>> = Endo(Symbols.INVERSE) { x ->
-            if (!hasReciprocal(x)) throw ArithmeticException("Cannot invert dual number with zero real part: $x")
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the dual numbers")
 
             val invA = field.reciprocal(x.a)
             val invA2 = field.mul(invA, invA)
@@ -155,7 +155,7 @@ object DualAlgebras {
      * Convenience function to build the dual ring over a base field.
      */
     fun <F : Any> Field<F>.dualRingWithReciprocal(
-        isZero: (F) -> Boolean = { it == zero }
+        isZero: UnaryOp<F, Boolean> = UnaryOp { it == zero }
     ): DualCommutativeRingWithReciprocal<F> =
         DualCommutativeRingWithReciprocal(this, isZero)
 
@@ -167,9 +167,9 @@ object DualAlgebras {
      */
     fun <F : Any> diffAt(
         field: Field<F>,
-        f: (Dual<F>) -> Dual<F>,
+        f: Endo<Dual<F>>,
         x: F,
-        isZero: (F) -> Boolean = { it == field.zero }
+        isZero: UnaryOp<F, Boolean> = UnaryOp { it == field.zero }
     ): Pair<F, F> {
         val d = field.dualRingWithReciprocal(isZero)
         val y = f(d.variable(x))
@@ -186,15 +186,35 @@ object DualAlgebras {
      * Returns `f(x), f'(x)`.
      */
     fun diffAtReal(
-        f: (Dual<Real>) -> Dual<Real>,
+        f: Endo<Dual<Real>>,
         x: Real
     ): Pair<Real, Real> =
         diffAt(
             field = RealAlgebras.RealField,
             f = f,
             x = x,
-            isZero = { RealAlgebras.eqRealApprox(it, 0.0) }
+            isZero = realIsZero
         )
+
+    /**
+     * The floating-point zero test of [HasReciprocal]: not finite, or approximately zero.
+     */
+    private val realIsZero: UnaryOp<Real, Boolean> =
+        UnaryOp { !it.isFinite() || RealAlgebras.eqRealApprox(it, 0.0) }
+
+    /**
+     * Dual numbers over the reals with reciprocals following the floating-point policy of
+     * [HasReciprocal].
+     *
+     * Algebraically, `a + bε` is invertible iff `a ≠ 0`. Numerically, it counts as invertible iff
+     * `a` is finite and not approximately zero *and* the inverse `a⁻¹ - (b/a²)ε` is finite: unlike
+     * the norm-based algebras, the tangent part `b/a²` can overflow even when `a` is safely nonzero,
+     * so the predicate checks it directly.
+     */
+    object DualRealRing : DualCommutativeRingWithReciprocal<Real>(RealAlgebras.RealField, realIsZero) {
+        override fun hasReciprocal(a: Dual<Real>): Boolean =
+            super.hasReciprocal(a) && a.b.isFinite() && (a.b / (a.a * a.a)).isFinite()
+    }
 
     /**
      * The regular-representation matrix embedding into `M₂(R)` for the basis `{1, ε}` with `ε² = 0`:
@@ -213,7 +233,7 @@ object DualAlgebras {
             coefficientRing = base,
             s = base.zero,
             t = base.zero,
-            coeffs = { (a, b) -> a to b }
+            coeffs = UnaryOp { (a, b) -> a to b }
         )
 
     /**
@@ -244,8 +264,8 @@ object DualAlgebras {
             signed = signed,
             zero = zero,
             one = one,
-            re = { it.a },
-            im = { it.b },
+            re = UnaryOp { it.a },
+            im = UnaryOp { it.b },
             basis = Symbols.EPSILON,
             prA = prF,
             eqA = eqF

@@ -29,10 +29,9 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
 
@@ -161,7 +160,7 @@ object GaussianRatAlgebras {
             coefficientRing = RationalAlgebras.RationalField,
             s = -Rational.ONE,
             t = Rational.ZERO,
-            coeffs = { it.re to it.im }
+            coeffs = UnaryOp { it.re to it.im }
         )
 
     /**
@@ -183,16 +182,7 @@ object GaussianRatAlgebras {
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
         domain = GaussianRatField,
         codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = Rational.ZERO,
-                negate = Rational::unaryMinus,
-                mkQuaternion = ::rationalQuaternion
-            )
-        }
+        map = rationalQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**
@@ -203,13 +193,15 @@ object GaussianRatAlgebras {
     ): RationalQuaternion = gaussianRatToRationalQuaternionEmbedding(embedding)(this)
 
     /**
-     * This should theoretically be a ring monomorphism, but since we are mapping from rationals to floating point
-     * quaternions and may lose precision, we use a ring homomorphism instead.
+     * The embedding `ℚ(i) ↪ ℍ_ℚ` followed by the floating-point conversion `ℍ_ℚ → ℍ`.
+     *
+     * A plain conversion, not a homomorphism: rounding breaks exact multiplicativity and injectivity.
      */
-    fun gaussianRatToQuaternionEmbedding(
+    fun gaussianRatToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingHomomorphism<GaussianRat, Quaternion> = gaussianRatToRationalQuaternionEmbedding(embedding) andThen
-        RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism
+    ): UnaryOp<GaussianRat, Quaternion> =
+        gaussianRatToRationalQuaternionEmbedding(embedding).map andThen
+            RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox
 
     val eqGaussianRat: Eq<GaussianRat> = Eq { gq1, gq2 -> gq1.re == gq2.re && gq1.im == gq2.im }
 
@@ -218,8 +210,8 @@ object GaussianRatAlgebras {
             signed = RationalAlgebras.SignedRational,
             zero = RationalAlgebras.RationalField.add.identity,
             one = RationalAlgebras.RationalField.mul.identity,
-            re = { it.re },
-            im = { it.im },
+            re = UnaryOp { it.re },
+            im = UnaryOp { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = RationalAlgebras.printableRational,
             eqA = RationalAlgebras.eqRational

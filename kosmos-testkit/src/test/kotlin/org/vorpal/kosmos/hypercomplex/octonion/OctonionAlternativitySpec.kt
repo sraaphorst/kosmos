@@ -5,7 +5,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 
 /**
- * Confirms the *weak* associativity that [OctonionAlgebras.OctonionDivisionAlgebraReal] DOES satisfy,
+ * Confirms the *weak* associativity that [OctonionAlgebras.OctonionDivisionAlgebra] DOES satisfy,
  * complementing [OctonionNonAssociativitySpec] (which shows it is not fully associative).
  *
  * - [AlternativityLaw]: `x(xy) = (xx)y` and `(yx)x = y(xx)`. By Artin's theorem this is equivalent to
@@ -20,7 +20,7 @@ import org.vorpal.kosmos.laws.property.MoufangLaw
  */
 class OctonionAlternativitySpec : StringSpec({
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    val ring = OctonionAlgebras.OctonionDivisionAlgebra
     val op = ring.mul.op
     val arb = ArbOctonion.octonion
     val eq = OctonionAlgebras.eqOctonion

@@ -11,6 +11,7 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
@@ -53,7 +54,7 @@ private val hurwitzRestriction: InvolutiveRing<HurwitzQuaternion> =
  *
  * Homomorphisms:
  * - [HurwitzToRationalQuaternionMonomorphism]: the inclusion `𝓗 ↪ ℍ_ℚ`.
- * - [HurwitzToQuaternionMonomorphism]: `𝓗 ↪ ℍ_ℚ → ℍ`.
+ * - [hurwitzToQuaternionApprox]: the floating-point conversion `𝓗 → ℍ` (not a monomorphism).
  *
  * Eqs:
  * - [eqHurwitzQuaternion]
@@ -87,7 +88,7 @@ object HurwitzQuaternionAlgebras {
      */
     object HurwitzQuaternionRing :
         InvolutiveRing<HurwitzQuaternion> by hurwitzRestriction,
-        HasNormSq<HurwitzQuaternion, Rational>,
+        HasNormSq<HurwitzQuaternion, BigInteger>,
         HasReciprocal<HurwitzQuaternion> {
 
         override val zero: HurwitzQuaternion = HurwitzQuaternion.ZERO
@@ -101,15 +102,19 @@ object HurwitzQuaternionAlgebras {
          * ```
          * with each odd square being `1 (mod 8)`, so the numerator is `4 (mod 8)`, and hence divisible by 4.
          */
-        override val normSq: UnaryOp<HurwitzQuaternion, Rational> =
-            hurwitzInclusion.from(RationalQuaternionAlgebras.RationalQuaternionDivisionRing.normSq)
+        override val normSq: UnaryOp<HurwitzQuaternion, BigInteger> =
+            UnaryOp(Symbols.NORM_SQ_SYMBOL) { h ->
+                val n = RationalQuaternionAlgebras.RationalQuaternionDivisionRing.normSq(h.quaternion)
+                check(n.isInteger) { "Hurwitz invariant violated: N($h) = $n is not an integer." }
+                n.numerator
+            }
 
         /**
          * `h` is a unit of `𝓗` iff `N(h) = 1`. There are exactly 24 of them: `±1, ±i, ±j, ±k`
          * and `(±1 ± i ± j ± k)/2`.
          */
         override fun hasReciprocal(a: HurwitzQuaternion): Boolean =
-            normSq(a) == Rational.ONE
+            normSq(a) == BigInteger.ONE
 
         /**
          * The 24 units of `𝓗`: the 8 Lipschitz units `±1, ±i, ±j, ±k` and the 16 half-integer units
@@ -136,7 +141,7 @@ object HurwitzQuaternionAlgebras {
          */
         override val reciprocal: Endo<HurwitzQuaternion> = Endo(Symbols.INVERSE) { h ->
             if (!hasReciprocal(h)) {
-                throw ArithmeticException("$h is not a unit of the Hurwitz order; invert it in ℍ_ℚ instead.")
+                throw HasReciprocal.notInvertible(h, "the Hurwitz order (invert it in ℍ_ℚ instead)")
             }
             conj(h)
         }
@@ -187,7 +192,7 @@ object HurwitzQuaternionAlgebras {
         /**
          * The Euclidean inner product `⟨h₁, h₂⟩ = Re(h₁ · conj(h₂))`, i.e. the polarization of `normSq`.
          */
-        override val dot: (HurwitzQuaternion, HurwitzQuaternion) -> Rational = { h1, h2 ->
+        override val dot: BilinearForm<HurwitzQuaternion, Rational> = BilinearForm { h1, h2 ->
             val ring = HurwitzQuaternionRing
             ring.mul(h1, ring.conj(h2)).w
         }
@@ -226,15 +231,15 @@ object HurwitzQuaternionAlgebras {
     }
 
     /**
-     * Monomorphism: HurwitzQuaternion to Quaternion, `𝓗 ↪ ℍ_ℚ → ℍ`.
+     * The floating-point conversion `𝓗 → ℍ`, through `ℍ_ℚ`.
+     *
+     * Not a monomorphism: distinct large half-integers collide in `Double`, and products are preserved
+     * only up to rounding.
      */
-    object HurwitzToQuaternionMonomorphism: RingMonomorphism<HurwitzQuaternion, Quaternion> {
-        override val domain = HurwitzQuaternionRing
-        override val codomain = QuaternionAlgebras.QuaternionDivisionRing
-        override val map = UnaryOp<HurwitzQuaternion, Quaternion> { h ->
-            RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism(h.quaternion)
+    val hurwitzToQuaternionApprox: UnaryOp<HurwitzQuaternion, Quaternion> =
+        UnaryOp(Symbols.APPROX) { h ->
+            RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox(h.quaternion)
         }
-    }
 
     val eqHurwitzQuaternion: Eq<HurwitzQuaternion> = Eq.default()
 

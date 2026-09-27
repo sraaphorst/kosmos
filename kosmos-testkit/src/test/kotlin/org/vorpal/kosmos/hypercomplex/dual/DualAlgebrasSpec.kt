@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.diffAtReal
 import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.dualToRank2MatrixMonomorphism
 import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.dualRing
@@ -39,7 +40,7 @@ class DualAlgebrasSpec : FunSpec({
 
         test("identity via log∘exp: f(x) = log(exp(x)), f'(x) = 1") {
             val (fVal, dfVal) = diffAtReal(
-                f = { x -> DualRealFns.log(DualRealFns.exp(x)) },
+                f = Endo { x -> DualRealFns.log(DualRealFns.exp(x)) },
                 x = 1.5
             )
             fVal shouldBeApproximately 1.5
@@ -49,7 +50,7 @@ class DualAlgebrasSpec : FunSpec({
         test("quadratic: f(x) = x², f'(x) = 2x") {
             checkAll(arbDualReal) { x ->
                 val (fVal, dfVal) = diffAtReal(
-                    f = { d -> d * d },
+                    f = Endo { d -> d * d },
                     x = x
                 )
                 fVal shouldBeApproximately (x * x)
@@ -60,7 +61,7 @@ class DualAlgebrasSpec : FunSpec({
         test("cubic: f(x) = x³, f'(x) = 3x²") {
             checkAll(arbDualReal) { x ->
                 val (fVal, dfVal) = diffAtReal(
-                    f = { d -> d * d * d },
+                    f = Endo { d -> d * d * d },
                     x = x
                 )
                 fVal shouldBeApproximately (x * x * x)
@@ -71,7 +72,7 @@ class DualAlgebrasSpec : FunSpec({
         test("sin: f(x) = sin(x), f'(x) = cos(x)") {
             checkAll(arbDualReal) { x ->
                 val (fVal, dfVal) = diffAtReal(
-                    f = DualRealFns::sin,
+                    f = Endo(DualRealFns::sin),
                     x = x
                 )
                 fVal shouldBeApproximately sin(x)
@@ -82,7 +83,7 @@ class DualAlgebrasSpec : FunSpec({
         test("exp: f(x) = exp(x), f'(x) = exp(x)") {
             checkAll(arbDualReal) { x ->
                 val (fVal, dfVal) = diffAtReal(
-                    f = DualRealFns::exp,
+                    f = Endo(DualRealFns::exp),
                     x = x
                 )
                 fVal shouldBeApproximately exp(x)
@@ -93,7 +94,7 @@ class DualAlgebrasSpec : FunSpec({
         test("composition: f(x) = exp(sin(x)), f'(x) = cos(x)·exp(sin(x))") {
             checkAll(arbDualReal) { x ->
                 val (fVal, dfVal) = diffAtReal(
-                    f = { d -> DualRealFns.exp(DualRealFns.sin(d)) },
+                    f = Endo { d -> DualRealFns.exp(DualRealFns.sin(d)) },
                     x = x
                 )
                 fVal shouldBeApproximately exp(sin(x))
@@ -103,7 +104,7 @@ class DualAlgebrasSpec : FunSpec({
 
         test("returns pair (f(x), f'(x)) in the correct order") {
             // f(x) = x² at x=3: f=9, f'=6
-            val result = diffAtReal(f = { d -> d * d }, x = 3.0)
+            val result = diffAtReal(f = Endo { d -> d * d }, x = 3.0)
             result.first shouldBeApproximately 9.0
             result.second shouldBeApproximately 6.0
         }

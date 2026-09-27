@@ -29,6 +29,15 @@ data class CD<A : Any>(val a: A, val b: A) {
  * it, e.g., in a Field<Complex>.
  *
  * We include `sigma` here to be able to use the Cayley-Dickson process to build the split versions.
+ *
+ * What the doubling preserves, given the precondition on `sigma` documented at [withSigma]:
+ * - the conjugation `(a, b)* = (a*, -b)` is always an involutive anti-automorphism;
+ * - if the base is commutative *and* has the trivial involution, the double is commutative and
+ *   associative ([commutative]);
+ * - if the base is commutative and associative (with any involution), the double is associative
+ *   ([associative]): this is how ℂ, ℚ(i) and ℤ[i] double to the quaternion tier;
+ * - if the base is merely associative, the double is alternative (ℍ ↦ 𝕆), and in general
+ *   nothing more is preserved (𝕆 ↦ sedenions lose alternativity and acquire zero divisors).
  */
 class CayleyDickson<A : Any> private constructor(
     private val base: NonAssociativeInvolutiveRing<A>,
@@ -80,14 +89,36 @@ class CayleyDickson<A : Any> private constructor(
         CD(base.conj(a), base.add.inverse(b))
     }
 
+    /**
+     * The universal property of the Cayley-Dickson construction, for *this* double:
+     * the first-slot injection `a ↦ (a, 0)` is a ring monomorphism from the base into `CD<A>`.
+     *
+     * Use this when the doubled algebra is used as-is. When it is wrapped in a richer public
+     * object (a `Field<Complex>`, a `RealNormedDivisionAlgebra<Octonion>`, ...), use the
+     * companion [Companion.canonicalEmbedding] so that the morphism's codomain is that object.
+     */
+    fun canonicalEmbedding(): NonAssociativeRingMonomorphism<A, CD<A>> =
+        canonicalEmbedding(base, this)
+
     companion object {
         /**
-         * Constructor for the Cayley–Dickson doubling step.
+         * Constructor for the Cayley–Dickson doubling step with an arbitrary `sigma`:
+         * ```text
+         * (a, b)(c, d) = (ac - σ d* b, da + b c*)
+         * ```
          *
-         * - `usual` uses σ = 1 (the multiplicative identity)
-         * - `split` uses σ = -1 (the additive inverse of 1)
+         * Precondition on `sigma`. The conjugation `(a, b) ↦ (a*, -b)` is an involutive
+         * anti-automorphism of the result, and the norm `N(x) = x x*` takes values in the base, only if
+         * `sigma` is *central* (commutes with every element of the base) and *fixed by the base
+         * involution* (`sigma* = sigma`). Both hold automatically for the safe factories:
+         * - [usual] uses σ = 1 (the multiplicative identity),
+         * - [split] uses σ = -1 (the additive inverse of 1),
+         * - [commutative] takes any σ over a commutative base with the trivial involution.
          *
-         * These names correspond to the usual vs split forms over ℝ and many other bases.
+         * The general form exists for the generalized quaternion algebras `(a, b)_F`, obtained by
+         * doubling twice with σ₁ = -a and σ₂ = -b over a field `F`, where `sigma` is a scalar and the
+         * precondition is immediate. The precondition is not checkable here for an arbitrary base,
+         * so it is the caller's responsibility; the laws are verified per instance by the test kit.
          */
         fun <A : Any> withSigma(
             base: NonAssociativeInvolutiveRing<A>,
@@ -96,6 +127,40 @@ class CayleyDickson<A : Any> private constructor(
             base = base,
             sigma = sigma
         )
+
+        /**
+         * The usual doubling of a *commutative and associative* involutive ring, typed as the
+         * associative [InvolutiveRing] it is.
+         *
+         * If the base is commutative and associative, its double is associative (though no longer
+         * commutative when the base involution is nontrivial). This is exactly the step
+         * ℂ ↦ ℍ, ℚ(i) ↦ ℍ_ℚ, ℤ[i] ↦ ℤ⟨i, j, k⟩, and the reason the quaternion tier gets a
+         * `Monoid` multiplication while the octonion tier gets only a `NonAssociativeMonoid`.
+         *
+         * The base's multiplication must be a [CommutativeMonoid]; this is checked at construction,
+         * since associativity of the double depends on it.
+         */
+        fun <A : Any> associative(
+            base: InvolutiveRing<A>
+        ): InvolutiveRing<CD<A>> {
+            require(base.mul is CommutativeMonoid<A>) {
+                "CayleyDickson.associative requires a commutative base: the double of a noncommutative " +
+                    "associative algebra is only alternative."
+            }
+            val doubled = usual(base)
+            return object : InvolutiveRing<CD<A>> {
+                override val add = doubled.add
+                override val mul: Monoid<CD<A>> = Monoid.of(
+                    identity = doubled.mul.identity,
+                    op = doubled.mul.op
+                )
+                override val conj = doubled.conj
+                override val one = mul.identity
+
+                override fun fromBigInt(n: BigInteger): CD<A> =
+                    doubled.fromBigInt(n)
+            }
+        }
 
         fun <A: Any> usual(
             base: NonAssociativeInvolutiveRing<A>,
@@ -179,7 +244,10 @@ class CayleyDickson<A : Any> private constructor(
          * For any `A` and `CD<A>`, the first-slot injection `a ↦ (a, 0)` is a ring monomorphism where 0 is
          * the additive identity of `A`.
          *
-         * It belongs with the construction itself, not with any specific instance.
+         * [doubled] must be an algebra whose operations *are* those of a Cayley-Dickson double of
+         * [base] (typically a public object that wraps one and adds a reciprocal, a norm, etc.); this
+         * cannot be verified structurally, and the morphism laws are checked per instance by the test
+         * kit. For the raw double itself, prefer the instance method [CayleyDickson.canonicalEmbedding].
          */
         fun <A : Any> canonicalEmbedding(
             base: NonAssociativeInvolutiveRing<A>,

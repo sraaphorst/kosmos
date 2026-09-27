@@ -9,7 +9,6 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printables
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.expectSome
-import org.vorpal.kosmos.hypercomplex.dual.DualAlgebras.dualRingWithReciprocal
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.homomorphism.preservesBinaryOpLaw
@@ -39,9 +38,7 @@ import org.vorpal.kosmos.testutils.shouldBeZero
  */
 class DualCommutativeRingSpec : FunSpec({
 
-    val dualRing = RealAlgebras.RealField.dualRingWithReciprocal {
-        RealAlgebras.eqRealApprox(it, 0.0)
-    }
+    val dualRing = DualAlgebras.DualRealRing
 
     // Convenience values and operators.
     val zero = dualRing.add.identity

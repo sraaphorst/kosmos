@@ -8,7 +8,7 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 
 /**
  * Verifies that [OctonionFanoOrientations.deriveFromCurrentBasis] recovers the *signed* Fano-line
- * orientation that is actually used by [OctonionAlgebras.OctonionDivisionAlgebraReal], rather than
+ * orientation that is actually used by [OctonionAlgebras.OctonionDivisionAlgebra], rather than
  * one taken from memory or a diagram.
  *
  * The orientation derived from the multiplication is then checked against the multiplication itself,
@@ -23,7 +23,7 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
  */
 class OctonionFanoOrientationSpec : StringSpec({
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    val ring = OctonionAlgebras.OctonionDivisionAlgebra
     val eq = OctonionAlgebras.eqOctonionStrict
     val pr = OctonionAlgebras.printableOctonionStrict
 

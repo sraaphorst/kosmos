@@ -15,6 +15,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -191,7 +192,7 @@ object EisensteinIntAlgebras {
         override val rank: Int = 2
         private val ring = EisensteinIntCommutativeRing
 
-        override val dot: (EisensteinInt, EisensteinInt) -> Rational = { e1, e2 ->
+        override val dot: BilinearForm<EisensteinInt, Rational> = BilinearForm { e1, e2 ->
             Rational.of(ring.normSq(ring.add(e1, e2)) - ring.normSq(e1) - ring.normSq(e2), BigInteger.TWO)
         }
 
@@ -227,7 +228,7 @@ object EisensteinIntAlgebras {
             coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
             s = -BigInteger.ONE,
             t = -BigInteger.ONE,
-            coeffs = { it.a to it.b }
+            coeffs = UnaryOp { it.a to it.b }
         )
 
     /**
@@ -254,8 +255,8 @@ object EisensteinIntAlgebras {
             signed = IntegerAlgebras.SignedInteger,
             zero = BigInteger.ZERO,
             one = BigInteger.ONE,
-            re = { it.a },
-            im = { it.b },
+            re = UnaryOp { it.a },
+            im = UnaryOp { it.b },
             basis = Symbols.OMEGA,
             prA = IntegerAlgebras.printableInteger,
             eqA = IntegerAlgebras.eqInteger

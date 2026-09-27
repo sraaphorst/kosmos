@@ -10,7 +10,7 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
  * from memory or a diagram.
  */
 object OctonionFanoOrientations {
-    private val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    private val ring = OctonionAlgebras.OctonionDivisionAlgebra
 
     private val basis: Map<Int, Octonion> =
         (1..7).associateWith { ring.basisMap.getValue(it) }

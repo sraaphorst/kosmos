@@ -4,10 +4,11 @@ import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
-import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
@@ -22,10 +23,40 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
-import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+
+/**
+ * `ℂ = ℝ[i]/(i² + 1)`: the Cayley-Dickson doubling of ℝ (trivial involution) at `σ = 1`.
+ *
+ * This is the same construction, one level down, as the bicomplex numbers `𝔹 = ℂ[j]/(j² + 1)`.
+ *
+ * File-level rather than a member of [ComplexAlgebras] so that initializing
+ * [ComplexAlgebras.ComplexField] never recursively initializes [ComplexAlgebras].
+ */
+private val cayleyDicksonComplex: CommutativeInvolutiveRing<Complex> =
+    CayleyDickson.commutative(RealAlgebras.RealField, 1.0)
+
+/**
+ * The componentwise real scalar action `r ⊳ (a + bi) = ra + rb·i`.
+ */
+private val realScaling: LeftAction<Real, Complex> =
+    LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, b) -> complex(r * a, r * b) }
+
+/**
+ * The squared modulus `|a + bi|² = a² + b²`.
+ */
+private val complexNormSq: UnaryOp<Complex, Real> =
+    UnaryOp(Symbols.NORM_SQ_SYMBOL) { c -> c.re * c.re + c.im * c.im }
+
+/**
+ * The floating-point invertibility predicate of [HasReciprocal]: the squared modulus is finite and
+ * not approximately zero.
+ */
+private fun isInvertibleComplex(c: Complex): Boolean {
+    val n2 = complexNormSq(c)
+    return n2.isFinite() && RealAlgebras.eqRealApprox.neqv(n2, 0.0)
+}
 
 /**
  * Main structures:
@@ -42,6 +73,7 @@ import java.math.BigInteger
  * Homomorphisms:
  * - [complexToQuaternionEmbedding]: the unital embeddings from the complex numbers to the quaternions.
  * - [Complex.asQuaternion]: convenience extension for the canonical embedding.
+ * - [ComplexToRank2RMatrixMonomorphism]: the regular representation `ℂ ↪ M₂(ℝ)`.
  *
  * Eqs:
  * - [eqComplexStrict]: strict equality on complex numbers.
@@ -57,33 +89,29 @@ object ComplexAlgebras {
     val i: Complex = complex(0.0, 1.0)
 
     /**
-     * `ℂ = ℝ[i]/(i² + 1)`: the Cayley-Dickson doubling of ℝ (trivial involution) at `σ = 1`.
+     * The complex field.
      *
-     * This is the same construction, one level down, as the bicomplex numbers `𝔹 = ℂ[j]/(j² + 1)`.
+     * Reciprocals follow the floating-point policy of [HasReciprocal]: `c` is invertible iff
+     * `|c|²` is finite and not approximately zero, and [reciprocal] throws [ArithmeticException]
+     * otherwise.
      */
-    private val base: CommutativeInvolutiveRing<Complex> =
-        CayleyDickson.commutative(RealAlgebras.RealField, 1.0)
-
     object ComplexField : Field<Complex> {
 
-        override val add = base.add
+        override val add = cayleyDicksonComplex.add
 
-        override val mul: CommutativeMonoid<Complex> = base.mul
+        override val mul: CommutativeMonoid<Complex> = cayleyDicksonComplex.mul
+
+        override fun hasReciprocal(a: Complex): Boolean =
+            isInvertibleComplex(a)
 
         override val reciprocal: Endo<Complex> = Endo(Symbols.INVERSE) { c ->
-            val n2 = c.re * c.re + c.im * c.im
-            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) {
-                "Zero has no multiplicative inverse in ${Symbols.BB_C}."
-            }
-            complex(c.re / n2, -c.im / n2)
+            if (!hasReciprocal(c)) throw HasReciprocal.notInvertible(c, Symbols.BB_C)
+            realScaling(1.0 / complexNormSq(c), cayleyDicksonComplex.conj(c))
         }
 
         override fun fromBigInt(n: BigInteger): Complex =
             complex(n.toDouble(), 0.0)
     }
-
-    private val action: LeftAction<Real, Complex> =
-        LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, b) -> complex(r * a, r * b) }
 
     object ComplexStarAlgebra :
         Field<Complex> by ComplexField,
@@ -97,13 +125,16 @@ object ComplexAlgebras {
         override val scalars = RealAlgebras.RealField
 
         override val conj: Endo<Complex> =
-            base.conj
+            cayleyDicksonComplex.conj
 
         override val normSq: UnaryOp<Complex, Real> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL) { c -> c.re * c.re + c.im * c.im }
+            complexNormSq
 
         override val leftAction: LeftAction<Real, Complex> =
-            action
+            realScaling
+
+        override fun hasReciprocal(a: Complex): Boolean =
+            ComplexField.hasReciprocal(a)
     }
 
     /**
@@ -127,7 +158,7 @@ object ComplexAlgebras {
         override val scalars = RealAlgebras.RealField
         override val add = ComplexField.add
         override val dimension = 2
-        override val leftAction = action
+        override val leftAction = realScaling
     }
 
     private val canonicalEmbedding = AxisSignEmbeddings.AxisSignEmbedding.canonical
@@ -144,20 +175,8 @@ object ComplexAlgebras {
      */
     fun complexToQuaternionEmbedding(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<Complex, Quaternion> = RingMonomorphism.of(
-        domain = ComplexField,
-        codomain = QuaternionAlgebras.QuaternionDivisionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = emb,
-                re = z.re,
-                im = z.im,
-                zero = 0.0,
-                negate = Double::unaryMinus,
-                mkQuaternion = ::quaternion
-            )
-        }
-    )
+    ): RingMonomorphism<Complex, Quaternion> =
+        QuaternionAlgebras.complexEmbedding(emb)
 
     /**
      * Canonical monomorphism from the complex numbers into `M₂(ℝ)`, given by:
@@ -174,7 +193,7 @@ object ComplexAlgebras {
         coefficientRing = RealAlgebras.RealField,
         s = -1.0,
         t = 0.0,
-        coeffs = { (re, im) -> re to im }
+        coeffs = UnaryOp { (re, im) -> re to im }
     )
 
     /**
@@ -198,8 +217,8 @@ object ComplexAlgebras {
             signed = RealAlgebras.SignedReal,
             zero = RealAlgebras.RealField.zero,
             one = RealAlgebras.RealField.one,
-            re = { it.re },
-            im = { it.im },
+            re = UnaryOp { it.re },
+            im = UnaryOp { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = prReal,
             eqA = eqReal

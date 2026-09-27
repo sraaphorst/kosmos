@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.geometry.lattices
 
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.linear.values.DenseMat
 
 interface EuclideanLattice<V : Any, S : Any> : ZLattice<V> {
     /**
      * Symmetric bilinear form ⟨·,·⟩ returning scalar S (often Real, Rational, etc).
      */
-    val dot: (V, V) -> S
+    val dot: BilinearForm<V, S>
 
     /**
      * Derived Gram matrix G_ij = ⟨b_i, b_j⟩.
