@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
@@ -60,9 +61,10 @@ object RationalAlgebras {
             identity = Rational.ONE,
             op = BinOp(Symbols.ASTERISK, Rational::times)
         )
-        // We already check for 0 in the reciprocal function.
-        override val reciprocal: Endo<Rational> =
-            Endo(Symbols.INVERSE, Rational::reciprocal)
+        override val reciprocal: Endo<Rational> = Endo(Symbols.INVERSE) { q ->
+            if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, Symbols.BB_Q)
+            q.reciprocal()
+        }
         override fun fromBigInt(n: BigInteger): Rational =
             Rational.of(n)
     }

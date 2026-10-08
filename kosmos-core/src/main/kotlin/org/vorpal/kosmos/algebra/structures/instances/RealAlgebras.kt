@@ -4,6 +4,7 @@ import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
@@ -42,8 +43,15 @@ object RealAlgebras {
             op = BinOp(Symbols.ASTERISK, Real::times)
         )
 
+        /**
+         * The floating-point policy of [HasReciprocal]: `x` is invertible iff it is finite and not
+         * approximately zero, so `NaN`, `±∞` and subnormal-scale values are rejected.
+         */
+        override fun hasReciprocal(a: Real): Boolean =
+            a.isFinite() && eqRealApprox.neqv(a, 0.0)
+
         override val reciprocal: Endo<Real> = Endo(Symbols.INVERSE) { x ->
-            require(eqRealApprox.neqv(x, 0.0) && x.isFinite()) { "0 has no reciprocal." }
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, Symbols.BB_R)
             1.0 / x
         }
 

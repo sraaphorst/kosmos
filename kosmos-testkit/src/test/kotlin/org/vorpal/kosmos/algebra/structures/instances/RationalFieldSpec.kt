@@ -30,7 +30,7 @@ class RationalFieldSpec : StringSpec({
     }
 
     "reciprocal throws on zero" {
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<ArithmeticException> {
             field.reciprocal(Rational.ZERO)
         }
     }

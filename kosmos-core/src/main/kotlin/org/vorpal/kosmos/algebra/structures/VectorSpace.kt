@@ -24,7 +24,7 @@ interface VectorSpace<F : Any, V : Any> : RModule<F, V> {
 }
 
 /**
- * A vector space which has a non-zero, well-defined, finite dimensionality.
+ * A vector space which has a well-defined, finite (possibly zero) dimension.
  */
 interface FiniteVectorSpace<F: Any, V: Any> : VectorSpace<F, V>, Dimensionality {
     companion object {

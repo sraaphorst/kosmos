@@ -27,6 +27,17 @@ import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
+import org.vorpal.kosmos.hypercomplex.bioctonion.BioctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.bioctonion.bioctonion
+import org.vorpal.kosmos.hypercomplex.biquaternion.BiquaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.biquaternion.biquaternion
+import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.splitoctonion.splitOctonion
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.splitquaternion.splitQuaternion
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 
 /**
  * The reciprocal contract of [HasReciprocal], checked uniformly across the hypercomplex package.
@@ -39,6 +50,9 @@ import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
  * For the floating-point structures, the boundary cases are exercised explicitly: zero, subnormal and
  * tiny values, `NaN`, `±∞`, and overflow-scale values, all of which must be rejected rather than
  * producing a non-finite "inverse". Structures with zero divisors must also reject the null cone.
+ *
+ * The base fields ℝ, ℚ and ℚ(i) are included: every hypercomplex reciprocal ultimately divides in one
+ * of them, so they must honour the same contract (`𝔽_p` is covered by `PrimeFieldSpec`).
  */
 class ReciprocalPolicySpec : StringSpec({
 
@@ -149,6 +163,81 @@ class ReciprocalPolicySpec : StringSpec({
         // 1 + k lies on the null cone (its 𝛂-coordinate vanishes).
         ring.hasReciprocal(Bicomplex.ofStandard(1.0, 0.0, 0.0, 1.0)) shouldBe false
         ring.hasReciprocal(Bicomplex.ofStandard(1.0, 0.0, 0.0, 0.0)) shouldBe true
+    }
+
+    "ℝ: hasReciprocal, reciprocal and reciprocalOption agree, including at 0, tiny, NaN and ∞" {
+        val field = RealAlgebras.RealField
+        checkAll(boundaryReal) { a ->
+            checkContract(field, a, UnaryOp { r -> r.isFinite() })
+        }
+        listOf(0.0, -0.0, Double.MIN_VALUE, 1e-300, Double.NaN, Double.POSITIVE_INFINITY).forEach { a ->
+            field.hasReciprocal(a) shouldBe false
+            shouldThrow<ArithmeticException> { field.reciprocal(a) }
+        }
+        field.reciprocal(4.0) shouldBe 0.25
+        RealAlgebras.RealStarField.hasReciprocal(Double.NaN) shouldBe false
+        shouldThrow<ArithmeticException> { RealAlgebras.RealStarField.reciprocal(0.0) }
+    }
+
+    "ℚ and ℚ(i): exactly the nonzero elements are invertible, and 0 throws ArithmeticException" {
+        val q = RationalAlgebras.RationalField
+        q.hasReciprocal(Rational.ZERO) shouldBe false
+        shouldThrow<ArithmeticException> { q.reciprocal(Rational.ZERO) }
+        q.reciprocalOption(Rational.ZERO) shouldBe Option.None
+        q.reciprocal(Rational.of(2, 3)) shouldBe Rational.of(3, 2)
+
+        listOf(GaussianRatAlgebras.GaussianRatField, GaussianRatAlgebras.GaussianRatStarAlgebra).forEach { k ->
+            k.hasReciprocal(GaussianRat.ZERO) shouldBe false
+            shouldThrow<ArithmeticException> { k.reciprocal(GaussianRat.ZERO) }
+            k.reciprocalOption(GaussianRat.ZERO) shouldBe Option.None
+            k.reciprocal(GaussianRat.I) shouldBe GaussianRat(Rational.ZERO, -Rational.ONE)
+        }
+    }
+
+    "split-quaternions over ℝ: the null cone w² + x² = y² + z² is not invertible" {
+        val ring = SplitQuaternionAlgebras.RealSplitQuaternionRing
+        checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { w, x, y, z ->
+            checkContract(ring, splitQuaternion(w, x, y, z), UnaryOp { q -> allFinite(q.coefficients()) })
+        }
+        ring.hasReciprocal(splitQuaternion(1.0, 0.0, 1.0, 0.0)) shouldBe false
+        ring.hasReciprocal(splitQuaternion(3.0, 4.0, 5.0, 0.0)) shouldBe false
+        ring.hasReciprocal(ring.zero) shouldBe false
+        ring.hasReciprocal(splitQuaternion(2.0, 0.0, 1.0, 0.0)) shouldBe true
+    }
+
+    "split-octonions over ℝ: the null cone is not invertible" {
+        val ring = SplitOctonionAlgebras.RealSplitOctonionAlgebra
+        checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { w, x, u, t ->
+            checkContract(ring, splitOctonion(w, x, 0.0, 0.0, u, 0.0, 0.0, t), UnaryOp { o -> allFinite(o.coefficients()) })
+        }
+        ring.hasReciprocal(splitOctonion(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0)) shouldBe false
+        ring.hasReciprocal(ring.zero) shouldBe false
+        ring.hasReciprocal(ring.one) shouldBe true
+    }
+
+    "biquaternions: hasReciprocal agrees with reciprocal at the boundary and on the null cone" {
+        val ring = BiquaternionAlgebras.BiquaternionRing
+        checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { a, b, c, d ->
+            val q = biquaternion(complex(a, b), complex(c, 0.0), complex(0.0, d), complex(1.0, 0.0))
+            checkContract(ring, q, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.a, z.b) }) })
+        }
+        // 1 + h·i has norm 1 + h² = 0.
+        ring.hasReciprocal(biquaternion(complex(1.0, 0.0), complex(0.0, 1.0), complex(0.0, 0.0), complex(0.0, 0.0))) shouldBe false
+        ring.hasReciprocal(ring.zero) shouldBe false
+        ring.hasReciprocal(ring.one) shouldBe true
+    }
+
+    "bioctonions: hasReciprocal agrees with reciprocal at the boundary and on the null cone" {
+        val ring = BioctonionAlgebras.BioctonionAlgebra
+        val zero = complex(0.0, 0.0)
+        checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { a, b, c, d ->
+            val o = bioctonion(listOf(complex(a, b), zero, zero, complex(c, 0.0), zero, complex(0.0, d), zero, complex(1.0, 0.0)))
+            checkContract(ring, o, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.a, z.b) }) })
+        }
+        // 1 + h·e₄ has norm 1 + h² = 0.
+        ring.hasReciprocal(bioctonion(listOf(complex(1.0, 0.0), zero, zero, zero, complex(0.0, 1.0), zero, zero, zero))) shouldBe false
+        ring.hasReciprocal(ring.zero) shouldBe false
+        ring.hasReciprocal(ring.one) shouldBe true
     }
 
     "ℍ_ℚ: exactly the nonzero elements are invertible, and 0 throws ArithmeticException" {
