@@ -35,9 +35,13 @@ data class CD<A : Any>(val a: A, val b: A) {
  * - if the base is commutative *and* has the trivial involution, the double is commutative and
  *   associative ([commutative]);
  * - if the base is commutative and associative (with any involution), the double is associative
- *   ([associative]): this is how ℂ, ℚ(i) and ℤ[i] double to the quaternion tier;
+ *   ([associative], [associativeSplit]): this is how ℂ, ℚ(i) and ℤ[i] double to the quaternion
+ *   tier, and how ℂ doubles to the split-quaternions;
  * - if the base is merely associative, the double is alternative (ℍ ↦ 𝕆), and in general
  *   nothing more is preserved (𝕆 ↦ sedenions lose alternativity and acquire zero divisors).
+ *
+ * The norm of a double is `N(a, b) = (a, b)(a, b)* = N(a) + σ·N(b)`: positive definite for `σ = 1`
+ * over a definite base, and isotropic (so the double has zero divisors) for `σ = -1`.
  */
 class CayleyDickson<A : Any> private constructor(
     private val base: NonAssociativeInvolutiveRing<A>,
@@ -142,12 +146,34 @@ class CayleyDickson<A : Any> private constructor(
          */
         fun <A : Any> associative(
             base: InvolutiveRing<A>
+        ): InvolutiveRing<CD<A>> =
+            associativeDouble(base, usual(base), "associative")
+
+        /**
+         * The split (`σ = -1`) doubling of a *commutative and associative* involutive ring, typed as
+         * the associative [InvolutiveRing] it is.
+         *
+         * Associativity of the double needs only a commutative, associative base and a central `σ`
+         * fixed by the involution, so it holds for `σ = -1` exactly as for `σ = 1`. This is the step
+         * ℂ ↦ split-quaternions (`j² = k² = +1`), the associative counterpart of [split] in the same
+         * way that [associative] is the associative counterpart of [usual].
+         *
+         * The base's multiplication must be a [CommutativeMonoid]; this is checked at construction.
+         */
+        fun <A : Any> associativeSplit(
+            base: InvolutiveRing<A>
+        ): InvolutiveRing<CD<A>> =
+            associativeDouble(base, split(base), "associativeSplit")
+
+        private fun <A : Any> associativeDouble(
+            base: InvolutiveRing<A>,
+            doubled: CayleyDickson<A>,
+            factory: String
         ): InvolutiveRing<CD<A>> {
             require(base.mul is CommutativeMonoid<A>) {
-                "CayleyDickson.associative requires a commutative base: the double of a noncommutative " +
+                "CayleyDickson.$factory requires a commutative base: the double of a noncommutative " +
                     "associative algebra is only alternative."
             }
-            val doubled = usual(base)
             return object : InvolutiveRing<CD<A>> {
                 override val add = doubled.add
                 override val mul: Monoid<CD<A>> = Monoid.of(
@@ -162,10 +188,19 @@ class CayleyDickson<A : Any> private constructor(
             }
         }
 
+        /**
+         * The usual doubling, `σ = 1`: the new unit `ℓ = (0, 1)` satisfies `ℓ² = -1`.
+         */
         fun <A: Any> usual(
             base: NonAssociativeInvolutiveRing<A>,
         ): CayleyDickson<A> = withSigma(base, base.mul.identity)
 
+        /**
+         * The split doubling, `σ = -1`: the new unit `ℓ = (0, 1)` satisfies `ℓ² = +1`.
+         *
+         * The norm becomes `N(a, b) = N(a) - N(b)`, which is isotropic, so the result always has
+         * zero divisors (for instance `(1 + ℓ)(1 - ℓ) = 0`).
+         */
         fun <A: Any> split(
             base: NonAssociativeInvolutiveRing<A>
         ): CayleyDickson<A> {

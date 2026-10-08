@@ -19,18 +19,23 @@ import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
  * 𝕆_ℚ       = CD⟨ℍ_ℚ⟩   coefficients S = Rational
  * Gravesian = CD⟨Lip⟩   coefficients S = BigInteger
  * ```
+ * With [split] set, the doubling uses `σ = -1` instead: `e₄, …, e₇` square to `+1`, giving the
+ * split-octonions over the scalars of the quaternion tier. Over the biquaternion tier the usual
+ * doubling gives the bioctonions `𝕆 ⊗ ℂ`.
  * An [OctonionTier] holds everything that depends only on that choice: the (nonassociative)
  * Cayley-Dickson ring, the basis `1, e₁, …, e₇`, coordinates `[w, x, y, z, u, v, s, t]`, the
  * coordinatewise scalar action, the norm, the quaternion-embedding kit, and the printable.
  */
 internal class OctonionTier<S : Any, C : Any>(
-    val quaternions: QuaternionTier<S, C>
+    val quaternions: QuaternionTier<S, C>,
+    val split: Boolean = false
 ) {
     /**
-     * The Cayley-Dickson double `CD⟨CD⟨C⟩⟩`.
+     * The Cayley-Dickson double `CD⟨CD⟨C⟩⟩`: usual (`σ = 1`) or split (`σ = -1`).
      */
     val ring: CayleyDickson<CD<C>> =
-        CayleyDickson.usual(quaternions.ring)
+        if (split) CayleyDickson.split(quaternions.ring)
+        else CayleyDickson.usual(quaternions.ring)
 
     /**
      * The coordinates `[w, x, y, z, u, v, s, t]` of `(w + xi + yj + zk, u + vi + sj + tk)`.
@@ -71,17 +76,25 @@ internal class OctonionTier<S : Any, C : Any>(
         }
 
     /**
-     * The norm `N(o) = o·conj(o)`, the sum of the squares of the eight coordinates.
-     *
-     * For the usual (σ = 1) doubling, `N(a, b) = N(a) + N(b)`, so it is read off the quaternion norms.
+     * The norm `N(o) = o·conj(o)`, read off the quaternion norms: for a doubling with sign `σ`,
+     * ```text
+     * N(a, b) = N(a) + σ·N(b),
+     * ```
+     * the sum of the eight squared coordinates for the usual doubling, and `N(a) - N(b)` (signature
+     * `(4, 4)` over a usual quaternion tier) for the split one.
      */
     val normSq: UnaryOp<CD<CD<C>>, S> =
         UnaryOp(Symbols.NORM_SQ_SYMBOL) { o ->
-            quaternions.scalars.add(quaternions.normSq(o.a), quaternions.normSq(o.b))
+            val scalars = quaternions.scalars
+            val nb = quaternions.normSq(o.b)
+            scalars.add(quaternions.normSq(o.a), if (split) scalars.add.inverse(nb) else nb)
         }
 
     /**
      * The machinery for the 168 signed-basis-unit embeddings of the quaternion tier into this tier.
+     *
+     * Only meaningful for the usual doubling over a usual quaternion tier, where every imaginary
+     * basis unit squares to `-1`.
      */
     fun embeddingKit(eq: Eq<CD<CD<C>>>): OctonionEmbeddingKit.OctonionEmbeddingKit<S, CD<C>, CD<CD<C>>> =
         OctonionEmbeddingKit.OctonionEmbeddingKit(

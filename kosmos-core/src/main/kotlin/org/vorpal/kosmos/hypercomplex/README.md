@@ -1,19 +1,122 @@
 # Hypercomplex Number Systems
 
-This package implements the classical tower of normed division algebras
-built by iterated Cayley–Dickson doubling, together with their
-integer- and rational-coefficient subrings:
+This package implements the hypercomplex number systems of Kosmos: the classical tower of normed
+division algebras, their split forms, their complexifications, the commutative quadratic extensions
+of a ring, and the integer- and rational-coefficient subrings of the tower.
 
-$$
-\mathbb{R} \;\subset\; \mathbb{C} \;\subset\; \mathbb{H} \;\subset\; \mathbb{O}
-$$
+Every one of them is an instance of a single construction, Cayley–Dickson doubling.
 
-At each level, the algebraic structure weakens:
-$\mathbb{C}$ loses ordering,
-$\mathbb{H}$ loses commutativity,
-$\mathbb{O}$ loses associativity.
-Every level retains a multiplicative norm ($|ab| = |a||b|$) and
-hence a division algebra structure.
+**Contents**
+
+1. [Map of the number systems](#map-of-the-number-systems)
+2. [One construction, many algebras](#one-construction-many-algebras)
+3. [Package layout](#package-layout)
+4. [The division tower and its coefficient rings](#the-tower-diagram)
+5. [Split forms](#split-forms)
+6. [Complexifications](#complexifications)
+7. Embedding families: [complex → quaternion (×6)](#embeddings-complex--quaternion-6),
+   [quaternion → octonion (×168)](#embeddings-quaternion--octonion-168-or-84-normalized)
+8. [Quick reference](#quick-reference-monomorphisms-and-conversions)
+9. [What remains to be done](#what-remains-to-be-done)
+
+---
+
+## Map of the Number Systems
+
+### The family tree
+
+Each arrow is one Cayley–Dickson doubling of the algebra above it. The label says which doubling:
+`usual` (`σ = 1`, new unit squares to `−1`), `split` (`σ = −1`, new unit squares to `+1`), or
+`σ = 0` (new unit squares to `0`); `triv` means the base is given the *trivial* involution, which
+keeps the result commutative.
+
+```
+                                        ℝ
+              ┌─────────────────────────┼──────────────────────────┐
+         usual│                    split│                       σ=0│
+              ▼                         ▼                          ▼
+              ℂ                   split-complex                  dual
+                                  R[j]/(j² − 1)               F[ε]/(ε²)
+      ┌───────┼────────────────┐
+ usual│  split│      usual,triv│
+      ▼       ▼                ▼
+      ℍ       ℍ′               𝔹  (bicomplex = tessarines)
+      │   split-quaternions    │
+ ┌────┴────┐                   │usual
+ │usual    │split              ▼
+ ▼         ▼                 ℍ ⊗ ℂ  (biquaternions)
+ 𝕆         𝕆′                  │
+       split-octonions         │usual
+                               ▼
+                             𝕆 ⊗ ℂ  (bioctonions)
+```
+
+The left branch is the classical tower $\mathbb{R} \subset \mathbb{C} \subset \mathbb{H} \subset \mathbb{O}$,
+where each level loses a property ($\mathbb{C}$ loses ordering, $\mathbb{H}$ commutativity,
+$\mathbb{O}$ associativity) but keeps a multiplicative norm and so remains a division algebra.
+The other branches trade the division property for zero divisors.
+
+### Properties at a glance
+
+| Algebra | dim / ℝ | Built as | Commutative | Associative | Alternative | Division | Norm | Isomorphic to |
+|---------|:-------:|----------|:-----------:|:-----------:|:-----------:|:--------:|------|---------------|
+| ℂ | 2 | `CD(ℝ)`, σ = 1 | ✓ | ✓ | ✓ | ✓ | $a^2 + b^2$ | |
+| split-complex | 2 | `CD(ℝ)`, σ = −1 | ✓ | ✓ | ✓ | ✗ | $a^2 - b^2$ | ℝ ⊕ ℝ |
+| dual | 2 | `CD(ℝ)`, σ = 0 | ✓ | ✓ | ✓ | ✗ | $a^2$ | |
+| ℍ | 4 | `CD(ℂ)`, σ = 1 | ✗ | ✓ | ✓ | ✓ | $w^2 + x^2 + y^2 + z^2$ | |
+| ℍ′ split-quaternions | 4 | `CD(ℂ)`, σ = −1 | ✗ | ✓ | ✓ | ✗ | $w^2 + x^2 - y^2 - z^2$ | M₂(ℝ) |
+| 𝔹 bicomplex | 4 | `CD(ℂ)`, σ = 1, trivial involution | ✓ | ✓ | ✓ | ✗ | $z_1^2 + z_2^2 \in \mathbb{C}$ | ℂ ⊕ ℂ |
+| 𝕆 | 8 | `CD(ℍ)`, σ = 1 | ✗ | ✗ | ✓ | ✓ | sum of 8 squares | |
+| 𝕆′ split-octonions | 8 | `CD(ℍ)`, σ = −1 | ✗ | ✗ | ✓ | ✗ | signature (4, 4) | Zorn vector-matrices |
+| ℍ ⊗ ℂ biquaternions | 8 | `CD(𝔹)`, σ = 1 | ✗ | ✓ | ✓ | ✗ | $w^2 + x^2 + y^2 + z^2 \in \mathbb{C}$ | M₂(ℂ) |
+| 𝕆 ⊗ ℂ bioctonions | 16 | `CD(ℍ ⊗ ℂ)`, σ = 1 | ✗ | ✗ | ✓ | ✗ | sum of 8 squares in ℂ | |
+
+Every norm in the table is multiplicative, $N(xy) = N(x)N(y)$, and all but the dual numbers (whose
+norm is degenerate) are **composition algebras** over their scalars. Those marked "Division ✗" have
+an isotropic norm, and the elements of norm zero are exactly the zero divisors (together with 0).
+
+### How they relate
+
+**Real forms.** An algebra over ℂ can contain several real subalgebras that each span it. The
+quaternion and octonion algebras over ℂ have exactly two:
+
+```
+        ℍ ───────────┐                    𝕆 ───────────┐
+   (real coefficients)▼               (real coefficients)▼
+                    ℍ ⊗ ℂ ≅ M₂(ℂ)                       𝕆 ⊗ ℂ
+   (j ↦ h·j, k ↦ h·k)▲              (e₄…e₇ ↦ h·e₄…h·e₇)▲
+        ℍ′ ──────────┘                    𝕆′ ──────────┘
+```
+
+Here `h` is the imaginary unit of the coefficient field ℂ. Multiplying a unit by `h` flips the sign
+of its square, which is how a split form sits inside the complexification next to the compact one.
+All four arrows are implemented as monomorphisms and tested.
+
+**Sub-algebras along each tower.**
+
+```
+ℝ ↪ ℂ ↪ ℍ ↪ 𝕆                      the division tower (canonical CD embeddings)
+ℝ ↪ ℂ ↪ ℍ′ ↪ 𝕆′                    the split tower: ℂ is the plane {w + xi}
+ℝ ↪ split-complex ↪ ℍ′             along j, or along k
+ℍ ↪ 𝕆′                             the positive-definite half {1, e₁, e₂, e₃}
+ℂ ↪ 𝔹 ↪ ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ              the complexified tower (canonical CD embeddings)
+```
+
+**Matrix algebras.** Three of the algebras *are* matrix algebras, and Kosmos provides the
+isomorphisms with their inverses:
+
+| Isomorphism | Location | Norm becomes | Conjugation becomes |
+|-------------|----------|--------------|---------------------|
+| ℍ′ ≅ M₂(ℝ) | `SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(field)` | determinant | adjugate |
+| ℍ ⊗ ℂ ≅ M₂(ℂ) | `BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism` | determinant | adjugate (Hermitian conjugate ↦ conjugate transpose) |
+
+The division algebras ℂ and ℍ, and the commutative algebras, embed into matrix rings without filling
+them; see [Matrix representations](#matrix-representations).
+
+**Names.** The *tessarines* are the bicomplex numbers `𝔹`, in a different basis; see `Bicomplex`.
+*Coquaternions* are the split-quaternions. *Hyperbolic numbers*, *perplex numbers* and *double
+numbers* are the split-complex numbers. *Complex quaternions* and *complex octonions* are the
+biquaternions and bioctonions.
 
 ---
 
@@ -23,13 +126,17 @@ Every algebra in this package is carried by the Cayley–Dickson pair `CD<A>` an
 arithmetic from `CayleyDickson` (in `algebra.structures`). Nothing re-implements a doubling
 product by hand. The variations come from two choices: the involution on the base, and `σ`.
 
-**Base with a nontrivial involution** (`CayleyDickson.usual` / `split`) gives the
-noncommutative tower:
+**Base with a nontrivial involution** (`CayleyDickson.usual` / `split`, and their associative
+counterparts `associative` / `associativeSplit`) gives the noncommutative algebras:
 
 | Algebra | Carrier | Construction |
 |---------|---------|--------------|
 | ℍ, ℍ_ℚ, Lip | `Quaternion`, `RationalQuaternion`, `LipschitzQuaternion` (typealiases of `CD<…>`) | `CD⟨ℂ⟩`, `CD⟨ℚ(i)⟩`, `CD⟨ℤ[i]⟩` |
 | 𝕆, 𝕆_ℚ, Gravesian | `Octonion`, `RationalOctonion`, `GravesianOctonion` | `CD⟨ℍ⟩`, `CD⟨ℍ_ℚ⟩`, `CD⟨Lip⟩` |
+| ℍ′ over `R` | `SplitQuaternion<R>` (value class over `CD<CD<R>>`) | `CD_split⟨R[i]⟩` |
+| 𝕆′ over `R` | `SplitOctonion<R>` (value class over `CD<CD<CD<R>>>`) | `CD_split⟨ℍ_R⟩` |
+| ℍ ⊗ ℂ | `Biquaternion` (value class over `CD<CD<Complex>>`) | `CD⟨ℂ[i]⟩ = CD⟨𝔹⟩` |
+| 𝕆 ⊗ ℂ | `Bioctonion` (value class over `CD<CD<CD<Complex>>>`) | `CD⟨ℍ ⊗ ℂ⟩` |
 
 **Commutative base with the *trivial* involution** (`CayleyDickson.commutative(base, σ)`)
 gives the commutative quadratic extension `R[x]/(x² + σ)`:
@@ -41,24 +148,42 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 | −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
 | 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
 
-`Bicomplex`, `Dual` and `SplitComplex` are value classes, not typealiases. `Bicomplex` and
-`Quaternion` are both carried by `CD<Complex>`, and `Dual<Real>` and `SplitComplex<Real>` share
-`CD<Real>` with `Complex`. The algebras differ, so the Kotlin types must too. Their ring
-structures are transported from the Cayley–Dickson ring along the wrapper with
-`CarrierTransport`.
+**Typealias or value class?** The division tower uses typealiases of `CD<…>`; everything else is a
+value class, because carriers collide. The algebras differ, so the Kotlin types must too:
 
-**One construction per tier, three coefficient rings.** ℍ, ℍ_ℚ and the Lipschitz quaternions are
-built by a single internal `QuaternionTier` over ℂ, ℚ(i) and ℤ[i]; 𝕆, 𝕆_ℚ and the Gravesian
-octonions by a single `OctonionTier` over those. A tier supplies the ring, basis, coordinates,
-scalar action, norm, embeddings and printable; the public `*Algebras` objects add only what
-really differs per tier (reciprocals, vector spaces or ℤ-modules, conversions).
+| Carrier | Shared by |
+|---------|-----------|
+| `CD<Real>` | `Complex`, `SplitComplex<Real>`, `Dual<Real>` |
+| `CD<CD<Real>>` = `CD<Complex>` | `Quaternion`, `Bicomplex`, `SplitQuaternion<Real>` |
+| `CD<CD<CD<Real>>>` = `CD<Quaternion>` | `Octonion`, `SplitOctonion<Real>`, `Biquaternion` |
+| `CD<CD<CD<Complex>>>` = `CD<Octonion>` | `Bioctonion` (and, later, the sedenions) |
+
+The ring structure of each value class is transported from the Cayley–Dickson ring along the
+wrapper with `CarrierTransport`.
+
+**One construction per tier.** ℍ, ℍ_ℚ and the Lipschitz quaternions are built by a single internal
+`QuaternionTier` over ℂ, ℚ(i) and ℤ[i]; 𝕆, 𝕆_ℚ and the Gravesian octonions by a single
+`OctonionTier` over those. The same two tiers, with a `split` flag or over a different base, build
+the rest:
+
+| Tier call | Result |
+|-----------|--------|
+| `QuaternionTier.over(R, split = true)` | split-quaternions over `R` |
+| `OctonionTier(QuaternionTier.over(R), split = true)` | split-octonions over `R` |
+| `QuaternionTier.over(ComplexField)` | biquaternions |
+| `OctonionTier(biquaternionTier)` | bioctonions |
+
+A tier supplies the ring, basis, coordinates, scalar action, norm, embeddings and printable; the
+public `*Algebras` objects add only what really differs (reciprocals, vector spaces or ℤ-modules,
+extra conjugations, conversions).
 
 **What `CayleyDickson` promises.** `usual`, `split` and `commutative` are the safe factories.
 `withSigma` accepts any `σ`, but the conjugation is an anti-automorphism only when `σ` is central
 and fixed by the base involution (always true for the generalized quaternion algebras `(a, b)_F`,
-where `σ` is a scalar). `associative` types the double of a *commutative* base as an associative
-`InvolutiveRing`; this is the quaternion step. The kernel is tested directly, level by level, in
-`CayleyDicksonSpec`.
+where `σ` is a scalar). `associative` and `associativeSplit` type the double of a *commutative*
+base as an associative `InvolutiveRing`; these are the quaternion and split-quaternion steps. The
+norm of any double is `N(a, b) = N(a) + σ·N(b)`. The kernel is tested directly, level by level, in
+`CayleyDicksonSpec`, and the transport in `CarrierTransportSpec`.
 
 **Orders are substructures, not new implementations.** A `HurwitzQuaternion` is an element of
 the Hurwitz order `𝓗 ⊂ ℍ_ℚ`, represented by its underlying `RationalQuaternion`. Its
@@ -75,7 +200,9 @@ source of truth, `reciprocal` throws `ArithmeticException` exactly where it retu
 algebras use *numerical* invertibility: the norm (or, for `Dual<Real>`, the computed inverse) is
 finite and not approximately zero, so `NaN`, `±∞`, subnormal-scale values and the null cone are
 rejected rather than inverted to garbage. `Bicomplex.isUnit()` stays the exact algebraic predicate.
-This is tested uniformly in `ReciprocalPolicySpec`.
+The base fields ℝ, ℚ, ℚ(i) and 𝔽ₚ follow the same contract, since every hypercomplex reciprocal
+ends in a division in one of them. This is tested uniformly in `ReciprocalPolicySpec` (and
+`PrimeFieldSpec`).
 
 ---
 
@@ -104,6 +231,22 @@ hypercomplex/
 │   ├── BicomplexAlgebras.kt
 │   (design notes for the general multicomplex case: docs/design/Multicomplex.md)
 │
+├── splitquaternion/          # SplitQuaternion<R> = CD_split⟨R[i]⟩ ≅ M₂(R)
+│   ├── SplitQuaternion.kt
+│   └── SplitQuaternionAlgebras.kt
+│
+├── splitoctonion/            # SplitOctonion<R> = CD_split⟨ℍ_R⟩
+│   ├── SplitOctonion.kt
+│   └── SplitOctonionAlgebras.kt
+│
+├── biquaternion/             # ℍ ⊗ ℂ = CD⟨𝔹⟩ ≅ M₂(ℂ)
+│   ├── Biquaternion.kt
+│   └── BiquaternionAlgebras.kt     three conjugations, real forms, matrix isomorphism
+│
+├── bioctonion/               # 𝕆 ⊗ ℂ = CD⟨ℍ ⊗ ℂ⟩
+│   ├── Bioctonion.kt
+│   └── BioctonionAlgebras.kt       three conjugations, real forms, 168 embeddings
+│
 ├── quaternion/               # ℍ-like rings
 │   ├── Quaternion.kt               ℍ   = CD⟨ℂ⟩             (Real coefficients)
 │   ├── QuaternionAlgebras.kt
@@ -113,7 +256,7 @@ hypercomplex/
 │   ├── LipschitzQuaternionAlgebras.kt
 │   ├── HurwitzQuaternion.kt        𝓗 ⊂ ℍ_ℚ, the Hurwitz order (value class over RationalQuaternion)
 │   ├── HurwitzQuaternionAlgebras.kt
-│   ├── QuaternionTier.kt           the one quaternion construction over ℂ, ℚ(i), ℤ[i]
+│   ├── QuaternionTier.kt           the one quaternion construction (usual or split, any base)
 │   ├── AxisSignEmbeddings.kt       the 6 specs for complex-like ↪ quaternion-like
 │   ├── QuaternionEmbeddingKit.kt   generic complex-like → quaternion builder
 │   └── QuaternionPrintable.kt
@@ -125,7 +268,7 @@ hypercomplex/
     ├── RationalOctonionAlgebras.kt
     ├── GravesianOctonion.kt        CD⟨Lip⟩ ≅ ℤ⁸            (BigInteger coefficients)
     ├── GravesianOctonionAlgebras.kt
-    ├── OctonionTier.kt             the one octonion construction over ℍ, ℍ_ℚ, Lip
+    ├── OctonionTier.kt             the one octonion construction (usual or split, any tier)
     ├── OctonionEmbeddingKit.kt     the 168 signed-basis-unit quaternion → octonion embeddings
     ├── OctonionFanoOrientation(s).kt, OrientedFanoLine.kt
     └── OctonionPrintable.kt
@@ -142,6 +285,8 @@ a basis `e₀, …, e_{n-1}` of `A` to `(e₀, 0), …, (0, e_{n-1})` in `CD<A>`
 ---
 
 ## The Tower Diagram
+
+This section is about the division tower and its three coefficient rings.
 
 Solid arrows are ring monomorphisms (structure-preserving injections).
 Horizontal arrows stay within one "level" of the tower;
@@ -174,6 +319,109 @@ tested as homomorphisms *up to approximate equality* only.
 The Eisenstein integers $\mathbb{Z}[\omega]$ sit beside $\mathbb{Z}[i]$ at Level 1
 with a homomorphism $\mathbb{Z}[\omega] \to \mathbb{C}$. They embed into the Hurwitz order,
 but not into the Lipschitz quaternions (see [below](#eisenstein-integers-and-the-quaternion-orders)).
+
+---
+
+## Split Forms
+
+The split forms use the doubling sign `σ = −1`, so the new unit squares to `+1`. They are generic
+over a commutative base ring `R`, like `SplitComplex<R>`: the same code gives the algebras over ℝ,
+ℚ, ℤ and finite fields. The exact versions (over ℚ) are what the tests check with strict equality.
+
+### Split-quaternions
+
+```text
+i² = −1,   j² = +1,   k² = +1,   ij = k,   jk = −i,   ki = j,   ijk = +1
+```
+
+```kotlin
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.splitquaternion.splitQuaternion
+
+val ring = SplitQuaternionAlgebras.RealSplitQuaternionRing
+val q = splitQuaternion(2.0, 0.0, 1.0, 0.0)          // 2 + j
+ring.normSq(q)                                        // 3.0 = w² + x² − y² − z²
+ring.reciprocal(q)                                    // (2 − j) / 3
+
+// Zero divisors: (1 + j)(1 − j) = 0, and neither factor is invertible.
+ring.hasReciprocal(splitQuaternion(1.0, 0.0, 1.0, 0.0))   // false
+
+// Exact, over any commutative ring:
+val exact = SplitQuaternionAlgebras.splitQuaternionRing(RationalAlgebras.RationalField)
+
+// ℍ′ ≅ M₂(F), with inverse; the norm is the determinant.
+val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(RationalAlgebras.RationalField)
+```
+
+The matrix representation is `w + xi + yj + zk ↦ [[w − z, y − x], [x + y, w + z]]`. It is an
+isomorphism when 2 is invertible. Over ℤ it is injective but not surjective (entries on each
+diagonal share a parity), and in characteristic 2 the isomorphism is refused.
+
+### Split-octonions
+
+`SplitOctonion<R>` is the split doubling of the Hamilton quaternions over `R`: `e₁, e₂, e₃` square
+to `−1` and `e₄, …, e₇` square to `+1`. It is alternative, flexible and Moufang but not
+associative, and its norm has signature `(4, 4)`.
+
+```kotlin
+import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
+
+val ring = SplitOctonionAlgebras.RealSplitOctonionAlgebra
+val (one, e1, e2, e3, e4) = ring.basis
+ring.mul(e4, e4)                                      // +1
+ring.mul(ring.add(one, e4), ring.add(one, ring.add.inverse(e4)))   // 0
+```
+
+The inverse `o⁻¹ = conj(o)/N(o)` exists off the null cone and is two-sided despite
+nonassociativity, because the algebra is alternative.
+
+---
+
+## Complexifications
+
+The biquaternions and bioctonions are the quaternion and octonion algebras *over ℂ*. Their
+coefficients are complex numbers, and the imaginary unit of that coefficient field is written `h`
+to keep it apart from the units `i, j, k` and `e₁, …, e₇`. `h` is central.
+
+### Three conjugations
+
+Each complexified algebra has three involutions, and it matters which one is meant:
+
+| Conjugation | On `ℍ ⊗ ℂ` | Linear over | Reverses products | API |
+|-------------|------------|-------------|:-----------------:|-----|
+| quaternion / octonion | `w − xi − yj − zk` | ℂ | ✓ | `conj` |
+| complex | conjugate each coefficient (`h ↦ −h`) | ℝ only | ✗ (an automorphism) | `complexConj` |
+| Hermitian | both | ℝ only | ✓ | `hermitianConj` |
+
+`conj` is the Cayley–Dickson conjugation, and the norm is `N(q) = q·conj(q)`, which is
+complex-valued. The fixed ring of `complexConj` is the real form ℍ (or 𝕆). Under
+`ℍ ⊗ ℂ ≅ M₂(ℂ)` the Hermitian conjugate is the conjugate transpose.
+
+Correspondingly there are two star-algebra structures: `BiquaternionStarAlgebra` over ℂ (with
+`conj`) and `BiquaternionHermitianStarAlgebra` over ℝ (with `hermitianConj`), and likewise for the
+bioctonions.
+
+```kotlin
+import org.vorpal.kosmos.hypercomplex.biquaternion.BiquaternionAlgebras
+
+val ring = BiquaternionAlgebras.BiquaternionRing
+val (i, j, k, h) = listOf(ring.i, ring.j, ring.k, ring.h)
+
+ring.mul(h, h)                                        // −1, and h commutes with everything
+val nullElement = ring.add(ring.one, ring.mul(h, i))  // 1 + h·i
+ring.normSq(nullElement)                              // 0 + 0i: a zero divisor
+ring.hasReciprocal(nullElement)                       // false
+
+val iso = BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism   // ℍ ⊗ ℂ ≅ M₂(ℂ)
+```
+
+The bioctonions additionally carry the 168 (84 normalized) signed-basis-unit embeddings
+`ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ`, the ℂ-linear extensions of the embeddings `ℍ ↪ 𝕆` described below.
+
+**Exactness.** `Biquaternion` and `Bioctonion` have floating-point coefficients, so their specs use
+approximate equality. The construction is generic, though, and `ComplexifiedTowerSpec` runs the
+same two doublings over the exact field ℚ(i) to verify associativity, alternativity, the Moufang
+identities and multiplicativity of the norm with strict equality.
 
 ---
 
@@ -432,6 +680,10 @@ These canonical embeddings are used throughout the tower:
 | $\mathbb{C} \hookrightarrow \mathbb{B}$     | `BicomplexAlgebras.complexToBicomplexMonomorphism`           |
 | $\mathbb{H}_\mathbb{Q} \hookrightarrow \mathbb{O}_\mathbb{Q}$ | `RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism` |
 | $\mathbb{H} \hookrightarrow \mathbb{O}$     | `OctonionAlgebras.QuaternionToOctonionMonomorphism`          |
+| $\mathbb{C} \hookrightarrow \mathbb{H}'$    | `SplitQuaternionAlgebras.ComplexToSplitQuaternionMonomorphism` |
+| $\mathbb{H} \hookrightarrow \mathbb{O}'$    | `SplitOctonionAlgebras.QuaternionToSplitOctonionMonomorphism` |
+| $\mathbb{B} \hookrightarrow \mathbb{H} \otimes \mathbb{C}$ | `BiquaternionAlgebras.BicomplexToBiquaternionMonomorphism` |
+| $\mathbb{H} \otimes \mathbb{C} \hookrightarrow \mathbb{O} \otimes \mathbb{C}$ | `BioctonionAlgebras.BiquaternionToBioctonionMonomorphism` |
 
 The ×6 and ×168 embedding families *include* the canonical embedding
 as a special case (the one with axis=I, sign=PLUS for ×6;
@@ -458,6 +710,12 @@ Each type has an appropriate scalar action:
 | $\mathbb{O}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 8) |
 | $\mathbb{B}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 4) |
 | $\mathbb{B}$     | $\mathbb{C}$ | `FiniteVectorSpace` (dim 2) |
+| `SplitQuaternion<R>` | $R$ | `RModule` (rank 4); `FiniteVectorSpace` (dim 4) over ℝ |
+| `SplitOctonion<R>` | $R$ | `RModule` (rank 8); `FiniteVectorSpace` (dim 8) over ℝ |
+| $\mathbb{H} \otimes \mathbb{C}$ | $\mathbb{C}$ | `FiniteVectorSpace` (dim 4) |
+| $\mathbb{H} \otimes \mathbb{C}$ | $\mathbb{R}$ | `FiniteVectorSpace` (dim 8) |
+| $\mathbb{O} \otimes \mathbb{C}$ | $\mathbb{C}$ | `FiniteVectorSpace` (dim 8) |
+| $\mathbb{O} \otimes \mathbb{C}$ | $\mathbb{R}$ | `FiniteVectorSpace` (dim 16) |
 
 These scalar actions are required by the `OctonionEmbeddingKit`
 to construct embeddings via linear combination of basis elements.
@@ -526,6 +784,32 @@ Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into 
 | `Grav → 𝕆` (≈) | `GravesianOctonionAlgebras.gravesianToOctonionApprox` |
 | `𝕆_ℚ → 𝕆` (≈) | `RationalOctonionAlgebras.rationalOctonionToOctonionApprox` |
 
+### Split forms
+
+| Arrow | Location |
+|-------|----------|
+| `R ↪ ℍ′_R` | `SplitQuaternionAlgebras.scalarEmbedding(base)` |
+| `ℂ ↪ ℍ′` | `SplitQuaternionAlgebras.ComplexToSplitQuaternionMonomorphism` |
+| `SplitComplex<R> ↪ ℍ′_R` (along j) | `SplitQuaternionAlgebras.splitComplexToSplitQuaternionMonomorphism(base)` |
+| `SplitComplex<R> ↪ ℍ′_R` (along k) | `SplitQuaternionAlgebras.splitComplexToSplitQuaternionAlongK(base)` |
+| `R ↪ 𝕆′_R` | `SplitOctonionAlgebras.scalarEmbedding(base)` |
+| `ℍ ↪ 𝕆′` | `SplitOctonionAlgebras.QuaternionToSplitOctonionMonomorphism` |
+| `ℍ′_R ↪ 𝕆′_R` | `SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(base)` |
+
+### Complexifications
+
+| Arrow | Location |
+|-------|----------|
+| `ℂ ↪ ℍ ⊗ ℂ` (center) | `BiquaternionAlgebras.ComplexToBiquaternionMonomorphism` |
+| `ℍ ↪ ℍ ⊗ ℂ` (real form) | `BiquaternionAlgebras.QuaternionToBiquaternionMonomorphism` |
+| `ℍ′ ↪ ℍ ⊗ ℂ` (real form) | `BiquaternionAlgebras.SplitQuaternionToBiquaternionMonomorphism` |
+| `𝔹 ↪ ℍ ⊗ ℂ` | `BiquaternionAlgebras.BicomplexToBiquaternionMonomorphism` |
+| `ℂ ↪ 𝕆 ⊗ ℂ` (scalars) | `BioctonionAlgebras.ComplexToBioctonionMonomorphism` |
+| `𝕆 ↪ 𝕆 ⊗ ℂ` (real form) | `BioctonionAlgebras.OctonionToBioctonionMonomorphism` |
+| `𝕆′ ↪ 𝕆 ⊗ ℂ` (real form) | `BioctonionAlgebras.SplitOctonionToBioctonionMonomorphism` |
+| `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ` (canonical) | `BioctonionAlgebras.BiquaternionToBioctonionMonomorphism` |
+| `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ` (×168) | `BioctonionAlgebras.allBiquaternionEmbeddings()` |
+
 ### Matrix representations
 
 | Arrow | Location |
@@ -535,9 +819,13 @@ Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into 
 | `Dual<F> ↪ M₂(F)` | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
 | `𝔹 ↪ M₂(ℂ)` | `BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism`, `…ToDiagonalMatrixMonomorphism` |
 | `ℍ ↪ M₂(ℂ)` | `QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism` |
+| `ℍ′_R ↪ M₂(R)` | `SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base)` |
+| `ℍ′_F ≅ M₂(F)` | `SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(field)` |
+| `ℍ ⊗ ℂ ≅ M₂(ℂ)` | `BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism` |
 
 The first four are all `quadraticRank2MatrixEmbedding`: the regular representation of
-`R[x]/(x² − s − tx)` on the basis `{1, x}`.
+`R[x]/(x² − s − tx)` on the basis `{1, x}`. Restricted to ℍ, the biquaternion isomorphism is the
+classical `ℍ ↪ M₂(ℂ)`.
 
 ---
 
@@ -566,3 +854,55 @@ the octonion multiplication table and is computed (not chosen) by
 the `OctonionEmbeddingKit`.
 
 The Fano plane implementation lives in `org.vorpal.kosmos.combinatorics.FanoPlane`.
+
+---
+
+## What Remains to Be Done
+
+Nothing below is implemented yet. Items are grouped by how they would build on what exists.
+
+### More algebras from the same kernel
+
+| Algebra | How it would be built | Notes |
+|---------|-----------------------|-------|
+| Sedenions 𝕊, and the levels above | `CayleyDickson.usual(𝕆)` | Flexible and power-associative, not alternative; zero divisors. The kernel is already tested at this level (`A₄` in `CayleyDicksonSpec`); what is missing is the named carrier, which must be a value class because `Bioctonion` uses the same `CD<Octonion>` carrier. |
+| Generalized quaternion algebras `(a, b)_F` | `CayleyDickson.withSigma` twice | Available through the kernel and tested for `(2, 3)_ℚ`, but with no named type, norm, or splitting test (Hilbert symbol). |
+| Dual quaternions `ℍ ⊗ 𝔻` | quaternion tier over `Dual<Real>` | Rigid motions of 3-space. `QuaternionTier.over(base)` accepts any commutative ring as its base, so this is mostly naming and tests. |
+| Split-biquaternions `ℍ ⊗ (ℝ ⊕ ℝ) ≅ ℍ ⊕ ℍ` | quaternion tier over `SplitComplex<Real>` | Same remark. |
+| Dual-complex numbers, hyperbolic quaternions | | The hyperbolic quaternions (Macfarlane) are nonassociative and are *not* a Cayley–Dickson double. |
+| Tricomplex and general multicomplex numbers | iterate `CayleyDickson.commutative` | Design notes in `docs/design/Multicomplex.md`. |
+| Clifford algebras `Cl(p, q)` | new construction | Would unify several algebras here: `Cl(0,1) ≅ ℂ`, `Cl(1,0) ≅` split-complex, `Cl(0,2) ≅ ℍ`, `Cl(1,1) ≅ Cl(2,0) ≅ ℍ′`, `Cl(3,0) ≅ ℍ ⊗ ℂ`, `Cl(0,3) ≅ ℍ ⊕ ℍ`. |
+
+### Gaps in the algebras that exist
+
+- **Split-octonions:** the Zorn vector-matrix representation; the family of embeddings `ℍ ↪ 𝕆′` and
+  `ℍ′ ↪ 𝕆′` beyond the canonical ones; the isomorphism `CD_usual(ℍ′) ≅ CD_split(ℍ)`.
+- **Biquaternions and bioctonions:** named exact tiers over ℚ(i) (the construction is tested
+  exactly, but only the floating-point carriers are public); the Lorentz-group action of the
+  biquaternions.
+- **Split forms over ℤ and ℚ:** these work today through the generic `SplitQuaternion<R>` and
+  `SplitOctonion<R>`, but have no named `*Algebras` objects, orders, or unit groups.
+- **Split-complex numbers:** the idempotent (diagonal) coordinates exist for ℝ only, not for a
+  generic base.
+- **Eisenstein integers:** the monomorphisms `ℤ[ω] ↪ 𝓗` (see
+  [above](#eisenstein-integers-and-the-quaternion-orders)).
+- **Integral octonions:** the Gravesian octonions are implemented, but not the maximal orders
+  (the Cayley integers / octavians, whose lattice is E₈), nor the Kleinian or double-Hurwitzian
+  orders.
+
+### Structure and laws
+
+- **Type-level structure.** "Alternative" and "composition algebra" are verified by tests but are
+  not interfaces: there is no `AlternativeAlgebra` or `CompositionAlgebra` type, and no bundled
+  `LawSuite` for them (the specs call `AlternativityLaw`, `MoufangLaw` and
+  `NormSqMultiplicativeLaw` directly).
+- **Isotropic norms.** `NormedDivisionAlgebra` covers the division tower only. The split and
+  complexified algebras expose `HasNormSq` and `HasReciprocal` separately, with no shared interface
+  for "composition algebra with a possibly isotropic norm".
+- **Unit groups and automorphisms.** The 24 Hurwitz units, the unit quaternions as `SU(2)` and
+  their action as rotations, `Aut(𝕆) = G₂`, and the Moufang loop of unit octonions.
+- **Transcendental functions.** `exp`, `log`, powers and polar decomposition exist for dual numbers
+  only.
+- **Octonion matrices** (also listed in the top-level `TODO.md`), and with them the exceptional
+  Jordan algebra.
+

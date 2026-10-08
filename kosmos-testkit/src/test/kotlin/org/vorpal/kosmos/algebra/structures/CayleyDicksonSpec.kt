@@ -7,6 +7,7 @@ import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.map
 import io.kotest.property.arbitrary.pair
+import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.rational.Rational
@@ -32,6 +33,8 @@ import org.vorpal.kosmos.laws.property.AssociativityLaw
  * - A₂ ([CayleyDickson.associative]): associative but not commutative;
  * - A₃ (octonion-like): alternative but not associative;
  * - A₄ (sedenion-like): not alternative, and has zero divisors.
+ *
+ * The split doublings (`σ = -1`) and the norm formula `N(a, b) = N(a) + σ·N(b)` are checked alongside.
  */
 class CayleyDicksonSpec : StringSpec({
 
@@ -39,7 +42,10 @@ class CayleyDicksonSpec : StringSpec({
 
     /** Rationals `p/q` with `|p| ≤ 12`, `1 ≤ q ≤ 12`: small, so the deep levels stay fast. */
     val smallRational: Arb<Rational> =
-        Arb.pair(Arb.int(-12..12), Arb.int(1..12)).map { (p, d) -> Rational.of(p, d) }
+        Arb.pair(
+            Arb.int(-12..12),
+            Arb.int(1..12)
+        ).map { (p, d) -> Rational.of(p, d) }
 
     fun <A : Any> doubled(arb: Arb<A>): Arb<CD<A>> =
         Arb.pair(arb, arb).map { (a, b) -> CD(a, b) }
@@ -150,6 +156,76 @@ class CayleyDicksonSpec : StringSpec({
             pairSums.asSequence().map { y -> x to y }
         }.firstOrNull { (x, y) -> !eq4(a4.mul(x, a4.mul(x, y)), a4.mul(a4.mul(x, x), y)) }
         check(alternativityWitness != null) { "Expected a failure of left alternativity at the fourth level." }
+    }
+
+    // ── The split doublings (σ = -1) ─────────────────────────────────────────
+
+    /** The complex-like level `ℚ[i]/(i² + 1)` as a commutative involutive ring. */
+    val complexLike = CayleyDickson.commutative(RationalAlgebras.RationalField, Rational.ONE)
+
+    "CayleyDickson.split: the new unit ℓ = (0, 1) squares to +1, and (1 + ℓ)(1 - ℓ) = 0" {
+        val splitComplexLike = CayleyDickson.split(q)
+        val ell1 = CD(Rational.ZERO, Rational.ONE)
+        check(eq1(splitComplexLike.mul(ell1, ell1), splitComplexLike.one))
+        check(eq1(
+            splitComplexLike.mul(
+                splitComplexLike.add(splitComplexLike.one, ell1),
+                splitComplexLike.add(splitComplexLike.one, splitComplexLike.add.inverse(ell1))
+            ),
+            splitComplexLike.zero
+        ))
+
+        val splitOctonionLike = CayleyDickson.split(a2)
+        val ell3 = CD(a2.zero, a2.one)
+        check(eq3(splitOctonionLike.mul(ell3, ell3), splitOctonionLike.one))
+    }
+
+    "CayleyDickson.associativeSplit doubles a commutative base to an associative ring with j² = k² = +1" {
+        val splitQuaternionLike = CayleyDickson.associativeSplit(complexLike)
+        InvolutiveRingLaws(splitQuaternionLike, arb2, eq2, prAny).fullTest().throwIfFailed()
+
+        val i = CD(CD(Rational.ZERO, Rational.ONE), CD(Rational.ZERO, Rational.ZERO))
+        val j = CD(CD(Rational.ZERO, Rational.ZERO), CD(Rational.ONE, Rational.ZERO))
+        val k = splitQuaternionLike.mul(i, j)
+        check(eq2(splitQuaternionLike.mul(i, i), splitQuaternionLike.negOne))
+        check(eq2(splitQuaternionLike.mul(j, j), splitQuaternionLike.one))
+        check(eq2(splitQuaternionLike.mul(k, k), splitQuaternionLike.one))
+        check(eq2(splitQuaternionLike.mul(j, i), splitQuaternionLike.add.inverse(k)))
+    }
+
+    "CayleyDickson.associativeSplit rejects a noncommutative base" {
+        shouldThrow<IllegalArgumentException> {
+            CayleyDickson.associativeSplit(CayleyDickson.associative(complexLike))
+        }
+    }
+
+    "the split doubling of the quaternion level is alternative, not associative, and has zero divisors" {
+        val splitOctonionLike = CayleyDickson.split(CayleyDickson.associative(complexLike))
+        NonAssociativeInvolutiveRingLaws(splitOctonionLike, arb3, eq3, prAny).fullTest().throwIfFailed()
+        AlternativityLaw(splitOctonionLike.mul.op, arb3, eq3, prAny).test()
+
+        val basis = CayleyDickson.doubledBasis(a2.zero, CayleyDickson.doubledBasis(a1.zero, CayleyDickson.doubledBasis(Rational.ZERO, listOf(Rational.ONE))))
+        val (e1, e2, e4) = listOf(1, 2, 4).map(basis::get)
+        check(!eq3(
+            splitOctonionLike.mul(splitOctonionLike.mul(e1, e2), e4),
+            splitOctonionLike.mul(e1, splitOctonionLike.mul(e2, e4))
+        ))
+
+        val plus = splitOctonionLike.add(splitOctonionLike.one, e4)
+        val minus = splitOctonionLike.add(splitOctonionLike.one, splitOctonionLike.add.inverse(e4))
+        check(eq3(splitOctonionLike.mul(plus, minus), splitOctonionLike.zero))
+    }
+
+    "the norm of a double is N(a, b) = N(a) + σ·N(b)" {
+        // Over ℚ with the trivial involution N(a) = a², so N(a, b) = a² + σb².
+        listOf(Rational.ONE, -Rational.ONE, Rational.ZERO, Rational.of(5)).forEach { sigma ->
+            val ring = CayleyDickson.withSigma(q, sigma)
+            checkAll(arb1) { x ->
+                val expected = CD(x.a * x.a + sigma * x.b * x.b, Rational.ZERO)
+                check(eq1(ring.mul(x, ring.conj(x)), expected))
+                check(eq1(ring.mul(ring.conj(x), x), expected))
+            }
+        }
     }
 
     // ── General σ: generalized quaternion algebras (a, b)_ℚ ──────────────────

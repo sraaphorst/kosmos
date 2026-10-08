@@ -21,6 +21,12 @@ import org.vorpal.kosmos.core.render.Printable
  * ℍ_ℚ = CD⟨ℚ(i)⟩    coefficients S = Rational,   C = GaussianRat
  * Lip = CD⟨ℤ[i]⟩    coefficients S = BigInteger, C = GaussianInt
  * ```
+ * and the same construction, over other bases or with the split sign, gives the rest of the
+ * quaternion-level algebras (see [over]):
+ * ```text
+ * split-quaternions over R = CD_split⟨R[i]⟩    coefficients S = R,       C = CD<R>
+ * biquaternions ℍ ⊗ ℂ      = CD⟨ℂ[i]⟩          coefficients S = Complex, C = CD<Complex>
+ * ```
  * A [QuaternionTier] holds everything that depends only on that choice: the associative
  * Cayley-Dickson ring, the basis `1, i, j, k`, coordinates `[w, x, y, z]`, the coordinatewise scalar
  * action, the reduced norm, the six embeddings of the complex-like base, and the printable.
@@ -34,19 +40,23 @@ import org.vorpal.kosmos.core.render.Printable
  * @param re the real part `C → S`.
  * @param im the imaginary part `C → S`.
  * @param mkComplex builds `re + im·i` in `C`.
+ * @param split `false` for the usual doubling (`j² = k² = -1`), `true` for the split doubling
+ *   (`j² = k² = +1`).
  */
 internal class QuaternionTier<S : Any, C : Any>(
     val complexRing: InvolutiveRing<C>,
     val scalars: CommutativeRing<S>,
     val re: UnaryOp<C, S>,
     val im: UnaryOp<C, S>,
-    val mkComplex: BinaryOp<S, S, C>
+    val mkComplex: BinaryOp<S, S, C>,
+    val split: Boolean = false
 ) {
     /**
-     * The associative Cayley-Dickson double `CD⟨C⟩`.
+     * The associative Cayley-Dickson double `CD⟨C⟩`: usual (`σ = 1`) or split (`σ = -1`).
      */
     val ring: InvolutiveRing<CD<C>> =
-        CayleyDickson.associative(complexRing)
+        if (split) CayleyDickson.associativeSplit(complexRing)
+        else CayleyDickson.associative(complexRing)
 
     /**
      * The coordinates `[w, x, y, z]` of `w + xi + yj + zk = (w + xi, y + zi)`.
@@ -83,8 +93,8 @@ internal class QuaternionTier<S : Any, C : Any>(
         }
 
     /**
-     * The reduced norm `N(q) = q·conj(q) = w² + x² + y² + z²`, read off the real coordinate of the
-     * Cayley-Dickson product.
+     * The reduced norm `N(q) = q·conj(q)`, read off the real coordinate of the Cayley-Dickson
+     * product: `w² + x² + y² + z²` for the usual doubling and `w² + x² - y² - z²` for the split one.
      */
     val normSq: UnaryOp<CD<C>, S> =
         UnaryOp(Symbols.NORM_SQ_SYMBOL) { q -> re(ring.mul(q, ring.conj(q)).a) }
@@ -122,4 +132,28 @@ internal class QuaternionTier<S : Any, C : Any>(
             eqA = eqS,
             decompose = coordinates
         )
+
+    companion object {
+        /**
+         * The quaternion tier over an arbitrary commutative ring `R`, with complex-like base
+         * `R[i]/(i² + 1) = CD⟨R⟩` (trivial involution on `R`, see [CayleyDickson.commutative]):
+         * - `split = false`: the Hamilton quaternion algebra `(-1, -1)_R`;
+         * - `split = true`: the split-quaternion algebra `(-1, +1)_R ≅ M₂(R)` (when 2 is invertible).
+         *
+         * Over `R = ℝ` the carrier is `CD<CD<Real>> = CD<Complex>`, the same carrier as ℍ; over
+         * `R = ℂ` this is the biquaternion algebra `ℍ ⊗ ℂ`.
+         */
+        fun <R : Any> over(
+            base: CommutativeRing<R>,
+            split: Boolean = false
+        ): QuaternionTier<R, CD<R>> =
+            QuaternionTier(
+                complexRing = CayleyDickson.commutative(base, base.one),
+                scalars = base,
+                re = UnaryOp { c -> c.a },
+                im = UnaryOp { c -> c.b },
+                mkComplex = BinaryOp { a, b -> CD(a, b) },
+                split = split
+            )
+    }
 }

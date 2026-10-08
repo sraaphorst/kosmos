@@ -36,14 +36,34 @@ class CarrierTransport<A : Any, B : Any>(
     val wrap: UnaryOp<A, B>,
     val unwrap: UnaryOp<B, A>
 ) {
+    /**
+     * Typically used in:
+     * ```
+     * newOp = this(op)
+     * ```
+     * calls to transport the `op` operator from `A` to `B`.
+     *
+     * Currently unused outside of this class: could be made private.
+     */
     operator fun invoke(op: BinOp<A>): BinOp<B> =
         BinOp(op.symbol) { x, y -> wrap(op(unwrap(x), unwrap(y))) }
 
+    /**
+     * Typically used in:
+     * ```
+     * newEndo = this(endo)
+     * ```
+     * calls to transport the `endo` operator from `A` to `B`.
+     *
+     * Currently unused outside of this class: could be made private.
+     */
     operator fun invoke(endo: Endo<A>): Endo<B> =
         Endo(endo.symbol) { x -> wrap(endo(unwrap(x))) }
 
     /**
      * Transport a map *out of* the carrier, e.g. a norm `A → N`.
+     *
+     * Currently unused outside of this class: could be made private.
      */
     fun <N> from(f: UnaryOp<A, N>): UnaryOp<B, N> =
         UnaryOp(f.symbol) { x -> f(unwrap(x)) }
@@ -72,6 +92,18 @@ class CarrierTransport<A : Any, B : Any>(
             identity = wrap(monoid.identity),
             op = this(monoid.op)
         )
+
+    fun nonAssociativeInvolutiveRing(ring: NonAssociativeInvolutiveRing<A>): NonAssociativeInvolutiveRing<B> {
+        val transport = this
+        return object : NonAssociativeInvolutiveRing<B> {
+            override val add = transport.abelianGroup(ring.add)
+            override val mul = transport.nonAssociativeMonoid(ring.mul)
+            override val conj = transport(ring.conj)
+
+            override fun fromBigInt(n: BigInteger): B =
+                wrap(ring.fromBigInt(n))
+        }
+    }
 
     fun involutiveRing(ring: InvolutiveRing<A>): InvolutiveRing<B> {
         val transport = this

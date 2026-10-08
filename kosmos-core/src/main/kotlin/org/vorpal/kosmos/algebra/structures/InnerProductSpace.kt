@@ -58,9 +58,10 @@ interface InnerProductSpace<F : Any, V : Any> : VectorSpace<F, V> {
      * Default is unimplemented; concrete spaces can override when they know
      * how to invert the Gram operator.
      *
-     * Note: phi was a Covector<F, V>, but we don't want a circular dependency with the analysis package.
+     * Note: `phi` is a covector `V → F` (a `Covector<F, V>`); it is typed as a plain function to avoid a
+     * circular dependency with the analysis package.
      */
-    fun sharp(phi: (F) -> V): V =
+    fun sharp(phi: (V) -> F): V =
         throw UnsupportedOperationException(
             "Default sharp not implemented; override in your concrete space."
         )

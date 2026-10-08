@@ -15,11 +15,17 @@ data class PrimeField(val p: BigInteger) : Field<BigInteger>, HasCharacteristic 
 
     override val characteristic: BigInteger = p
 
+    /**
+     * Invertibility is decided on the canonical representative, so every multiple of `p` (not just
+     * the literal `0`) is rejected.
+     */
+    override fun hasReciprocal(a: BigInteger): Boolean =
+        canon(a).signum() != 0
+
     override val reciprocal: Endo<BigInteger> =
-        Endo(Symbols.SLASH) { a ->
-            val c = canon(a)
-            require(c != BigInteger.ZERO) { "Zero has no multiplicative inverse in 𝔽_$p" }
-            c.modInverse(p)
+        Endo(Symbols.INVERSE) { a ->
+            if (!hasReciprocal(a)) throw HasReciprocal.notInvertible(a, "${Symbols.BB_F}_$p")
+            canon(a).modInverse(p)
         }
 
     /**

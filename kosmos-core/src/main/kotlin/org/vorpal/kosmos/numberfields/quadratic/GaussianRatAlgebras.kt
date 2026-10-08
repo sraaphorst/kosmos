@@ -89,7 +89,7 @@ object GaussianRatAlgebras {
             a != zero
 
         override val reciprocal: Endo<GaussianRat> = Endo(Symbols.INVERSE) { gq ->
-            require(gq != zero) { "The reciprocal of $zero is undefined" }
+            if (!hasReciprocal(gq)) throw HasReciprocal.notInvertible(gq, "${Symbols.BB_Q}(i)")
             val n2 = gq.re * gq.re + gq.im * gq.im
             GaussianRat(gq.re / n2, -gq.im / n2)
         }
