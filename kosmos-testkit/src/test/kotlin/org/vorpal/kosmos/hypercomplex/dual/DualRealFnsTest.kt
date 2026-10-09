@@ -473,7 +473,7 @@ class DualRealFnsTest : StringSpec({
     }
 
     "inv rejects zero real part" {
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<ArithmeticException> {
             DualRealFns.inv(dual(0.0, 1.0))
         }
     }

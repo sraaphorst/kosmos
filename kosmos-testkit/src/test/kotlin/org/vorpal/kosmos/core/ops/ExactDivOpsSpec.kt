@@ -33,13 +33,13 @@ class ExactDivOpsSpec : FunSpec({
         }
 
         test("throws when the division is not exact") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<ArithmeticException> {
                 div(7.toBigInteger(), 2.toBigInteger())
             }
         }
 
         test("throws on division by zero") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<ArithmeticException> {
                 div(BigInteger.ONE, BigInteger.ZERO)
             }
         }
@@ -63,7 +63,7 @@ class ExactDivOpsSpec : FunSpec({
         }
 
         test("throws on division by zero") {
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<ArithmeticException> {
                 div(Rational.ONE, Rational.ZERO)
             }
         }

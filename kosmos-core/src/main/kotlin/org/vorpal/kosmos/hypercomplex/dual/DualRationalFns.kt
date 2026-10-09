@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 
@@ -60,7 +61,7 @@ object DualRationalFns {
      * Requires `a != 0`.
      */
     fun inv(x: Dual<Rational>): Dual<Rational> {
-        require(x.f != Rational.ZERO) { "inv requires nonzero real part, got ${x.f}" }
+        if (x.f == Rational.ZERO) throw HasReciprocal.notInvertible(x, "the dual numbers")
 
         val invA = x.f.reciprocal()
         val invA2 = invA * invA
@@ -156,8 +157,8 @@ object DualRationalFns {
         d: Rational
     ): Dual<Rational> {
         val denominator = c * x.f + d
-        require(denominator != Rational.ZERO) {
-            "mobius undefined when c*f + d = 0, got f=${x.f}"
+        if (denominator == Rational.ZERO) {
+            throw ArithmeticException("mobius undefined when c*f + d = 0, got f=${x.f}")
         }
 
         val numerator = a * x.f + b
