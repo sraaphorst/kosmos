@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.choice
@@ -42,13 +43,13 @@ object ArbBicomplex {
      * elements of the null cone, i.e. the non-units other than `0`.
      *
      * The nonzero coordinate is drawn from [ArbComplex.boundedComplex] (components bounded away
-     * from 0), not merely a nonzero complex number: [Bicomplex.ofIdempotent] halves its inputs,
+     * from 0), not merely a nonzero complex number: [BicomplexAlgebras.ofIdempotent] halves its inputs,
      * and halving a subnormal edge case such as `Double.MIN_VALUE` underflows to `0.0`, which
      * would silently produce the zero bicomplex number instead of a zero divisor.
      */
     val zeroDivisorBicomplex: Arb<RealBicomplex> =
         Arb.choice(
-            ArbComplex.boundedComplex.map { alpha -> Bicomplex.ofIdempotent(alpha, complexField.zero) },
-            ArbComplex.boundedComplex.map { beta -> Bicomplex.ofIdempotent(complexField.zero, beta) }
+            ArbComplex.boundedComplex.map { alpha -> BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, alpha, complexField.zero) },
+            ArbComplex.boundedComplex.map { beta -> BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, complexField.zero, beta) }
         )
 }

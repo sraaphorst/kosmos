@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
+import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.products.CommutativeRings
+import org.vorpal.kosmos.algebra.morphisms.RingIsomorphism
 import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.complexRingOver
@@ -246,6 +249,83 @@ object BicomplexAlgebras {
     }
 
     /**
+     * The combined idempotent map
+     * ```text
+     * Φ : Bicomplex(R) → Complex(R) × Complex(R),   z ↦ (𝛂, 𝜷) = (z1 + i·z2, z1 - i·z2),
+     * ```
+     * a ring homomorphism into the product ring (componentwise operations) over any base.
+     *
+     * It is an isomorphism exactly when 2 is invertible in `R`; see [idempotentIsomorphism]. Over ℤ
+     * it is injective but not surjective (`𝛂 - 𝜷 = 2i·z2` is always even), and over `𝔽₂` it is not
+     * injective, because the two projections coincide there.
+     */
+    fun <R : Any> idempotentHomomorphism(
+        base: CommutativeRing<R>
+    ): RingHomomorphism<Bicomplex<R>, Pair<Complex<R>, Complex<R>>> {
+        val alpha = firstProjection(base)
+        val beta = secondProjection(base)
+        return RingHomomorphism.of(
+            domain = bicomplexRingOver(base),
+            codomain = CommutativeRings.double(complexRingOver(base)),
+            map = UnaryOp("Φ") { z -> alpha(z) to beta(z) }
+        )
+    }
+
+    /**
+     * The bicomplex number `𝛂·e₁ + 𝜷·e₂` with the given idempotent coordinates, over a field in which
+     * 2 is invertible:
+     * ```text
+     * z1 = (𝛂 + 𝜷)/2,   z2 = (𝛂 - 𝜷)/(2i) = -i·(𝛂 - 𝜷)/2.
+     * ```
+     * This is the inverse of [idempotentHomomorphism].
+     *
+     * @throws IllegalArgumentException if 2 is not invertible in [field].
+     */
+    fun <F : Any> ofIdempotent(
+        field: Field<F>,
+        alpha: Complex<F>,
+        beta: Complex<F>
+    ): Bicomplex<F> {
+        val half = halfOf(field)
+        fun minus(a: F, b: F): F = field.add(a, field.add.inverse(b))
+        return Bicomplex.ofStandard(
+            complex(field.mul(field.add(alpha.re, beta.re), half), field.mul(field.add(alpha.im, beta.im), half)),
+            complex(field.mul(minus(alpha.im, beta.im), half), field.mul(minus(beta.re, alpha.re), half))
+        )
+    }
+
+    private fun <F : Any> halfOf(field: Field<F>): F {
+        val two = field.add(field.one, field.one)
+        require(field.hasReciprocal(two)) {
+            "The idempotent decomposition of the bicomplex numbers needs 2 to be invertible in the base field."
+        }
+        return field.reciprocal(two)
+    }
+
+    /**
+     * The splitting `Bicomplex(F) ≅ Complex(F) × Complex(F)` over a field in which 2 is invertible:
+     * [idempotentHomomorphism] together with its inverse [ofIdempotent]. In the product ring
+     * multiplication is componentwise, so this gives a second, independent way to multiply bicomplex
+     * numbers: `Φ(zw) = Φ(z)Φ(w)`.
+     *
+     * @throws IllegalArgumentException if 2 is not invertible in [field].
+     */
+    fun <F : Any> idempotentIsomorphism(
+        field: Field<F>
+    ): RingIsomorphism<Bicomplex<F>, Pair<Complex<F>, Complex<F>>> {
+        halfOf(field)
+        val forward = idempotentHomomorphism(field)
+        return RingIsomorphism.of(
+            forward = forward,
+            backward = RingHomomorphism.of(
+                domain = forward.codomain,
+                codomain = forward.domain,
+                map = UnaryOp("Φ⁻¹") { (alpha, beta) -> ofIdempotent(field, alpha, beta) }
+            )
+        )
+    }
+
+    /**
      * The Cayley-Dickson embedding `Complex(R) ↪ Bicomplex(R)`, `z ↦ z + 0j`.
      */
     fun <R : Any> complexToBicomplexMonomorphism(
@@ -319,7 +399,7 @@ object BicomplexAlgebras {
         private val complexField = ComplexAlgebras.ComplexField
         private val complexStar = ComplexAlgebras.ComplexStarAlgebra
 
-        override val zero: RealBicomplex = Bicomplex.ZERO
+        override val zero: RealBicomplex = cayleyDicksonBicomplex.zero
 
         // Imaginary unit from the first complex plane
         val i: RealBicomplex = Bicomplex.ofStandard(0.0, 1.0, 0.0, 0.0)
