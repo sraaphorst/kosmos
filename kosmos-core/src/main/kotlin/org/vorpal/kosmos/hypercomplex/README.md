@@ -945,6 +945,35 @@ The geometry that goes with each level, to be recorded as tests when the level i
 The collineation counts are for the unoriented geometry. The number preserving the signs is much
 smaller, as it is for the octonions, and is to be computed.
 
+**Subloops of the signed basis units.** For the `2ⁿ`-dimensional algebra the signed units
+`{±e_0, …, ±e_(2ⁿ−1)}` form a loop of order `2ⁿ⁺¹`, and `±e_i ↦ i` maps it onto `𝔽₂ⁿ` with kernel
+`{±1}`. Every nontrivial subloop contains `−1` (any imaginary unit squares to it), so nontrivial
+subloops correspond exactly to subspaces of `𝔽₂ⁿ`. The number of proper nontrivial subloops is
+therefore a sum of Gaussian binomial coefficients, `Σ_{k<n} [n choose k]₂`:
+
+| Algebra | n | Proper nontrivial subloops |
+|---------|:-:|----------------------------|
+| 𝕆 | 3 | 1 + 7 + 7 = 15 |
+| 𝕊 | 4 | 1 + 15 + 35 + 15 = 66 |
+| 32-dim | 5 | 1 + 31 + 155 + 155 + 31 = 373 |
+
+The count depends only on the XOR structure of the indices. The signs decide the finer question,
+which is the interesting one computationally: which subloops are associative, alternative, or
+isomorphic to one another.
+
+**Ordinary and defective lines** (Saniga, Holweck and Pracna). With the units labelled
+`1, …, 2ⁿ − 1`, a line `{a, b, c}` with `a < b < c` is *ordinary* if `a + b = c` as integers and
+*defective* otherwise. For the sedenions, 25 of the 35 lines are ordinary and 10 are defective, and
+the 10 defective lines, with the 10 points lying on them, form a Desargues configuration. This
+depends on the binary labelling, and is directly testable.
+
+References:
+- M. Saniga, F. Holweck, P. Pracna, "From Cayley-Dickson Algebras to Combinatorial Grassmannians",
+  *Mathematics* 3 (2015) 1192–1221, doi:10.3390/math3041192 (open access, CC BY 4.0); preprint
+  "Cayley-Dickson Algebras and Finite Geometry", arXiv:1405.6888.
+- D. C. Agourakis, M. Gerenutti, "A Dual Pathway to 168" (preprint, 2026),
+  doi:10.22541/au.177507195.52530214/v1.
+
 ### More algebras from the same kernel
 
 | Algebra | How it would be built | Notes |
