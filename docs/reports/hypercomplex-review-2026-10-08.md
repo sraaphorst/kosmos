@@ -440,3 +440,39 @@ no longer checked only approximately, which closes first-pass open question 3.
 null-cone predicates of the bicomplex numbers, the printable for complex coefficients, the matrix
 isomorphism `ℍ ⊗ ℂ ≅ M₂(ℂ)`, and the 168 embeddings into the bioctonions.
 
+---
+
+## Addendum 4: bicomplex refinements (2026-10-09)
+
+**Result:** `./gradlew clean build`: **1861 tests, 0 failures.**
+
+Following an external review of `Bicomplex<R>`. I checked each point and agreed with all of them;
+one I implemented differently.
+
+| Point | Outcome |
+|-------|---------|
+| The projections are homomorphisms over any base, but `z ↦ (𝛂, 𝜷)` is an isomorphism only when 2 is invertible | Correct. KDoc rewritten to say so, with the ℤ and 𝔽₂ cases. |
+| Move `ofIdempotent` out of the companion and generalize it | Done: `BicomplexAlgebras.ofIdempotent(field, alpha, beta)`. |
+| Remove `ZERO` and `ONE` from the carrier | Done. Use `BicomplexCommutativeRing.zero` / `.one`, or `bicomplexRing(base).zero`. |
+| Null-cone predicates do not generalize by comparing with zero | Correct (over ℤ, `(2, 2)` has nonzero coordinates but is not a unit). Kept real-only, and documented why, including why the comparison is exact. |
+| State the tessarine change of basis | Done: `j_tess = i·j`, `j = -i·j_tess`, valid over every commutative ring. |
+| Add `component1()` / `component2()` | Done: `val (z1, z2) = z`. |
+| Typo "xof" | Fixed. |
+
+**Where I differed.** The review suggested passing `half` as a parameter. I take a `Field<F>` and
+compute it, refusing with `IllegalArgumentException` when 2 is not invertible. A caller cannot then
+supply a wrong `half`, and it matches `splitQuaternionMatrixIsomorphism`.
+
+**Added beyond the review**
+- `BicomplexAlgebras.idempotentHomomorphism(base)`: the map `Φ` into the product ring
+  `Complex(R) × Complex(R)`, over any base.
+- `BicomplexAlgebras.idempotentIsomorphism(field)`: `Φ` with its inverse, as a `RingIsomorphism`.
+- `BicomplexIdempotentSpec` (10 tests): `Φ` is a homomorphism over ℚ; `Φ(zw) = Φ(z)Φ(w)`
+  componentwise, used as an independent multiplication; the round trips; the idempotents
+  `e₁, e₂` and `z = 𝛂e₁ + 𝜷e₂`; the tessarine basis over ℚ and ℤ; over ℤ injective but not
+  surjective; over 𝔽₂ the projections coincide and the splitting is refused.
+
+**Source-incompatible:** `Bicomplex.ofIdempotent(a, b)` is now
+`BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, a, b)`, and `Bicomplex.ZERO` / `.ONE` are
+gone. All uses in the repository are migrated.
+

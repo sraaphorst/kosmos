@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
@@ -20,7 +21,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "reciprocal exists for an invertible bicomplex number" {
-        val z = Bicomplex.ofIdempotent(
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
             complex(2.0, 1.0),
             complex(3.0, -4.0)
         )
@@ -33,7 +34,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "reciprocal fails for a nonzero zero divisor" {
-        val z = Bicomplex.ofIdempotent(
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
             complex(0.0, 0.0),
             complex(1.0, 2.0)
         )
@@ -70,7 +71,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "first projection returns alpha" {
-        val z = Bicomplex.ofIdempotent(
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
             complex(1.0, 2.0),
             complex(3.0, 4.0)
         )
@@ -81,7 +82,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "second projection returns beta" {
-        val z = Bicomplex.ofIdempotent(
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
             complex(1.0, 2.0),
             complex(3.0, 4.0)
         )

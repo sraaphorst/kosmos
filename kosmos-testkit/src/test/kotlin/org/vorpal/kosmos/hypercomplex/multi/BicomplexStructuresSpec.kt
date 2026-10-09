@@ -153,8 +153,8 @@ class BicomplexStructuresSpec : StringSpec({
 
             // If 𝛂 = 0 then e₂-part is the only survivor, so multiplying by e₁ = (1, 0) kills it, and vice versa.
             val annihilator =
-                if (eqC(z.alpha, complexField.zero)) Bicomplex.ofIdempotent(complexField.one, complexField.zero)
-                else Bicomplex.ofIdempotent(complexField.zero, complexField.one)
+                if (eqC(z.alpha, complexField.zero)) BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, complexField.one, complexField.zero)
+                else BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, complexField.zero, complexField.one)
             check(eqB(ring.mul(z, annihilator), ring.zero))
         }
     }

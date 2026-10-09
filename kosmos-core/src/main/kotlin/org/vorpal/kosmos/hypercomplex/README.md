@@ -114,7 +114,8 @@ isomorphisms with their inverses:
 The division algebras ℂ and ℍ, and the commutative algebras, embed into matrix rings without filling
 them; see [Matrix representations](#matrix-representations).
 
-**Names.** The *tessarines* are the bicomplex numbers `𝔹`, in a different basis; see `Bicomplex`.
+**Names.** The *tessarines* are the bicomplex numbers `𝔹` in a different basis (`j_tess = i·j`, so
+`j_tess² = +1`); see `Bicomplex`.
 *Coquaternions* are the split-quaternions. *Hyperbolic numbers*, *perplex numbers* and *double
 numbers* are the split-complex numbers. *Complex quaternions* and *complex octonions* are the
 biquaternions and bioctonions.
@@ -459,6 +460,13 @@ The bioctonions additionally carry the 168 (84 normalized) signed-basis-unit emb
 commutative ring, and `BicomplexAlgebras`, `BiquaternionAlgebras` and `BioctonionAlgebras` provide
 the generic rings, norms, conjugations, modules, star algebras and embeddings alongside the real
 structures. The usage examples in this section are over ℝ.
+
+**The bicomplex splitting.** The two idempotent projections `z ↦ z1 ± i·z2` are ring homomorphisms
+`Bicomplex(R) → Complex(R)` over every base. Together they give
+`Φ : Bicomplex(R) → Complex(R) × Complex(R)`, which is an isomorphism exactly when 2 is invertible
+(`BicomplexAlgebras.idempotentIsomorphism(field)`, with inverse `ofIdempotent`). Over ℤ it is
+injective but not surjective, and over 𝔽₂ the projections coincide. `BicomplexIdempotentSpec`
+checks all three cases, and uses the splitting as an independent way to multiply.
 
 **Exactness.** The real versions have floating-point coefficients, so their specs use approximate
 equality. `GenericComplexifiedSpec` checks the same laws *exactly* over ℚ (associativity,
@@ -1008,8 +1016,9 @@ References:
 - **Biquaternions and bioctonions:** the Lorentz-group action of the biquaternions; a generic
   printable for complex coefficients (only the real ones have one); the matrix isomorphism
   `Biquaternion(F) ≅ M₂(Complex(F))` over a general field (only the real one is provided).
-- **Bicomplex numbers:** the idempotent decomposition and `isUnit` / null-cone predicates are
-  real-only; over a general base only the two idempotent projections are provided.
+- **Bicomplex numbers:** the `isUnit` / null-cone / zero-divisor predicates are real-only. Over a
+  general base the right notion is that both idempotent coordinates are *units* of `Complex(R)`,
+  which needs a unit test on the base ring.
 - **Split forms over ℤ and ℚ:** these work today through the generic `SplitQuaternion<R>` and
   `SplitOctonion<R>`, but have no named `*Algebras` objects, orders, or unit groups.
 - **Split-complex numbers:** the idempotent (diagonal) coordinates exist for ℝ only, not for a
