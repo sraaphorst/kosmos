@@ -8,3 +8,4 @@ A list of things to do as they come up so they are not forgotten.
 - [ ] Scopes for calculations of algebraic objects.
 - [x] Octonion Fano Plane orientation.
 - [ ] Octonion matrices.
+- [ ] Revisit Meadows: `MeadowLaws` exists but no spec exercises it. Review the laws (reflection, restricted inverse) and add tests.
