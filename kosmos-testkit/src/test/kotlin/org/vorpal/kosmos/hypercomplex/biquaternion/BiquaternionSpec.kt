@@ -31,7 +31,7 @@ class BiquaternionSpec : StringSpec({
     val one = ring.one
     val (i, j, k) = Triple(ring.i, ring.j, ring.k)
     val h = ring.h
-    fun neg(x: Biquaternion) = ring.add.inverse(x)
+    fun neg(x: RealBiquaternion) = ring.add.inverse(x)
 
     "BiquaternionRing satisfies InvolutiveRingLaws (associative, with the quaternion conjugate)" {
         InvolutiveRingLaws(ring, arb, eq, pr).fullTest().throwIfFailed()

@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.complex
 
+import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.CD
@@ -157,6 +158,45 @@ object ComplexAlgebras {
         base: CommutativeRing<R>
     ): LeftAction<R, Complex<R>> =
         LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, b) -> complex(base.mul(r, a), base.mul(r, b)) }
+
+    /**
+     * `Complex<F>` over a field, with reciprocals on the units.
+     *
+     * `z = a + bi` is invertible iff `N(z) = a² + b²` is invertible in [field], and then
+     * `z⁻¹ = conj(z) / N(z)`. Over a field in which `-1` is not a square that is every nonzero `z`,
+     * and `Complex<F>` is a field; otherwise the norm is isotropic and there are zero divisors.
+     * [isZero] decides when a norm counts as zero; over `Real` use [ComplexField], which applies the
+     * floating-point policy.
+     */
+    fun <F : Any> complexRingWithReciprocal(
+        field: Field<F>,
+        isZero: UnaryOp<F, Boolean> = UnaryOp { it == field.zero }
+    ): ComplexRingWithReciprocal<F> =
+        ComplexRingWithReciprocal(field, isZero)
+
+    class ComplexRingWithReciprocal<F : Any>(
+        private val field: Field<F>,
+        private val isZero: UnaryOp<F, Boolean>
+    ) : CommutativeInvolutiveRing<Complex<F>> by complexRingOver(field),
+        HasNormSq<Complex<F>, F>,
+        HasReciprocal<Complex<F>> {
+
+        override val zero: Complex<F>
+            get() = add.identity
+
+        override val normSq: UnaryOp<Complex<F>, F> =
+            UnaryOp(Symbols.NORM_SQ_SYMBOL) { (a, b) -> field.add(field.mul(a, a), field.mul(b, b)) }
+
+        override fun hasReciprocal(a: Complex<F>): Boolean =
+            !isZero(normSq(a))
+
+        override val reciprocal: Endo<Complex<F>> = Endo(Symbols.INVERSE) { z ->
+            if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the complex numbers over the given field")
+            val scale = field.reciprocal(normSq(z))
+            val (a, b) = conj(z)
+            complex(field.mul(scale, a), field.mul(scale, b))
+        }
+    }
 
     /**
      * `Complex<R>` as a free `R`-module of rank 2.

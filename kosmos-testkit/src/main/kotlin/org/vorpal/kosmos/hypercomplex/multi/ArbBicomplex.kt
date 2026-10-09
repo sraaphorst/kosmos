@@ -18,7 +18,7 @@ object ArbBicomplex {
      * Generic bicomplex numbers with small real coefficients, drawn in the standard basis
      * `a + bi + cj + dk`.
      */
-    val bicomplex: Arb<Bicomplex> =
+    val bicomplex: Arb<RealBicomplex> =
         Arb.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -32,7 +32,7 @@ object ArbBicomplex {
      * Units of `𝔹`, safely away from the null cone: both idempotent coordinates `𝛂`, `𝜷`
      * have squared modulus in `[0.01, 10000]`, so `z⁻¹` is numerically well-conditioned.
      */
-    val unitBicomplex: Arb<Bicomplex> =
+    val unitBicomplex: Arb<RealBicomplex> =
         bicomplex.filter { z ->
             listOf(z.alpha, z.beta).all { c -> complexStar.normSq(c) in 0.01..10_000.0 }
         }
@@ -46,7 +46,7 @@ object ArbBicomplex {
      * and halving a subnormal edge case such as `Double.MIN_VALUE` underflows to `0.0`, which
      * would silently produce the zero bicomplex number instead of a zero divisor.
      */
-    val zeroDivisorBicomplex: Arb<Bicomplex> =
+    val zeroDivisorBicomplex: Arb<RealBicomplex> =
         Arb.choice(
             ArbComplex.boundedComplex.map { alpha -> Bicomplex.ofIdempotent(alpha, complexField.zero) },
             ArbComplex.boundedComplex.map { beta -> Bicomplex.ofIdempotent(complexField.zero, beta) }

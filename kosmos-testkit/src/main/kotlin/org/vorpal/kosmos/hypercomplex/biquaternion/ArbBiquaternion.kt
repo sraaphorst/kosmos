@@ -21,7 +21,7 @@ object ArbBiquaternion {
     /**
      * Biquaternions with small complex coefficients.
      */
-    val biquaternion: Arb<Biquaternion> =
+    val biquaternion: Arb<RealBiquaternion> =
         Arb.bind(smallComplex, smallComplex, smallComplex, smallComplex) { w, x, y, z ->
             biquaternion(w, x, y, z)
         }
@@ -30,7 +30,7 @@ object ArbBiquaternion {
      * Units of `ℍ ⊗ ℂ`, safely away from the null cone: the complex norm `N(q)` has squared modulus
      * in `[0.01, 10⁸]`, so `q⁻¹` is numerically well-conditioned.
      */
-    val unitBiquaternion: Arb<Biquaternion> =
+    val unitBiquaternion: Arb<RealBiquaternion> =
         biquaternion.filter { q ->
             val n = BiquaternionAlgebras.BiquaternionRing.normSq(q)
             ComplexAlgebras.ComplexStarAlgebra.normSq(n) in 0.01..1e8

@@ -393,3 +393,50 @@ with the real octonions (`CD<CD<CD<Real>>>`). They no longer do, because a biqua
 coefficients are now `RealComplex` values rather than raw pairs. Nothing depended on the
 coincidence.
 
+---
+
+## Addendum 3: generic `Bicomplex<R>`, `Biquaternion<R>`, `Bioctonion<R>` (2026-10-09)
+
+**Result:** `./gradlew clean build`: **1851 tests, 0 failures.**
+
+The three complexified algebras are now generic over a commutative base ring, matching every other
+carrier in the package:
+
+```text
+Bicomplex(R)    = Complex(R)    ⊗_R Complex(R) ≅ Complex(Complex(R))        value class over CD<Complex<R>>
+Biquaternion(R) = Quaternion(R) ⊗_R Complex(R) ≅ Quaternion(Complex(R))     value class over CD<CD<Complex<R>>>
+Bioctonion(R)   = Octonion(R)   ⊗_R Complex(R) ≅ Octonion(Complex(R))       value class over CD<CD<CD<Complex<R>>>>
+```
+
+- `RealBicomplex`, `RealBiquaternion` and `RealBioctonion` are the typealiases for the classical
+  algebras. All existing structures (`BicomplexCommutativeRing`, `BiquaternionRing`,
+  `BioctonionAlgebra`, the star algebras, vector spaces and morphisms) are unchanged apart from
+  their type names.
+- Each `*Algebras` object gained a generic section: ring, basis, the central unit `h`, the
+  `Complex(R)`-valued norm, the three conjugations, both scalar actions, ring-with-reciprocal over a
+  field, module, star algebras, and the embeddings (from `Complex<R>`, `Quaternion<R>` or
+  `Octonion<R>`, the split form, and the level below).
+- `ComplexAlgebras.complexRingWithReciprocal(field)` is new: reciprocals in `Complex<F>` over any
+  field. The biquaternion and bioctonion reciprocals are built on it.
+- The tiers are now `biquaternionTier(base)` and `bioctonionTier(base)`: the quaternion and octonion
+  tiers with scalars `Complex(R)`.
+
+**New `GenericComplexifiedSpec` (22 tests).** Everything exactly over ℚ: ring laws, unit relations,
+the conjugations, multiplicativity of the norms, zero divisors, reciprocals, modules, star algebras
+and all nine embeddings; ring laws and the reciprocal contract over 𝔽₃; and agreement of the generic
+constructions over ℝ with the named real structures. The biquaternions and bioctonions are therefore
+no longer checked only approximately, which closes first-pass open question 3.
+
+**Source-incompatible changes**
+
+| Before | After |
+|--------|-------|
+| `Bicomplex`, `Biquaternion`, `Bioctonion` as bare types | `RealBicomplex`, `RealBiquaternion`, `RealBioctonion` (or `Bicomplex<Real>`, …) |
+| `z.alpha`, `z.beta`, `z.idempotent()`, `z.isUnit()`, `z.isInNullCone()`, `z.isZeroDivisor()` as members of `Bicomplex` | extension members on `RealBicomplex` (same call syntax; needs an import outside the package) |
+
+`Bicomplex.ofStandard`, `Bicomplex.ofIdempotent`, `Bicomplex.ZERO` and `Bicomplex.ONE` are unchanged.
+
+**Left real-only**, and listed in the README under what remains: the idempotent decomposition and
+null-cone predicates of the bicomplex numbers, the printable for complex coefficients, the matrix
+isomorphism `ℍ ⊗ ℂ ≅ M₂(ℂ)`, and the 168 embeddings into the bioctonions.
+

@@ -33,7 +33,7 @@ class BioctonionSpec : StringSpec({
 
     val one = ring.one
     val h = ring.h
-    fun neg(x: Bioctonion) = ring.add.inverse(x)
+    fun neg(x: RealBioctonion) = ring.add.inverse(x)
 
     "BioctonionAlgebra satisfies NonAssociativeInvolutiveRingLaws" {
         NonAssociativeInvolutiveRingLaws(ring, arb, eq, pr).fullTest().throwIfFailed()
