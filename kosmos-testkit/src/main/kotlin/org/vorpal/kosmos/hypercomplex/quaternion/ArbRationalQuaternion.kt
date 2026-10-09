@@ -21,18 +21,18 @@ object ArbRationalQuaternion {
             .map { (p, q) -> Rational.of(p, q) }
 
     /**
-     * Rational quaternions `ℍ_ℚ = CD⟨ℚ(i)⟩`, built from pairs of Gaussian rationals.
+     * Rational quaternions `ℍ_ℚ`, built from pairs of Gaussian rationals `(w + xi, y + zi)`.
      */
     val rationalQuaternion: Arb<RationalQuaternion> =
         Arb.pair(ArbGaussianRat.small, ArbGaussianRat.small)
-            .map { (a, b) -> CD(a, b) }
+            .map { (a, b) -> Quaternion(CD(a.cd, b.cd)) }
 
     /**
      * Rational quaternions with small coordinates; see [smallRational].
      */
     val smallRationalQuaternion: Arb<RationalQuaternion> =
         Arb.bind(smallRational, smallRational, smallRational, smallRational) { w, x, y, z ->
-            rationalQuaternion(w, x, y, z)
+            quaternion(w, x, y, z)
         }
 
     /**

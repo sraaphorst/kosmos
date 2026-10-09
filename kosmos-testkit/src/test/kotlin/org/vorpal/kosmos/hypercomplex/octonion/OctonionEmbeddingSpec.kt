@@ -1,15 +1,12 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
+import org.vorpal.kosmos.algebra.structures.CD
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.Sign
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.w
-import org.vorpal.kosmos.hypercomplex.quaternion.x
-import org.vorpal.kosmos.hypercomplex.quaternion.y
-import org.vorpal.kosmos.hypercomplex.quaternion.z
 
 /**
  * The signed-basis-unit embeddings `ℍ ↪ 𝕆` and the canonical Cayley-Dickson embedding.
@@ -27,8 +24,8 @@ class OctonionEmbeddingSpec : StringSpec({
     val eq = OctonionAlgebras.eqOctonionStrict
 
     "the Cayley-Dickson basis of 𝕆 = CD⟨ℍ⟩ doubles the quaternion basis" {
-        check(octonions.basis.take(4) == quaternions.basis.map { q -> Octonion(q, quaternions.zero) })
-        check(octonions.basis.drop(4) == quaternions.basis.map { q -> Octonion(quaternions.zero, q) })
+        check(octonions.basis.take(4) == quaternions.basis.map { q -> Octonion(CD(q.cd, quaternions.zero.cd)) })
+        check(octonions.basis.drop(4) == quaternions.basis.map { q -> Octonion(CD(quaternions.zero.cd, q.cd)) })
         check(listOf(octonions.e1, octonions.e2, octonions.e3, octonions.e4, octonions.e5, octonions.e6, octonions.e7) == octonions.basis.drop(1))
     }
 
@@ -61,7 +58,7 @@ class OctonionEmbeddingSpec : StringSpec({
         val all = OctonionAlgebras.allQuaternionEmbeddings()
 
         // The automorphism fixes 1 and i and negates j and k.
-        fun flip(q: Quaternion): Quaternion =
+        fun flip(q: RealQuaternion): RealQuaternion =
             quaternion(q.w, q.x, -q.y, -q.z)
 
         all.filterKeys { it.jSign == Sign.PLUS }.forEach { (spec, phi) ->

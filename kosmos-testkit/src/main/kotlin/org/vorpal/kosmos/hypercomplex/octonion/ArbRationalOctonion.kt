@@ -10,11 +10,11 @@ import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 object ArbRationalOctonion {
 
     /**
-     * Rational octonions `𝕆_ℚ = CD⟨ℍ_ℚ⟩`, built from pairs of rational quaternions.
+     * Rational octonions `𝕆_ℚ`, built from pairs of rational quaternions.
      */
     val rationalOctonion: Arb<RationalOctonion> =
         Arb.pair(ArbRationalQuaternion.rationalQuaternion, ArbRationalQuaternion.rationalQuaternion)
-            .map { (a, b) -> CD(a, b) }
+            .map { (a, b) -> Octonion(CD(a.cd, b.cd)) }
 
     /**
      * Rational octonions with small numerators and denominators, keeping exact arithmetic in the
@@ -22,7 +22,7 @@ object ArbRationalOctonion {
      */
     val smallRationalOctonion: Arb<RationalOctonion> =
         Arb.pair(ArbRationalQuaternion.smallRationalQuaternion, ArbRationalQuaternion.smallRationalQuaternion)
-            .map { (a, b) -> CD(a, b) }
+            .map { (a, b) -> Octonion(CD(a.cd, b.cd)) }
 
     val nonZeroRationalOctonion: Arb<RationalOctonion> =
         smallRationalOctonion.filter { o ->

@@ -94,8 +94,8 @@ class LipschitzQuaternionRingSpec : StringSpec({
 
     "the floating-point conversion Lip → ℍ is not injective beyond 2⁵³, which is why it is not a monomorphism" {
         val big = BigInteger.TWO.pow(53)
-        val q1 = lipschitzQuaternion(big, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
-        val q2 = lipschitzQuaternion(big + BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
+        val q1 = quaternion(big, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
+        val q2 = quaternion(big + BigInteger.ONE, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
         check(!eq(q1, q2))
         check(
             QuaternionAlgebras.eqQuaternionStrict(

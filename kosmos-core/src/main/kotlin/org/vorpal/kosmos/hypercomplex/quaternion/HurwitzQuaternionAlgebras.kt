@@ -236,7 +236,7 @@ object HurwitzQuaternionAlgebras {
      * Not a monomorphism: distinct large half-integers collide in `Double`, and products are preserved
      * only up to rounding.
      */
-    val hurwitzToQuaternionApprox: UnaryOp<HurwitzQuaternion, Quaternion> =
+    val hurwitzToQuaternionApprox: UnaryOp<HurwitzQuaternion, RealQuaternion> =
         UnaryOp(Symbols.APPROX) { h ->
             RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox(h.quaternion)
         }

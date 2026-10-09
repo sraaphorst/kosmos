@@ -101,7 +101,7 @@ class ReciprocalPolicySpec : StringSpec({
     "ℍ: hasReciprocal, reciprocal and reciprocalOption agree at the boundary" {
         checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { w, x, y, z ->
             checkContract(QuaternionAlgebras.QuaternionDivisionRing, quaternion(w, x, y, z), UnaryOp { q ->
-                allFinite(listOf(q.a.a, q.a.b, q.b.a, q.b.b))
+                allFinite(q.coefficients())
             })
         }
         QuaternionAlgebras.QuaternionDivisionRing.hasReciprocal(quaternion(1e-300, 0.0, 0.0, 0.0)) shouldBe false
@@ -111,7 +111,7 @@ class ReciprocalPolicySpec : StringSpec({
         checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { w, x, u, t ->
             val o = octonion(w, x, 0.0, 0.0, u, 0.0, 0.0, t)
             checkContract(OctonionAlgebras.OctonionDivisionAlgebra, o, UnaryOp { inv ->
-                allFinite(listOf(inv.a.a.a, inv.a.a.b, inv.a.b.a, inv.a.b.b, inv.b.a.a, inv.b.a.b, inv.b.b.a, inv.b.b.b))
+                allFinite(inv.coefficients())
             })
         }
         OctonionAlgebras.OctonionDivisionAlgebra.hasReciprocal(OctonionAlgebras.OctonionDivisionAlgebra.zero) shouldBe false

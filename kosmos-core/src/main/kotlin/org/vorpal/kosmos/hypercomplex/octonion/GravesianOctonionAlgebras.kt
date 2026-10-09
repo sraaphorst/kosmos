@@ -16,18 +16,16 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternionTier
-import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
 import java.math.BigInteger
 
 /**
- * The Gravesian octonions `CD⟨ℤ⟨i, j, k⟩⟩`: the octonion tier over the Lipschitz quaternions.
+ * The Gravesian octonions `Octonion<BigInteger>`: the octonion tier over the Lipschitz quaternions.
  *
  * File-level so that initializing [GravesianOctonionAlgebras.GravesianOctonionRing] never recursively
  * initializes [GravesianOctonionAlgebras].
  */
-internal val gravesianOctonionTier: OctonionTier<BigInteger, GaussianInt> =
-    OctonionTier(lipschitzQuaternionTier)
+internal val gravesianOctonionTier: OctonionTier<BigInteger, LipschitzQuaternion, GravesianOctonion> =
+    octonionTier(IntegerAlgebras.IntegerCommutativeRing)
 
 /**
  * [GravesianOctonionAlgebras] contains the algebraic structures over the [GravesianOctonion] type, as well as the
@@ -115,7 +113,7 @@ object GravesianOctonionAlgebras {
      * Not a monomorphism: integers beyond `2⁵³` collide in `Double`, and products are preserved only
      * up to rounding.
      */
-    val gravesianToOctonionApprox: UnaryOp<GravesianOctonion, Octonion> =
+    val gravesianToOctonionApprox: UnaryOp<GravesianOctonion, RealOctonion> =
         UnaryOp(Symbols.APPROX) { o ->
             realOctonionTier.fromCoordinates(gravesianOctonionTier.coordinates(o).map(BigInteger::toReal))
         }

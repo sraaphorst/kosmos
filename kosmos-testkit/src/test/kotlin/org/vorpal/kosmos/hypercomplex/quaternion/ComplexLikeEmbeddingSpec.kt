@@ -22,7 +22,6 @@ import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
-import java.math.BigInteger
 
 /**
  * The ×6 families of embeddings of a complex-like ring into a quaternion-like ring, one per
@@ -78,7 +77,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToLipschitzQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-            imaginaryUnit = GaussianInt(BigInteger.ZERO, BigInteger.ONE),
+            imaginaryUnit = GaussianInt.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -88,7 +87,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToHurwitzQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing,
-            imaginaryUnit = GaussianInt(BigInteger.ZERO, BigInteger.ONE),
+            imaginaryUnit = GaussianInt.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -98,7 +97,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToRationalQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-            imaginaryUnit = GaussianInt(BigInteger.ZERO, BigInteger.ONE),
+            imaginaryUnit = GaussianInt.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -129,13 +128,13 @@ class ComplexLikeEmbeddingSpec : StringSpec({
         AxisSignEmbedding.canonical shouldBe AxisSignEmbedding(ImagAxis.I, Sign.PLUS)
 
         checkAll(ArbGaussianInt.small) { z ->
-            GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()(z) shouldBe CD(z, GaussianInt.ZERO)
+            GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianInt.ZERO.cd))
         }
         checkAll(ArbGaussianRat.small) { z ->
-            GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()(z) shouldBe CD(z, GaussianRat.ZERO)
+            GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianRat.ZERO.cd))
         }
         checkAll(ArbComplex.boundedComplex) { z ->
-            ComplexAlgebras.complexToQuaternionEmbedding()(z) shouldBe CD(z, ComplexAlgebras.ComplexField.zero)
+            ComplexAlgebras.complexToQuaternionEmbedding()(z) shouldBe Quaternion(CD(z, ComplexAlgebras.ComplexField.zero))
         }
     }
 

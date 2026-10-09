@@ -12,10 +12,12 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras.asQuaternion
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras.powInt
 import org.vorpal.kosmos.hypercomplex.complex.complex
+import org.vorpal.kosmos.hypercomplex.octonion.Octonion
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras.asOctonion
 import org.vorpal.kosmos.hypercomplex.quaternion.ArbQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.AxisSignEmbedding
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
@@ -52,16 +54,16 @@ class TowerConveniencesSpec : StringSpec({
 
     "Complex.asQuaternion is the chosen embedding, canonical by default" {
         checkAll(ArbComplex.boundedComplex) { c ->
-            c.asQuaternion() shouldBe CD(c, complexField.zero)
+            c.asQuaternion() shouldBe Quaternion(CD(c, complexField.zero))
             AxisSignEmbedding.all.forEach { emb ->
                 c.asQuaternion(emb) shouldBe ComplexAlgebras.complexToQuaternionEmbedding(emb)(c)
             }
         }
     }
 
-    "Quaternion.asOctonion is the canonical Cayley-Dickson embedding q ↦ (q, 0)" {
+    "RealQuaternion.asOctonion is the canonical Cayley-Dickson embedding q ↦ (q, 0)" {
         checkAll(ArbQuaternion.quaternion) { q ->
-            q.asOctonion() shouldBe CD(q, QuaternionAlgebras.QuaternionDivisionRing.zero)
+            q.asOctonion() shouldBe Octonion(CD(q.cd, QuaternionAlgebras.QuaternionDivisionRing.zero.cd))
             q.asOctonion() shouldBe OctonionAlgebras.QuaternionToOctonionMonomorphism(q)
         }
     }

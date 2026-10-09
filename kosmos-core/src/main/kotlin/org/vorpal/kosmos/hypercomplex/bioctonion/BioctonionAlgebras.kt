@@ -3,7 +3,6 @@ package org.vorpal.kosmos.hypercomplex.bioctonion
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.HasReciprocal
@@ -12,7 +11,6 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.contramap
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -25,11 +23,10 @@ import org.vorpal.kosmos.hypercomplex.biquaternion.complexCoefficientPrintable
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
-import org.vorpal.kosmos.hypercomplex.octonion.Octonion
+import org.vorpal.kosmos.hypercomplex.octonion.RealOctonion
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionEmbeddingKit
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionTier
-import org.vorpal.kosmos.hypercomplex.octonion.realOctonionTier
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonion
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
 
@@ -39,23 +36,21 @@ import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
  * File-level so that initializing [BioctonionAlgebras.BioctonionAlgebra] never recursively
  * initializes [BioctonionAlgebras].
  */
-internal val bioctonionTier: OctonionTier<Complex, CD<Complex>> =
-    OctonionTier(biquaternionTier)
-
-private val bioctonionTransport: CarrierTransport<CD<CD<CD<Complex>>>, Bioctonion> =
-    CarrierTransport(
-        wrap = UnaryOp { cd -> Bioctonion(cd) },
-        unwrap = UnaryOp { o -> o.cd }
+internal val bioctonionTier: OctonionTier<Complex, Biquaternion, Bioctonion> =
+    OctonionTier(
+        quaternions = biquaternionTier,
+        wrap = { cd -> Bioctonion(cd) },
+        unwrap = { o -> o.cd }
     )
 
 private val cayleyDicksonBioctonion: NonAssociativeInvolutiveRing<Bioctonion> =
-    bioctonionTransport.nonAssociativeInvolutiveRing(bioctonionTier.ring)
+    bioctonionTier.ring
 
 /**
  * The coefficientwise complex scalar action.
  */
 private val complexScaling: LeftAction<Complex, Bioctonion> =
-    LeftAction(Symbols.TRIANGLE_RIGHT) { c, o -> Bioctonion(bioctonionTier.scalarAction(c, o.cd)) }
+    bioctonionTier.scalarAction
 
 /**
  * Algebraic structures, morphisms and utilities over the [Bioctonion]s `𝕆 ⊗_ℝ ℂ`.
@@ -106,10 +101,10 @@ object BioctonionAlgebras {
          * The standard ℂ-basis `1, e₁, …, e₇`.
          */
         val basis: List<Bioctonion> =
-            bioctonionTier.basis.map { cd -> Bioctonion(cd) }
+            bioctonionTier.basis
 
         val basisMap: Map<Int, Bioctonion> =
-            basis.withIndex().associate { (idx, e) -> idx to e }
+            bioctonionTier.basisMap
 
         /** The central imaginary scalar `h` (the `i` of the coefficient field ℂ), with `h² = -1`. */
         val h: Bioctonion =
@@ -142,7 +137,7 @@ object BioctonionAlgebras {
          * octonion (composition) algebra over ℂ.
          */
         override val normSq: UnaryOp<Bioctonion, Complex> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL) { o -> bioctonionTier.normSq(o.cd) }
+            bioctonionTier.normSq
 
         /**
          * `o` is invertible iff `N(o)` is invertible in ℂ. Following the floating-point policy of
@@ -212,18 +207,18 @@ object BioctonionAlgebras {
         NonAssociativeRingMonomorphism.of(
             domain = ComplexAlgebras.ComplexField,
             codomain = BioctonionAlgebra,
-            map = UnaryOp { c -> bioctonion(listOf(c) + List(7) { ComplexAlgebras.ComplexField.zero }) }
+            map = bioctonionTier.scalarEmbeddingMap
         )
 
     /**
      * The embedding `𝕆 ↪ 𝕆 ⊗ ℂ` of the real octonions as the bioctonions with real coefficients:
      * the fixed ring of [BioctonionAlgebra.complexConj].
      */
-    val OctonionToBioctonionMonomorphism: NonAssociativeRingMonomorphism<Octonion, Bioctonion> =
+    val OctonionToBioctonionMonomorphism: NonAssociativeRingMonomorphism<RealOctonion, Bioctonion> =
         NonAssociativeRingMonomorphism.of(
             domain = OctonionAlgebras.OctonionDivisionAlgebra,
             codomain = BioctonionAlgebra,
-            map = UnaryOp { o -> bioctonion(realOctonionTier.coordinates(o).map { r -> complex(r, 0.0) }) }
+            map = UnaryOp { o -> bioctonion(o.coefficients().map { r -> complex(r, 0.0) }) }
         )
 
     /**
@@ -251,27 +246,20 @@ object BioctonionAlgebras {
         NonAssociativeRingMonomorphism.of(
             domain = BiquaternionAlgebras.BiquaternionRing,
             codomain = BioctonionAlgebra,
-            map = UnaryOp { q -> Bioctonion(CD(q.cd, biquaternionTier.ring.zero)) }
+            map = bioctonionTier.canonicalEmbeddingMap
         )
 
     val eqBioctonionStrict: Eq<Bioctonion> =
-        CD.eq(CD.eq(CD.eq(ComplexAlgebras.eqComplexStrict))).contramap(Bioctonion::cd)
+        bioctonionTier.eq(ComplexAlgebras.eqComplexStrict)
 
     val eqBioctonion: Eq<Bioctonion> =
-        CD.eq(CD.eq(CD.eq(ComplexAlgebras.eqComplex))).contramap(Bioctonion::cd)
+        bioctonionTier.eq(ComplexAlgebras.eqComplex)
 
     /**
      * The machinery for the signed-basis-unit embeddings `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ`; see [OctonionEmbeddingKit].
      */
     val embeddingKit: OctonionEmbeddingKit.OctonionEmbeddingKit<Complex, Biquaternion, Bioctonion> =
-        OctonionEmbeddingKit.OctonionEmbeddingKit(
-            quaternionRing = BiquaternionAlgebras.BiquaternionRing,
-            octonionRing = BioctonionAlgebra,
-            basisMap = BioctonionAlgebra.basisMap,
-            leftAction = complexScaling,
-            eq = eqBioctonionStrict,
-            decompose = UnaryOp { q -> q.coefficients() }
-        )
+        bioctonionTier.embeddingKit(eqBioctonionStrict)
 
     /**
      * The 168 signed-basis-unit embeddings `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ`: the ℂ-linear extensions of the 168

@@ -5,7 +5,6 @@ import org.vorpal.kosmos.algebra.morphisms.RingIsomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
@@ -25,7 +24,6 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.contramap
 import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
@@ -39,8 +37,13 @@ import org.vorpal.kosmos.linear.values.DenseMat
  */
 internal fun <R : Any> splitQuaternionTier(
     base: CommutativeRing<R>
-): QuaternionTier<R, CD<R>> =
-    QuaternionTier.over(base, split = true)
+): QuaternionTier<R, SplitQuaternion<R>> =
+    QuaternionTier(
+        scalars = base,
+        wrap = { cd -> SplitQuaternion(cd) },
+        unwrap = { q -> q.cd },
+        split = true
+    )
 
 /**
  * Algebraic structures and utilities for the split-quaternions (coquaternions).
@@ -73,12 +76,6 @@ internal fun <R : Any> splitQuaternionTier(
  */
 object SplitQuaternionAlgebras {
 
-    private fun <R : Any> transport(): CarrierTransport<CD<CD<R>>, SplitQuaternion<R>> =
-        CarrierTransport(
-            wrap = UnaryOp { cd -> SplitQuaternion(cd) },
-            unwrap = UnaryOp { q -> q.cd }
-        )
-
     /**
      * The split-quaternion ring over a commutative base ring: associative, noncommutative, with
      * ```text
@@ -93,7 +90,7 @@ object SplitQuaternionAlgebras {
     fun <R : Any> splitQuaternionRing(
         base: CommutativeRing<R>
     ): InvolutiveRing<SplitQuaternion<R>> =
-        transport<R>().involutiveRing(splitQuaternionTier(base).ring)
+        splitQuaternionTier(base).ring
 
     /**
      * The standard basis `1, i, j, k` over [base].
@@ -101,7 +98,7 @@ object SplitQuaternionAlgebras {
     fun <R : Any> basis(
         base: CommutativeRing<R>
     ): List<SplitQuaternion<R>> =
-        splitQuaternionTier(base).basis.map { cd -> SplitQuaternion(cd) }
+        splitQuaternionTier(base).basis
 
     private val realBasis: List<SplitQuaternion<Real>> =
         basis(RealAlgebras.RealField)
@@ -126,20 +123,16 @@ object SplitQuaternionAlgebras {
      */
     fun <R : Any> normSq(
         base: CommutativeRing<R>
-    ): UnaryOp<SplitQuaternion<R>, R> {
-        val tierNormSq = splitQuaternionTier(base).normSq
-        return UnaryOp(Symbols.NORM_SQ_SYMBOL) { q -> tierNormSq(q.cd) }
-    }
+    ): UnaryOp<SplitQuaternion<R>, R> =
+        splitQuaternionTier(base).normSq
 
     /**
      * The coordinatewise scalar action `r ⊳ (w + xi + yj + zk) = rw + rx·i + ry·j + rz·k`.
      */
     fun <R : Any> splitQuaternionLeftAction(
         base: CommutativeRing<R>
-    ): LeftAction<R, SplitQuaternion<R>> {
-        val tierAction = splitQuaternionTier(base).scalarAction
-        return LeftAction(Symbols.TRIANGLE_RIGHT) { r, q -> SplitQuaternion(tierAction(r, q.cd)) }
-    }
+    ): LeftAction<R, SplitQuaternion<R>> =
+        splitQuaternionTier(base).scalarAction
 
     /**
      * Split-quaternions over a field, with reciprocals on the units.
@@ -288,12 +281,14 @@ object SplitQuaternionAlgebras {
      */
     fun <R : Any> scalarEmbedding(
         base: CommutativeRing<R>
-    ): RingMonomorphism<R, SplitQuaternion<R>> =
-        RingMonomorphism.of(
+    ): RingMonomorphism<R, SplitQuaternion<R>> {
+        val tier = splitQuaternionTier(base)
+        return RingMonomorphism.of(
             domain = base,
-            codomain = splitQuaternionRing(base),
-            map = UnaryOp { r -> splitQuaternion(r, base.zero, base.zero, base.zero) }
+            codomain = tier.ring,
+            map = tier.scalarEmbeddingMap
         )
+    }
 
     /**
      * The Cayley-Dickson embedding `ℂ ↪ ℍ'`, `a + bi ↦ a + bi`: the first-slot injection of the
@@ -416,7 +411,7 @@ object SplitQuaternionAlgebras {
      * Eqs
      */
     fun <R : Any> eqSplitQuaternion(eqR: Eq<R>): Eq<SplitQuaternion<R>> =
-        CD.eq(CD.eq(eqR)).contramap(SplitQuaternion<R>::cd)
+        CD.eq(CD.eq(eqR)).contramap { q: SplitQuaternion<R> -> q.cd }
 
     /**
      * Strict equality on real split-quaternions.
@@ -439,7 +434,7 @@ object SplitQuaternionAlgebras {
         prR: Printable<R>,
         eqR: Eq<R>
     ): Printable<SplitQuaternion<R>> =
-        splitQuaternionTier(base).printable(signed, prR, eqR).contramap(SplitQuaternion<R>::cd)
+        splitQuaternionTier(base).printable(signed, prR, eqR)
 
     private fun printableSplitQuaternionRealGenerator(
         prReal: Printable<Real>,

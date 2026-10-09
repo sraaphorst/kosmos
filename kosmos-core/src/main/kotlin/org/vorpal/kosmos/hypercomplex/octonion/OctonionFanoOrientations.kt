@@ -12,10 +12,10 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 object OctonionFanoOrientations {
     private val ring = OctonionAlgebras.OctonionDivisionAlgebra
 
-    private val basis: Map<Int, Octonion> =
+    private val basis: Map<Int, RealOctonion> =
         (1..7).associateWith { ring.basisMap.getValue(it) }
 
-    private fun neg(o: Octonion): Octonion =
+    private fun neg(o: RealOctonion): RealOctonion =
         ring.add.inverse(o)
 
     /**

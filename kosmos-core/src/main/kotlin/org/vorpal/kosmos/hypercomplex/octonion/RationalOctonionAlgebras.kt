@@ -2,7 +2,6 @@ package org.vorpal.kosmos.hypercomplex.octonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
@@ -18,17 +17,15 @@ import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternionTier
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
 
 /**
- * `𝕆_ℚ = CD⟨ℍ_ℚ⟩`: the rational octonion tier.
+ * `𝕆_ℚ = Octonion<Rational>`: the rational octonion tier.
  *
  * File-level so that initializing [RationalOctonionAlgebras.RationalOctonionDivisionAlgebra] never
  * recursively initializes [RationalOctonionAlgebras].
  */
-internal val rationalOctonionTier: OctonionTier<Rational, GaussianRat> =
-    OctonionTier(rationalQuaternionTier)
+internal val rationalOctonionTier: OctonionTier<Rational, RationalQuaternion, RationalOctonion> =
+    octonionTier(RationalAlgebras.RationalField)
 
 /**
  * [RationalOctonionAlgebras] contains the algebraic structures over the [RationalOctonion] type, as well as the
@@ -91,10 +88,14 @@ object RationalOctonionAlgebras {
         leftAction = rationalOctonionTier.scalarAction
     )
 
+    /**
+     * The canonical Cayley-Dickson embedding `ℍ_ℚ ↪ 𝕆_ℚ`, `q ↦ (q, 0)`.
+     */
     val RationalQuaternionToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalQuaternion, RationalOctonion> =
-        CayleyDickson.canonicalEmbedding(
-            base = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-            doubled = RationalOctonionDivisionAlgebra
+        NonAssociativeRingMonomorphism.of(
+            domain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
+            codomain = RationalOctonionDivisionAlgebra,
+            map = rationalOctonionTier.canonicalEmbeddingMap
         )
 
     val HurwitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<HurwitzQuaternion, RationalOctonion> =
@@ -106,7 +107,7 @@ object RationalOctonionAlgebras {
      * Not a monomorphism: distinct rationals can round to the same `Double`, and products are preserved
      * only up to rounding.
      */
-    val rationalOctonionToOctonionApprox: UnaryOp<RationalOctonion, Octonion> =
+    val rationalOctonionToOctonionApprox: UnaryOp<RationalOctonion, RealOctonion> =
         UnaryOp(Symbols.APPROX) { o ->
             realOctonionTier.fromCoordinates(rationalOctonionTier.coordinates(o).map(Rational::toReal))
         }

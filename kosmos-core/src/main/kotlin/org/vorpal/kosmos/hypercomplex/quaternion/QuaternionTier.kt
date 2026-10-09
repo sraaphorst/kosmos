@@ -1,120 +1,156 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.algebra.structures.CD
+import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.BinaryOp
+import org.vorpal.kosmos.core.contramap
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
 
 /**
- * The quaternion construction `CD⟨C⟩`, parameterized by its coefficient ring.
+ * The quaternion-level construction over a commutative ring of scalars `S`, delivered on a public
+ * carrier `Q`.
  *
- * ℍ, ℍ_ℚ and the Lipschitz quaternions are one construction over three complex-like rings:
+ * Every quaternion-level algebra in Kosmos is two Cayley-Dickson doublings of its scalars:
  * ```text
- * ℍ   = CD⟨ℂ⟩       coefficients S = Real,       C = Complex
- * ℍ_ℚ = CD⟨ℚ(i)⟩    coefficients S = Rational,   C = GaussianRat
- * Lip = CD⟨ℤ[i]⟩    coefficients S = BigInteger, C = GaussianInt
+ * S   ──commutative, σ = 1──▶   S[i] = CD⟨S⟩   ──associative, σ = ±1──▶   CD⟨CD⟨S⟩⟩
  * ```
- * and the same construction, over other bases or with the split sign, gives the rest of the
- * quaternion-level algebras (see [over]):
+ * and differs from the others only in the scalars, the sign of the second doubling, and the Kotlin
+ * type that names the result:
  * ```text
- * split-quaternions over R = CD_split⟨R[i]⟩    coefficients S = R,       C = CD<R>
- * biquaternions ℍ ⊗ ℂ      = CD⟨ℂ[i]⟩          coefficients S = Complex, C = CD<Complex>
+ * Quaternion<R>        usual   over R        ℍ (R = ℝ), ℍ_ℚ (R = ℚ), Lipschitz (R = ℤ)
+ * SplitQuaternion<R>   split   over R
+ * Biquaternion         usual   over ℂ
  * ```
- * A [QuaternionTier] holds everything that depends only on that choice: the associative
- * Cayley-Dickson ring, the basis `1, i, j, k`, coordinates `[w, x, y, z]`, the coordinatewise scalar
- * action, the reduced norm, the six embeddings of the complex-like base, and the printable.
+ * A [QuaternionTier] holds everything that depends only on those choices: the associative ring,
+ * the basis `1, i, j, k`, coordinates `[w, x, y, z]`, the coordinatewise scalar action, the reduced
+ * norm, the embeddings of the complex-like level, an [Eq] and a printable. All of it is expressed on
+ * the public carrier `Q`, so the `*Algebras` objects never handle a raw [CD].
  *
- * The public `*Algebras` objects then add only what genuinely differs per tier: a reciprocal
- * (everywhere for ℍ and ℍ_ℚ, on the units only for Lipschitz), a vector space or `ℤ`-module, and
- * conversions between tiers.
+ * The public `*Algebras` objects then add only what genuinely differs: a reciprocal, a vector space
+ * or `ℤ`-module, extra conjugations, and conversions.
  *
- * @param complexRing the complex-like base `C`: a commutative ring with its complex conjugation.
  * @param scalars the coefficient ring `S`.
- * @param re the real part `C → S`.
- * @param im the imaginary part `C → S`.
- * @param mkComplex builds `re + im·i` in `C`.
+ * @param wrap names a raw Cayley-Dickson pair as a `Q`. Must be inverse to [unwrap].
+ * @param unwrap the raw Cayley-Dickson pair of a `Q`.
  * @param split `false` for the usual doubling (`j² = k² = -1`), `true` for the split doubling
  *   (`j² = k² = +1`).
  */
-internal class QuaternionTier<S : Any, C : Any>(
-    val complexRing: InvolutiveRing<C>,
+internal class QuaternionTier<S : Any, Q : Any>(
     val scalars: CommutativeRing<S>,
-    val re: UnaryOp<C, S>,
-    val im: UnaryOp<C, S>,
-    val mkComplex: BinaryOp<S, S, C>,
+    val wrap: (CD<CD<S>>) -> Q,
+    val unwrap: (Q) -> CD<CD<S>>,
     val split: Boolean = false
 ) {
     /**
-     * The associative Cayley-Dickson double `CD⟨C⟩`: usual (`σ = 1`) or split (`σ = -1`).
+     * The complex-like level `S[i]/(i² + 1)`: the commutative doubling of the scalars, with its
+     * conjugation `a + bi ↦ a - bi`.
      */
-    val ring: InvolutiveRing<CD<C>> =
+    val complexRing: CommutativeInvolutiveRing<CD<S>> =
+        CayleyDickson.commutative(scalars, scalars.one)
+
+    /**
+     * The associative Cayley-Dickson double on the raw carrier: usual (`σ = 1`) or split (`σ = -1`).
+     * The octonion tier doubles this once more.
+     */
+    val rawRing: InvolutiveRing<CD<CD<S>>> =
         if (split) CayleyDickson.associativeSplit(complexRing)
         else CayleyDickson.associative(complexRing)
 
     /**
+     * The ring on the public carrier.
+     */
+    val ring: InvolutiveRing<Q> =
+        CarrierTransport<CD<CD<S>>, Q>(
+            wrap = UnaryOp { cd -> wrap(cd) },
+            unwrap = UnaryOp { q -> unwrap(q) }
+        ).involutiveRing(rawRing)
+
+    /**
      * The coordinates `[w, x, y, z]` of `w + xi + yj + zk = (w + xi, y + zi)`.
      */
-    val coordinates: UnaryOp<CD<C>, List<S>> =
-        UnaryOp { q -> listOf(re(q.a), im(q.a), re(q.b), im(q.b)) }
+    val coordinates: UnaryOp<Q, List<S>> =
+        UnaryOp { q ->
+            val cd = unwrap(q)
+            listOf(cd.a.a, cd.a.b, cd.b.a, cd.b.b)
+        }
 
     /**
      * The quaternion `w + xi + yj + zk` from its coordinates `[w, x, y, z]`.
      */
-    val fromCoordinates: UnaryOp<List<S>, CD<C>> =
+    val fromCoordinates: UnaryOp<List<S>, Q> =
         UnaryOp { cs ->
             require(cs.size == 4) { "A quaternion has 4 coordinates: got ${cs.size}." }
-            CD(mkComplex(cs[0], cs[1]), mkComplex(cs[2], cs[3]))
+            wrap(CD(CD(cs[0], cs[1]), CD(cs[2], cs[3])))
         }
 
     /**
-     * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `C`.
+     * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `S[i]`.
      */
-    val basis: List<CD<C>> =
+    val basis: List<Q> =
         CayleyDickson.doubledBasis(
             zero = complexRing.zero,
-            baseBasis = listOf(complexRing.one, mkComplex(scalars.zero, scalars.one))
-        )
+            baseBasis = CayleyDickson.doubledBasis(scalars.zero, listOf(scalars.one))
+        ).map(wrap)
 
     /**
      * The coordinatewise scalar action `s ⊳ (w + xi + yj + zk) = sw + sx·i + sy·j + sz·k`.
      *
      * The scalars are central, so this is also left (and right) multiplication by the embedded scalar.
      */
-    val scalarAction: LeftAction<S, CD<C>> =
+    val scalarAction: LeftAction<S, Q> =
         LeftAction(Symbols.TRIANGLE_RIGHT) { s, q ->
             fromCoordinates(coordinates(q).map { c -> scalars.mul(s, c) })
         }
 
     /**
-     * The reduced norm `N(q) = q·conj(q)`, read off the real coordinate of the Cayley-Dickson
+     * The reduced norm `N(q) = q·conj(q)`, read off the scalar coordinate of the Cayley-Dickson
      * product: `w² + x² + y² + z²` for the usual doubling and `w² + x² - y² - z²` for the split one.
      */
-    val normSq: UnaryOp<CD<C>, S> =
-        UnaryOp(Symbols.NORM_SQ_SYMBOL) { q -> re(ring.mul(q, ring.conj(q)).a) }
+    val normSq: UnaryOp<Q, S> =
+        UnaryOp(Symbols.NORM_SQ_SYMBOL) { q ->
+            val cd = unwrap(q)
+            rawRing.mul(cd, rawRing.conj(cd)).a.a
+        }
 
     /**
-     * The map `C → CD⟨C⟩` sending the imaginary unit of `C` to the chosen signed axis `±i`, `±j`, or `±k`.
+     * The embedding of the scalars, `s ↦ s + 0i + 0j + 0k`.
+     */
+    val scalarEmbeddingMap: UnaryOp<S, Q> =
+        UnaryOp { s -> fromCoordinates(listOf(s, scalars.zero, scalars.zero, scalars.zero)) }
+
+    /**
+     * The map `S[i] → Q` sending the imaginary unit to the chosen signed axis `±i`, `±j`, or `±k`.
+     *
+     * A ring homomorphism only when the chosen axis squares to `-1`: always for the usual doubling,
+     * and for the `i` axis alone in the split one.
      */
     fun complexEmbeddingMap(
         emb: AxisSignEmbeddings.AxisSignEmbedding
-    ): UnaryOp<C, CD<C>> =
+    ): UnaryOp<CD<S>, Q> =
         UnaryOp { c ->
             QuaternionEmbeddingKit.embedComplexLike(
                 axisSign = emb,
-                re = re(c),
-                im = im(c),
+                re = c.a,
+                im = c.b,
                 zero = scalars.zero,
                 negate = scalars.add.inverse,
                 mkQuaternion = fromCoordinates
             )
         }
+
+    /**
+     * Coordinatewise equality on the public carrier.
+     */
+    fun eq(eqS: Eq<S>): Eq<Q> =
+        CD.eq(CD.eq(eqS)).contramap { q: Q -> unwrap(q) }
 
     /**
      * The printable `w + xi + yj + zk`, dropping zero terms.
@@ -123,7 +159,7 @@ internal class QuaternionTier<S : Any, C : Any>(
         signed: SignedOps<S>,
         prS: Printable<S>,
         eqS: Eq<S>
-    ): Printable<CD<C>> =
+    ): Printable<Q> =
         QuaternionPrintable.quaternionPrintable(
             signed = signed,
             zero = scalars.zero,
@@ -132,28 +168,4 @@ internal class QuaternionTier<S : Any, C : Any>(
             eqA = eqS,
             decompose = coordinates
         )
-
-    companion object {
-        /**
-         * The quaternion tier over an arbitrary commutative ring `R`, with complex-like base
-         * `R[i]/(i² + 1) = CD⟨R⟩` (trivial involution on `R`, see [CayleyDickson.commutative]):
-         * - `split = false`: the Hamilton quaternion algebra `(-1, -1)_R`;
-         * - `split = true`: the split-quaternion algebra `(-1, +1)_R ≅ M₂(R)` (when 2 is invertible).
-         *
-         * Over `R = ℝ` the carrier is `CD<CD<Real>> = CD<Complex>`, the same carrier as ℍ; over
-         * `R = ℂ` this is the biquaternion algebra `ℍ ⊗ ℂ`.
-         */
-        fun <R : Any> over(
-            base: CommutativeRing<R>,
-            split: Boolean = false
-        ): QuaternionTier<R, CD<R>> =
-            QuaternionTier(
-                complexRing = CayleyDickson.commutative(base, base.one),
-                scalars = base,
-                re = UnaryOp { c -> c.a },
-                im = UnaryOp { c -> c.b },
-                mkComplex = BinaryOp { a, b -> CD(a, b) },
-                split = split
-            )
-    }
 }

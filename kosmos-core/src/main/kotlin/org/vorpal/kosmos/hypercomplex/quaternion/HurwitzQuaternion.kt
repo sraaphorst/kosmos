@@ -57,7 +57,7 @@ value class HurwitzQuaternion private constructor(
             c: Rational,
             d: Rational
         ): HurwitzQuaternion =
-            invoke(rationalQuaternion(a, b, c, d))
+            invoke(quaternion(a, b, c, d))
 
         /**
          * Trusted wrapping for values already known to lie in `𝓗`, e.g. results of the ring
@@ -82,21 +82,21 @@ value class HurwitzQuaternion private constructor(
         }
 
         fun isHurwitz(a: Rational, b: Rational, c: Rational, d: Rational): Boolean =
-            isHurwitz(rationalQuaternion(a, b, c, d))
+            isHurwitz(quaternion(a, b, c, d))
 
         private val HALF: Rational = Rational.of(1, 2)
 
-        val ZERO: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ZERO))
-        val ONE: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ONE, Rational.ZERO, Rational.ZERO, Rational.ZERO))
-        val I: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ONE, Rational.ZERO, Rational.ZERO))
-        val J: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ONE, Rational.ZERO))
-        val K: HurwitzQuaternion = wrap(rationalQuaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ONE))
+        val ZERO: HurwitzQuaternion = wrap(quaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ZERO))
+        val ONE: HurwitzQuaternion = wrap(quaternion(Rational.ONE, Rational.ZERO, Rational.ZERO, Rational.ZERO))
+        val I: HurwitzQuaternion = wrap(quaternion(Rational.ZERO, Rational.ONE, Rational.ZERO, Rational.ZERO))
+        val J: HurwitzQuaternion = wrap(quaternion(Rational.ZERO, Rational.ZERO, Rational.ONE, Rational.ZERO))
+        val K: HurwitzQuaternion = wrap(quaternion(Rational.ZERO, Rational.ZERO, Rational.ZERO, Rational.ONE))
 
         /**
          * The Hurwitz unit `ω = (1 + i + j + k)/2`, which together with `1, i, j` generates `𝓗`
          * as a `ℤ`-module.
          */
-        val OMEGA: HurwitzQuaternion = wrap(rationalQuaternion(HALF, HALF, HALF, HALF))
+        val OMEGA: HurwitzQuaternion = wrap(quaternion(HALF, HALF, HALF, HALF))
     }
 }
 

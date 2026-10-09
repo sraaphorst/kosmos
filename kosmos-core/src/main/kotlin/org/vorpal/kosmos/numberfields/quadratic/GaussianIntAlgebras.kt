@@ -3,6 +3,10 @@ package org.vorpal.kosmos.numberfields.quadratic
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CD
+import org.vorpal.kosmos.algebra.structures.CarrierTransport
+import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.EuclidMeasure
 import org.vorpal.kosmos.algebra.structures.EuclideanDomain
@@ -29,10 +33,25 @@ import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+
+/**
+ * `ℤ[i] = ℤ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℤ (trivial involution) at `σ = 1`,
+ * transported to the [GaussianInt] carrier. Its involution is complex conjugation.
+ *
+ * File-level so that initializing [GaussianIntAlgebras.GaussianIntEuclideanDomain] never recursively
+ * initializes [GaussianIntAlgebras].
+ */
+private val cayleyDicksonGaussianInt: CommutativeInvolutiveRing<GaussianInt> =
+    CarrierTransport<CD<BigInteger>, GaussianInt>(
+        wrap = UnaryOp { cd -> GaussianInt(cd) },
+        unwrap = UnaryOp { z -> z.cd }
+    ).commutativeInvolutiveRing(
+        CayleyDickson.commutative(IntegerAlgebras.IntegerCommutativeRing, BigInteger.ONE)
+    )
 
 /**
  * Main structures:
@@ -85,22 +104,11 @@ object GaussianIntAlgebras {
         override val zero: GaussianInt = GaussianInt.ZERO
         override val one: GaussianInt = GaussianInt.ONE
 
-        override val add: AbelianGroup<GaussianInt> = AbelianGroup.of(
-            identity = zero,
-            op = BinOp(Symbols.PLUS) { gz1, gz2 -> GaussianInt(gz1.re + gz2.re, gz1.im + gz2.im) },
-            inverse = Endo(Symbols.MINUS) { gz -> GaussianInt(-gz.re, -gz.im) }
-        )
+        override val add: AbelianGroup<GaussianInt> = cayleyDicksonGaussianInt.add
 
-        override val mul: CommutativeMonoid<GaussianInt> = CommutativeMonoid.of(
-            identity = one,
-            op = BinOp(Symbols.ASTERISK) { gz1, gz2 ->
-                GaussianInt(gz1.re * gz2.re - gz1.im * gz2.im, gz1.re * gz2.im + gz1.im * gz2.re)
-            }
-        )
+        override val mul: CommutativeMonoid<GaussianInt> = cayleyDicksonGaussianInt.mul
 
-        override val conj: Endo<GaussianInt> = Endo(Symbols.CONJ) { a ->
-            GaussianInt(a.re, -a.im)
-        }
+        override val conj: Endo<GaussianInt> = cayleyDicksonGaussianInt.conj
 
         override val normSq: UnaryOp<GaussianInt, BigInteger> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a ->
@@ -238,7 +246,7 @@ object GaussianIntAlgebras {
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
         domain = GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-        map = lipschitzQuaternionTier.complexEmbeddingMap(embedding)
+        map = UnaryOp { z -> lipschitzQuaternionTier.complexEmbeddingMap(embedding)(z.cd) }
     )
 
     /**
@@ -284,7 +292,7 @@ object GaussianIntAlgebras {
      */
     fun gaussianIntToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): UnaryOp<GaussianInt, Quaternion> =
+    ): UnaryOp<GaussianInt, RealQuaternion> =
         gaussianIntToLipschitzQuaternionEmbedding(embedding).map andThen
             LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox
 

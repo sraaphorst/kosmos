@@ -3,7 +3,6 @@ package org.vorpal.kosmos.hypercomplex.quaternion
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
@@ -14,7 +13,6 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
 import org.vorpal.kosmos.core.ops.BilinearForm
-import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
@@ -23,26 +21,19 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
 import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonion
 import org.vorpal.kosmos.hypercomplex.octonion.GravesianOctonionAlgebras
+import org.vorpal.kosmos.hypercomplex.octonion.gravesianOctonionTier
 import org.vorpal.kosmos.hypercomplex.octonion.RationalOctonion
 import org.vorpal.kosmos.linear.values.Vec4
-import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
-import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 import java.math.BigInteger
 
 /**
- * `ℤ⟨i, j, k⟩ = CD⟨ℤ[i]⟩`: the Lipschitz quaternion tier.
+ * `ℤ⟨i, j, k⟩ = Quaternion<BigInteger>`: the Lipschitz quaternion tier.
  *
  * File-level so that initializing [LipschitzQuaternionAlgebras.LipschitzQuaternionRing] never
  * recursively initializes [LipschitzQuaternionAlgebras].
  */
-internal val lipschitzQuaternionTier: QuaternionTier<BigInteger, GaussianInt> =
-    QuaternionTier(
-        complexRing = GaussianIntAlgebras.GaussianIntEuclideanDomain,
-        scalars = IntegerAlgebras.IntegerCommutativeRing,
-        re = UnaryOp { z -> z.re },
-        im = UnaryOp { z -> z.im },
-        mkComplex = BinaryOp { a, b -> GaussianInt(a, b) }
-    )
+internal val lipschitzQuaternionTier: QuaternionTier<BigInteger, LipschitzQuaternion> =
+    quaternionTier(IntegerAlgebras.IntegerCommutativeRing)
 
 /**
  * Main structures:
@@ -111,7 +102,7 @@ object LipschitzQuaternionAlgebras {
         }
 
         /**
-         * The standard basis `1, i, j, k`, obtained by doubling the basis `1, i` of `ℤ[i]`.
+         * The standard basis `1, i, j, k`.
          */
         val basis: List<LipschitzQuaternion> =
             lipschitzQuaternionTier.basis
@@ -189,15 +180,19 @@ object LipschitzQuaternionAlgebras {
      * Not a monomorphism: integers beyond `2⁵³` collide in `Double`, and products are preserved only
      * up to rounding.
      */
-    val lipschitzToQuaternionApprox: UnaryOp<LipschitzQuaternion, Quaternion> =
+    val lipschitzToQuaternionApprox: UnaryOp<LipschitzQuaternion, RealQuaternion> =
         UnaryOp(Symbols.APPROX) { lq ->
             realQuaternionTier.fromCoordinates(lipschitzQuaternionTier.coordinates(lq).map(BigInteger::toReal))
         }
 
+    /**
+     * The canonical Cayley-Dickson embedding `ℤ⟨i, j, k⟩ ↪ Gravesian`, `q ↦ (q, 0)`.
+     */
     val LipschitzToGravesianOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, GravesianOctonion> =
-        CayleyDickson.canonicalEmbedding(
-            base = LipschitzQuaternionRing,
-            doubled = GravesianOctonionAlgebras.GravesianOctonionRing
+        NonAssociativeRingMonomorphism.of(
+            domain = LipschitzQuaternionRing,
+            codomain = GravesianOctonionAlgebras.GravesianOctonionRing,
+            map = gravesianOctonionTier.canonicalEmbeddingMap
         )
 
     val LipschitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<LipschitzQuaternion, RationalOctonion> =

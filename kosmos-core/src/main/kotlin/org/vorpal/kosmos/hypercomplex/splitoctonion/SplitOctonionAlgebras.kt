@@ -2,7 +2,6 @@ package org.vorpal.kosmos.hypercomplex.splitoctonion
 
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
@@ -23,21 +22,26 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.core.render.contramap
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternionTier
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 
 /**
- * The split-octonion tier over [base]: the split doubling of the Hamilton quaternions over [base].
+ * The split-octonion tier over [base]: the split doubling of the quaternions over [base].
  */
 internal fun <R : Any> splitOctonionTier(
     base: CommutativeRing<R>
-): OctonionTier<R, CD<R>> =
-    OctonionTier(QuaternionTier.over(base), split = true)
+): OctonionTier<R, Quaternion<R>, SplitOctonion<R>> =
+    OctonionTier(
+        quaternions = quaternionTier(base),
+        wrap = { cd -> SplitOctonion(cd) },
+        unwrap = { o -> o.cd },
+        split = true
+    )
 
 /**
  * Algebraic structures and utilities for the split-octonions.
@@ -62,16 +66,11 @@ internal fun <R : Any> splitOctonionTier(
  *
  * Morphisms:
  * - [scalarEmbedding]: `R ↪ SplitOctonion<R>`.
- * - [QuaternionToSplitOctonionMonomorphism]: the Cayley-Dickson embedding `ℍ ↪ 𝕆'`, `q ↦ (q, 0)`.
+ * - [quaternionToSplitOctonionMonomorphism], [QuaternionToSplitOctonionMonomorphism]: the
+ *   Cayley-Dickson embedding `q ↦ (q, 0)` of the quaternions, over any base and over ℝ.
  * - [splitQuaternionToSplitOctonionMonomorphism]: `ℍ' ↪ 𝕆'` onto the span of `1, e₁, e₄, e₅`.
  */
 object SplitOctonionAlgebras {
-
-    private fun <R : Any> transport(): CarrierTransport<CD<CD<CD<R>>>, SplitOctonion<R>> =
-        CarrierTransport(
-            wrap = UnaryOp { cd -> SplitOctonion(cd) },
-            unwrap = UnaryOp { o -> o.cd }
-        )
 
     /**
      * The split-octonion ring over a commutative base ring.
@@ -88,7 +87,7 @@ object SplitOctonionAlgebras {
     fun <R : Any> splitOctonionRing(
         base: CommutativeRing<R>
     ): NonAssociativeInvolutiveRing<SplitOctonion<R>> =
-        transport<R>().nonAssociativeInvolutiveRing(splitOctonionTier(base).ring)
+        splitOctonionTier(base).ring
 
     /**
      * The standard basis `1, e₁, …, e₇` over [base]: `e₁, e₂, e₃` are `i, j, k` in the first slot
@@ -97,7 +96,7 @@ object SplitOctonionAlgebras {
     fun <R : Any> basis(
         base: CommutativeRing<R>
     ): List<SplitOctonion<R>> =
-        splitOctonionTier(base).basis.map { cd -> SplitOctonion(cd) }
+        splitOctonionTier(base).basis
 
     /**
      * The split norm
@@ -109,10 +108,8 @@ object SplitOctonionAlgebras {
      */
     fun <R : Any> normSq(
         base: CommutativeRing<R>
-    ): UnaryOp<SplitOctonion<R>, R> {
-        val tierNormSq = splitOctonionTier(base).normSq
-        return UnaryOp(Symbols.NORM_SQ_SYMBOL) { o -> tierNormSq(o.cd) }
-    }
+    ): UnaryOp<SplitOctonion<R>, R> =
+        splitOctonionTier(base).normSq
 
     /**
      * The coordinatewise scalar action. The scalars lie in the nucleus and the center, so this is
@@ -120,10 +117,8 @@ object SplitOctonionAlgebras {
      */
     fun <R : Any> splitOctonionLeftAction(
         base: CommutativeRing<R>
-    ): LeftAction<R, SplitOctonion<R>> {
-        val tierAction = splitOctonionTier(base).scalarAction
-        return LeftAction(Symbols.TRIANGLE_RIGHT) { r, o -> SplitOctonion(tierAction(r, o.cd)) }
-    }
+    ): LeftAction<R, SplitOctonion<R>> =
+        splitOctonionTier(base).scalarAction
 
     /**
      * Split-octonions over a field, with reciprocals on the units.
@@ -267,25 +262,38 @@ object SplitOctonionAlgebras {
      */
     fun <R : Any> scalarEmbedding(
         base: CommutativeRing<R>
-    ): NonAssociativeRingMonomorphism<R, SplitOctonion<R>> =
-        NonAssociativeRingMonomorphism.of(
+    ): NonAssociativeRingMonomorphism<R, SplitOctonion<R>> {
+        val tier = splitOctonionTier(base)
+        return NonAssociativeRingMonomorphism.of(
             domain = base,
-            codomain = splitOctonionRing(base),
-            map = UnaryOp { r ->
-                val zero = base.zero
-                splitOctonion(r, zero, zero, zero, zero, zero, zero, zero)
-            }
+            codomain = tier.ring,
+            map = tier.scalarEmbeddingMap
         )
+    }
 
     /**
      * The Cayley-Dickson embedding `ℍ ↪ 𝕆'`, `q ↦ (q, 0)`: the quaternions are the span of
      * `1, e₁, e₂, e₃`, the positive-definite half of the split norm.
      */
-    object QuaternionToSplitOctonionMonomorphism : NonAssociativeRingMonomorphism<Quaternion, SplitOctonion<Real>> {
+    object QuaternionToSplitOctonionMonomorphism : NonAssociativeRingMonomorphism<RealQuaternion, SplitOctonion<Real>> {
         override val domain = QuaternionAlgebras.QuaternionDivisionRing
         override val codomain = RealSplitOctonionAlgebra
-        override val map: UnaryOp<Quaternion, SplitOctonion<Real>> =
-            UnaryOp { q -> SplitOctonion(CD(q, QuaternionAlgebras.QuaternionDivisionRing.zero)) }
+        override val map: UnaryOp<RealQuaternion, SplitOctonion<Real>> =
+            quaternionToSplitOctonionMonomorphism(RealAlgebras.RealField).map
+    }
+
+    /**
+     * The Cayley-Dickson embedding `Quaternion<R> ↪ SplitOctonion<R>`, `q ↦ (q, 0)`, over any base.
+     */
+    fun <R : Any> quaternionToSplitOctonionMonomorphism(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<Quaternion<R>, SplitOctonion<R>> {
+        val tier = splitOctonionTier(base)
+        return NonAssociativeRingMonomorphism.of(
+            domain = tier.quaternions.ring,
+            codomain = tier.ring,
+            map = tier.canonicalEmbeddingMap
+        )
     }
 
     /**
@@ -311,7 +319,7 @@ object SplitOctonionAlgebras {
      * Eqs
      */
     fun <R : Any> eqSplitOctonion(eqR: Eq<R>): Eq<SplitOctonion<R>> =
-        CD.eq(CD.eq(CD.eq(eqR))).contramap(SplitOctonion<R>::cd)
+        CD.eq(CD.eq(CD.eq(eqR))).contramap { o: SplitOctonion<R> -> o.cd }
 
     /**
      * Strict equality on real split-octonions.
@@ -334,7 +342,7 @@ object SplitOctonionAlgebras {
         prR: Printable<R>,
         eqR: Eq<R>
     ): Printable<SplitOctonion<R>> =
-        splitOctonionTier(base).printable(signed, prR, eqR).contramap(SplitOctonion<R>::cd)
+        splitOctonionTier(base).printable(signed, prR, eqR)
 
     private fun printableSplitOctonionRealGenerator(
         prReal: Printable<Real>,

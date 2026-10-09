@@ -31,7 +31,7 @@ class OctonionFanoOrientationSpec : StringSpec({
     fun neg(i: Int) = ring.add.inverse(basis.getValue(i))
 
     // Signed-zero-safe octonion equality assertion (see class kdoc).
-    infix fun Octonion.shouldEqualOctonion(expected: Octonion) {
+    infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
         if (eq.neqv(this, expected))
             fail("expected ${pr(expected)} but was ${pr(this)}")
     }
