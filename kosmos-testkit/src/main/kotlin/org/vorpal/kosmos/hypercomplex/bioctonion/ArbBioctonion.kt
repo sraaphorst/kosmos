@@ -12,14 +12,14 @@ object ArbBioctonion {
     /**
      * Bioctonions with small complex coefficients.
      */
-    val bioctonion: Arb<Bioctonion> =
+    val bioctonion: Arb<RealBioctonion> =
         Arb.list(ArbBiquaternion.smallComplex, 8..8).map(::bioctonion)
 
     /**
      * Units of `𝕆 ⊗ ℂ`, safely away from the null cone: the complex norm `N(o)` has squared modulus
      * in `[0.01, 10⁸]`.
      */
-    val unitBioctonion: Arb<Bioctonion> =
+    val unitBioctonion: Arb<RealBioctonion> =
         bioctonion.filter { o ->
             val n = BioctonionAlgebras.BioctonionAlgebra.normSq(o)
             ComplexAlgebras.ComplexStarAlgebra.normSq(n) in 0.01..1e8

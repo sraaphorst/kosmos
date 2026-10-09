@@ -1,68 +1,82 @@
 package org.vorpal.kosmos.hypercomplex.biquaternion
 
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.hypercomplex.complex.RealComplex
+import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 
 /**
- * A biquaternion (complex quaternion) `w + xi + yj + zk` with *complex* coefficients
- * `w, x, y, z ∈ ℂ`:
+ * A biquaternion over a commutative base ring [R].
  * ```text
- * ℍ ⊗_ℝ ℂ,   i² = j² = k² = ijk = -1,
+ * Biquaternion(R) = Quaternion(R) ⊗_R Complex(R) ≅ Quaternion(Complex(R)).
  * ```
- * where the complex scalars commute with `i, j, k`. To keep the two imaginary units apart, the
- * imaginary unit of the coefficient field ℂ is written `h` in this package's documentation, so the
- * eight real dimensions are spanned by `1, i, j, k, h, hi, hj, hk`.
- *
- * Algebraically this is the Hamilton quaternion algebra `(-1, -1)_ℂ`, built by the same two
- * Cayley-Dickson doublings as ℍ but starting from ℂ instead of ℝ:
+ * Elements have the form
  * ```text
- * Biquaternion = CD⟨ℂ[i]/(i² + 1)⟩ = CD⟨𝔹⟩,
+ * w + xi + yj + zk,   w, x, y, z ∈ Complex(R),   i² = j² = k² = ijk = -1,
  * ```
- * the doubling of the bicomplex numbers with their `j`-conjugation. It is associative and
- * noncommutative, and isomorphic to the matrix algebra `M₂(ℂ)`; see
- * [BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism]. It is not a division algebra: its
- * complex-valued norm `w² + x² + y² + z²` vanishes on nonzero elements such as `1 + hi`.
+ * and the complex imaginary unit commutes with the quaternion units `i`, `j` and `k`. To keep the
+ * two kinds of imaginary unit apart, the unit of the coefficient ring `Complex(R)` is written `h` in
+ * this package's documentation, so a basis over `R` is `1, i, j, k, h, hi, hj, hk`.
  *
- * [Biquaternion] is a value class rather than a typealias of [CD] because its carrier
- * `CD<CD<RealComplex>> = CD<Quaternion>` is also the carrier of the octonions 𝕆.
+ * This is an associative, generally noncommutative algebra of rank 8 over `R`. It is the
+ * Cayley-Dickson doubling of `Complex(R)[i]/(i² + 1) = Bicomplex(R)`, built by the same two
+ * doublings as the quaternions but starting from `Complex(R)` instead of `R`.
  *
- * This file defines only carrier-level naming and accessors. The algebraic structure is supplied
- * by [BiquaternionAlgebras].
+ * The classical case has a name: [RealBiquaternion] `= Biquaternion<Real>`, the complex quaternions
+ * `ℍ ⊗_ℝ ℂ ≅ M₂(ℂ)`. It is not a division algebra: its complex-valued norm `w² + x² + y² + z²`
+ * vanishes on nonzero elements such as `1 + hi`.
+ *
+ * [Biquaternion] is a value class rather than a typealias of [CD] so that it is a distinct Kotlin
+ * type from the other algebras carried by nested Cayley-Dickson pairs.
+ *
+ * Algebraic operations are supplied by [BiquaternionAlgebras].
  */
 @JvmInline
-value class Biquaternion(val cd: CD<CD<RealComplex>>) {
+value class Biquaternion<R : Any>(val cd: CD<CD<Complex<R>>>) {
 
-    /** The scalar part `w ∈ ℂ`. */
-    val w: RealComplex get() = cd.a.a
+    /** The scalar coefficient `w ∈ Complex(R)`. */
+    val w: Complex<R> get() = cd.a.a
 
-    /** The complex coefficient of `i`. */
-    val x: RealComplex get() = cd.a.b
+    /** The coefficient of `i`. */
+    val x: Complex<R> get() = cd.a.b
 
-    /** The complex coefficient of `j`. */
-    val y: RealComplex get() = cd.b.a
+    /** The coefficient of `j`. */
+    val y: Complex<R> get() = cd.b.a
 
-    /** The complex coefficient of `k`. */
-    val z: RealComplex get() = cd.b.b
+    /** The coefficient of `k`. */
+    val z: Complex<R> get() = cd.b.b
 
-    operator fun component1(): RealComplex = w
-    operator fun component2(): RealComplex = x
-    operator fun component3(): RealComplex = y
-    operator fun component4(): RealComplex = z
+    operator fun component1(): Complex<R> = w
+    operator fun component2(): Complex<R> = x
+    operator fun component3(): Complex<R> = y
+    operator fun component4(): Complex<R> = z
 
     /**
-     * The complex coefficients `[w, x, y, z]` of `w + xi + yj + zk`.
+     * The four complex coefficients `[w, x, y, z]`.
      */
-    fun coefficients(): List<RealComplex> =
+    fun coefficients(): List<Complex<R>> =
         listOf(w, x, y, z)
+
+    /**
+     * The eight base-ring coefficients, in the order
+     * `[Re w, Im w, Re x, Im x, Re y, Im y, Re z, Im z]`.
+     */
+    fun baseCoefficients(): List<R> =
+        coefficients().flatMap { c -> listOf(c.re, c.im) }
 
     override fun toString(): String =
         "Biquaternion(w=$w, x=$x, y=$y, z=$z)"
 }
 
-fun biquaternion(
-    w: RealComplex,
-    x: RealComplex,
-    y: RealComplex,
-    z: RealComplex
-): Biquaternion =
+/** The complex quaternions `ℍ ⊗_ℝ ℂ`. */
+typealias RealBiquaternion = Biquaternion<Real>
+
+/**
+ * The biquaternion `w + xi + yj + zk`.
+ */
+fun <R : Any> biquaternion(
+    w: Complex<R>,
+    x: Complex<R>,
+    y: Complex<R>,
+    z: Complex<R>,
+): Biquaternion<R> =
     Biquaternion(CD(CD(w, x), CD(y, z)))

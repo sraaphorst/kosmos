@@ -136,8 +136,8 @@ counterparts `associative` / `associativeSplit`) gives the noncommutative algebr
 | 𝕆 over `R` | `Octonion<R>` (value class over `CD<CD<CD<R>>>`) | `CD⟨ℍ_R⟩` |
 | ℍ′ over `R` | `SplitQuaternion<R>` (value class over `CD<CD<R>>`) | `CD_split⟨R[i]⟩` |
 | 𝕆′ over `R` | `SplitOctonion<R>` (value class over `CD<CD<CD<R>>>`) | `CD_split⟨ℍ_R⟩` |
-| ℍ ⊗ ℂ | `Biquaternion` (value class over `CD<CD<Complex>>`) | `CD⟨ℂ[i]⟩ = CD⟨𝔹⟩` |
-| 𝕆 ⊗ ℂ | `Bioctonion` (value class over `CD<CD<CD<Complex>>>`) | `CD⟨ℍ ⊗ ℂ⟩` |
+| biquaternions over `R` | `Biquaternion<R>` (value class over `CD<CD<Complex<R>>>`) | `CD⟨Bicomplex(R)⟩` = quaternions over `Complex(R)` |
+| bioctonions over `R` | `Bioctonion<R>` (value class over `CD<CD<CD<Complex<R>>>>`) | `CD⟨Biquaternion(R)⟩` = octonions over `Complex(R)` |
 
 **Commutative base with the *trivial* involution** (`CayleyDickson.commutative(base, σ)`)
 gives the commutative quadratic extension `R[x]/(x² + σ)`:
@@ -145,19 +145,23 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 | σ | x² | Algebra | Carrier |
 |---|----|---------|---------|
 | 1  | −1 | complex-like `R[i]/(i² + 1)`: ℂ, ℚ(i), ℤ[i] | `Complex<R>` (value class over `CD<R>`) |
-| 1  | −1 | 𝔹 = ℂ[j]/(j² + 1) (bicomplex) | `Bicomplex` (value class over `CD<Complex>`) |
+| 1  | −1 | bicomplex `Complex(R)[j]/(j² + 1)` | `Bicomplex<R>` (value class over `CD<Complex<R>>`) |
 | −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
 | 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
 
-**Generic carriers and their named instances.** `Complex<R>`, `Quaternion<R>` and `Octonion<R>` are
-generic over a commutative ring, exactly like `SplitComplex<R>` and `SplitQuaternion<R>`. The
-classical coefficient rings are typealiases:
+**Generic carriers and their named instances.** Every carrier is generic over a commutative ring:
+`Complex<R>`, `Quaternion<R>`, `Octonion<R>`, the split forms, and the complexified forms
+`Bicomplex<R>`, `Biquaternion<R>` and `Bioctonion<R>`. The classical coefficient rings are
+typealiases:
 
 | Typealias | Is | Algebra |
 |-----------|----|---------|
 | `RealComplex` | `Complex<Real>` | ℂ |
 | `GaussianRat` | `Complex<Rational>` | ℚ(i) |
 | `GaussianInt` | `Complex<BigInteger>` | ℤ[i] |
+| `RealBicomplex` | `Bicomplex<Real>` | 𝔹 = ℂ ⊗ ℂ |
+| `RealBiquaternion` | `Biquaternion<Real>` | ℍ ⊗ ℂ |
+| `RealBioctonion` | `Bioctonion<Real>` | 𝕆 ⊗ ℂ |
 | `RealQuaternion` | `Quaternion<Real>` | ℍ |
 | `RationalQuaternion` | `Quaternion<Rational>` | ℍ_ℚ |
 | `LipschitzQuaternion` | `Quaternion<BigInteger>` | the Lipschitz order `ℤ⟨i, j, k⟩` |
@@ -183,9 +187,16 @@ because the raw carriers collide. The algebras differ, so the Kotlin types must 
 | `CD<CD<R>>` | `Quaternion<R>`, `SplitQuaternion<R>` |
 | `CD<CD<CD<R>>>` | `Octonion<R>`, `SplitOctonion<R>` |
 
-The complexified algebras nest the complex value class instead: `Bicomplex` is over
-`CD<RealComplex>`, `Biquaternion` over `CD<CD<RealComplex>>` and `Bioctonion` over
-`CD<CD<CD<RealComplex>>>`. No carrier in the package is a typealias of `CD` any more.
+The complexified algebras nest the complex value class instead: `Bicomplex<R>` is over
+`CD<Complex<R>>`, `Biquaternion<R>` over `CD<CD<Complex<R>>>` and `Bioctonion<R>` over
+`CD<CD<CD<Complex<R>>>>`. They are the complex-like, quaternion and octonion constructions with
+scalars `Complex(R)`:
+```text
+Bicomplex(R)    = Complex(R)    ⊗_R Complex(R) ≅ Complex(Complex(R))
+Biquaternion(R) = Quaternion(R) ⊗_R Complex(R) ≅ Quaternion(Complex(R))
+Bioctonion(R)   = Octonion(R)   ⊗_R Complex(R) ≅ Octonion(Complex(R))
+```
+No carrier in the package is a typealias of `CD` any more.
 
 **One construction per tier.** Every quaternion-level algebra is built by the single internal
 `QuaternionTier`, and every octonion-level algebra by the single `OctonionTier`. A tier is given the
@@ -195,10 +206,10 @@ scalars, whether the doubling is split, and how to name the raw pair as the publ
 |------|--------|
 | `quaternionTier(R)` | `Quaternion<R>` |
 | `splitQuaternionTier(R)` | `SplitQuaternion<R>` (`split = true`) |
-| `biquaternionTier` | `Biquaternion` (scalars ℂ) |
+| `biquaternionTier(R)` | `Biquaternion<R>` (the quaternion tier with scalars `Complex(R)`) |
 | `octonionTier(R)` | `Octonion<R>` |
 | `splitOctonionTier(R)` | `SplitOctonion<R>` (`split = true`, over `quaternionTier(R)`) |
-| `bioctonionTier` | `Bioctonion` (over `biquaternionTier`) |
+| `bioctonionTier(R)` | `Bioctonion<R>` (over `biquaternionTier(R)`) |
 
 A tier supplies the ring, basis, coordinates, scalar action, norm, embeddings, `Eq` and printable,
 all on the public carrier, so no `*Algebras` object handles a raw `CD` pair or does its own
@@ -444,10 +455,15 @@ val iso = BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism   // ℍ �
 The bioctonions additionally carry the 168 (84 normalized) signed-basis-unit embeddings
 `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ`, the ℂ-linear extensions of the embeddings `ℍ ↪ 𝕆` described below.
 
-**Exactness.** `Biquaternion` and `Bioctonion` have floating-point coefficients, so their specs use
-approximate equality. The construction is generic, though, and `ComplexifiedTowerSpec` runs the
-same two doublings over the exact field ℚ(i) to verify associativity, alternativity, the Moufang
-identities and multiplicativity of the norm with strict equality.
+**Generic over the base ring.** `Bicomplex<R>`, `Biquaternion<R>` and `Bioctonion<R>` take any
+commutative ring, and `BicomplexAlgebras`, `BiquaternionAlgebras` and `BioctonionAlgebras` provide
+the generic rings, norms, conjugations, modules, star algebras and embeddings alongside the real
+structures. The usage examples in this section are over ℝ.
+
+**Exactness.** The real versions have floating-point coefficients, so their specs use approximate
+equality. `GenericComplexifiedSpec` checks the same laws *exactly* over ℚ (associativity,
+alternativity, the Moufang identities, multiplicativity of the norm, reciprocals, every embedding),
+and over the finite field 𝔽₃. `ComplexifiedTowerSpec` checks the raw construction over ℚ(i).
 
 ---
 
@@ -989,9 +1005,11 @@ References:
 
 - **Split-octonions:** the Zorn vector-matrix representation; the family of embeddings `ℍ ↪ 𝕆′` and
   `ℍ′ ↪ 𝕆′` beyond the canonical ones; the isomorphism `CD_usual(ℍ′) ≅ CD_split(ℍ)`.
-- **Biquaternions and bioctonions:** named exact tiers over ℚ(i) (the construction is tested
-  exactly, but only the floating-point carriers are public); the Lorentz-group action of the
-  biquaternions.
+- **Biquaternions and bioctonions:** the Lorentz-group action of the biquaternions; a generic
+  printable for complex coefficients (only the real ones have one); the matrix isomorphism
+  `Biquaternion(F) ≅ M₂(Complex(F))` over a general field (only the real one is provided).
+- **Bicomplex numbers:** the idempotent decomposition and `isUnit` / null-cone predicates are
+  real-only; over a general base only the two idempotent projections are provided.
 - **Split forms over ℤ and ℚ:** these work today through the generic `SplitQuaternion<R>` and
   `SplitOctonion<R>`, but have no named `*Algebras` objects, orders, or unit groups.
 - **Split-complex numbers:** the idempotent (diagonal) coordinates exist for ℝ only, not for a
