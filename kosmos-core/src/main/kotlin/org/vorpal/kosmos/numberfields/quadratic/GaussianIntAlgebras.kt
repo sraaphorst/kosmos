@@ -17,7 +17,6 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.toReal
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction

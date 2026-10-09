@@ -16,8 +16,9 @@ Every one of them is an instance of a single construction, Cayley–Dickson doub
 6. [Complexifications](#complexifications)
 7. Embedding families: [complex → quaternion (×6)](#embeddings-complex--quaternion-6),
    [quaternion → octonion (×168)](#embeddings-quaternion--octonion-168-or-84-normalized)
-8. [Quick reference](#quick-reference-monomorphisms-and-conversions)
-9. [What remains to be done](#what-remains-to-be-done)
+8. [Combinatorics of the octonion multiplication table](#combinatorics-of-the-octonion-multiplication-table)
+9. [Quick reference](#quick-reference-monomorphisms-and-conversions)
+10. [What remains to be done](#what-remains-to-be-done)
 
 ---
 
@@ -131,8 +132,8 @@ counterparts `associative` / `associativeSplit`) gives the noncommutative algebr
 
 | Algebra | Carrier | Construction |
 |---------|---------|--------------|
-| ℍ, ℍ_ℚ, Lip | `Quaternion`, `RationalQuaternion`, `LipschitzQuaternion` (typealiases of `CD<…>`) | `CD⟨ℂ⟩`, `CD⟨ℚ(i)⟩`, `CD⟨ℤ[i]⟩` |
-| 𝕆, 𝕆_ℚ, Gravesian | `Octonion`, `RationalOctonion`, `GravesianOctonion` | `CD⟨ℍ⟩`, `CD⟨ℍ_ℚ⟩`, `CD⟨Lip⟩` |
+| ℍ over `R` | `Quaternion<R>` (value class over `CD<CD<R>>`) | `CD⟨R[i]⟩` |
+| 𝕆 over `R` | `Octonion<R>` (value class over `CD<CD<CD<R>>>`) | `CD⟨ℍ_R⟩` |
 | ℍ′ over `R` | `SplitQuaternion<R>` (value class over `CD<CD<R>>`) | `CD_split⟨R[i]⟩` |
 | 𝕆′ over `R` | `SplitOctonion<R>` (value class over `CD<CD<CD<R>>>`) | `CD_split⟨ℍ_R⟩` |
 | ℍ ⊗ ℂ | `Biquaternion` (value class over `CD<CD<Complex>>`) | `CD⟨ℂ[i]⟩ = CD⟨𝔹⟩` |
@@ -147,35 +148,57 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 | 1  | −1 | 𝔹 = ℂ[j]/(j² + 1) (bicomplex) | `Bicomplex` (value class over `CD<Complex>`) |
 | −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
 | 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
+| 1  | −1 | ℤ[i], ℚ(i) | `GaussianInt`, `GaussianRat` (value classes over `CD<BigInteger>`, `CD<Rational>`) |
 
-**Typealias or value class?** The division tower uses typealiases of `CD<…>`; everything else is a
-value class, because carriers collide. The algebras differ, so the Kotlin types must too:
+**Generic carriers and their named instances.** `Quaternion<R>` and `Octonion<R>` are generic over
+a commutative ring, exactly like `SplitQuaternion<R>`. The classical coefficient rings are
+typealiases:
 
-| Carrier | Shared by |
-|---------|-----------|
-| `CD<Real>` | `Complex`, `SplitComplex<Real>`, `Dual<Real>` |
-| `CD<CD<Real>>` = `CD<Complex>` | `Quaternion`, `Bicomplex`, `SplitQuaternion<Real>` |
-| `CD<CD<CD<Real>>>` = `CD<Quaternion>` | `Octonion`, `SplitOctonion<Real>`, `Biquaternion` |
-| `CD<CD<CD<Complex>>>` = `CD<Octonion>` | `Bioctonion` (and, later, the sedenions) |
+| Typealias | Is | Algebra |
+|-----------|----|---------|
+| `RealQuaternion` | `Quaternion<Real>` | ℍ |
+| `RationalQuaternion` | `Quaternion<Rational>` | ℍ_ℚ |
+| `LipschitzQuaternion` | `Quaternion<BigInteger>` | the Lipschitz order `ℤ⟨i, j, k⟩` |
+| `RealOctonion` | `Octonion<Real>` | 𝕆 |
+| `RationalOctonion` | `Octonion<Rational>` | 𝕆_ℚ |
+| `GravesianOctonion` | `Octonion<BigInteger>` | the Gravesian integers |
 
-The ring structure of each value class is transported from the Cayley–Dickson ring along the
-wrapper with `CarrierTransport`.
+`QuaternionAlgebras` and `OctonionAlgebras` hold the generic constructions (`quaternionRing(base)`,
+`octonionRing(base)`, `…RingWithReciprocal(field)`, modules, star algebras, the canonical
+embedding) alongside the structures of ℍ and 𝕆. They work over any commutative ring: over 𝔽₇, for
+example, `Quaternion<𝔽₇>` is a ring with zero divisors (`i + 2j + 3k` has norm 0), which
+`GenericQuaternionOctonionSpec` checks.
 
-**One construction per tier.** ℍ, ℍ_ℚ and the Lipschitz quaternions are built by a single internal
-`QuaternionTier` over ℂ, ℚ(i) and ℤ[i]; 𝕆, 𝕆_ℚ and the Gravesian octonions by a single
-`OctonionTier` over those. The same two tiers, with a `split` flag or over a different base, build
-the rest:
+**Why value classes.** Every carrier above is a value class over a `CD` pair, not a typealias,
+because the raw carriers collide. The algebras differ, so the Kotlin types must too:
 
-| Tier call | Result |
-|-----------|--------|
-| `QuaternionTier.over(R, split = true)` | split-quaternions over `R` |
-| `OctonionTier(QuaternionTier.over(R), split = true)` | split-octonions over `R` |
-| `QuaternionTier.over(ComplexField)` | biquaternions |
-| `OctonionTier(biquaternionTier)` | bioctonions |
+| Raw carrier | Shared by |
+|-------------|-----------|
+| `CD<R>` | `Complex` (`R = Real`), `SplitComplex<R>`, `Dual<R>`, `GaussianInt`, `GaussianRat` |
+| `CD<CD<R>>` | `Quaternion<R>`, `SplitQuaternion<R>`, `Bicomplex` (`R = Real`) |
+| `CD<CD<CD<R>>>` | `Octonion<R>`, `SplitOctonion<R>`, `Biquaternion` (`R = Real`) |
+| `CD<CD<CD<Complex>>>` | `Bioctonion` (and, later, the sedenions over ℝ) |
 
-A tier supplies the ring, basis, coordinates, scalar action, norm, embeddings and printable; the
-public `*Algebras` objects add only what really differs (reciprocals, vector spaces or ℤ-modules,
-extra conjugations, conversions).
+`Complex` is the one remaining typealias (`CD<Real>`); see
+[What remains](#what-remains-to-be-done).
+
+**One construction per tier.** Every quaternion-level algebra is built by the single internal
+`QuaternionTier`, and every octonion-level algebra by the single `OctonionTier`. A tier is given the
+scalars, whether the doubling is split, and how to name the raw pair as the public type:
+
+| Tier | Result |
+|------|--------|
+| `quaternionTier(R)` | `Quaternion<R>` |
+| `splitQuaternionTier(R)` | `SplitQuaternion<R>` (`split = true`) |
+| `biquaternionTier` | `Biquaternion` (scalars ℂ) |
+| `octonionTier(R)` | `Octonion<R>` |
+| `splitOctonionTier(R)` | `SplitOctonion<R>` (`split = true`, over `quaternionTier(R)`) |
+| `bioctonionTier` | `Bioctonion` (over `biquaternionTier`) |
+
+A tier supplies the ring, basis, coordinates, scalar action, norm, embeddings, `Eq` and printable,
+all on the public carrier, so no `*Algebras` object handles a raw `CD` pair or does its own
+transport. The public objects add only what really differs (reciprocals, vector spaces or
+ℤ-modules, extra conjugations, conversions).
 
 **What `CayleyDickson` promises.** `usual`, `split` and `commutative` are the safe factories.
 `withSigma` accepts any `σ`, but the conjugation is an anti-automorphism only when `σ` is central
@@ -248,34 +271,31 @@ hypercomplex/
 │   └── BioctonionAlgebras.kt       three conjugations, real forms, 168 embeddings
 │
 ├── quaternion/               # ℍ-like rings
-│   ├── Quaternion.kt               ℍ   = CD⟨ℂ⟩             (Real coefficients)
-│   ├── QuaternionAlgebras.kt
-│   ├── RationalQuaternion.kt       ℍ_ℚ = CD⟨ℚ(i)⟩          (Rational coefficients)
-│   ├── RationalQuaternionAlgebras.kt
-│   ├── LipschitzQuaternion.kt      Lip = CD⟨ℤ[i]⟩          (BigInteger coefficients)
-│   ├── LipschitzQuaternionAlgebras.kt
+│   ├── Quaternion.kt               Quaternion<R>; RealQuaternion, RationalQuaternion, LipschitzQuaternion
+│   ├── QuaternionAlgebras.kt       generic constructions, and ℍ
+│   ├── RationalQuaternionAlgebras.kt   ℍ_ℚ
+│   ├── LipschitzQuaternionAlgebras.kt  the Lipschitz order
 │   ├── HurwitzQuaternion.kt        𝓗 ⊂ ℍ_ℚ, the Hurwitz order (value class over RationalQuaternion)
 │   ├── HurwitzQuaternionAlgebras.kt
-│   ├── QuaternionTier.kt           the one quaternion construction (usual or split, any base)
+│   ├── QuaternionTier.kt           the one quaternion-level construction, on any public carrier
 │   ├── AxisSignEmbeddings.kt       the 6 specs for complex-like ↪ quaternion-like
 │   ├── QuaternionEmbeddingKit.kt   generic complex-like → quaternion builder
 │   └── QuaternionPrintable.kt
 │
 └── octonion/                 # 𝕆-like rings
-    ├── Octonion.kt                 𝕆   = CD⟨ℍ⟩             (Real coefficients)
-    ├── OctonionAlgebras.kt
-    ├── RationalOctonion.kt         𝕆_ℚ = CD⟨ℍ_ℚ⟩           (Rational coefficients)
-    ├── RationalOctonionAlgebras.kt
-    ├── GravesianOctonion.kt        CD⟨Lip⟩ ≅ ℤ⁸            (BigInteger coefficients)
-    ├── GravesianOctonionAlgebras.kt
-    ├── OctonionTier.kt             the one octonion construction (usual or split, any tier)
+    ├── Octonion.kt                 Octonion<R>; RealOctonion, RationalOctonion, GravesianOctonion
+    ├── OctonionAlgebras.kt         generic constructions, and 𝕆
+    ├── RationalOctonionAlgebras.kt     𝕆_ℚ
+    ├── GravesianOctonionAlgebras.kt    the Gravesian integers ≅ ℤ⁸
+    ├── OctonionTier.kt             the one octonion-level construction, on any public carrier
     ├── OctonionEmbeddingKit.kt     the 168 signed-basis-unit quaternion → octonion embeddings
     ├── OctonionFanoOrientation(s).kt, OrientedFanoLine.kt
     └── OctonionPrintable.kt
 ```
 
 The Gaussian integers `ℤ[i]`, Gaussian rationals `ℚ(i)` and Eisenstein integers `ℤ[ω]` live in
-`numberfields.quadratic`.
+`numberfields.quadratic`. `GaussianInt` and `GaussianRat` are value classes over `CD`, with their
+ring arithmetic taken from `CayleyDickson.commutative`.
 
 Bases are derived rather than written out: `CayleyDickson.doubledBasis(zero, baseBasis)` doubles
 a basis `e₀, …, e_{n-1}` of `A` to `(e₀, 0), …, (0, e_{n-1})` in `CD<A>`, which reproduces
@@ -623,7 +643,7 @@ then recorded in the spec for inspection.
 ### The Canonical Embedding
 
 The canonical embedding has `iIndex = 1, jIndex = 2` and both signs `PLUS`, giving
-$i \mapsto e_1,\; j \mapsto e_2,\; k \mapsto e_3$. This is `Quaternion.asOctonion()`, i.e. the
+$i \mapsto e_1,\; j \mapsto e_2,\; k \mapsto e_3$. This is `RealQuaternion.asOctonion()`, i.e. the
 Cayley–Dickson embedding $q \mapsto (q, 0)$.
 
 ---
@@ -829,6 +849,34 @@ classical `ℍ ↪ M₂(ℂ)`.
 
 ---
 
+## Combinatorics of the Octonion Multiplication Table
+
+The products of the seven imaginary units, `e_i · e_j = ± e_k`, form a finite object that can be
+checked exhaustively. `OctonionCombinatoricsSpec` does so, exactly, over the rational octonions:
+
+| Count | What it counts |
+|------:|----------------|
+| 35 = 7 + 28 | unordered triples of distinct units: the 7 Fano lines, and 28 non-lines |
+| 42 | ordered triples of distinct units that associate (7 lines × 6 orders); each line spans a copy of the quaternion group Q₈ |
+| 168 | ordered triples that do not associate (28 × 6); they *anti*-associate: `(e_i e_j) e_k = −e_i (e_j e_k)` |
+| 84 | pairs `(i, j, k) ↔ (k, j, i)` of nonassociative triples, whose associators are negatives of each other |
+| 21 | permutations of the units preserving the table: the Frobenius group C₇ ⋊ C₃ |
+| 168 | collineations of the unoriented Fano plane, `PSL(2, 7)` |
+| 1344 = 2³ · 168 | signed permutations preserving the table |
+| 480 = 645120 / 1344 | distinct multiplication tables reachable by signed permutations: 30 Fano planes × 16 orientations |
+
+Two facts behind the table:
+
+- **The associator is alternating.** `[x, y, z] = (xy)z − x(yz)` changes sign under any
+  transposition of its arguments, because the octonions are alternative. On a nonassociative basis
+  triple it equals `±2·e_m`, where `m` is the one point of the Fano plane not on a line through two
+  of `i, j, k`.
+- **Why 16 orientations.** A Fano plane has 2⁷ = 128 ways to orient its 7 lines, but only 16 of them
+  are octonion tables. Flipping the signs of the units (2⁷ choices) acts on the orientations with a
+  kernel of order 8, giving 128 / 8 = 16.
+
+---
+
 ## The Fano Plane
 
 The 168 octonion embeddings are governed by the Fano plane, the unique
@@ -867,10 +915,11 @@ Nothing below is implemented yet. Items are grouped by how they would build on w
 |---------|-----------------------|-------|
 | Sedenions 𝕊, and the levels above | `CayleyDickson.usual(𝕆)` | Flexible and power-associative, not alternative; zero divisors. The kernel is already tested at this level (`A₄` in `CayleyDicksonSpec`); what is missing is the named carrier, which must be a value class because `Bioctonion` uses the same `CD<Octonion>` carrier. |
 | Generalized quaternion algebras `(a, b)_F` | `CayleyDickson.withSigma` twice | Available through the kernel and tested for `(2, 3)_ℚ`, but with no named type, norm, or splitting test (Hilbert symbol). |
-| Dual quaternions `ℍ ⊗ 𝔻` | quaternion tier over `Dual<Real>` | Rigid motions of 3-space. `QuaternionTier.over(base)` accepts any commutative ring as its base, so this is mostly naming and tests. |
-| Split-biquaternions `ℍ ⊗ (ℝ ⊕ ℝ) ≅ ℍ ⊕ ℍ` | quaternion tier over `SplitComplex<Real>` | Same remark. |
+| Dual quaternions `ℍ ⊗ 𝔻` | `Quaternion<Dual<Real>>` | Rigid motions of 3-space. `QuaternionAlgebras.quaternionRing(base)` already accepts any commutative ring, so this is naming, the dual conjugations and tests. |
+| Split-biquaternions `ℍ ⊗ (ℝ ⊕ ℝ) ≅ ℍ ⊕ ℍ` | `Quaternion<SplitComplex<Real>>` | Same remark. |
 | Dual-complex numbers, hyperbolic quaternions | | The hyperbolic quaternions (Macfarlane) are nonassociative and are *not* a Cayley–Dickson double. |
 | Tricomplex and general multicomplex numbers | iterate `CayleyDickson.commutative` | Design notes in `docs/design/Multicomplex.md`. |
+| `Complex<R>` | generic value class over `CD<R>` | `Complex` is still `typealias Complex = CD<Real>`, the last typealias carrier; `GaussianInt` and `GaussianRat` would become `Complex<BigInteger>` and `Complex<Rational>`. `Complex` is used well outside this package (linear algebra, analysis), so this is a wider change. |
 | Clifford algebras `Cl(p, q)` | new construction | Would unify several algebras here: `Cl(0,1) ≅ ℂ`, `Cl(1,0) ≅` split-complex, `Cl(0,2) ≅ ℍ`, `Cl(1,1) ≅ Cl(2,0) ≅ ℍ′`, `Cl(3,0) ≅ ℍ ⊗ ℂ`, `Cl(0,3) ≅ ℍ ⊕ ℍ`. |
 
 ### Gaps in the algebras that exist
@@ -903,6 +952,10 @@ Nothing below is implemented yet. Items are grouped by how they would build on w
   their action as rotations, `Aut(𝕆) = G₂`, and the Moufang loop of unit octonions.
 - **Transcendental functions.** `exp`, `log`, powers and polar decomposition exist for dual numbers
   only.
+- **Sedenion zero divisors and the number 168.** The preprint "A Dual Pathway to 168" relates the
+  168 nonassociative octonion triples above to 168 pairs of primitive zero divisors in the
+  sedenions, by a `GL(3, 2)`-equivariant bijection. The octonion side is now verified here; the
+  sedenion side needs the named sedenions first.
 - **Octonion matrices** (also listed in the top-level `TODO.md`), and with them the exceptional
   Jordan algebra.
 

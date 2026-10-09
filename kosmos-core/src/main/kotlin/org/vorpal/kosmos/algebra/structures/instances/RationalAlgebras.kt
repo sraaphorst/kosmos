@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing

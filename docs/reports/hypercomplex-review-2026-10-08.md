@@ -1,7 +1,7 @@
 # Hypercomplex Review and Completion Report
 
 **Date:** 2026-10-08
-**Branch:** `claude/project-thread-lxwsdp` (cut from `K249`)
+**Branch:** `K249`
 **Scope:** the `algebra` package of `kosmos-core`, the `hypercomplex` package of `kosmos-core`, and
 their tests in `kosmos-testkit`.
 
@@ -230,7 +230,7 @@ Every new public declaration has KDoc.
    changed; the generated `kosmos-testkit.kotlin_module` had been truncated. `./gradlew
    :kosmos-testkit:clean` fixed it. This is a Kotlin incremental-compilation problem, not a problem
    in the code, and the final verification was a full `clean build`.
-3. **Nothing is pushed.** All work is in one local commit on `claude/project-thread-lxwsdp`.
+3. **Nothing is pushed.** All work is in local commits on `K249`.
 
 ## 7. Open questions
 
@@ -239,3 +239,120 @@ Every new public declaration has KDoc.
 2. Is `i² = −1, j² = k² = +1` the split-quaternion convention you want?
 3. Should the biquaternions and bioctonions get public exact tiers over ℚ(i)?
 4. Should I push the branch and open a pull request against `K249` or `main`?
+
+---
+
+## Addendum: second pass (2026-10-08, later)
+
+Sections 1 to 7 describe the first pass. This addendum covers the follow-up work, and supersedes
+them where they differ: in particular sections 2 and 3 describe typealias carriers and raw tiers
+that no longer exist.
+
+**Result:** `./gradlew clean build`: **1817 tests, 0 failures.**
+
+### A. Octonion combinatorics (new `OctonionCombinatoricsSpec`, 17 tests)
+
+All checked exhaustively and exactly, from the products of the basis units of `𝕆_ℚ`:
+
+| Claim | Verified |
+|-------|----------|
+| 35 unordered triples of distinct units = 7 Fano lines + 28 non-lines | ✓ |
+| An ordered triple associates iff it is collinear: 42 do, 168 do not | ✓ |
+| The 168 anti-associate, and triples with a repeated unit all associate | ✓ |
+| Each Fano line spans a quaternion subalgebra (a copy of Q₈) | ✓ |
+| The associator is alternating (all three transpositions, random rationals) | ✓ |
+| Reversal pairs the 168 into 84 pairs with opposite associators | ✓ |
+| Exactly 21 permutations preserve the table, forming C₇ ⋊ C₃ | ✓ (element orders 1, 3, 7 with counts 1, 14, 6; normal C₇; nonabelian) |
+| 168 collineations of the unoriented plane; 1344 signed automorphisms | ✓ |
+| 2⁷ · 7! = 645,120 signed permutations give exactly 480 tables | ✓ |
+| 480 = 30 Fano planes × 16 orientations | ✓ |
+
+One refinement to the statement you quoted: on a nonassociative basis triple the associator is
+exactly `±2·e_m`, where `m` is the single point of the Fano plane not on a line through two of the
+three indices. Zorn vector-matrices were **not** implemented.
+
+### B. Generic `Quaternion<R>` and `Octonion<R>`
+
+- `Quaternion<R>` and `Octonion<R>` are value classes over the Cayley-Dickson pair, mirroring
+  `SplitQuaternion<R>`. `RealQuaternion`, `RationalQuaternion`, `LipschitzQuaternion`,
+  `RealOctonion`, `RationalOctonion` and `GravesianOctonion` are typealiases of them.
+- **Source-incompatible:** the bare names `Quaternion` and `Octonion` now need a type argument.
+  Use `RealQuaternion` / `RealOctonion`. The helper constructors `rationalQuaternion`,
+  `lipschitzQuaternion`, `rationalOctonion` and `gravesianOctonion` are gone; `quaternion(…)` and
+  `octonion(…)` are generic. Coordinates are members (`q.w`), and the raw pair is `q.cd`.
+- `QuaternionAlgebras` and `OctonionAlgebras` gained generic constructions over any commutative
+  ring: ring, ring-with-reciprocal over a field, basis, norm, scalar action, module, algebra, star
+  algebra, scalar embedding, the canonical `Quaternion<R> ↪ Octonion<R>`, `Eq` and printable.
+- `GaussianInt` and `GaussianRat` are value classes over `CD<BigInteger>` and `CD<Rational>`. Their
+  `add`, `mul` and `conj` now come from `CayleyDickson.commutative` instead of hand-written
+  formulas. `GaussianRat(re, im)`, `.re`, `.im` and destructuring still work. `GaussianInt.I` is new.
+- `QuaternionTier` and `OctonionTier` were rewritten to deliver everything on the public carrier.
+  This removed the per-algebra transport code from all six `*Algebras` families, including the four
+  written in the first pass.
+
+**My view on the design question.** Value classes are the right call, for the reason you gave and
+one more: with typealiases, `Quaternion<Real>`, `SplitQuaternion<Real>` and `Bicomplex` would be the
+same type, and the compiler would accept a split-quaternion where a quaternion is expected. The
+cost is that the canonical embedding is no longer the bare `CayleyDickson.canonicalEmbedding`; the
+tiers now supply it. Wrapping the Gaussian types is consistent with that and let their arithmetic
+come from the kernel too.
+
+**The inconsistency that remains:** `Complex` is still `typealias Complex = CD<Real>`. The
+consistent end state is a generic `Complex<R>` with `GaussianInt = Complex<BigInteger>` and
+`GaussianRat = Complex<Rational>`. I did not do it because `Complex` is used well beyond this
+package (linear algebra, analysis), so it deserves its own decision.
+
+### C. Exceptions
+
+Rule now applied throughout: **dividing by zero or inverting a non-unit throws
+`ArithmeticException`** (as the JVM's own `BigInteger` does); a malformed argument throws
+`IllegalArgumentException`. Changed to match:
+
+| Site | Was |
+|------|-----|
+| `Rational.reciprocal()`, `r / 0`, `Rational.of(n, 0)` | `IllegalArgumentException` |
+| `DualRationalFns.inv`, `DualRationalFns.mobius`, `DualRealFns.inv` | `IllegalArgumentException` |
+| `ExtendedGcd.modInverse()` (and `Int`/`Long.modInverse`) | `IllegalArgumentException` |
+| `ExactDivOps` (division by zero, and inexact division) | `IllegalArgumentException` |
+| `GaussianInt` and `EisensteinInt` `divRem` by zero | `IllegalArgumentException` |
+| `DenseMatAlgebras.hadamardReciprocal` on a zero entry | `IllegalArgumentException` |
+
+This supersedes the note in section 1 that `Rational.reciprocal()` was left unchanged. Left as
+`IllegalArgumentException` on purpose: `Rational % m` for a non-positive modulus (an argument
+precondition), and membership checks of the Hadamard unit groups.
+
+### D. Other fixes
+
+- `Monoid.pow` no longer performs a wasted final squaring. The same flaw was in `Group.zTimes` and
+  `Complex.powInt`; both are fixed, and `powInt` now delegates to `Monoid.pow`.
+  `ExponentiationSpec` counts the operations: exactly `⌊log₂ n⌋ + popcount(n)` for `pow`.
+
+### E. Files removed
+
+- `RationalQuaternion.kt`, `LipschitzQuaternion.kt`, `RationalOctonion.kt`, `GravesianOctonion.kt`
+  (folded into `Quaternion.kt` and `Octonion.kt`).
+- The `LipschitzQuaternions` constants object (unused).
+- `RationalAlgebras.QToGaussianRatMonomorphism` (an exact duplicate of
+  `GaussianRatAlgebras.QToGaussianRatMonomorphism`, and untested).
+
+**Not deleted:** the untracked `_to_delete/` directory at the repository root. It is not under
+version control, so removing it cannot be undone; say the word and I will remove it.
+
+### F. New and changed tests in this pass
+
+| Spec | Tests | |
+|------|------:|---|
+| `OctonionCombinatoricsSpec` | 17 | section A |
+| `GenericQuaternionOctonionSpec` | 17 | `Quaternion<𝔽₇>` and `Octonion<𝔽₇>` laws; zero divisors over 𝔽₇; agreement with the named ℚ structures; carriers that share a pair are distinct types |
+| `GaussianCarrierSpec` | 6 | the wrappers, and the transported arithmetic against the textbook formulas |
+| `ExponentiationSpec` | 6 | section D |
+
+Several existing specs had exception types or carrier construction updated; no assertion was weakened.
+
+### G. Open questions
+
+1. Should `Complex` become a generic `Complex<R>` value class (see B)?
+2. Should `_to_delete/` be removed?
+3. The first-pass questions about the split-quaternion convention and exact biquaternion tiers
+   still stand.
+
