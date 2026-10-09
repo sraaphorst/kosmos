@@ -23,8 +23,6 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.times
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import java.math.BigInteger
 
 /**
@@ -38,7 +36,7 @@ import java.math.BigInteger
  * Homomorphisms:
  * - [QToRHomomorphism]: a ring homomorphism from rationals to reals: mathematically, this would be injective, but
  *   given the limitations of the [Real] type, it is not.
- * - [QToGaussianRatMonomorphism]: from rationals to Gaussian rationals.
+ * - `ℚ ↪ ℚ(i)` lives with the Gaussian rationals: `GaussianRatAlgebras.QToGaussianRatMonomorphism`.
  *
  * Eqs:
  * - [eqRational]
@@ -106,14 +104,6 @@ object RationalAlgebras {
         override val domain = RationalField
         override val codomain = RealAlgebras.RealField
         override val map = UnaryOp<Rational, Real> { it.toReal() }
-    }
-
-    object QToGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> {
-        override val domain = RationalField
-        override val codomain = GaussianRatAlgebras.GaussianRatField
-        override val map = UnaryOp<Rational, GaussianRat> {
-            GaussianRat(it, Rational.ZERO)
-        }
     }
 
     val eqRational: Eq<Rational> = Eq.default()

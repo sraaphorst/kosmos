@@ -22,7 +22,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
@@ -168,7 +168,7 @@ object ComplexAlgebras {
      */
     fun complexToQuaternionEmbedding(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<Complex, Quaternion> =
+    ): RingMonomorphism<Complex, RealQuaternion> =
         QuaternionAlgebras.complexEmbedding(emb)
 
     /**
@@ -196,7 +196,7 @@ object ComplexAlgebras {
      */
     fun Complex.asQuaternion(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): Quaternion = complexToQuaternionEmbedding(emb)(this)
+    ): RealQuaternion = complexToQuaternionEmbedding(emb)(this)
 
     /** EQs **/
     val eqComplexStrict: Eq<Complex> = CD.eq(RealAlgebras.eqRealStrict)

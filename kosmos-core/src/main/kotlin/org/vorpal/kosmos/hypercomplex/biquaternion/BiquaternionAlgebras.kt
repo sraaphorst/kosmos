@@ -4,7 +4,6 @@ import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingIsomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.HasReciprocal
@@ -13,7 +12,6 @@ import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.contramap
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
@@ -24,10 +22,9 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.multi.Bicomplex
 import org.vorpal.kosmos.hypercomplex.multi.BicomplexAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
-import org.vorpal.kosmos.hypercomplex.quaternion.realQuaternionTier
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
@@ -39,23 +36,21 @@ import org.vorpal.kosmos.linear.values.DenseMat
  * File-level so that initializing [BiquaternionAlgebras.BiquaternionRing] never recursively
  * initializes [BiquaternionAlgebras].
  */
-internal val biquaternionTier: QuaternionTier<Complex, CD<Complex>> =
-    QuaternionTier.over(ComplexAlgebras.ComplexField)
-
-private val biquaternionTransport: CarrierTransport<CD<CD<Complex>>, Biquaternion> =
-    CarrierTransport(
-        wrap = UnaryOp { cd -> Biquaternion(cd) },
-        unwrap = UnaryOp { q -> q.cd }
+internal val biquaternionTier: QuaternionTier<Complex, Biquaternion> =
+    QuaternionTier(
+        scalars = ComplexAlgebras.ComplexField,
+        wrap = { cd -> Biquaternion(cd) },
+        unwrap = { q -> q.cd }
     )
 
 private val cayleyDicksonBiquaternion: InvolutiveRing<Biquaternion> =
-    biquaternionTransport.involutiveRing(biquaternionTier.ring)
+    biquaternionTier.ring
 
 /**
  * The coefficientwise complex scalar action `c ⊳ (w + xi + yj + zk) = cw + cx·i + cy·j + cz·k`.
  */
 private val complexScaling: LeftAction<Complex, Biquaternion> =
-    LeftAction(Symbols.TRIANGLE_RIGHT) { c, q -> Biquaternion(biquaternionTier.scalarAction(c, q.cd)) }
+    biquaternionTier.scalarAction
 
 /**
  * Apply [f] to each of the four complex coefficients.
@@ -115,7 +110,7 @@ object BiquaternionAlgebras {
          * The standard ℂ-basis `1, i, j, k`.
          */
         val basis: List<Biquaternion> =
-            biquaternionTier.basis.map { cd -> Biquaternion(cd) }
+            biquaternionTier.basis
 
         /** The quaternion unit `i`. */
         val i: Biquaternion = basis[1]
@@ -157,7 +152,7 @@ object BiquaternionAlgebras {
          * [BiquaternionToComplexMatrixIsomorphism] it is the determinant.
          */
         override val normSq: UnaryOp<Biquaternion, Complex> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL) { q -> biquaternionTier.normSq(q.cd) }
+            biquaternionTier.normSq
 
         /**
          * `q` is invertible iff `N(q)` is invertible in ℂ. Following the floating-point policy of
@@ -220,23 +215,18 @@ object BiquaternionAlgebras {
     val ComplexToBiquaternionMonomorphism: RingMonomorphism<Complex, Biquaternion> = RingMonomorphism.of(
         domain = ComplexAlgebras.ComplexField,
         codomain = BiquaternionRing,
-        map = UnaryOp { c ->
-            val zero = ComplexAlgebras.ComplexField.zero
-            biquaternion(c, zero, zero, zero)
-        }
+        map = biquaternionTier.scalarEmbeddingMap
     )
 
     /**
      * The embedding `ℍ ↪ ℍ ⊗ ℂ` of the real quaternions as the biquaternions with real
      * coefficients: the fixed ring of [BiquaternionRing.complexConj].
      */
-    val QuaternionToBiquaternionMonomorphism: RingMonomorphism<Quaternion, Biquaternion> = RingMonomorphism.of(
+    val QuaternionToBiquaternionMonomorphism: RingMonomorphism<RealQuaternion, Biquaternion> = RingMonomorphism.of(
         domain = QuaternionAlgebras.QuaternionDivisionRing,
         codomain = BiquaternionRing,
         map = UnaryOp { q ->
-            Biquaternion(
-                biquaternionTier.fromCoordinates(realQuaternionTier.coordinates(q).map { r -> complex(r, 0.0) })
-            )
+            biquaternionTier.fromCoordinates(q.coefficients().map { r -> complex(r, 0.0) })
         }
     )
 
@@ -327,10 +317,10 @@ object BiquaternionAlgebras {
     }
 
     val eqBiquaternionStrict: Eq<Biquaternion> =
-        CD.eq(CD.eq(ComplexAlgebras.eqComplexStrict)).contramap(Biquaternion::cd)
+        biquaternionTier.eq(ComplexAlgebras.eqComplexStrict)
 
     val eqBiquaternion: Eq<Biquaternion> =
-        CD.eq(CD.eq(ComplexAlgebras.eqComplex)).contramap(Biquaternion::cd)
+        biquaternionTier.eq(ComplexAlgebras.eqComplex)
 
     private fun printableBiquaternionGenerator(
         prComplex: Printable<Complex>,

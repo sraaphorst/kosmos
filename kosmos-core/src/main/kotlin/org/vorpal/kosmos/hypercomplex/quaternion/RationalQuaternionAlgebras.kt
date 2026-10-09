@@ -8,28 +8,19 @@ import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 
 /**
- * `ℍ_ℚ = CD⟨ℚ(i)⟩`: the rational quaternion tier.
+ * `ℍ_ℚ = Quaternion<Rational>`: the rational quaternion tier.
  *
  * File-level so that initializing [RationalQuaternionAlgebras.RationalQuaternionDivisionRing] never
  * recursively initializes [RationalQuaternionAlgebras].
  */
-internal val rationalQuaternionTier: QuaternionTier<Rational, GaussianRat> =
-    QuaternionTier(
-        complexRing = GaussianRatAlgebras.GaussianRatStarAlgebra,
-        scalars = RationalAlgebras.RationalField,
-        re = UnaryOp { z -> z.re },
-        im = UnaryOp { z -> z.im },
-        mkComplex = BinaryOp { a, b -> GaussianRat(a, b) }
-    )
+internal val rationalQuaternionTier: QuaternionTier<Rational, RationalQuaternion> =
+    quaternionTier(RationalAlgebras.RationalField)
 
 /**
  * [RationalQuaternionAlgebras] contains the algebraic structures over the [RationalQuaternion] type, as well as the
@@ -102,7 +93,7 @@ object RationalQuaternionAlgebras {
      * round to the same `Double`, and products are only preserved up to rounding. Tests check it as a
      * homomorphism *up to approximate equality*.
      */
-    val rationalQuaternionToQuaternionApprox: UnaryOp<RationalQuaternion, Quaternion> =
+    val rationalQuaternionToQuaternionApprox: UnaryOp<RationalQuaternion, RealQuaternion> =
         UnaryOp(Symbols.APPROX) { q ->
             realQuaternionTier.fromCoordinates(rationalQuaternionTier.coordinates(q).map(Rational::toReal))
         }

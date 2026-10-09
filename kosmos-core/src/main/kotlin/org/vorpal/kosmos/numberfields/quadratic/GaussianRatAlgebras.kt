@@ -4,6 +4,10 @@ import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CD
+import org.vorpal.kosmos.algebra.structures.CarrierTransport
+import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -28,12 +32,27 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+
+/**
+ * `ℚ(i) = ℚ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℚ (trivial involution) at `σ = 1`,
+ * transported to the [GaussianRat] carrier. Its involution is complex conjugation.
+ *
+ * File-level so that initializing [GaussianRatAlgebras.GaussianRatField] never recursively
+ * initializes [GaussianRatAlgebras].
+ */
+private val cayleyDicksonGaussianRat: CommutativeInvolutiveRing<GaussianRat> =
+    CarrierTransport<CD<Rational>, GaussianRat>(
+        wrap = UnaryOp { cd -> GaussianRat(cd) },
+        unwrap = UnaryOp { z -> z.cd }
+    ).commutativeInvolutiveRing(
+        CayleyDickson.commutative(RationalAlgebras.RationalField, Rational.ONE)
+    )
 
 /**
  * Main structures:
@@ -69,18 +88,9 @@ object GaussianRatAlgebras {
         override val zero = GaussianRat.ZERO
         override val one = GaussianRat.ONE
 
-        override val add: AbelianGroup<GaussianRat> = AbelianGroup.of(
-            identity = zero,
-            op = BinOp(Symbols.PLUS) { gq1, gq2 -> GaussianRat(gq1.re + gq2.re, gq1.im + gq2.im) },
-            inverse = Endo(Symbols.MINUS) { gq -> GaussianRat(-gq.re, -gq.im) }
-        )
+        override val add: AbelianGroup<GaussianRat> = cayleyDicksonGaussianRat.add
 
-        override val mul: CommutativeMonoid<GaussianRat> = CommutativeMonoid.of(
-            identity = one,
-            op = BinOp(Symbols.ASTERISK) { gq1, gq2 ->
-                GaussianRat(gq1.re * gq2.re - gq1.im * gq2.im, gq1.re * gq2.im + gq1.im * gq2.re)
-            }
-        )
+        override val mul: CommutativeMonoid<GaussianRat> = cayleyDicksonGaussianRat.mul
 
         override fun fromBigInt(n: BigInteger): GaussianRat =
             GaussianRat(n.toRational(), Rational.ZERO)
@@ -94,9 +104,7 @@ object GaussianRatAlgebras {
             GaussianRat(gq.re / n2, -gq.im / n2)
         }
 
-        internal val conj: Endo<GaussianRat> = Endo(Symbols.CONJ) { a ->
-            GaussianRat(a.re, -a.im)
-        }
+        internal val conj: Endo<GaussianRat> = cayleyDicksonGaussianRat.conj
     }
 
     object GaussianRatStarAlgebra:
@@ -182,7 +190,7 @@ object GaussianRatAlgebras {
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
         domain = GaussianRatField,
         codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-        map = rationalQuaternionTier.complexEmbeddingMap(embedding)
+        map = UnaryOp { z -> rationalQuaternionTier.complexEmbeddingMap(embedding)(z.cd) }
     )
 
     /**
@@ -199,7 +207,7 @@ object GaussianRatAlgebras {
      */
     fun gaussianRatToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): UnaryOp<GaussianRat, Quaternion> =
+    ): UnaryOp<GaussianRat, RealQuaternion> =
         gaussianRatToRationalQuaternionEmbedding(embedding).map andThen
             RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox
 

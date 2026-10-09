@@ -9,9 +9,9 @@ import org.vorpal.kosmos.hypercomplex.quaternion.ArbLipschitzQuaternion
 object ArbGravesianOctonion {
 
     /**
-     * Gravesian octonions `CD⟨ℤ⟨i, j, k⟩⟩ ≅ ℤ⁸`, built from pairs of Lipschitz quaternions.
+     * Gravesian octonions `Octonion<BigInteger> ≅ ℤ⁸`, built from pairs of Lipschitz quaternions.
      */
     val gravesianOctonion: Arb<GravesianOctonion> =
         Arb.pair(ArbLipschitzQuaternion.lipschitzQuaternion, ArbLipschitzQuaternion.lipschitzQuaternion)
-            .map { (a, b) -> CD(a, b) }
+            .map { (a, b) -> Octonion(CD(a.cd, b.cd)) }
 }

@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
+import org.vorpal.kosmos.algebra.structures.CD
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.hypercomplex.complex.ArbComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
@@ -22,13 +23,13 @@ class QuaternionBasisSpec : StringSpec({
         val zero = ComplexAlgebras.ComplexField.zero
         val one = ComplexAlgebras.ComplexField.one
         val i = ComplexAlgebras.i
-        check(ring.basis == listOf(Quaternion(one, zero), Quaternion(i, zero), Quaternion(zero, one), Quaternion(zero, i)))
+        check(ring.basis == listOf(CD(one, zero), CD(i, zero), CD(zero, one), CD(zero, i)).map { cd -> Quaternion(cd) })
     }
 
     "Hamilton's relations: i² = j² = k² = -1, ij = k = -ji, jk = i = -kj, ki = j = -ik" {
         val (_, i, j, k) = ring.basis
         val negOne = ring.negOne
-        fun neg(q: Quaternion): Quaternion = ring.add.inverse(q)
+        fun neg(q: RealQuaternion): RealQuaternion = ring.add.inverse(q)
 
         listOf(i, j, k).forEach { u -> check(eq(ring.mul(u, u), negOne)) { "${pr(u)}² != -1" } }
         check(eq(ring.mul(i, j), k) && eq(ring.mul(j, i), neg(k)))

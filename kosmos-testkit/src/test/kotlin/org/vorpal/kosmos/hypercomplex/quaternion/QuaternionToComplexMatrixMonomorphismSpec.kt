@@ -82,14 +82,14 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
         fun twoRe(z: Complex): Complex =
             complex.add(z, complex.conj(z))
 
-        fun normSqAsComplex(q: Quaternion): Complex =
+        fun normSqAsComplex(q: RealQuaternion): Complex =
             complex(mono.domain.normSq(q), 0.0)
 
         checkAll(ArbQuaternion.quaternion) { q ->
             val m = mono(q)
 
             val tr = trace2x2(m)
-            val expectedTr = twoRe(q.a)
+            val expectedTr = twoRe(q.cd.a)
 
             withClue(
                 "trace(Φ(q)) should equal 2*Re(q), q=${prQ(q)}, got tr=${prC(tr)}, expected=${prC(expectedTr)}"
