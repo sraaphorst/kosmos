@@ -22,6 +22,7 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
@@ -288,7 +289,7 @@ object QuaternionAlgebras {
      */
     fun complexEmbedding(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<Complex, RealQuaternion> =
+    ): RingMonomorphism<RealComplex, RealQuaternion> =
         RingMonomorphism.of(
             domain = ComplexAlgebras.ComplexField,
             codomain = QuaternionDivisionRing,
@@ -300,7 +301,7 @@ object QuaternionAlgebras {
      */
     fun quaternionLeftComplexVectorSpace(
         emb: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): FiniteVectorSpace<Complex, RealQuaternion> {
+    ): FiniteVectorSpace<RealComplex, RealQuaternion> {
         val embed = complexEmbedding(emb)
         return FiniteVectorSpace.of(
             scalars = ComplexAlgebras.ComplexField,
@@ -313,10 +314,10 @@ object QuaternionAlgebras {
     }
 
     // A map of all complex embeddings to the vector space that they generate.
-    val QuaternionLeftComplexVectorSpacesAll: Map<AxisSignEmbeddings.AxisSignEmbedding, FiniteVectorSpace<Complex, RealQuaternion>> =
+    val QuaternionLeftComplexVectorSpacesAll: Map<AxisSignEmbeddings.AxisSignEmbedding, FiniteVectorSpace<RealComplex, RealQuaternion>> =
         AxisSignEmbeddings.AxisSignEmbedding.all.associateWith(::quaternionLeftComplexVectorSpace)
 
-    val QuaternionLeftComplexVectorSpaceCanonical: FiniteVectorSpace<Complex, RealQuaternion> =
+    val QuaternionLeftComplexVectorSpaceCanonical: FiniteVectorSpace<RealComplex, RealQuaternion> =
         quaternionLeftComplexVectorSpace(canonicalEmbedding)
 
     val QuaternionStarAlgebra: StarAlgebra<Real, RealQuaternion> = StarAlgebra.of(
@@ -331,12 +332,13 @@ object QuaternionAlgebras {
      * q ↦ [[a, b], [-conj(b), conj(a)]].
      * ```
      */
-    object QuaternionToComplexMatrixMonomorphism: RingMonomorphism<RealQuaternion, DenseMat<Complex>> {
+    object QuaternionToComplexMatrixMonomorphism: RingMonomorphism<RealQuaternion, DenseMat<RealComplex>> {
         private val complexStarAlgebra = ComplexAlgebras.ComplexStarAlgebra
         override val domain = QuaternionDivisionRing
         override val codomain = DenseMatAlgebras.DenseMatRing(complexStarAlgebra, 2)
-        override val map: UnaryOp<RealQuaternion, DenseMat<Complex>> = UnaryOp { q ->
-            val (a, b) = q.cd
+        override val map: UnaryOp<RealQuaternion, DenseMat<RealComplex>> = UnaryOp { q ->
+            val a = Complex(q.cd.a)
+            val b = Complex(q.cd.b)
             DenseMat.ofRows(
                 listOf(
                     listOf(a, b),

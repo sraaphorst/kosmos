@@ -144,18 +144,20 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 
 | σ | x² | Algebra | Carrier |
 |---|----|---------|---------|
-| 1  | −1 | ℂ = ℝ[i]/(i² + 1) | `Complex` (typealias of `CD<Real>`) |
+| 1  | −1 | complex-like `R[i]/(i² + 1)`: ℂ, ℚ(i), ℤ[i] | `Complex<R>` (value class over `CD<R>`) |
 | 1  | −1 | 𝔹 = ℂ[j]/(j² + 1) (bicomplex) | `Bicomplex` (value class over `CD<Complex>`) |
 | −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
 | 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
-| 1  | −1 | ℤ[i], ℚ(i) | `GaussianInt`, `GaussianRat` (value classes over `CD<BigInteger>`, `CD<Rational>`) |
 
-**Generic carriers and their named instances.** `Quaternion<R>` and `Octonion<R>` are generic over
-a commutative ring, exactly like `SplitQuaternion<R>`. The classical coefficient rings are
-typealiases:
+**Generic carriers and their named instances.** `Complex<R>`, `Quaternion<R>` and `Octonion<R>` are
+generic over a commutative ring, exactly like `SplitComplex<R>` and `SplitQuaternion<R>`. The
+classical coefficient rings are typealiases:
 
 | Typealias | Is | Algebra |
 |-----------|----|---------|
+| `RealComplex` | `Complex<Real>` | ℂ |
+| `GaussianRat` | `Complex<Rational>` | ℚ(i) |
+| `GaussianInt` | `Complex<BigInteger>` | ℤ[i] |
 | `RealQuaternion` | `Quaternion<Real>` | ℍ |
 | `RationalQuaternion` | `Quaternion<Rational>` | ℍ_ℚ |
 | `LipschitzQuaternion` | `Quaternion<BigInteger>` | the Lipschitz order `ℤ⟨i, j, k⟩` |
@@ -163,24 +165,27 @@ typealiases:
 | `RationalOctonion` | `Octonion<Rational>` | 𝕆_ℚ |
 | `GravesianOctonion` | `Octonion<BigInteger>` | the Gravesian integers |
 
-`QuaternionAlgebras` and `OctonionAlgebras` hold the generic constructions (`quaternionRing(base)`,
-`octonionRing(base)`, `…RingWithReciprocal(field)`, modules, star algebras, the canonical
-embedding) alongside the structures of ℍ and 𝕆. They work over any commutative ring: over 𝔽₇, for
-example, `Quaternion<𝔽₇>` is a ring with zero divisors (`i + 2j + 3k` has norm 0), which
-`GenericQuaternionOctonionSpec` checks.
+`ComplexAlgebras`, `QuaternionAlgebras` and `OctonionAlgebras` hold the generic constructions
+(`complexRing(base)`, `quaternionRing(base)`, `octonionRing(base)`, `…RingWithReciprocal(field)`,
+modules, star algebras, the canonical embeddings) alongside the structures of ℂ, ℍ and 𝕆. They work
+over any commutative ring. Over finite fields, for example:
+- `Complex<𝔽₇>` is the field with 49 elements, but `Complex<𝔽₅>` has zero divisors, since
+  `2² = −1` there (`GenericComplexSpec`);
+- `Quaternion<𝔽₇>` is a ring with zero divisors: `i + 2j + 3k` has norm 0
+  (`GenericQuaternionOctonionSpec`).
 
 **Why value classes.** Every carrier above is a value class over a `CD` pair, not a typealias,
 because the raw carriers collide. The algebras differ, so the Kotlin types must too:
 
 | Raw carrier | Shared by |
 |-------------|-----------|
-| `CD<R>` | `Complex` (`R = Real`), `SplitComplex<R>`, `Dual<R>`, `GaussianInt`, `GaussianRat` |
-| `CD<CD<R>>` | `Quaternion<R>`, `SplitQuaternion<R>`, `Bicomplex` (`R = Real`) |
-| `CD<CD<CD<R>>>` | `Octonion<R>`, `SplitOctonion<R>`, `Biquaternion` (`R = Real`) |
-| `CD<CD<CD<Complex>>>` | `Bioctonion` (and, later, the sedenions over ℝ) |
+| `CD<R>` | `Complex<R>`, `SplitComplex<R>`, `Dual<R>` |
+| `CD<CD<R>>` | `Quaternion<R>`, `SplitQuaternion<R>` |
+| `CD<CD<CD<R>>>` | `Octonion<R>`, `SplitOctonion<R>` |
 
-`Complex` is the one remaining typealias (`CD<Real>`); see
-[What remains](#what-remains-to-be-done).
+The complexified algebras nest the complex value class instead: `Bicomplex` is over
+`CD<RealComplex>`, `Biquaternion` over `CD<CD<RealComplex>>` and `Bioctonion` over
+`CD<CD<CD<RealComplex>>>`. No carrier in the package is a typealias of `CD` any more.
 
 **One construction per tier.** Every quaternion-level algebra is built by the single internal
 `QuaternionTier`, and every octonion-level algebra by the single `OctonionTier`. A tier is given the
@@ -233,7 +238,7 @@ ends in a division in one of them. This is tested uniformly in `ReciprocalPolicy
 
 ```
 hypercomplex/
-├── complex/                  # ℂ = CD⟨ℝ⟩ (commutative doubling, σ = 1)
+├── complex/                  # Complex<R> = CD⟨R⟩ (commutative doubling, σ = 1); ℂ = RealComplex
 │   ├── Complex.kt
 │   ├── ComplexAlgebras.kt
 │   └── ComplexPrintable.kt
@@ -294,7 +299,8 @@ hypercomplex/
 ```
 
 The Gaussian integers `ℤ[i]`, Gaussian rationals `ℚ(i)` and Eisenstein integers `ℤ[ω]` live in
-`numberfields.quadratic`. `GaussianInt` and `GaussianRat` are value classes over `CD`, with their
+`numberfields.quadratic`. `GaussianInt` and `GaussianRat` are `Complex<BigInteger>` and
+`Complex<Rational>`, with their
 ring arithmetic taken from `CayleyDickson.commutative`.
 
 Bases are derived rather than written out: `CayleyDickson.doubledBasis(zero, baseBasis)` doubles
@@ -919,7 +925,6 @@ Nothing below is implemented yet. Items are grouped by how they would build on w
 | Split-biquaternions `ℍ ⊗ (ℝ ⊕ ℝ) ≅ ℍ ⊕ ℍ` | `Quaternion<SplitComplex<Real>>` | Same remark. |
 | Dual-complex numbers, hyperbolic quaternions | | The hyperbolic quaternions (Macfarlane) are nonassociative and are *not* a Cayley–Dickson double. |
 | Tricomplex and general multicomplex numbers | iterate `CayleyDickson.commutative` | Design notes in `docs/design/Multicomplex.md`. |
-| `Complex<R>` | generic value class over `CD<R>` | `Complex` is still `typealias Complex = CD<Real>`, the last typealias carrier; `GaussianInt` and `GaussianRat` would become `Complex<BigInteger>` and `Complex<Rational>`. `Complex` is used well outside this package (linear algebra, analysis), so this is a wider change. |
 | Clifford algebras `Cl(p, q)` | new construction | Would unify several algebras here: `Cl(0,1) ≅ ℂ`, `Cl(1,0) ≅` split-complex, `Cl(0,2) ≅ ℍ`, `Cl(1,1) ≅ Cl(2,0) ≅ ℍ′`, `Cl(3,0) ≅ ℍ ⊗ ℂ`, `Cl(0,3) ≅ ℍ ⊕ ℍ`. |
 
 ### Gaps in the algebras that exist

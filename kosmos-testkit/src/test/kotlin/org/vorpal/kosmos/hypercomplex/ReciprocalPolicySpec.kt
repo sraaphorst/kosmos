@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex
 
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -89,7 +90,7 @@ class ReciprocalPolicySpec : StringSpec({
 
     "ℂ: hasReciprocal, reciprocal and reciprocalOption agree, including at 0, tiny, NaN and ∞" {
         checkAll(boundaryReal, boundaryReal) { a, b ->
-            checkContract(ComplexAlgebras.ComplexField, complex(a, b), UnaryOp { c -> allFinite(listOf(c.a, c.b)) })
+            checkContract(ComplexAlgebras.ComplexField, complex(a, b), UnaryOp { c -> allFinite(listOf(c.re, c.im)) })
         }
         ComplexAlgebras.ComplexField.hasReciprocal(complex(0.0, 0.0)) shouldBe false
         ComplexAlgebras.ComplexField.hasReciprocal(complex(Double.NaN, 1.0)) shouldBe false
@@ -187,10 +188,10 @@ class ReciprocalPolicySpec : StringSpec({
         q.reciprocal(Rational.of(2, 3)) shouldBe Rational.of(3, 2)
 
         listOf(GaussianRatAlgebras.GaussianRatField, GaussianRatAlgebras.GaussianRatStarAlgebra).forEach { k ->
-            k.hasReciprocal(GaussianRat.ZERO) shouldBe false
-            shouldThrow<ArithmeticException> { k.reciprocal(GaussianRat.ZERO) }
-            k.reciprocalOption(GaussianRat.ZERO) shouldBe Option.None
-            k.reciprocal(GaussianRat.I) shouldBe GaussianRat(Rational.ZERO, -Rational.ONE)
+            k.hasReciprocal(GaussianRats.ZERO) shouldBe false
+            shouldThrow<ArithmeticException> { k.reciprocal(GaussianRats.ZERO) }
+            k.reciprocalOption(GaussianRats.ZERO) shouldBe Option.None
+            k.reciprocal(GaussianRats.I) shouldBe GaussianRat(Rational.ZERO, -Rational.ONE)
         }
     }
 
@@ -219,7 +220,7 @@ class ReciprocalPolicySpec : StringSpec({
         val ring = BiquaternionAlgebras.BiquaternionRing
         checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { a, b, c, d ->
             val q = biquaternion(complex(a, b), complex(c, 0.0), complex(0.0, d), complex(1.0, 0.0))
-            checkContract(ring, q, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.a, z.b) }) })
+            checkContract(ring, q, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.re, z.im) }) })
         }
         // 1 + h·i has norm 1 + h² = 0.
         ring.hasReciprocal(biquaternion(complex(1.0, 0.0), complex(0.0, 1.0), complex(0.0, 0.0), complex(0.0, 0.0))) shouldBe false
@@ -232,7 +233,7 @@ class ReciprocalPolicySpec : StringSpec({
         val zero = complex(0.0, 0.0)
         checkAll(boundaryReal, boundaryReal, boundaryReal, boundaryReal) { a, b, c, d ->
             val o = bioctonion(listOf(complex(a, b), zero, zero, complex(c, 0.0), zero, complex(0.0, d), zero, complex(1.0, 0.0)))
-            checkContract(ring, o, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.a, z.b) }) })
+            checkContract(ring, o, UnaryOp { inv -> allFinite(inv.coefficients().flatMap { z -> listOf(z.re, z.im) }) })
         }
         // 1 + h·e₄ has norm 1 + h² = 0.
         ring.hasReciprocal(bioctonion(listOf(complex(1.0, 0.0), zero, zero, zero, complex(0.0, 1.0), zero, zero, zero))) shouldBe false

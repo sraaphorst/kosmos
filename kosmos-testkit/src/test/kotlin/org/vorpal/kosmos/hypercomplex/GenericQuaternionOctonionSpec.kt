@@ -13,7 +13,6 @@ import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.multi.Bicomplex
 import org.vorpal.kosmos.hypercomplex.multi.BicomplexAlgebras
 import org.vorpal.kosmos.hypercomplex.octonion.ArbRationalOctonion
@@ -288,11 +287,13 @@ class GenericQuaternionOctonionSpec : StringSpec({
     }
 
     "algebras that share a Cayley-Dickson carrier are distinct types with distinct products" {
-        // The same raw pair (0, 1) names j in ℍ, j in ℍ′ and j in 𝔹.
-        val raw = CD(complex(0.0, 0.0), complex(1.0, 0.0))
+        // The same coordinates (0, 0, 1, 0) name j in ℍ, j in ℍ′ and j in 𝔹; ℍ and ℍ′ even share the
+        // raw Cayley-Dickson pair.
+        val raw = CD(CD(0.0, 0.0), CD(1.0, 0.0))
         val quaternionJ = Quaternion(raw)
         val splitJ = SplitQuaternion(raw)
-        val bicomplexJ = Bicomplex(raw)
+        val bicomplexJ = Bicomplex.ofStandard(0.0, 0.0, 1.0, 0.0)
+        quaternionJ.cd shouldBe splitJ.cd
 
         val any: List<Any> = listOf(quaternionJ, splitJ, bicomplexJ)
         any[0] shouldNotBe any[1]
@@ -313,8 +314,8 @@ class GenericQuaternionOctonionSpec : StringSpec({
         check(eqB(bicomplex.mul(bicomplexJ, bicomplexJ), bicomplex.add.inverse(bicomplex.one))) // j² = -1
 
         // ℍ and 𝔹 agree on j² but differ on ij versus ji: ℍ anticommutes, 𝔹 commutes.
-        val rawI = CD(complex(0.0, 1.0), complex(0.0, 0.0))
-        val (qi, bi) = Quaternion(rawI) to Bicomplex(rawI)
+        val qi = quaternion(0.0, 1.0, 0.0, 0.0)
+        val bi = Bicomplex.ofStandard(0.0, 1.0, 0.0, 0.0)
         check(eqQ(quaternions.mul(qi, quaternionJ), quaternions.add.inverse(quaternions.mul(quaternionJ, qi))))
         check(!eqQ(quaternions.mul(qi, quaternionJ), quaternions.mul(quaternionJ, qi)))
         check(eqB(bicomplex.mul(bi, bicomplexJ), bicomplex.mul(bicomplexJ, bi)))

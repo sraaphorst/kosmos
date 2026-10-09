@@ -5,7 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.multi.ArbBicomplex
 import org.vorpal.kosmos.hypercomplex.multi.BicomplexAlgebras
@@ -37,18 +37,18 @@ class BiquaternionMorphismSpec : StringSpec({
     val eqM = DenseMatAlgebras.liftEq(eqC)
     val prM = DenseMatAlgebras.liftPrintablePretty(prC)
 
-    val arbMatrix: Arb<DenseMat<Complex>> =
+    val arbMatrix: Arb<DenseMat<RealComplex>> =
         ArbBiquaternion.smallComplex.let { c ->
             Arb.bind(c, c, c, c) { p, q, r, s -> DenseMat.ofRows(listOf(listOf(p, q), listOf(r, s))) }
         }
 
-    fun det(m: DenseMat<Complex>): Complex =
+    fun det(m: DenseMat<RealComplex>): RealComplex =
         complexField.add(
             complexField.mul(m[0, 0], m[1, 1]),
             complexField.add.inverse(complexField.mul(m[0, 1], m[1, 0]))
         )
 
-    fun conjugateTranspose(m: DenseMat<Complex>): DenseMat<Complex> =
+    fun conjugateTranspose(m: DenseMat<RealComplex>): DenseMat<RealComplex> =
         DenseMat.ofRows(
             listOf(
                 listOf(complexStar.conj(m[0, 0]), complexStar.conj(m[1, 0])),
@@ -212,4 +212,4 @@ class BiquaternionMorphismSpec : StringSpec({
 })
 
 /** The real number `r` as a complex number. */
-private fun CDReal(r: Double): Complex = org.vorpal.kosmos.hypercomplex.complex.complex(r, 0.0)
+private fun CDReal(r: Double): RealComplex = org.vorpal.kosmos.hypercomplex.complex.complex(r, 0.0)

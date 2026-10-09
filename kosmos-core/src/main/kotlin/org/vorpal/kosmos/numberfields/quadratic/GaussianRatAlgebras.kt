@@ -4,9 +4,6 @@ import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
@@ -26,8 +23,9 @@ import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.complexRingOver
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
@@ -40,18 +38,13 @@ import java.math.BigInteger
 
 /**
  * `ℚ(i) = ℚ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℚ (trivial involution) at `σ = 1`,
- * transported to the [GaussianRat] carrier. Its involution is complex conjugation.
+ * on the [Complex] carrier. Its involution is complex conjugation.
  *
  * File-level so that initializing [GaussianRatAlgebras.GaussianRatField] never recursively
  * initializes [GaussianRatAlgebras].
  */
 private val cayleyDicksonGaussianRat: CommutativeInvolutiveRing<GaussianRat> =
-    CarrierTransport<CD<Rational>, GaussianRat>(
-        wrap = UnaryOp { cd -> GaussianRat(cd) },
-        unwrap = UnaryOp { z -> z.cd }
-    ).commutativeInvolutiveRing(
-        CayleyDickson.commutative(RationalAlgebras.RationalField, Rational.ONE)
-    )
+    complexRingOver(RationalAlgebras.RationalField)
 
 /**
  * Main structures:
@@ -84,8 +77,8 @@ object GaussianRatAlgebras {
 
     object GaussianRatField : Field<GaussianRat> {
 
-        override val zero = GaussianRat.ZERO
-        override val one = GaussianRat.ONE
+        override val zero = GaussianRats.ZERO
+        override val one = GaussianRats.ONE
 
         override val add: AbelianGroup<GaussianRat> = cayleyDicksonGaussianRat.add
 
@@ -112,8 +105,8 @@ object GaussianRatAlgebras {
         HasNormSq<GaussianRat, Rational>,
         HasReciprocal<GaussianRat> {
 
-        override val zero = GaussianRat.ZERO
-        override val one = GaussianRat.ONE
+        override val zero = GaussianRats.ZERO
+        override val one = GaussianRats.ONE
 
         override val scalars = RationalAlgebras.RationalField
         override val add = GaussianRatField.add
@@ -174,10 +167,10 @@ object GaussianRatAlgebras {
      * This may not be a perfect monomorphism due to floating point imprecision of converting
      * Rational to Real when building Complex.
      */
-    object GaussianRatToComplexHomomorphism: RingHomomorphism<GaussianRat, Complex> {
+    object GaussianRatToComplexHomomorphism: RingHomomorphism<GaussianRat, RealComplex> {
         override val domain = GaussianRatField
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<GaussianRat, Complex> { gq ->
+        override val map = UnaryOp<GaussianRat, RealComplex> { gq ->
             complex(gq.re.toReal(), gq.im.toReal())
         }
     }
@@ -189,7 +182,7 @@ object GaussianRatAlgebras {
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
         domain = GaussianRatField,
         codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-        map = UnaryOp { z -> rationalQuaternionTier.complexEmbeddingMap(embedding)(z.cd) }
+        map = rationalQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**

@@ -25,7 +25,7 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.syntax.toNearestInt
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
@@ -235,17 +235,17 @@ object EisensteinIntAlgebras {
      * Note: due to rounding in Real, for sufficiently large values, this may not precisely meet the exact
      * definition of a ring homomorphism. BigInteger to Real may become lossy quite quickly.
      */
-    object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, Complex> {
+    object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, RealComplex> {
         override val domain = EisensteinIntCommutativeRing
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<EisensteinInt, Complex> { e ->
+        override val map = UnaryOp<EisensteinInt, RealComplex> { e ->
             val aReal = e.a.toReal()
             val bReal = e.b.toReal()
             complex(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
     }
 
-    fun EisensteinInt.toComplex(): Complex =
+    fun EisensteinInt.toComplex(): RealComplex =
         EisensteinIntToCHomomorphism(this)
 
     val eqEisensteinInt: Eq<EisensteinInt> = Eq.default()

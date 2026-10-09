@@ -1,10 +1,11 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
@@ -37,7 +38,7 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
     }
 
     "QuaternionToComplexMatrixMonomorphism respects conjugation as conjugate-transpose" {
-        fun conjTranspose2x2(m: DenseMat<Complex>): DenseMat<Complex> {
+        fun conjTranspose2x2(m: DenseMat<RealComplex>): DenseMat<RealComplex> {
             require(m.rows == 2 && m.cols == 2) { "expected 2x2, got ${m.rows}${Symbols.TIMES}${m.cols}" }
             return DenseMat.ofRows(
                 listOf(
@@ -58,38 +59,38 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
     }
 
     "QuaternionToComplexMatrixMonomorphism trace equals 2*Re(q) and det equals normSq(q)" {
-        fun require2x2(m: DenseMat<Complex>) {
+        fun require2x2(m: DenseMat<RealComplex>) {
             require(m.rows == 2 && m.cols == 2) {
                 "expected 2x2, got ${m.rows}${Symbols.TIMES}${m.cols}"
             }
         }
 
-        fun sub(x: Complex, y: Complex): Complex =
+        fun sub(x: RealComplex, y: RealComplex): RealComplex =
             complex.add(x, complex.add.inverse(y))
 
-        fun trace2x2(m: DenseMat<Complex>): Complex {
+        fun trace2x2(m: DenseMat<RealComplex>): RealComplex {
             require2x2(m)
             return complex.add(m[0, 0], m[1, 1])
         }
 
-        fun det2x2(m: DenseMat<Complex>): Complex {
+        fun det2x2(m: DenseMat<RealComplex>): RealComplex {
             require2x2(m)
             val ad = complex.mul(m[0, 0], m[1, 1])
             val bc = complex.mul(m[0, 1], m[1, 0])
             return sub(ad, bc)
         }
 
-        fun twoRe(z: Complex): Complex =
+        fun twoRe(z: RealComplex): RealComplex =
             complex.add(z, complex.conj(z))
 
-        fun normSqAsComplex(q: RealQuaternion): Complex =
+        fun normSqAsComplex(q: RealQuaternion): RealComplex =
             complex(mono.domain.normSq(q), 0.0)
 
         checkAll(ArbQuaternion.quaternion) { q ->
             val m = mono(q)
 
             val tr = trace2x2(m)
-            val expectedTr = twoRe(q.cd.a)
+            val expectedTr = twoRe(Complex(q.cd.a))
 
             withClue(
                 "trace(Φ(q)) should equal 2*Re(q), q=${prQ(q)}, got tr=${prC(tr)}, expected=${prC(expectedTr)}"

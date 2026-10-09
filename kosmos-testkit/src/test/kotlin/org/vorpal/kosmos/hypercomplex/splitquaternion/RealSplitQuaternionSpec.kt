@@ -91,7 +91,7 @@ class RealSplitQuaternionSpec : StringSpec({
         ).test()
 
         checkAll(ArbComplex.boundedComplex) { c ->
-            mono(c) shouldBe splitQuaternion(c.a, c.b, 0.0, 0.0)
+            mono(c) shouldBe splitQuaternion(c.re, c.im, 0.0, 0.0)
         }
     }
 

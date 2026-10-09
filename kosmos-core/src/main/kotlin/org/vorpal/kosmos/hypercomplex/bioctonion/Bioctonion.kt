@@ -1,7 +1,7 @@
 package org.vorpal.kosmos.hypercomplex.bioctonion
 
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 
 /**
  * A bioctonion (complex octonion): an octonion `c₀ + c₁e₁ + … + c₇e₇` with *complex* coefficients,
@@ -22,18 +22,18 @@ import org.vorpal.kosmos.hypercomplex.complex.Complex
  * split-octonions are real forms of it.
  *
  * [Bioctonion] is a value class rather than a typealias of [CD] because its carrier
- * `CD<CD<CD<Complex>>> = CD<Octonion>` is also the carrier that the sedenions will use.
+ * `CD<CD<CD<RealComplex>>> = CD<Octonion>` is also the carrier that the sedenions will use.
  *
  * This file defines only carrier-level naming and accessors. The algebraic structure is supplied
  * by [BioctonionAlgebras].
  */
 @JvmInline
-value class Bioctonion(val cd: CD<CD<CD<Complex>>>) {
+value class Bioctonion(val cd: CD<CD<CD<RealComplex>>>) {
 
     /**
      * The complex coefficients `[c₀, c₁, …, c₇]` in the basis `1, e₁, …, e₇`.
      */
-    fun coefficients(): List<Complex> =
+    fun coefficients(): List<RealComplex> =
         listOf(
             cd.a.a.a, cd.a.a.b, cd.a.b.a, cd.a.b.b,
             cd.b.a.a, cd.b.a.b, cd.b.b.a, cd.b.b.b
@@ -42,7 +42,7 @@ value class Bioctonion(val cd: CD<CD<CD<Complex>>>) {
     /**
      * The complex coefficient of the `n`-th basis element (`n = 0` is the scalar part).
      */
-    operator fun get(n: Int): Complex =
+    operator fun get(n: Int): RealComplex =
         coefficients()[n]
 
     override fun toString(): String =
@@ -52,7 +52,7 @@ value class Bioctonion(val cd: CD<CD<CD<Complex>>>) {
 /**
  * The bioctonion with complex coefficients `[c₀, c₁, …, c₇]` in the basis `1, e₁, …, e₇`.
  */
-fun bioctonion(coefficients: List<Complex>): Bioctonion {
+fun bioctonion(coefficients: List<RealComplex>): Bioctonion {
     require(coefficients.size == 8) { "A bioctonion has 8 complex coefficients: got ${coefficients.size}." }
     val (c0, c1, c2, c3) = coefficients.subList(0, 4)
     val (c4, c5, c6, c7) = coefficients.subList(4, 8)

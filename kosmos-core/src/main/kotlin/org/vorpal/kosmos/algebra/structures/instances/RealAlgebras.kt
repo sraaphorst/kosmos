@@ -17,7 +17,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras.ComplexField
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import java.math.BigInteger
@@ -74,13 +74,13 @@ object RealAlgebras {
             Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
     }
 
-    object RealToComplexMonomorphism: RingMonomorphism<Real, Complex> {
+    object RealToComplexMonomorphism: RingMonomorphism<Real, RealComplex> {
         override val domain = RealAlgebras.RealField
         override val codomain = ComplexField
-        override val map = UnaryOp<Real, Complex> { r -> complex(r, 0.0) }
+        override val map = UnaryOp<Real, RealComplex> { r -> complex(r, 0.0) }
     }
 
-    fun Real.toComplex(): Complex =
+    fun Real.toComplex(): RealComplex =
         RealToComplexMonomorphism(this)
 
     val eqRealApprox: Eq<Real> = Eqs.realApprox()

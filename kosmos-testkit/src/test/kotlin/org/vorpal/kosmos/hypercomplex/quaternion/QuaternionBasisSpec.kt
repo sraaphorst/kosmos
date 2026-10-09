@@ -23,7 +23,7 @@ class QuaternionBasisSpec : StringSpec({
         val zero = ComplexAlgebras.ComplexField.zero
         val one = ComplexAlgebras.ComplexField.one
         val i = ComplexAlgebras.i
-        check(ring.basis == listOf(CD(one, zero), CD(i, zero), CD(zero, one), CD(zero, i)).map { cd -> Quaternion(cd) })
+        check(ring.basis == listOf(CD(one, zero), CD(i, zero), CD(zero, one), CD(zero, i)).map { (a, b) -> Quaternion(CD(a.cd, b.cd)) })
     }
 
     "Hamilton's relations: i² = j² = k² = -1, ij = k = -ji, jk = i = -kj, ki = j = -ik" {

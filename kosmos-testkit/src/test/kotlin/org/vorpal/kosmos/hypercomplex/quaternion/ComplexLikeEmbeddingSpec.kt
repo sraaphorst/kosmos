@@ -1,5 +1,7 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
+import org.vorpal.kosmos.numberfields.quadratic.GaussianInts
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -18,9 +20,7 @@ import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 
 /**
@@ -77,7 +77,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToLipschitzQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-            imaginaryUnit = GaussianInt.I,
+            imaginaryUnit = GaussianInts.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -87,7 +87,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToHurwitzQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = HurwitzQuaternionAlgebras.HurwitzQuaternionRing,
-            imaginaryUnit = GaussianInt.I,
+            imaginaryUnit = GaussianInts.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -97,7 +97,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianIntAlgebras::gaussianIntToRationalQuaternionEmbedding,
             domain = GaussianIntAlgebras.GaussianIntEuclideanDomain,
             codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-            imaginaryUnit = GaussianInt.I,
+            imaginaryUnit = GaussianInts.I,
             arb = ArbGaussianInt.small
         )
     }
@@ -107,7 +107,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
             family = GaussianRatAlgebras::gaussianRatToRationalQuaternionEmbedding,
             domain = GaussianRatAlgebras.GaussianRatField,
             codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-            imaginaryUnit = GaussianRat.I,
+            imaginaryUnit = GaussianRats.I,
             arb = ArbGaussianRat.small
         )
     }
@@ -128,13 +128,13 @@ class ComplexLikeEmbeddingSpec : StringSpec({
         AxisSignEmbedding.canonical shouldBe AxisSignEmbedding(ImagAxis.I, Sign.PLUS)
 
         checkAll(ArbGaussianInt.small) { z ->
-            GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianInt.ZERO.cd))
+            GaussianIntAlgebras.gaussianIntToLipschitzQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianInts.ZERO.cd))
         }
         checkAll(ArbGaussianRat.small) { z ->
-            GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianRat.ZERO.cd))
+            GaussianRatAlgebras.gaussianRatToRationalQuaternionEmbedding()(z) shouldBe Quaternion(CD(z.cd, GaussianRats.ZERO.cd))
         }
         checkAll(ArbComplex.boundedComplex) { z ->
-            ComplexAlgebras.complexToQuaternionEmbedding()(z) shouldBe Quaternion(CD(z, ComplexAlgebras.ComplexField.zero))
+            ComplexAlgebras.complexToQuaternionEmbedding()(z) shouldBe quaternion(z.re, z.im, 0.0, 0.0)
         }
     }
 
