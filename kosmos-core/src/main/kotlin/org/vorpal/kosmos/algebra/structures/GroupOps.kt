@@ -23,6 +23,8 @@ fun <A : Any> Group<A>.zTimes(
     tailrec fun natTimes(k: BigInteger, acc: A, cur: A): A =
         when {
             k.signum() == 0  -> acc
+            // Last set bit: finish without doubling `cur` once more.
+            k == BigInteger.ONE -> op(acc, cur)
             k.testBit(0) -> natTimes(k.shiftRight(1), op(acc, cur), op(cur, cur))
             else             -> natTimes(k.shiftRight(1), acc,          op(cur, cur))
         }

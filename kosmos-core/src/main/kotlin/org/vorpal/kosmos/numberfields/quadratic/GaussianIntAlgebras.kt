@@ -124,7 +124,7 @@ object GaussianIntAlgebras {
          */
         override val divRem: BinaryOp<GaussianInt, GaussianInt, Pair<GaussianInt, GaussianInt>> =
             BinaryOp(Symbols.DIV_REM) { a, b ->
-                require(b != zero) { "division by zero in Gaussian integers" }
+                if (b == zero) throw ArithmeticException("Division by zero in the Gaussian integers.")
 
                 val denominator = normSq(b)
                 val numerator = mul(a, conj(b))

@@ -33,11 +33,13 @@ fun <A : Any> Monoid<A>.pow(a: A, n: Int): A {
     /**
      * Use doubling to minimize the number of multiplications.
      */
-    tailrec fun aux(curr: A, remPow: Int, acc: A = this.identity): A =
+    // Invariant: the answer is `acc * curr^remPow`, with `remPow >= 1`. The loop stops at the last
+    // set bit, so `curr` is never squared once it is no longer needed.
+    tailrec fun aux(curr: A, remPow: Int, acc: A): A =
         when {
-            remPow <= 0 -> acc
+            remPow == 1 -> this(acc, curr)
             remPow % 2 == 1 -> aux(this(curr, curr), remPow / 2, this(acc, curr))
             else -> aux(this(curr, curr), remPow / 2, acc)
         }
-    return aux(a, n)
+    return aux(a, n, identity)
 }

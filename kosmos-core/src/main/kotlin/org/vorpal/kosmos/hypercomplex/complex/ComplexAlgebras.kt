@@ -12,6 +12,7 @@ import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
+import org.vorpal.kosmos.algebra.structures.pow
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
@@ -143,15 +144,7 @@ object ComplexAlgebras {
      */
     fun Complex.powInt(n: Int): Complex {
         require(n >= 0) { "n must be >= 0" }
-        val field = ComplexField
-
-        tailrec fun go(base: Complex, exp: Int, acc: Complex): Complex = when {
-            exp == 0         -> acc
-            (exp and 1) == 1 -> go(field.mul(base, base), exp ushr 1, field.mul(acc, base))
-            else             -> go(field.mul(base, base), exp ushr 1, acc)
-        }
-
-        return go(this, n, field.one)
+        return ComplexField.mul.pow(this, n)
     }
 
     object ComplexRealVectorSpace : FiniteVectorSpace<Real, Complex> {

@@ -87,7 +87,7 @@ class DualRationalFnsSpec : FunSpec({
 
         test("inv rejects zero real part") {
             checkAll(arbRational) { b ->
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<ArithmeticException> {
                     DualRationalFns.inv(
                         dual(
                             f = Rational.ZERO,
@@ -276,7 +276,7 @@ class DualRationalFnsSpec : FunSpec({
 
         test("mobius rejects zero denominator") {
             checkAll(arbDualRational) { x ->
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<ArithmeticException> {
                     DualRationalFns.mobius(
                         x = x,
                         a = Rational.ONE,

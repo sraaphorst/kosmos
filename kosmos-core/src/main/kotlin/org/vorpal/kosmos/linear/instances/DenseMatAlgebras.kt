@@ -453,7 +453,9 @@ object DenseMatAlgebras {
 
         return DenseMat.tabulate(rows, cols) { r, c ->
             val a = x[r, c]
-            require(a != field.zero) { "Hadamard reciprocal requires no zero entries. Found 0 at ($r, $c)." }
+            if (!field.hasReciprocal(a)) {
+                throw ArithmeticException("Hadamard reciprocal requires invertible entries. Found $a at ($r, $c).")
+            }
             field.reciprocal(a)
         }
     }

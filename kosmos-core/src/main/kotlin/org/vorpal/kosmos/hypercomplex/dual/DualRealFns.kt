@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.powInt
 import kotlin.math.acos
@@ -410,7 +411,7 @@ object DualRealFns {
      * Requires `a != 0`.
      */
     fun inv(x: Dual<Real>): Dual<Real> {
-        require(x.f != 0.0) { "inv requires nonzero real part, got ${x.f}" }
+        if (x.f == 0.0) throw HasReciprocal.notInvertible(x, "the dual numbers")
 
         val invA = 1.0 / x.f
         val invA2 = invA * invA

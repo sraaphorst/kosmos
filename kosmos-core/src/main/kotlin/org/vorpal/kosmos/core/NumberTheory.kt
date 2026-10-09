@@ -160,7 +160,7 @@ abstract class GcdResult<T>(val gcd: T, val x: T, val a: T, val y: T, val b: T) 
      * Requires gcd(a, b) = 1.
      */
     fun modInverse(): T {
-        require(isOne(gcd)) { "$a has no modular inverse mod $b (gcd = $gcd)" }
+        if (!isOne(gcd)) throw ArithmeticException("$a has no modular inverse mod $b (gcd = $gcd)")
         return mod(x, b)
     }
 }

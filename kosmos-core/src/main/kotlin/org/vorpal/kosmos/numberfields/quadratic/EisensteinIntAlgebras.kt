@@ -114,7 +114,7 @@ object EisensteinIntAlgebras {
             add = EisensteinIntCommutativeRing.add,
             mul = EisensteinIntCommutativeRing.mul,
             divRem = BinaryOp(Symbols.DIV_REM) { alpha, beta ->
-                require(beta != EisensteinInt.ZERO) { "division by zero" }
+                if (beta == EisensteinInt.ZERO) throw ArithmeticException("Division by zero in the Eisenstein integers.")
                 val den = EisensteinIntCommutativeRing.normSq(beta)
                 require(den != BigInteger.ZERO) { "normSq(beta) must be nonzero for beta != 0" }
 
