@@ -915,11 +915,40 @@ The Fano plane implementation lives in `org.vorpal.kosmos.combinatorics.FanoPlan
 
 Nothing below is implemented yet. Items are grouped by how they would build on what exists.
 
+### Agreed roadmap
+
+Dimension 16 is the stopping point for *named* hypercomplex types. In priority order:
+
+1. **`Sedenion<R>`**: the fourth usual doubling, `CD⟨Octonion<R>⟩`, with `coefficients()` and
+   `get(index)` rather than sixteen named coordinates. Flexible and power-associative, not
+   alternative; zero divisors, yet over ℝ the norm is positive definite (signature `(16, 0)`), so
+   there are no nonzero isotropic elements.
+2. **`SplitSedenion<R>`**: the *split* doubling of the ordinary octonions, `N(a, b) = N(a) − N(b)`,
+   signature `(8, 8)` over ℝ, so it has nonzero isotropic elements as well. "Split sedenion" is not
+   a standardized name: several Cayley–Dickson sign sequences give an indefinite form at dimension
+   16, so the documentation must state the sequence used.
+3. **Arbitrary-depth Cayley–Dickson algebras** through a generic construction parameterized by the
+   sequence of doubling signs and exposing a `dimension`, instead of a `Trigintaduonion<R>` type
+   with five levels of nested generics.
+4. **The 32-dimensional algebra, computationally**: its loop of 64 signed basis units and its
+   subloop lattice (Cawagas et al. report 373 nontrivial subloops), and more generally how the
+   subalgebra structure changes under successive doublings.
+
+The geometry that goes with each level, to be recorded as tests when the level is built:
+
+| Algebra | Imaginary units | Geometry of `e_i · e_j = ± e_k` | As a design | Collineations |
+|---------|----------------:|----------------------------------|-------------|---------------|
+| 𝕆 | 7 | PG(2,2), 7 lines | STS(7) | 168 (verified; 21 preserve orientation) |
+| 𝕊 | 15 | PG(3,2), 35 lines | STS(15) | 20,160 = \|GL(4,2)\|, GL(4,2) ≅ A₈ |
+| 32-dim | 31 | PG(4,2), 155 lines | STS(31) | \|GL(5,2)\| |
+
+The collineation counts are for the unoriented geometry. The number preserving the signs is much
+smaller, as it is for the octonions, and is to be computed.
+
 ### More algebras from the same kernel
 
 | Algebra | How it would be built | Notes |
 |---------|-----------------------|-------|
-| Sedenions 𝕊, and the levels above | `CayleyDickson.usual(𝕆)` | Flexible and power-associative, not alternative; zero divisors. The kernel is already tested at this level (`A₄` in `CayleyDicksonSpec`); what is missing is the named carrier, which must be a value class because `Bioctonion` uses the same `CD<Octonion>` carrier. |
 | Generalized quaternion algebras `(a, b)_F` | `CayleyDickson.withSigma` twice | Available through the kernel and tested for `(2, 3)_ℚ`, but with no named type, norm, or splitting test (Hilbert symbol). |
 | Dual quaternions `ℍ ⊗ 𝔻` | `Quaternion<Dual<Real>>` | Rigid motions of 3-space. `QuaternionAlgebras.quaternionRing(base)` already accepts any commutative ring, so this is naming, the dual conjugations and tests. |
 | Split-biquaternions `ℍ ⊗ (ℝ ⊕ ℝ) ≅ ℍ ⊕ ℍ` | `Quaternion<SplitComplex<Real>>` | Same remark. |
