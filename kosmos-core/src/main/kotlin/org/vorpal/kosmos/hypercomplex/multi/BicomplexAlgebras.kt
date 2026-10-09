@@ -23,11 +23,9 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.basisPrintable
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
-import org.vorpal.kosmos.hypercomplex.complex.im
-import org.vorpal.kosmos.hypercomplex.complex.re
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
 import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
@@ -42,7 +40,7 @@ import kotlin.math.sqrt
  * [BicomplexAlgebras.BicomplexCommutativeRing] never recursively initializes [BicomplexAlgebras].
  */
 private val cayleyDicksonBicomplex: CommutativeInvolutiveRing<Bicomplex> =
-    CarrierTransport<CD<Complex>, Bicomplex>(
+    CarrierTransport<CD<RealComplex>, Bicomplex>(
         wrap = UnaryOp { cd -> Bicomplex(cd) },
         unwrap = UnaryOp { z -> z.cd }
     ).commutativeInvolutiveRing(
@@ -83,8 +81,8 @@ private val cayleyDicksonBicomplex: CommutativeInvolutiveRing<Bicomplex> =
  * Norm forms `N_t(w) = w · w^(†t)` and the scalar norm:
  * Each conjugation norm lands in the subring fixed by its involution, and is typed by that subring:
  * - [BicomplexCommutativeRing.normByConj1] → [Bicomplex] confined to the ordinary complex line
- *   `ℂ(j)` (`j² = -1`); not narrowed to [Complex], since `ℂ(j) ≠` the canonical `ℂ(i)`.
- * - [BicomplexCommutativeRing.normByConj2] → [Complex]: the canonical base field `ℂ(i)`.
+ *   `ℂ(j)` (`j² = -1`); not narrowed to [RealComplex], since `ℂ(j) ≠` the canonical `ℂ(i)`.
+ * - [BicomplexCommutativeRing.normByConj2] → [RealComplex]: the canonical base field `ℂ(i)`.
  * - [BicomplexCommutativeRing.normByConj3] → [SplitComplex]<[Real]>: the split-complex line
  *   `ℂ(k)` (`k² = +1`).
  * - [BicomplexCommutativeRing.normSq], [BicomplexCommutativeRing.norm]: the scalar 4D Euclidean
@@ -95,7 +93,7 @@ private val cayleyDicksonBicomplex: CommutativeInvolutiveRing<Bicomplex> =
  *   of [complexToBicomplexMonomorphism].
  * - [cjToComplex]: the left-inverse retraction `ℂ(j) → ℂ`, `a + bj ↦ a + bi`.
  * - [normByConj1ToCanonical]: [BicomplexCommutativeRing.normByConj1] delivered as a canonical
- *   [Complex] via [cjToComplex].
+ *   [RealComplex] via [cjToComplex].
  *
  * Vector spaces:
  * - [BicomplexRealVectorSpace]: `𝔹` as a 4-dimensional vector space over the reals.
@@ -221,10 +219,10 @@ object BicomplexAlgebras {
          * ```
          *
          * The result is returned as a [Bicomplex]: it lives inside the embedded subring
-         * `ℂ(j) ⊂ 𝔹`, *not* inside your canonical [Complex] (which is `ℂ(i)`). Unlike [normByConj2],
-         * whose two idempotent projections coincide and so collapse to an unambiguous [Complex],
+         * `ℂ(j) ⊂ 𝔹`, *not* inside your canonical [RealComplex] (which is `ℂ(i)`). Unlike [normByConj2],
+         * whose two idempotent projections coincide and so collapse to an unambiguous [RealComplex],
          * the projections of `N1` are complex conjugates of one another (`𝛂𝜷*` and `𝜷𝛂*`), so
-         * narrowing to [Complex] would require arbitrarily choosing the identification `j ↦ i`
+         * narrowing to [RealComplex] would require arbitrarily choosing the identification `j ↦ i`
          * or `j ↦ -i`.
          */
         val normByConj1: UnaryOp<Bicomplex, Bicomplex> = UnaryOp("normByConj1") { z ->
@@ -245,10 +243,10 @@ object BicomplexAlgebras {
          * (𝛂, 𝜷)(𝜷, 𝛂) = (𝛂𝜷, 𝛂𝜷)
          * ```
          * Because the `j`-component of the product vanishes, the value is unambiguously a canonical
-         * [Complex] number — there is no choice of imaginary unit to make — so we return [Complex]
+         * [RealComplex] number — there is no choice of imaginary unit to make — so we return [RealComplex]
          * directly rather than a [Bicomplex] confined to `ℂ(i)`.
          */
-        val normByConj2: UnaryOp<Bicomplex, Complex> = UnaryOp("normByConj2") { z ->
+        val normByConj2: UnaryOp<Bicomplex, RealComplex> = UnaryOp("normByConj2") { z ->
             mul(z, conj2(z)).z1
         }
 
@@ -329,7 +327,7 @@ object BicomplexAlgebras {
      * z -> (z, z)
      * ```
      */
-    val complexToBicomplexMonomorphism: RingMonomorphism<Complex, Bicomplex> = RingMonomorphism.of(
+    val complexToBicomplexMonomorphism: RingMonomorphism<RealComplex, Bicomplex> = RingMonomorphism.of(
         domain = ComplexAlgebras.ComplexField,
         codomain = BicomplexCommutativeRing,
         map = UnaryOp { z -> Bicomplex.ofStandard(z, ComplexAlgebras.ComplexField.zero) }
@@ -343,14 +341,14 @@ object BicomplexAlgebras {
      * image is the subring `ℂ(j) ⊂ 𝔹`, and [cjToComplex] is its left inverse
      * (`cjToComplex ∘ complexToBicomplexAlongJ = id_ℂ`).
      */
-    val complexToBicomplexAlongJ: RingMonomorphism<Complex, Bicomplex> = RingMonomorphism.of(
+    val complexToBicomplexAlongJ: RingMonomorphism<RealComplex, Bicomplex> = RingMonomorphism.of(
         domain = ComplexAlgebras.ComplexField,
         codomain = BicomplexCommutativeRing,
         map = UnaryOp { c -> Bicomplex.ofStandard(c.re, 0.0, c.im, 0.0) }   // (re + im·i) ↦ (re + im·j)
     )
 
     /**
-     * Retraction of the `ℂ(j)` line onto the canonical [Complex] field via the ring isomorphism
+     * Retraction of the `ℂ(j)` line onto the canonical [RealComplex] field via the ring isomorphism
      * `ℂ(j) ≅ ℂ(i)`, `j ↦ i`:  `a + bj ↦ a + bi`.
      *
      * Equivalently, the first idempotent projection `π_𝛂` restricted to `ℂ(j)`. It is an
@@ -358,11 +356,11 @@ object BicomplexAlgebras {
      * pass only `ℂ(j)`-valued elements — e.g. the result of [BicomplexCommutativeRing.normByConj1].
      * It is the left inverse of [complexToBicomplexAlongJ].
      */
-    fun cjToComplex(z: Bicomplex): Complex =
+    fun cjToComplex(z: Bicomplex): RealComplex =
         complex(z.a, z.c)   // (1-coefficient, j-coefficient) ↦ (re, im)
 
     /**
-     * [BicomplexCommutativeRing.normByConj1] delivered as a canonical [Complex] in `ℂ(i)`, i.e.
+     * [BicomplexCommutativeRing.normByConj1] delivered as a canonical [RealComplex] in `ℂ(i)`, i.e.
      * `cjToComplex ∘ normByConj1`.
      *
      * Returns `𝛂·conj(𝜷) = (a² + b² - c² - d²) + 2(ac + bd)i`. Use this when you want the
@@ -370,7 +368,7 @@ object BicomplexAlgebras {
      * (non-canonical) `j ↦ i` identification; otherwise prefer
      * [BicomplexCommutativeRing.normByConj1], which keeps the value honestly inside `ℂ(j) ⊂ 𝔹`.
      */
-    val normByConj1ToCanonical: UnaryOp<Bicomplex, Complex> =
+    val normByConj1ToCanonical: UnaryOp<Bicomplex, RealComplex> =
         UnaryOp("normByConj1ToCanonical") { w ->
             cjToComplex(BicomplexCommutativeRing.normByConj1(w))
         }
@@ -379,20 +377,20 @@ object BicomplexAlgebras {
      * Homomorphic projection of a bicomplex number onto the complex plane via the first idempotent element (𝛂).
      * Unlike standard basis projections, idempotent projections preserve ring multiplication.
      */
-    object BicomplexFirstProjectionHomomorphism: RingHomomorphism<Bicomplex, Complex> {
+    object BicomplexFirstProjectionHomomorphism: RingHomomorphism<Bicomplex, RealComplex> {
         override val domain = BicomplexCommutativeRing
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<Bicomplex, Complex>("${Symbols.PROJECTION}_𝛂") { it.alpha }
+        override val map = UnaryOp<Bicomplex, RealComplex>("${Symbols.PROJECTION}_𝛂") { it.alpha }
     }
 
     /**
      * Homomorphic projection of a bicomplex number onto the complex plane via the second idempotent element (𝜷).
      * Unlike standard basis projections, idempotent projections preserve ring multiplication.
      */
-    object BicomplexSecondProjectionHomomorphism: RingHomomorphism<Bicomplex, Complex> {
+    object BicomplexSecondProjectionHomomorphism: RingHomomorphism<Bicomplex, RealComplex> {
         override val domain = BicomplexCommutativeRing
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<Bicomplex, Complex>("${Symbols.PROJECTION}_𝜷") { it.beta }
+        override val map = UnaryOp<Bicomplex, RealComplex>("${Symbols.PROJECTION}_𝜷") { it.beta }
     }
 
     /**
@@ -402,7 +400,7 @@ object BicomplexAlgebras {
      * ```
      * This is the same [quadraticRank2MatrixEmbedding] that gives `ℂ ↪ M₂(ℝ)`, one level up.
      */
-    val BicomplexToComplexMatrixMonomorphism: RingMonomorphism<Bicomplex, DenseMat<Complex>> =
+    val BicomplexToComplexMatrixMonomorphism: RingMonomorphism<Bicomplex, DenseMat<RealComplex>> =
         quadraticRank2MatrixEmbedding(
             domain = BicomplexCommutativeRing,
             coefficientRing = ComplexAlgebras.ComplexField,
@@ -415,11 +413,11 @@ object BicomplexAlgebras {
      * A monomorphism from 𝔹 to M_2(ℂ) using the orthogonal idempotent basis.
      * Maps (𝛂, 𝜷) ↦ [[𝛂, 0], [0, 𝜷]]
      */
-    object BicomplexToDiagonalMatrixMonomorphism : RingMonomorphism<Bicomplex, DenseMat<Complex>> {
+    object BicomplexToDiagonalMatrixMonomorphism : RingMonomorphism<Bicomplex, DenseMat<RealComplex>> {
         private val complexField = ComplexAlgebras.ComplexField
         override val domain = BicomplexCommutativeRing
         override val codomain = DenseMatAlgebras.DenseMatRing(complexField, 2)
-        override val map: UnaryOp<Bicomplex, DenseMat<Complex>> = UnaryOp("M_2(ℂ)_diagonal") { b ->
+        override val map: UnaryOp<Bicomplex, DenseMat<RealComplex>> = UnaryOp("M_2(ℂ)_diagonal") { b ->
             DenseMat.ofRows(
                 listOf(
                     listOf(b.alpha, complexField.zero),
@@ -446,7 +444,7 @@ object BicomplexAlgebras {
      * The bicomplex numbers are a 2-dimensional vector space over the complex numbers `ℂ(i)`,
      * acting through the Cayley-Dickson embedding: `c ⊳ (z1 + z2 j) = cz1 + cz2 j`.
      */
-    val BicomplexComplexVectorSpace: FiniteVectorSpace<Complex, Bicomplex> = FiniteVectorSpace.of(
+    val BicomplexComplexVectorSpace: FiniteVectorSpace<RealComplex, Bicomplex> = FiniteVectorSpace.of(
         scalars = ComplexAlgebras.ComplexField,
         add = BicomplexCommutativeRing.add,
         dimension = 2,

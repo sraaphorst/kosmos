@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.linear.ops
 
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
@@ -23,7 +23,7 @@ object BLAS {
     // Double / Real "d*" family.
     private val d = RealAlgebras.RealStarField
 
-    // Double / Complex "z*" family.
+    // Double / RealComplex "z*" family.
     private val z = ComplexAlgebras.ComplexStarAlgebra
 
 
@@ -48,25 +48,25 @@ object BLAS {
     ): Real = DenseVecOps.dot(d, x, y)
 
     fun zaxpy(
-        a: Complex,
-        x: VecLike<Complex>,
-        y: VecLike<Complex>
-    ): DenseVec<Complex> = DenseVecOps.axpy(z, a, x, y)
+        a: RealComplex,
+        x: VecLike<RealComplex>,
+        y: VecLike<RealComplex>
+    ): DenseVec<RealComplex> = DenseVecOps.axpy(z, a, x, y)
 
     fun zscal(
-        a: Complex,
-        x: VecLike<Complex>
-    ): DenseVec<Complex> = DenseVecOps.scale(z, a, x)
+        a: RealComplex,
+        x: VecLike<RealComplex>
+    ): DenseVec<RealComplex> = DenseVecOps.scale(z, a, x)
 
     fun zdotu(
-        x: VecLike<Complex>,
-        y: VecLike<Complex>
-    ): Complex = DenseVecOps.dot(z, x, y)
+        x: VecLike<RealComplex>,
+        y: VecLike<RealComplex>
+    ): RealComplex = DenseVecOps.dot(z, x, y)
 
     fun zdotc(
-        x: VecLike<Complex>,
-        y: VecLike<Complex>
-    ): Complex = DenseVecOps.dotConjX(z, x, y)
+        x: VecLike<RealComplex>,
+        y: VecLike<RealComplex>
+    ): RealComplex = DenseVecOps.dotConjX(z, x, y)
 
 
     // -----------------------------
@@ -87,12 +87,12 @@ object BLAS {
 
     fun zgemv(
         aOp: MatOp,
-        alpha: Complex,
-        aMat: MatLike<Complex>,
-        xVec: VecLike<Complex>,
-        beta: Complex,
-        yVec: VecLike<Complex>
-    ): DenseVec<Complex> =
+        alpha: RealComplex,
+        aMat: MatLike<RealComplex>,
+        xVec: VecLike<RealComplex>,
+        beta: RealComplex,
+        yVec: VecLike<RealComplex>
+    ): DenseVec<RealComplex> =
         DenseMatOps.affineMatVec(z, alpha, aOp, aMat, xVec, beta, yVec)
 
     fun dger(
@@ -104,19 +104,19 @@ object BLAS {
         DenseVecOps.rank1Update(d, alpha, x, y, a) // if you expose it there
 
     fun zgeru(
-        alpha: Complex,
-        x: VecLike<Complex>,
-        y: VecLike<Complex>,
-        a: MatLike<Complex>
-    ): DenseMat<Complex> =
+        alpha: RealComplex,
+        x: VecLike<RealComplex>,
+        y: VecLike<RealComplex>,
+        a: MatLike<RealComplex>
+    ): DenseMat<RealComplex> =
         DenseVecOps.rank1Update(z, alpha, x, y, a)
 
     fun zgerc(
-        alpha: Complex,
-        x: VecLike<Complex>,
-        y: VecLike<Complex>,
-        a: MatLike<Complex>
-    ): DenseMat<Complex> =
+        alpha: RealComplex,
+        x: VecLike<RealComplex>,
+        y: VecLike<RealComplex>,
+        a: MatLike<RealComplex>
+    ): DenseMat<RealComplex> =
         DenseVecOps.rank1UpdateConjY(z, alpha, x, y, a)
 
     // -----------------------------
@@ -140,11 +140,11 @@ object BLAS {
     fun zgemm(
         aOp: MatOp,
         bOp: MatOp,
-        alpha: Complex,
-        a: MatLike<Complex>,
-        b: MatLike<Complex>,
-        beta: Complex,
-        c: MatLike<Complex>
-    ): DenseMat<Complex> =
+        alpha: RealComplex,
+        a: MatLike<RealComplex>,
+        b: MatLike<RealComplex>,
+        beta: RealComplex,
+        c: MatLike<RealComplex>
+    ): DenseMat<RealComplex> =
         DenseMatOps.affineMul(z, alpha, aOp, a, bOp, b, beta, c)
 }

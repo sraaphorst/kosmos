@@ -13,6 +13,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 
 /**
  * The quaternion-level construction over a commutative ring of scalars `S`, delivered on a public
@@ -127,19 +128,19 @@ internal class QuaternionTier<S : Any, Q : Any>(
         UnaryOp { s -> fromCoordinates(listOf(s, scalars.zero, scalars.zero, scalars.zero)) }
 
     /**
-     * The map `S[i] → Q` sending the imaginary unit to the chosen signed axis `±i`, `±j`, or `±k`.
+     * The map `Complex<S> → Q` sending the imaginary unit to the chosen signed axis `±i`, `±j`, or `±k`.
      *
      * A ring homomorphism only when the chosen axis squares to `-1`: always for the usual doubling,
      * and for the `i` axis alone in the split one.
      */
     fun complexEmbeddingMap(
         emb: AxisSignEmbeddings.AxisSignEmbedding
-    ): UnaryOp<CD<S>, Q> =
+    ): UnaryOp<Complex<S>, Q> =
         UnaryOp { c ->
             QuaternionEmbeddingKit.embedComplexLike(
                 axisSign = emb,
-                re = c.a,
-                im = c.b,
+                re = c.re,
+                im = c.im,
                 zero = scalars.zero,
                 negate = scalars.add.inverse,
                 mkQuaternion = fromCoordinates

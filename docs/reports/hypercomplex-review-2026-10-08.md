@@ -356,3 +356,40 @@ Several existing specs had exception types or carrier construction updated; no a
 3. The first-pass questions about the split-quaternion convention and exact biquaternion tiers
    still stand.
 
+---
+
+## Addendum 2: generic `Complex<R>` (2026-10-08, later still)
+
+**Result:** `./gradlew clean build`: **1829 tests, 0 failures.**
+
+- `Complex<R>` is now a value class over `CD<R>`, with `RealComplex = Complex<Real>` as the name
+  for ℂ. This closes open question 1 of the first addendum: no carrier in the hypercomplex package
+  is a typealias of `CD` any more.
+- `GaussianInt` and `GaussianRat` are `Complex<BigInteger>` and `Complex<Rational>`. They were
+  briefly separate value classes; a typealias matches how `LipschitzQuaternion` relates to
+  `Quaternion<R>`.
+- `ComplexAlgebras` gained generic constructions over any commutative ring: `complexRing`,
+  `imaginaryUnit`, `normSq`, `complexLeftAction`, `complexModule`, `complexStarAlgebra`,
+  `scalarEmbedding`, and `eqComplex` / `printableComplex` overloads. The Gaussian rings are built
+  from the same internal `complexRingOver`.
+- New `GenericComplexSpec` (12 tests): `Complex<𝔽₇>` is the field with 49 elements; `Complex<𝔽₅>`
+  has zero divisors because `2² = −1`; agreement with `GaussianRatField` and `ComplexField`; and
+  `Complex<Real>`, `SplitComplex<Real>` and `Dual<Real>` are distinct types on one raw carrier.
+
+**Source-incompatible changes**
+
+| Before | After |
+|--------|-------|
+| `Complex` (the type) | `RealComplex`, or `Complex<Real>` |
+| `c.a`, `c.b`, `CD(re, im)` as a complex number | `c.re`, `c.im`, `complex(re, im)`; the raw pair is `c.cd` |
+| `GaussianInt.ZERO`, `.ONE`, `.I` (and `GaussianRat.…`) | `GaussianInts.ZERO`, … (`GaussianRats.…`): a typealias cannot carry its own companion |
+| `GaussianInt(…).toString()` | prints as `Complex(re=…, im=…)` |
+| `Quaternion<Real>.cd.a` was a `Complex` | it is a raw `CD<Real>`; wrap it with `Complex(q.cd.a)` |
+
+`_to_delete/` has been removed, as you asked.
+
+**One consequence worth knowing.** Before this change the biquaternions shared their raw carrier
+with the real octonions (`CD<CD<CD<Real>>>`). They no longer do, because a biquaternion's
+coefficients are now `RealComplex` values rather than raw pairs. Nothing depended on the
+coincidence.
+

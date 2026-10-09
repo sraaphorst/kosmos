@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex
 
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -60,9 +61,9 @@ class ComplexifiedTowerSpec : StringSpec({
     fun normO(o: CD<CD<CD<GaussianRat>>>): GaussianRat =
         plus(normQ(o.a), normQ(o.b))
 
-    val h = CD(CD(GaussianRat.I, GaussianRat.ZERO), CD(GaussianRat.ZERO, GaussianRat.ZERO))
-    val i = CD(CD(GaussianRat.ZERO, GaussianRat.ONE), CD(GaussianRat.ZERO, GaussianRat.ZERO))
-    val j = CD(CD(GaussianRat.ZERO, GaussianRat.ZERO), CD(GaussianRat.ONE, GaussianRat.ZERO))
+    val h = CD(CD(GaussianRats.I, GaussianRats.ZERO), CD(GaussianRats.ZERO, GaussianRats.ZERO))
+    val i = CD(CD(GaussianRats.ZERO, GaussianRats.ONE), CD(GaussianRats.ZERO, GaussianRats.ZERO))
+    val j = CD(CD(GaussianRats.ZERO, GaussianRats.ZERO), CD(GaussianRats.ONE, GaussianRats.ZERO))
 
     "ℍ ⊗ ℚ(i) is exactly an associative involutive ring" {
         InvolutiveRingLaws(biquaternions, arbQ).fullTest().throwIfFailed()
@@ -79,7 +80,7 @@ class ComplexifiedTowerSpec : StringSpec({
     "the biquaternion norm w² + x² + y² + z² ∈ ℚ(i) is q·conj(q), and is exactly multiplicative" {
         checkAll(arbQ, arbQ) { p, q ->
             biquaternions.mul(p, biquaternions.conj(p)) shouldBe
-                CD(CD(normQ(p), GaussianRat.ZERO), CD(GaussianRat.ZERO, GaussianRat.ZERO))
+                CD(CD(normQ(p), GaussianRats.ZERO), CD(GaussianRats.ZERO, GaussianRats.ZERO))
             normQ(biquaternions.mul(p, q)) shouldBe k.mul(normQ(p), normQ(q))
         }
     }
@@ -89,7 +90,7 @@ class ComplexifiedTowerSpec : StringSpec({
         val plusHi = biquaternions.add(biquaternions.one, hi)
         val minusHi = biquaternions.add(biquaternions.one, biquaternions.add.inverse(hi))
         biquaternions.mul(plusHi, minusHi) shouldBe biquaternions.zero
-        normQ(plusHi) shouldBe GaussianRat.ZERO
+        normQ(plusHi) shouldBe GaussianRats.ZERO
     }
 
     "𝕆 ⊗ ℚ(i) is exactly a nonassociative involutive ring" {

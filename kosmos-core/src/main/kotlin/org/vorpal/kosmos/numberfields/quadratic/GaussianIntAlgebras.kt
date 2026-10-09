@@ -3,9 +3,6 @@ package org.vorpal.kosmos.numberfields.quadratic
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CarrierTransport
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.EuclidMeasure
@@ -23,8 +20,9 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.complexRingOver
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
@@ -39,18 +37,13 @@ import java.math.BigInteger
 
 /**
  * `ℤ[i] = ℤ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℤ (trivial involution) at `σ = 1`,
- * transported to the [GaussianInt] carrier. Its involution is complex conjugation.
+ * on the [Complex] carrier. Its involution is complex conjugation.
  *
  * File-level so that initializing [GaussianIntAlgebras.GaussianIntEuclideanDomain] never recursively
  * initializes [GaussianIntAlgebras].
  */
 private val cayleyDicksonGaussianInt: CommutativeInvolutiveRing<GaussianInt> =
-    CarrierTransport<CD<BigInteger>, GaussianInt>(
-        wrap = UnaryOp { cd -> GaussianInt(cd) },
-        unwrap = UnaryOp { z -> z.cd }
-    ).commutativeInvolutiveRing(
-        CayleyDickson.commutative(IntegerAlgebras.IntegerCommutativeRing, BigInteger.ONE)
-    )
+    complexRingOver(IntegerAlgebras.IntegerCommutativeRing)
 
 /**
  * Main structures:
@@ -63,7 +56,7 @@ private val cayleyDicksonGaussianInt: CommutativeInvolutiveRing<GaussianInt> =
  * - [ZToGaussianIntMonomorphism]: embedding homomorphism from the integers to the Gaussian integers.
  * - [GaussianIntToRatMonomorphism]: embedding homomorphism from the Gaussian integers to the Gaussian rationals.
  * - [toGaussianRat]: convenience method for this monomorphism.
- * - [GaussianIntToComplexMonomorphism]: embedding homomorphism from the Gaussian integers to the [Complex] numbers.
+ * - [GaussianIntToComplexMonomorphism]: embedding homomorphism from the Gaussian integers to the [RealComplex] numbers.
  * - [gaussianIntToLipschitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
  * - [asLipschitzQuaternion]: convenience method for this monomorphism.
  * - [gaussianIntToHurwitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Hurwitz quaternions.
@@ -100,8 +93,8 @@ object GaussianIntAlgebras {
         InvolutiveRing<GaussianInt>,
         HasNormSq<GaussianInt, BigInteger> {
 
-        override val zero: GaussianInt = GaussianInt.ZERO
-        override val one: GaussianInt = GaussianInt.ONE
+        override val zero: GaussianInt = GaussianInts.ZERO
+        override val one: GaussianInt = GaussianInts.ONE
 
         override val add: AbelianGroup<GaussianInt> = cayleyDicksonGaussianInt.add
 
@@ -225,11 +218,11 @@ object GaussianIntAlgebras {
     /**
      * The canonical monomorphism `ℤ[i] → ℂ`.
      */
-    object GaussianIntToComplexMonomorphism : RingMonomorphism<GaussianInt, Complex> {
+    object GaussianIntToComplexMonomorphism : RingMonomorphism<GaussianInt, RealComplex> {
         override val domain = GaussianIntEuclideanDomain
         override val codomain = ComplexAlgebras.ComplexField
 
-        override val map = UnaryOp<GaussianInt, Complex> { gz ->
+        override val map = UnaryOp<GaussianInt, RealComplex> { gz ->
             complex(gz.re.toReal(), gz.im.toReal())
         }
     }
@@ -245,7 +238,7 @@ object GaussianIntAlgebras {
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
         domain = GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-        map = UnaryOp { z -> lipschitzQuaternionTier.complexEmbeddingMap(embedding)(z.cd) }
+        map = lipschitzQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**

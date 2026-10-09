@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex
 
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
@@ -17,7 +18,6 @@ import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.octonion.OctonionAlgebras.asOctonion
 import org.vorpal.kosmos.hypercomplex.quaternion.ArbQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.AxisSignEmbedding
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.splitComplex
@@ -54,7 +54,7 @@ class TowerConveniencesSpec : StringSpec({
 
     "Complex.asQuaternion is the chosen embedding, canonical by default" {
         checkAll(ArbComplex.boundedComplex) { c ->
-            c.asQuaternion() shouldBe Quaternion(CD(c, complexField.zero))
+            c.asQuaternion() shouldBe quaternion(c.re, c.im, 0.0, 0.0)
             AxisSignEmbedding.all.forEach { emb ->
                 c.asQuaternion(emb) shouldBe ComplexAlgebras.complexToQuaternionEmbedding(emb)(c)
             }

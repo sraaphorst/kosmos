@@ -20,7 +20,7 @@ import org.vorpal.kosmos.hypercomplex.biquaternion.Biquaternion
 import org.vorpal.kosmos.hypercomplex.biquaternion.BiquaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.biquaternion.biquaternionTier
 import org.vorpal.kosmos.hypercomplex.biquaternion.complexCoefficientPrintable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.octonion.RealOctonion
@@ -36,7 +36,7 @@ import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
  * File-level so that initializing [BioctonionAlgebras.BioctonionAlgebra] never recursively
  * initializes [BioctonionAlgebras].
  */
-internal val bioctonionTier: OctonionTier<Complex, Biquaternion, Bioctonion> =
+internal val bioctonionTier: OctonionTier<RealComplex, Biquaternion, Bioctonion> =
     OctonionTier(
         quaternions = biquaternionTier,
         wrap = { cd -> Bioctonion(cd) },
@@ -49,7 +49,7 @@ private val cayleyDicksonBioctonion: NonAssociativeInvolutiveRing<Bioctonion> =
 /**
  * The coefficientwise complex scalar action.
  */
-private val complexScaling: LeftAction<Complex, Bioctonion> =
+private val complexScaling: LeftAction<RealComplex, Bioctonion> =
     bioctonionTier.scalarAction
 
 /**
@@ -89,7 +89,7 @@ object BioctonionAlgebras {
 
     object BioctonionAlgebra :
         NonAssociativeInvolutiveRing<Bioctonion> by cayleyDicksonBioctonion,
-        HasNormSq<Bioctonion, Complex>,
+        HasNormSq<Bioctonion, RealComplex>,
         HasReciprocal<Bioctonion> {
 
         private val complexField = ComplexAlgebras.ComplexField
@@ -136,7 +136,7 @@ object BioctonionAlgebras {
          * with no conjugation of the coefficients. It is multiplicative: the bioctonions are the
          * octonion (composition) algebra over ℂ.
          */
-        override val normSq: UnaryOp<Bioctonion, Complex> =
+        override val normSq: UnaryOp<Bioctonion, RealComplex> =
             bioctonionTier.normSq
 
         /**
@@ -159,7 +159,7 @@ object BioctonionAlgebras {
     /**
      * The bioctonions as an eight-dimensional vector space over ℂ.
      */
-    val BioctonionComplexVectorSpace: FiniteVectorSpace<Complex, Bioctonion> = FiniteVectorSpace.of(
+    val BioctonionComplexVectorSpace: FiniteVectorSpace<RealComplex, Bioctonion> = FiniteVectorSpace.of(
         scalars = ComplexAlgebras.ComplexField,
         add = BioctonionAlgebra.add,
         dimension = 8,
@@ -180,7 +180,7 @@ object BioctonionAlgebras {
      * The nonassociative ℂ-star-algebra of bioctonions under the octonion conjugate, which is
      * ℂ-linear.
      */
-    val BioctonionStarAlgebra: NonAssociativeStarAlgebra<Complex, Bioctonion> = NonAssociativeStarAlgebra.of(
+    val BioctonionStarAlgebra: NonAssociativeStarAlgebra<RealComplex, Bioctonion> = NonAssociativeStarAlgebra.of(
         scalars = ComplexAlgebras.ComplexField,
         involutiveRing = BioctonionAlgebra,
         leftAction = complexScaling
@@ -203,7 +203,7 @@ object BioctonionAlgebras {
     /**
      * The embedding of ℂ as the scalars `c ↦ c·1`.
      */
-    val ComplexToBioctonionMonomorphism: NonAssociativeRingMonomorphism<Complex, Bioctonion> =
+    val ComplexToBioctonionMonomorphism: NonAssociativeRingMonomorphism<RealComplex, Bioctonion> =
         NonAssociativeRingMonomorphism.of(
             domain = ComplexAlgebras.ComplexField,
             codomain = BioctonionAlgebra,
@@ -258,7 +258,7 @@ object BioctonionAlgebras {
     /**
      * The machinery for the signed-basis-unit embeddings `ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ`; see [OctonionEmbeddingKit].
      */
-    val embeddingKit: OctonionEmbeddingKit.OctonionEmbeddingKit<Complex, Biquaternion, Bioctonion> =
+    val embeddingKit: OctonionEmbeddingKit.OctonionEmbeddingKit<RealComplex, Biquaternion, Bioctonion> =
         bioctonionTier.embeddingKit(eqBioctonionStrict)
 
     /**
@@ -275,8 +275,8 @@ object BioctonionAlgebras {
         embeddingKit.normalizedEmbeddings()
 
     private fun printableBioctonionGenerator(
-        prComplex: Printable<Complex>,
-        eqComplex: Eq<Complex>
+        prComplex: Printable<RealComplex>,
+        eqComplex: Eq<RealComplex>
     ): Printable<Bioctonion> =
         complexCoefficientPrintable(
             labels = listOf("", "e1", "e2", "e3", "e4", "e5", "e6", "e7"),

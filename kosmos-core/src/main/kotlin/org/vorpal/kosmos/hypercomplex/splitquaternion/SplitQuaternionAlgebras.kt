@@ -24,7 +24,7 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
@@ -295,11 +295,11 @@ object SplitQuaternionAlgebras {
      * split doubling. Its image `{w + xi}` is the only coordinate plane that is a copy of ℂ; the
      * planes through `j` and `k` are split-complex.
      */
-    object ComplexToSplitQuaternionMonomorphism : RingMonomorphism<Complex, SplitQuaternion<Real>> {
+    object ComplexToSplitQuaternionMonomorphism : RingMonomorphism<RealComplex, SplitQuaternion<Real>> {
         override val domain = ComplexAlgebras.ComplexField
         override val codomain = RealSplitQuaternionRing
-        override val map: UnaryOp<Complex, SplitQuaternion<Real>> =
-            UnaryOp { c -> SplitQuaternion(CD(c, ComplexAlgebras.ComplexField.zero)) }
+        override val map: UnaryOp<RealComplex, SplitQuaternion<Real>> =
+            UnaryOp { c -> splitQuaternion(c.re, c.im, 0.0, 0.0) }
     }
 
     /**

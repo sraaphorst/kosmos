@@ -10,7 +10,7 @@ internal object ComplexPrintable {
     /**
      * Prints a complex-like object as a linear combination of basis elements.
      *
-     * Examples: Complex, RationalComplex, GaussianInt, GaussianRat, EisensteinInt.
+     * Examples: RealComplex, RationalComplex, GaussianInt, GaussianRat, EisensteinInt.
      */
     fun <A : Any, Z : Any> complexLikePrintable(
         signed: SignedOps<A>,

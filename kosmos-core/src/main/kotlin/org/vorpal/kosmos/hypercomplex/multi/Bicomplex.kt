@@ -2,11 +2,9 @@ package org.vorpal.kosmos.hypercomplex.multi
 
 import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
-import org.vorpal.kosmos.hypercomplex.complex.im
-import org.vorpal.kosmos.hypercomplex.complex.re
 
 /**
  * The [Bicomplex] numbers, also historically known as tessarines.
@@ -23,8 +21,8 @@ import org.vorpal.kosmos.hypercomplex.complex.re
  * involution at `σ = 1` (see [org.vorpal.kosmos.algebra.structures.CayleyDickson.commutative]).
  * All arithmetic comes from that construction; see [BicomplexAlgebras].
  *
- * [Bicomplex] is a value class rather than a typealias of `CD<Complex>` because the quaternions
- * `ℍ` are *also* carried by `CD<Complex>` (doubling `ℂ` with its *nontrivial* conjugation). The
+ * [Bicomplex] is a value class rather than a typealias of `CD<RealComplex>` because the quaternions
+ * `ℍ` are *also* carried by `CD<RealComplex>` (doubling `ℂ` with its *nontrivial* conjugation). The
  * two algebras share a carrier but not a multiplication, and must not be confused at the type level.
  *
  * Idempotent coordinates:
@@ -48,14 +46,14 @@ import org.vorpal.kosmos.hypercomplex.complex.re
  * second binarion construction.
  */
 @JvmInline
-value class Bicomplex(val cd: CD<Complex>) {
+value class Bicomplex(val cd: CD<RealComplex>) {
 
     /** The first standard component `z1` of `z1 + z2·j`. */
-    val z1: Complex
+    val z1: RealComplex
         get() = cd.a
 
     /** The second standard component `z2` of `z1 + z2·j`. */
-    val z2: Complex
+    val z2: RealComplex
         get() = cd.b
 
     /** The standard real coefficients of `a + bi + cj + dk`. */
@@ -69,23 +67,23 @@ value class Bicomplex(val cd: CD<Complex>) {
         get() = z2.im
 
     /** The first idempotent coordinate `𝛂 = z1 + i·z2 = (a - d) + (b + c)i`. */
-    val alpha: Complex
+    val alpha: RealComplex
         get() = complex(a - d, b + c)
 
     /** The second idempotent coordinate `𝜷 = z1 - i·z2 = (a + d) + (b - c)i`. */
-    val beta: Complex
+    val beta: RealComplex
         get() = complex(a + d, b - c)
 
     /**
-     * Return the idempotent Complex components `(𝛂, 𝜷)` of the bicomplex number.
+     * Return the idempotent RealComplex components `(𝛂, 𝜷)` of the bicomplex number.
      */
-    fun idempotent(): Pair<Complex, Complex> =
+    fun idempotent(): Pair<RealComplex, RealComplex> =
         alpha to beta
 
     /**
-     * Return the standard Complex components `(z1, z2)` of the bicomplex number.
+     * Return the standard RealComplex components `(z1, z2)` of the bicomplex number.
      */
-    fun standard(): Pair<Complex, Complex> =
+    fun standard(): Pair<RealComplex, RealComplex> =
         z1 to z2
 
     /**
@@ -135,7 +133,7 @@ value class Bicomplex(val cd: CD<Complex>) {
         /**
          * The bicomplex number `z1 + z2·j`.
          */
-        fun ofStandard(z1: Complex, z2: Complex): Bicomplex =
+        fun ofStandard(z1: RealComplex, z2: RealComplex): Bicomplex =
             Bicomplex(CD(z1, z2))
 
         /**
@@ -150,7 +148,7 @@ value class Bicomplex(val cd: CD<Complex>) {
          * z1 = (𝛂 + 𝜷)/2,   z2 = (𝛂 - 𝜷)/(2i).
          * ```
          */
-        fun ofIdempotent(alpha: Complex, beta: Complex): Bicomplex =
+        fun ofIdempotent(alpha: RealComplex, beta: RealComplex): Bicomplex =
             ofStandard(
                 complex((alpha.re + beta.re) / 2, (alpha.im + beta.im) / 2),
                 complex((alpha.im - beta.im) / 2, (beta.re - alpha.re) / 2)

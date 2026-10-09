@@ -17,7 +17,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.multi.Bicomplex
@@ -36,7 +36,7 @@ import org.vorpal.kosmos.linear.values.DenseMat
  * File-level so that initializing [BiquaternionAlgebras.BiquaternionRing] never recursively
  * initializes [BiquaternionAlgebras].
  */
-internal val biquaternionTier: QuaternionTier<Complex, Biquaternion> =
+internal val biquaternionTier: QuaternionTier<RealComplex, Biquaternion> =
     QuaternionTier(
         scalars = ComplexAlgebras.ComplexField,
         wrap = { cd -> Biquaternion(cd) },
@@ -49,13 +49,13 @@ private val cayleyDicksonBiquaternion: InvolutiveRing<Biquaternion> =
 /**
  * The coefficientwise complex scalar action `c ⊳ (w + xi + yj + zk) = cw + cx·i + cy·j + cz·k`.
  */
-private val complexScaling: LeftAction<Complex, Biquaternion> =
+private val complexScaling: LeftAction<RealComplex, Biquaternion> =
     biquaternionTier.scalarAction
 
 /**
  * Apply [f] to each of the four complex coefficients.
  */
-private fun mapCoefficients(q: Biquaternion, f: (Complex) -> Complex): Biquaternion =
+private fun mapCoefficients(q: Biquaternion, f: (RealComplex) -> RealComplex): Biquaternion =
     biquaternion(f(q.w), f(q.x), f(q.y), f(q.z))
 
 /**
@@ -98,7 +98,7 @@ object BiquaternionAlgebras {
 
     object BiquaternionRing :
         InvolutiveRing<Biquaternion> by cayleyDicksonBiquaternion,
-        HasNormSq<Biquaternion, Complex>,
+        HasNormSq<Biquaternion, RealComplex>,
         HasReciprocal<Biquaternion> {
 
         private val complexField = ComplexAlgebras.ComplexField
@@ -151,7 +151,7 @@ object BiquaternionAlgebras {
          * with no conjugation of the coefficients. It is multiplicative, and under
          * [BiquaternionToComplexMatrixIsomorphism] it is the determinant.
          */
-        override val normSq: UnaryOp<Biquaternion, Complex> =
+        override val normSq: UnaryOp<Biquaternion, RealComplex> =
             biquaternionTier.normSq
 
         /**
@@ -173,7 +173,7 @@ object BiquaternionAlgebras {
     /**
      * The biquaternions as a four-dimensional vector space over ℂ.
      */
-    val BiquaternionComplexVectorSpace: FiniteVectorSpace<Complex, Biquaternion> = FiniteVectorSpace.of(
+    val BiquaternionComplexVectorSpace: FiniteVectorSpace<RealComplex, Biquaternion> = FiniteVectorSpace.of(
         scalars = ComplexAlgebras.ComplexField,
         add = BiquaternionRing.add,
         dimension = 4,
@@ -193,7 +193,7 @@ object BiquaternionAlgebras {
     /**
      * The ℂ-star-algebra of biquaternions under the quaternion conjugate, which is ℂ-linear.
      */
-    val BiquaternionStarAlgebra: StarAlgebra<Complex, Biquaternion> = StarAlgebra.of(
+    val BiquaternionStarAlgebra: StarAlgebra<RealComplex, Biquaternion> = StarAlgebra.of(
         scalars = ComplexAlgebras.ComplexField,
         involutiveRing = BiquaternionRing,
         leftAction = complexScaling
@@ -212,7 +212,7 @@ object BiquaternionAlgebras {
     /**
      * The embedding of ℂ as the scalars `c ↦ c·1`, which is the center of the biquaternions.
      */
-    val ComplexToBiquaternionMonomorphism: RingMonomorphism<Complex, Biquaternion> = RingMonomorphism.of(
+    val ComplexToBiquaternionMonomorphism: RingMonomorphism<RealComplex, Biquaternion> = RingMonomorphism.of(
         domain = ComplexAlgebras.ComplexField,
         codomain = BiquaternionRing,
         map = biquaternionTier.scalarEmbeddingMap
@@ -275,14 +275,14 @@ object BiquaternionAlgebras {
      * [[p, q], [r, s]] ↦ (p + s)/2 + (p - s)/(2h)·i + (q - r)/2·j + (q + r)/(2h)·k.
      * ```
      */
-    val BiquaternionToComplexMatrixIsomorphism: RingIsomorphism<Biquaternion, DenseMat<Complex>> = run {
+    val BiquaternionToComplexMatrixIsomorphism: RingIsomorphism<Biquaternion, DenseMat<RealComplex>> = run {
         val field = ComplexAlgebras.ComplexField
         val matrices = DenseMatAlgebras.DenseMatRing(field, 2)
         val h = ComplexAlgebras.i
         val half = complex(0.5, 0.0)
         // 1 / (2h) = -h / 2
         val halfOverH = complex(0.0, -0.5)
-        fun minus(a: Complex, b: Complex): Complex = field.add(a, field.add.inverse(b))
+        fun minus(a: RealComplex, b: RealComplex): RealComplex = field.add(a, field.add.inverse(b))
 
         RingIsomorphism.of(
             forward = RingHomomorphism.of(
@@ -323,8 +323,8 @@ object BiquaternionAlgebras {
         biquaternionTier.eq(ComplexAlgebras.eqComplex)
 
     private fun printableBiquaternionGenerator(
-        prComplex: Printable<Complex>,
-        eqComplex: Eq<Complex>
+        prComplex: Printable<RealComplex>,
+        eqComplex: Eq<RealComplex>
     ): Printable<Biquaternion> =
         complexCoefficientPrintable(
             labels = listOf("", Symbols.IMAGINARY_I, Symbols.IMAGINARY_J, Symbols.IMAGINARY_K),
@@ -352,9 +352,9 @@ object BiquaternionAlgebras {
  */
 internal fun <Z : Any> complexCoefficientPrintable(
     labels: List<String>,
-    prComplex: Printable<Complex>,
-    eqComplex: Eq<Complex>,
-    decompose: (Z) -> List<Complex>
+    prComplex: Printable<RealComplex>,
+    eqComplex: Eq<RealComplex>,
+    decompose: (Z) -> List<RealComplex>
 ): Printable<Z> = Printable { z ->
     val zero = ComplexAlgebras.ComplexField.zero
     decompose(z)
