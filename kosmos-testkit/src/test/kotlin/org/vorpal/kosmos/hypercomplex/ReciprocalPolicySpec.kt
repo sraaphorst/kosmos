@@ -119,7 +119,7 @@ class ReciprocalPolicySpec : StringSpec({
     }
 
     "dual numbers over ℝ: a + bε is invertible iff a is finite and not approximately zero" {
-        val ring = DualAlgebras.DualRealRing
+        val ring = DualAlgebras.RealDualRing
         checkAll(boundaryReal, boundaryReal) { a, b ->
             checkContract(ring, dual(a, b), UnaryOp { d -> allFinite(listOf(d.a, d.b)) })
         }

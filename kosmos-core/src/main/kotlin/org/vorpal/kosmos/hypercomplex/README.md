@@ -148,7 +148,7 @@ gives the commutative quadratic extension `R[x]/(x² + σ)`:
 | 1  | −1 | complex-like `R[i]/(i² + 1)`: ℂ, ℚ(i), ℤ[i] | `Complex<R>` (value class over `CD<R>`) |
 | 1  | −1 | bicomplex `Complex(R)[j]/(j² + 1)` | `Bicomplex<R>` (value class over `CD<Complex<R>>`) |
 | −1 | +1 | split-complex `R[j]/(j² − 1)` | `SplitComplex<R>` (value class over `CD<R>`) |
-| 0  | 0  | dual numbers `F[ε]/(ε²)` | `Dual<F>` (value class over `CD<F>`) |
+| 0  | 0  | dual numbers `R[ε]/(ε²)` | `Dual<R>` (value class over `CD<R>`) |
 
 **Generic carriers and their named instances.** Every carrier is generic over a commutative ring:
 `Complex<R>`, `Quaternion<R>`, `Octonion<R>`, the split forms, and the complexified forms
@@ -259,10 +259,10 @@ hypercomplex/
 │   ├── SplitComplex.kt
 │   └── SplitComplexAlgebras.kt
 │
-├── dual/                     # Dual<F>: value class over CD⟨F⟩ (commutative doubling, σ = 0)
+├── dual/                     # Dual<R>: value class over CD⟨R⟩ (commutative doubling, σ = 0)
 │   ├── Dual.kt
 │   ├── DualAlgebras.kt             ring, reciprocal, autodiff, matrix embedding
-│   ├── DualModules.kt              scalar extension V ⊗ F[ε]
+│   ├── DualModules.kt              scalar extension V ⊗ R[ε]
 │   ├── DualRealFns.kt              elementary functions on Dual<Real>
 │   └── DualRationalFns.kt          rational functions on Dual<Rational>
 │
@@ -760,6 +760,7 @@ Each type has an appropriate scalar action:
 | $\mathbb{O}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 8) |
 | $\mathbb{B}$     | $\mathbb{R}$ | `FiniteVectorSpace` (dim 4) |
 | $\mathbb{B}$     | $\mathbb{C}$ | `FiniteVectorSpace` (dim 2) |
+| `Dual<R>` | $R$ | `RModule` (rank 2); `FiniteVectorSpace` (dim 2) over ℝ |
 | `SplitQuaternion<R>` | $R$ | `RModule` (rank 4); `FiniteVectorSpace` (dim 4) over ℝ |
 | `SplitOctonion<R>` | $R$ | `RModule` (rank 8); `FiniteVectorSpace` (dim 8) over ℝ |
 | $\mathbb{H} \otimes \mathbb{C}$ | $\mathbb{C}$ | `FiniteVectorSpace` (dim 4) |
@@ -834,6 +835,19 @@ Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into 
 | `Grav → 𝕆` (≈) | `GravesianOctonionAlgebras.gravesianToOctonionApprox` |
 | `𝕆_ℚ → 𝕆` (≈) | `RationalOctonionAlgebras.rationalOctonionToOctonionApprox` |
 
+### Dual numbers
+
+| Arrow | Location |
+|-------|----------|
+| `R ↪ Dual<R>` | `DualAlgebras.scalarEmbedding(base)` |
+| `Dual<R> → R` (set ε = 0) | `DualAlgebras.primalProjection(base)` |
+
+`DualAlgebras` mirrors `SplitComplexAlgebras` construction for construction: `dualRing(base)`,
+`dualRingWithReciprocal(field)`, `normSq`, module, algebra, star algebra, and the real conveniences
+`RealDualRing`, `RealDualStarAlgebra` and `DualRealVectorSpace`. On top of that it carries
+forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elementary functions in
+`DualRealFns` and `DualRationalFns`.
+
 ### Split forms
 
 | Arrow | Location |
@@ -866,7 +880,7 @@ Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into 
 |-------|----------|
 | `ℂ ↪ M₂(ℝ)` | `ComplexAlgebras.ComplexToRank2RMatrixMonomorphism` |
 | `SplitComplex<R> ↪ M₂(R)` | `SplitComplexAlgebras.splitComplexToRank2MatrixMonomorphism(base)` |
-| `Dual<F> ↪ M₂(F)` | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
+| `Dual<R> ↪ M₂(R)` | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
 | `𝔹 ↪ M₂(ℂ)` | `BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism`, `…ToDiagonalMatrixMonomorphism` |
 | `ℍ ↪ M₂(ℂ)` | `QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism` |
 | `ℍ′_R ↪ M₂(R)` | `SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base)` |

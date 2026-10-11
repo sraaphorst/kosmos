@@ -476,3 +476,79 @@ supply a wrong `half`, and it matches `splitQuaternionMatrixIsomorphism`.
 `BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, a, b)`, and `Bicomplex.ZERO` / `.ONE` are
 gone. All uses in the repository are migrated.
 
+---
+
+## Addendum 5: dual numbers (2026-10-11)
+
+**Result:** `./gradlew clean build`: **1876 tests, 0 failures.**
+
+**Correction to section 2.** The first pass stated that no errors were found in "the split-complex,
+dual and bicomplex numbers". For the dual numbers that statement was not backed by a review: the
+dual files were listed but not read. They have now been read in full, and this addendum is the
+review.
+
+### Findings
+
+The mathematics was sound: every derivative formula was correct, the ring is the Cayley-Dickson
+doubling at `σ = 0`, and the scalar-extension action is right. The problems were inconsistencies.
+
+| Finding | Fix |
+|---------|-----|
+| Two inverses with different rules: `DualRealRing.reciprocal` followed the floating-point policy, `DualRealFns.inv` only tested `a == 0.0`, so `inv(dual(1e-300, 1.0))` returned infinities | `inv` delegates to the ring's reciprocal, in both function libraries |
+| Mixed exceptions in `DualRealFns`: `inv` at a pole threw `ArithmeticException`; `cot`, `csc`, `coth`, `csch` threw `IllegalArgumentException` | One rule, documented on the object: outside the domain is `IllegalArgumentException`; a pole is `ArithmeticException` |
+| Dead guards: `tan` and `sec` tested `cos(a) != 0.0`, which never fails in floating point (`cos(π/2) ≈ 6·10⁻¹⁷`) | Poles are detected with the floating-point policy (finite and not approximately zero), so `tan(π/2)` is now rejected |
+| `sqrt`, `asin`, `acos` at a boundary with a nonzero tangent (an infinite derivative) threw `IllegalArgumentException` | `ArithmeticException`, as a pole of the derivative |
+| `DualRationalFns.pow` documented "Requires n >= 0" but accepted negative exponents | Documentation corrected; behaviour kept and tested |
+| `Dual.kt` still described `Complex` as `CD<Real>` | Rewritten |
+| `diffAt` took an `isZero` argument with no effect, and required a `Field` | Argument removed; works over any commutative ring |
+| `scalarExtension` took the dual ring as a separate argument that could disagree with the module's scalars, and required a vector space | Takes one `RModule`; the scalars are derived from it |
+
+### Brought in line with `SplitComplexAlgebras`
+
+`DualAlgebras` now has the same shape, construction for construction:
+
+| Split-complex | Dual (new or renamed) |
+|---------------|-----------------------|
+| `splitComplexRing(base)` | `dualRing(base)` (was the `DualCommutativeRing` class and `base.dualRing()`) |
+| `splitComplexRingWithReciprocal(field)` | `dualRingWithReciprocal(field)` |
+| `hyperbolicUnit(base)`, `j` | `infinitesimalUnit(base)`, `epsilon` |
+| `normSq(base)` | `normSq(base)` — **new** (`a²`), with `HasNormSq` on the reciprocal rings |
+| `splitComplexLeftAction`, `…Module`, `…Algebra`, `…StarAlgebra` | `dualLeftAction`, `dualModule`, `dualAlgebra`, `dualStarAlgebra` — **new** |
+| `RealSplitComplexRing`, `RealSplitComplexStarAlgebra`, `SplitComplexRealVectorSpace` | `RealDualRing` (was `DualRealRing`), `RealDualStarAlgebra`, `DualRealVectorSpace` — the last two **new** |
+| `scalarEmbedding(base)` | `scalarEmbedding(base)` — **new** as a morphism |
+| `eqSplitComplex(eqR)`, `eqSplitComplexStrict`, `eqSplitComplex` | `eqDual(eqR)`, `eqDualStrict`, `eqDual` (were `dualEq`, `eqDualRealStrict`, `eqDualReal`) |
+| `printableSplitComplexReal`, `…Strict`, `…Pretty` | `printableDualReal`, `printableDualStrict`, `printableDualPretty` |
+
+Also new: `primalProjection(base)`, the ring homomorphism `a + bε ↦ a`; and `variable` / `constant`
+as functions of the base ring (they were methods of the ring class, alongside `lift`, `eps` and
+`epsOne`, which are gone). The redundant accessors `real` and `eps` were removed; `a`/`b` are the
+members and `f`/`df` remain as the automatic-differentiation names.
+
+### Tests
+
+The five old dual spec files were replaced by six. The count rose only from 140 to 155, but what is
+checked changed substantially:
+
+| Spec | Tests | What it establishes |
+|------|------:|---------------------|
+| `DualRingSpec` | 24 | **Exact**, over ℚ, ℤ and 𝔽₅ (the old tests were floating-point only): ring and involution laws; the norm; the square-zero ideal; nilpotents; units; reciprocal; the truncated binomial theorem; module, algebra and star-algebra laws; the scalar embedding and primal projection; the tangent as a derivation; the matrix embedding with determinant = norm; all 25 elements over 𝔽₅ (20 units, 5 nilpotents) |
+| `RealDualSpec` | 10 | The real structures up to approximate equality; printables |
+| `DualDifferentiationSpec` | 11 | The rules of differentiation as **exact** identities over ℚ: power, linearity, product, quotient, reciprocal and chain rules; over ℤ; compositions over ℝ |
+| `DualModulesSpec` | 12 | The scalar extension of ℚ² exactly, and of ℤ over ℤ (no field needed) |
+| `DualRationalFnsSpec` | 15 | Each closed form against the same thing computed by the ring; laws of exponents; Möbius composition as matrix multiplication |
+| `DualRealFnsSpec` | 83 | For each of 22 functions: the closed form, agreement of its derivative with a **finite-difference quotient**, and linearity in the tangent. Then identities between dual numbers (`sin² + cos² = 1`, `tan = sin/cos`, inverse pairs, `exp(x + y)`, angle addition), and every failure mode |
+
+The finite-difference check matters: the old tests compared each derivative formula with the same
+formula written again in the test, which cannot catch a formula that is wrong in both places.
+
+The arbitraries are now an `ArbDual` object (they were top-level values), with fractional rationals
+(the old `arbRational` generated integers only).
+
+### Source-incompatible changes
+
+`DualCommutativeRing`, `DualCommutativeRingWithReciprocal`, `DualRealRing`, `base.dualRing()`,
+`lift`, `eps(b)`, `epsOne`, `x.real`, `x.eps`, `dualEq`, `eqDualReal`, `eqDualRealStrict`,
+`printableDualRealStrict`, `printableDualRealPretty`, the `isZero` argument of `diffAt`, and the
+second argument of `scalarExtension` are gone or renamed as in the table above. Several functions in
+`DualRealFns` now throw `ArithmeticException` where they threw `IllegalArgumentException`.
+
