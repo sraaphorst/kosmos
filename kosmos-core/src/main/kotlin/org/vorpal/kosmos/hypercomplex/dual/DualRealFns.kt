@@ -1,6 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
-import org.vorpal.kosmos.algebra.structures.HasReciprocal
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.powInt
 import kotlin.math.acos
@@ -40,8 +40,30 @@ import kotlin.math.tanh
  *
  * This is the core mechanism behind first-order forward-mode automatic differentiation:
  * the primal value is carried in `a`, and the derivative seed / tangent is carried in `b`.
+ *
+ * Failure modes follow one rule throughout:
+ * - An argument *outside the domain* of the function (the logarithm of a nonpositive number, the
+ *   square root of a negative one, `asin` outside `[-1, 1]`, a negative integer exponent) is an
+ *   [IllegalArgumentException].
+ * - A *pole*, where the value or the derivative would divide by zero (`inv` at 0, `cot` at 0, the
+ *   derivative of `sqrt` at 0), is an [ArithmeticException], as it is for every reciprocal in
+ *   Kosmos.
+ *
+ * Poles are detected with the floating-point policy of
+ * [org.vorpal.kosmos.algebra.structures.HasReciprocal]: the divisor must be finite and not
+ * approximately zero. An exact comparison with `0.0` would almost never fire, since for example
+ * `cos(π/2)` evaluates to about `6·10⁻¹⁷` rather than `0`.
  */
 object DualRealFns {
+    /**
+     * Reject a divisor that is not finite or is approximately zero.
+     */
+    private inline fun requireNotAtPole(divisor: Real, message: () -> String) {
+        if (!divisor.isFinite() || RealAlgebras.eqRealApprox(divisor, 0.0)) {
+            throw ArithmeticException(message())
+        }
+    }
+
     /**
      * Lift a differentiable unary real function to dual numbers.
      *
@@ -99,7 +121,7 @@ object DualRealFns {
      */
     fun tan(x: Dual<Real>): Dual<Real> {
         val ca = cos(x.f)
-        require(ca != 0.0) { "tan undefined when cos(a)=0, got a=${x.f}" }
+        requireNotAtPole(ca) { "tan has a pole where cos(a) = 0, got a=${x.f}" }
 
         val sec2 = 1.0 / (ca * ca)
         return dual(
@@ -117,7 +139,7 @@ object DualRealFns {
      */
     fun sec(x: Dual<Real>): Dual<Real> {
         val ca = cos(x.f)
-        require(ca != 0.0) { "sec undefined when cos(a)=0, got a=${x.f}" }
+        requireNotAtPole(ca) { "sec has a pole where cos(a) = 0, got a=${x.f}" }
 
         val sa = 1.0 / ca
         val d = sa * tan(x.f)
@@ -137,7 +159,7 @@ object DualRealFns {
      */
     fun cot(x: Dual<Real>): Dual<Real> {
         val sa = sin(x.f)
-        require(sa != 0.0) { "cot undefined when sin(a)=0, got a=${x.f}" }
+        requireNotAtPole(sa) { "cot has a pole where sin(a) = 0, got a=${x.f}" }
 
         val cotA = cos(x.f) / sa
         val csc2 = 1.0 / (sa * sa)
@@ -158,7 +180,7 @@ object DualRealFns {
      */
     fun csc(x: Dual<Real>): Dual<Real> {
         val sa = sin(x.f)
-        require(sa != 0.0) { "csc undefined when sin(a)=0, got a=${x.f}" }
+        requireNotAtPole(sa) { "csc has a pole where sin(a) = 0, got a=${x.f}" }
 
         val cscA = 1.0 / sa
         val cotA = cos(x.f) / sa
@@ -234,7 +256,7 @@ object DualRealFns {
         require(x.f >= 0.0) { "sqrt requires nonnegative real part, got ${x.f}" }
 
         if (x.f == 0.0) {
-            require(x.df == 0.0) { "sqrt derivative undefined at a=0 unless b=0" }
+            if (x.df != 0.0) throw ArithmeticException("sqrt has an infinite derivative at a=0: the tangent must be 0, got ${x.df}")
             return dual(
                 f = 0.0,
                 df = 0.0
@@ -261,7 +283,7 @@ object DualRealFns {
 
         val denom2 = 1.0 - x.f * x.f
         if (denom2 == 0.0) {
-            require(x.df == 0.0) { "asin derivative undefined at a=±1 unless b=0" }
+            if (x.df != 0.0) throw ArithmeticException("asin has an infinite derivative at a=±1: the tangent must be 0, got ${x.df}")
             return dual(
                 f = asin(x.f),
                 df = 0.0
@@ -286,7 +308,7 @@ object DualRealFns {
 
         val denom2 = 1.0 - x.f * x.f
         if (denom2 == 0.0) {
-            require(x.df == 0.0) { "acos derivative undefined at a=±1 unless b=0" }
+            if (x.df != 0.0) throw ArithmeticException("acos has an infinite derivative at a=±1: the tangent must be 0, got ${x.df}")
             return dual(
                 f = acos(x.f),
                 df = 0.0
@@ -372,7 +394,7 @@ object DualRealFns {
      */
     fun coth(x: Dual<Real>): Dual<Real> {
         val sa = sinh(x.f)
-        require(sa != 0.0) { "coth undefined when sinh(a)=0, got a=${x.f}" }
+        requireNotAtPole(sa) { "coth has a pole where sinh(a) = 0, got a=${x.f}" }
 
         val cothA = cosh(x.f) / sa
         val csch2 = 1.0 / (sa * sa)
@@ -392,7 +414,7 @@ object DualRealFns {
      */
     fun csch(x: Dual<Real>): Dual<Real> {
         val sa = sinh(x.f)
-        require(sa != 0.0) { "csch undefined when sinh(a)=0, got a=${x.f}" }
+        requireNotAtPole(sa) { "csch has a pole where sinh(a) = 0, got a=${x.f}" }
 
         val cschA = 1.0 / sa
         val cothA = cosh(x.f) / sa
@@ -410,17 +432,8 @@ object DualRealFns {
      * ```
      * Requires `a != 0`.
      */
-    fun inv(x: Dual<Real>): Dual<Real> {
-        if (x.f == 0.0) throw HasReciprocal.notInvertible(x, "the dual numbers")
-
-        val invA = 1.0 / x.f
-        val invA2 = invA * invA
-
-        return dual(
-            f = invA,
-            df = -x.df * invA2
-        )
-    }
+    fun inv(x: Dual<Real>): Dual<Real> =
+        DualAlgebras.RealDualRing.reciprocal(x)
 
     /**
      * Logistic sigmoid.

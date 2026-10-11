@@ -173,7 +173,7 @@ class GenericComplexSpec : StringSpec({
 
         val complexField = ComplexAlgebras.ComplexField
         val split = SplitComplexAlgebras.RealSplitComplexRing
-        val duals = DualAlgebras.DualRealRing
+        val duals = DualAlgebras.RealDualRing
 
         // The new unit squares to -1, +1 and 0 respectively.
         check(ComplexAlgebras.eqComplex(complexField.mul(complexUnit, complexUnit), complexField.negOne))

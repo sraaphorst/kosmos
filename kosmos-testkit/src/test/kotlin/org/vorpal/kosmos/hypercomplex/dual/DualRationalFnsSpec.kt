@@ -1,290 +1,176 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
+import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.arbitrary
 import io.kotest.property.arbitrary.int
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.algebra.structures.pow
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 
-class DualRationalFnsSpec : FunSpec({
+/**
+ * The algebraic functions on dual numbers over ℚ, checked exactly.
+ *
+ * Each closed-form function is compared with the same thing computed by the *ring*: `inv` with the
+ * ring reciprocal, `pow` with repeated multiplication, a Möbius map with `(ax + b)·(cx + d)⁻¹`. The
+ * closed forms are derivative formulas; the ring knows nothing about derivatives, so agreement is a
+ * genuine check.
+ */
+class DualRationalFnsSpec : StringSpec({
+    val q = RationalAlgebras.RationalField
+    val ring = DualAlgebras.dualRingWithReciprocal(q)
+    val arb = ArbDual.rationalDual
+    val arbUnit = ArbDual.unitRationalDual
+    val arbQ = ArbDual.rational
 
-    data class MobiusCase(
-        val x: Dual<Rational>,
-        val a: Rational,
-        val b: Rational,
-        val c: Rational,
-        val d: Rational
-    )
+    fun const(r: Rational): Dual<Rational> = DualAlgebras.constant(q, r)
 
-    val arbMobiusCase: Arb<MobiusCase> =
-        arbitrary {
-            while (true) {
-                val x = dual(
-                    f = arbRational.bind(),
-                    df = arbRational.bind()
+    // ── inv ──────────────────────────────────────────────────────────────────
+
+    "inv implements (a + bε)⁻¹ = 1/a - (b/a²)ε, and is the ring reciprocal" {
+        checkAll(arbUnit) { x ->
+            DualRationalFns.inv(x) shouldBe dual(x.f.reciprocal(), -x.df / (x.f * x.f))
+            DualRationalFns.inv(x) shouldBe ring.reciprocal(x)
+            ring.mul(x, DualRationalFns.inv(x)) shouldBe ring.one
+            DualRationalFns.inv(DualRationalFns.inv(x)) shouldBe x
+        }
+    }
+
+    "inv rejects a zero primal part with ArithmeticException, whatever the tangent" {
+        checkAll(arbQ) { b ->
+            shouldThrow<ArithmeticException> { DualRationalFns.inv(dual(Rational.ZERO, b)) }
+        }
+    }
+
+    // ── pow ──────────────────────────────────────────────────────────────────
+
+    "pow with exponent 0 is one, for every x including 0" {
+        checkAll(arb) { x ->
+            DualRationalFns.pow(x, 0) shouldBe ring.one
+        }
+        DualRationalFns.pow(ring.zero, 0) shouldBe ring.one
+    }
+
+    "pow with a positive exponent is repeated multiplication in the ring" {
+        checkAll(arb, Arb.int(1..9)) { x, n ->
+            DualRationalFns.pow(x, n) shouldBe ring.mul.pow(x, n)
+            DualRationalFns.pow(x, n) shouldBe dual(x.f.pow(n), n.toRational() * x.df * x.f.pow(n - 1))
+        }
+    }
+
+    "pow with a negative exponent is the inverse of the positive power" {
+        checkAll(arbUnit, Arb.int(1..7)) { x, n ->
+            DualRationalFns.pow(x, -n) shouldBe ring.reciprocal(ring.mul.pow(x, n))
+            ring.mul(DualRationalFns.pow(x, -n), DualRationalFns.pow(x, n)) shouldBe ring.one
+        }
+        checkAll(arbUnit) { x ->
+            DualRationalFns.pow(x, -1) shouldBe DualRationalFns.inv(x)
+        }
+    }
+
+    "pow obeys the laws of exponents: xᵐ·xⁿ = xᵐ⁺ⁿ and (xᵐ)ⁿ = xᵐⁿ" {
+        checkAll(arbUnit, Arb.int(-4..4), Arb.int(-4..4)) { x, m, n ->
+            ring.mul(DualRationalFns.pow(x, m), DualRationalFns.pow(x, n)) shouldBe DualRationalFns.pow(x, m + n)
+            DualRationalFns.pow(DualRationalFns.pow(x, m), n) shouldBe DualRationalFns.pow(x, m * n)
+        }
+    }
+
+    "pow with a negative exponent rejects a zero primal part with ArithmeticException" {
+        checkAll(arbQ, Arb.int(1..5)) { b, n ->
+            shouldThrow<ArithmeticException> { DualRationalFns.pow(dual(Rational.ZERO, b), -n) }
+        }
+    }
+
+    "pow of a nilpotent: (bε)¹ = bε and (bε)ⁿ = 0 for n ≥ 2" {
+        checkAll(arbQ, Arb.int(2..6)) { b, n ->
+            val x = dual(Rational.ZERO, b)
+            DualRationalFns.pow(x, 1) shouldBe x
+            DualRationalFns.pow(x, n) shouldBe ring.zero
+        }
+    }
+
+    "pow rejects Int.MIN_VALUE, which cannot be negated" {
+        shouldThrow<IllegalArgumentException> { DualRationalFns.pow(ring.one, Int.MIN_VALUE) }
+    }
+
+    // ── square and cube ──────────────────────────────────────────────────────
+
+    "square and cube are the ring products x·x and x·x·x" {
+        checkAll(arb) { x ->
+            DualRationalFns.square(x) shouldBe ring.mul(x, x)
+            DualRationalFns.square(x) shouldBe dual(x.f * x.f, Rational.of(2) * x.f * x.df)
+            DualRationalFns.square(x) shouldBe DualRationalFns.pow(x, 2)
+
+            DualRationalFns.cube(x) shouldBe ring.mul(x, ring.mul(x, x))
+            DualRationalFns.cube(x) shouldBe dual(x.f * x.f * x.f, Rational.of(3) * x.f * x.f * x.df)
+            DualRationalFns.cube(x) shouldBe DualRationalFns.pow(x, 3)
+        }
+    }
+
+    // ── Möbius transformations ───────────────────────────────────────────────
+
+    "mobius is (ax + b)·(cx + d)⁻¹ computed in the ring" {
+        checkAll(arb, arbQ, arbQ, arbQ, arbQ) { x, a, b, c, d ->
+            val denominator = ring.add(ring.mul(const(c), x), const(d))
+            if (ring.hasReciprocal(denominator)) {
+                val numerator = ring.add(ring.mul(const(a), x), const(b))
+                DualRationalFns.mobius(x, a, b, c, d) shouldBe ring.mul(numerator, ring.reciprocal(denominator))
+            } else {
+                shouldThrow<ArithmeticException> { DualRationalFns.mobius(x, a, b, c, d) }
+            }
+        }
+    }
+
+    "mobius carries the derivative (ad - bc)/(cu + d)²" {
+        checkAll(arb, arbQ, arbQ, arbQ, arbQ) { x, a, b, c, d ->
+            val denominator = c * x.f + d
+            if (denominator != Rational.ZERO) {
+                DualRationalFns.mobius(x, a, b, c, d) shouldBe dual(
+                    (a * x.f + b) / denominator,
+                    x.df * (a * d - b * c) / (denominator * denominator)
                 )
-
-                val a = arbRational.bind()
-                val b = arbRational.bind()
-                val c = arbRational.bind()
-                val d = arbRational.bind()
-
-                val denominator =
-                    c * x.f + d
-
-                if (denominator != Rational.ZERO) {
-                    return@arbitrary MobiusCase(
-                        x = x,
-                        a = a,
-                        b = b,
-                        c = c,
-                        d = d
-                    )
-                }
-            }
-
-            error("unreachable")
-        }
-
-    context("Reciprocal") {
-
-        test("inv implements (a + bε)^(-1) = 1/a - b/a² ε") {
-            checkAll(arbInvertibleDualRational) { x ->
-                val actual =
-                    DualRationalFns.inv(x)
-
-                val expected =
-                    dual(
-                        f = x.f.reciprocal(),
-                        df = -x.df * x.f.reciprocal() * x.f.reciprocal()
-                    )
-
-                actual shouldBe expected
             }
         }
+    }
 
-        test("multiplying by inv gives one") {
-            checkAll(arbInvertibleDualRational) { x ->
-                val inv =
-                    DualRationalFns.inv(x)
-
-                val product =
-                    dual(
-                        f = x.f * inv.f,
-                        df = x.f * inv.df + x.df * inv.f
-                    )
-
-                product shouldBe dual(
-                    f = Rational.ONE,
-                    df = Rational.ZERO
-                )
-            }
+    "special Möbius maps: the identity, the affine maps, and inversion" {
+        val (zero, one) = Rational.ZERO to Rational.ONE
+        checkAll(arb, arbQ, arbQ) { x, a, b ->
+            DualRationalFns.mobius(x, one, zero, zero, one) shouldBe x
+            DualRationalFns.mobius(x, a, b, zero, one) shouldBe ring.add(ring.mul(const(a), x), const(b))
         }
+        checkAll(arbUnit) { x ->
+            DualRationalFns.mobius(x, zero, one, one, zero) shouldBe DualRationalFns.inv(x)
+        }
+    }
 
-        test("inv rejects zero real part") {
-            checkAll(arbRational) { b ->
-                shouldThrow<ArithmeticException> {
-                    DualRationalFns.inv(
-                        dual(
-                            f = Rational.ZERO,
-                            df = b
-                        )
+    "composing Möbius maps multiplies their matrices" {
+        checkAll(arb, arbQ, arbQ, arbQ, arbQ) { x, a, b, c, d ->
+            // M₁ = [[a, b], [c, d]] and M₂ = [[2, 1], [1, 3]]; M₂ ∘ M₁ has matrix M₂·M₁.
+            val (a2, b2, c2, d2) = listOf(2, 1, 1, 3).map(Rational::of)
+            val inner = c * x.f + d
+            if (inner != Rational.ZERO) {
+                val y = DualRationalFns.mobius(x, a, b, c, d)
+                val outer = c2 * y.f + d2
+                val composedDenominator = (c2 * a + d2 * c) * x.f + (c2 * b + d2 * d)
+                if (outer != Rational.ZERO && composedDenominator != Rational.ZERO) {
+                    DualRationalFns.mobius(y, a2, b2, c2, d2) shouldBe DualRationalFns.mobius(
+                        x,
+                        a2 * a + b2 * c, a2 * b + b2 * d,
+                        c2 * a + d2 * c, c2 * b + d2 * d
                     )
                 }
             }
         }
     }
 
-    context("Integer powers") {
-
-        test("pow with exponent 0 gives one with zero tangent") {
-            checkAll(arbDualRational) { x ->
-                DualRationalFns.pow(x, 0) shouldBe dual(
-                    f = Rational.ONE,
-                    df = Rational.ZERO
-                )
-            }
-        }
-
-        test("pow implements (a + bε)^n = a^n + n b a^(n - 1) ε for positive n") {
-            checkAll(arbDualRational, Arb.int(1, 8)) { x, n ->
-                val actual =
-                    DualRationalFns.pow(x, n)
-
-                val expected =
-                    dual(
-                        f = x.f.pow(n),
-                        df = n.toRational() * x.df * x.f.pow(n - 1)
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("pow implements the same formula for negative n when the real part is nonzero") {
-            checkAll(arbInvertibleDualRational, Arb.int(-8, -1)) { x, n ->
-                val actual =
-                    DualRationalFns.pow(x, n)
-
-                val expected =
-                    dual(
-                        f = x.f.pow(n),
-                        df = n.toRational() * x.df * x.f.pow(n - 1)
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("pow with exponent -1 agrees with inv") {
-            checkAll(arbInvertibleDualRational) { x ->
-                DualRationalFns.pow(x, -1) shouldBe DualRationalFns.inv(x)
-            }
-        }
-
-        test("pow rejects Int.MIN_VALUE") {
-            checkAll(arbInvertibleDualRational) { x ->
-                shouldThrow<IllegalArgumentException> {
-                    DualRationalFns.pow(x, Int.MIN_VALUE)
-                }
-            }
-        }
-    }
-
-    context("Square and cube") {
-
-        test("square implements (a + bε)^2 = a^2 + 2ab ε") {
-            checkAll(arbDualRational) { x ->
-                val actual =
-                    DualRationalFns.square(x)
-
-                val expected =
-                    dual(
-                        f = x.f * x.f,
-                        df = Rational.TWO * x.f * x.df
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("square agrees with pow(x, 2)") {
-            checkAll(arbDualRational) { x ->
-                DualRationalFns.square(x) shouldBe DualRationalFns.pow(x, 2)
-            }
-        }
-
-        test("cube implements (a + bε)^3 = a^3 + 3a^2b ε") {
-            checkAll(arbDualRational) { x ->
-                val actual =
-                    DualRationalFns.cube(x)
-
-                val expected =
-                    dual(
-                        f = x.f * x.f * x.f,
-                        df = 3.toRational() * x.f * x.f * x.df
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("cube agrees with pow(x, 3)") {
-            checkAll(arbDualRational) { x ->
-                DualRationalFns.cube(x) shouldBe DualRationalFns.pow(x, 3)
-            }
-        }
-    }
-
-    context("Möbius / linear fractional transformation") {
-
-        test("mobius implements M(u + vε) = M(u) + v M'(u) ε") {
-            checkAll(arbMobiusCase) { case ->
-                val x = case.x
-                val a = case.a
-                val b = case.b
-                val c = case.c
-                val d = case.d
-
-                val denominator =
-                    c * x.f + d
-
-                val numerator =
-                    a * x.f + b
-
-                val determinant =
-                    a * d - b * c
-
-                val expected =
-                    dual(
-                        f = numerator / denominator,
-                        df = x.df * determinant / (denominator * denominator)
-                    )
-
-                val actual =
-                    DualRationalFns.mobius(
-                        x = x,
-                        a = a,
-                        b = b,
-                        c = c,
-                        d = d
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("mobius with parameters 0, 1, 1, 0 agrees with inv") {
-            checkAll(arbInvertibleDualRational) { x ->
-                val actual =
-                    DualRationalFns.mobius(
-                        x = x,
-                        a = Rational.ZERO,
-                        b = Rational.ONE,
-                        c = Rational.ONE,
-                        d = Rational.ZERO
-                    )
-
-                actual shouldBe DualRationalFns.inv(x)
-            }
-        }
-
-        test("mobius with c = 0 and d = 1 gives affine map ax + b") {
-            checkAll(arbDualRational, arbRational, arbRational) { x, a, b ->
-                val actual =
-                    DualRationalFns.mobius(
-                        x = x,
-                        a = a,
-                        b = b,
-                        c = Rational.ZERO,
-                        d = Rational.ONE
-                    )
-
-                val expected =
-                    dual(
-                        f = a * x.f + b,
-                        df = x.df * a
-                    )
-
-                actual shouldBe expected
-            }
-        }
-
-        test("mobius rejects zero denominator") {
-            checkAll(arbDualRational) { x ->
-                shouldThrow<ArithmeticException> {
-                    DualRationalFns.mobius(
-                        x = x,
-                        a = Rational.ONE,
-                        b = Rational.ZERO,
-                        c = Rational.ONE,
-                        d = -x.f
-                    )
-                }
+    "mobius rejects a zero denominator with ArithmeticException" {
+        checkAll(arb) { x ->
+            shouldThrow<ArithmeticException> {
+                DualRationalFns.mobius(x, Rational.ONE, Rational.ZERO, Rational.ONE, -x.f)
             }
         }
     }

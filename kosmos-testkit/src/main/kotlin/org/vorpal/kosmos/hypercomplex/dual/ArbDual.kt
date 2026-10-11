@@ -1,105 +1,86 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.double
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.map
-import org.vorpal.kosmos.core.Eqs
+import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.core.rational.toRational
+import java.math.BigInteger
 import kotlin.math.abs
 
-/**
- * Arbitrary for finite Reals suitable for dual number operations.
- */
-val arbDualReal: Arb<Real> =
-    Arb.double(-100.0, 100.0)
-        .filter { it.isFinite() }
+object ArbDual {
 
-/**
- * Arbitrary for non-zero Reals, using approximate real equality.
- */
-val arbNonZeroDualReal: Arb<Real> =
-    arbDualReal
-        .filter { Eqs.realApprox().neqv(it, 0.0) }
+    /**
+     * Generic dual numbers `a + bε` with primal part drawn from [primal] and tangent part drawn from
+     * [tangent].
+     */
+    fun <R : Any> dualOf(
+        primal: Arb<R>,
+        tangent: Arb<R> = primal
+    ): Arb<Dual<R>> =
+        Arb.bind(primal, tangent) { a, b -> dual(f = a, df = b) }
 
-/**
- * Generate a Real that is safely invertible for dual number operations.
- *
- * This avoids reciprocal tests becoming numerically noisy near zero.
- */
-private val arbSafelyInvertibleDualReal: Arb<Real> =
-    arbDualReal
-        .filter { abs(it) > 1e-4 }
+    /**
+     * Generic elements `primal + ε·tangent` of a scalar extension.
+     */
+    fun <V : Any> dualVectorOf(arbV: Arb<V>): Arb<DualVector<V>> =
+        Arb.bind(arbV, arbV) { p, t -> DualVector(primal = p, tangent = t) }
 
-/**
- * Dual numbers `a + bε` with primal part drawn from [primal] and tangent part drawn from [tangent].
- *
- * This is the generic building block for every dual-number generator below.
- */
-fun <F : Any> arbDualOf(
-    primal: Arb<F>,
-    tangent: Arb<F> = primal
-): Arb<Dual<F>> =
-    arbitrary {
-        dual(
-            f = primal.bind(),
-            df = tangent.bind()
-        )
-    }
+    // ── Exact: ℚ and ℤ ───────────────────────────────────────────────────────
 
-/**
- * Arbitrary for dual numbers over Real.
- */
-val arbDual: Arb<Dual<Real>> =
-    arbDualOf(arbDualReal)
+    /**
+     * Rationals `p/q` with `|p| ≤ 12`, `1 ≤ q ≤ 12`: genuinely fractional, and small enough that
+     * exact triple products stay fast.
+     */
+    val rational: Arb<Rational> =
+        Arb.bind(Arb.int(-12..12), Arb.int(1..12)) { p, d -> Rational.of(p, d) }
 
-/**
- * Arbitrary for invertible dual numbers.
- *
- * The real part is non-zero according to approximate real equality.
- */
-val arbInvertibleDual: Arb<Dual<Real>> =
-    arbDualOf(arbNonZeroDualReal, arbDualReal)
+    val nonZeroRational: Arb<Rational> =
+        rational.filter { it != Rational.ZERO }
 
-/**
- * Arbitrary for safely invertible dual numbers.
- *
- * The real part is bounded away from zero to keep reciprocal tests stable.
- */
-val arbSafelyInvertibleDual: Arb<Dual<Real>> =
-    arbDualOf(arbSafelyInvertibleDualReal, arbDualReal)
+    /**
+     * Exact dual numbers over ℚ, for laws that hold with strict equality.
+     */
+    val rationalDual: Arb<Dual<Rational>> =
+        dualOf(rational)
 
-/**
- * Arbitrary for non-invertible dual numbers.
- *
- * The real part is zero, and the infinitesimal part is non-zero to avoid
- * always generating the additive zero element.
- */
-val arbNonInvertibleDual: Arb<Dual<Real>> =
-    arbNonZeroDualReal.map { b -> dual(f = 0.0, df = b) }
+    /**
+     * Exact dual numbers over ℚ with nonzero primal part: exactly the units.
+     */
+    val unitRationalDual: Arb<Dual<Rational>> =
+        dualOf(nonZeroRational, rational)
 
-val arbRational: Arb<Rational> =
-    Arb.int(-20, 20)
-        .map { it.toRational() }
+    /**
+     * Dual numbers over ℤ.
+     */
+    val integerDual: Arb<Dual<BigInteger>> =
+        dualOf(Arb.int(-30..30).map(Int::toBigInteger))
 
-val arbNonZeroRational: Arb<Rational> =
-    arbRational
-        .filter { it != Rational.ZERO }
+    // ── Floating point: ℝ ────────────────────────────────────────────────────
 
-val arbDualRational: Arb<Dual<Rational>> =
-    arbDualOf(arbRational)
+    /**
+     * Smallish real dual numbers for associativity / distributivity / bilinearity tests.
+     */
+    val smallDual: Arb<Dual<Real>> =
+        dualOf(ArbReal.smallReal)
 
-val arbInvertibleDualRational: Arb<Dual<Rational>> =
-    arbDualOf(arbNonZeroRational, arbRational)
+    /**
+     * Real dual numbers with primal part bounded away from zero (`0.1 ≤ |a| ≤ 100`) and a bounded
+     * tangent, so that the reciprocal `a⁻¹ - (b/a²)ε` is numerically well-conditioned.
+     */
+    val unitDual: Arb<Dual<Real>> =
+        dualOf(ArbReal.fieldReal, Arb.double(-100.0..100.0))
 
-fun <V : Any> arbDualVector(arbV: Arb<V>): Arb<DualVector<V>> =
-    arbitrary {
-        DualVector(
-            primal = arbV.bind(),
-            tangent = arbV.bind()
-        )
-    }
+    /**
+     * Real dual numbers that are *not* invertible: zero primal part and a nonzero tangent, so the
+     * additive zero is not always what is generated.
+     */
+    val nonUnitDual: Arb<Dual<Real>> =
+        Arb.double(-100.0..100.0)
+            .filter { abs(it) > 1e-3 }
+            .map { b -> dual(f = 0.0, df = b) }
+}

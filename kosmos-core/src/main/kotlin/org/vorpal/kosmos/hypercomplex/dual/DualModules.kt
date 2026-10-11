@@ -3,7 +3,6 @@ package org.vorpal.kosmos.hypercomplex.dual
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.RModule
-import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
@@ -11,6 +10,10 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
 
+/**
+ * An element `primal + ε·tangent` of the scalar extension `V ⊗ Dual(R)` of a module `V`: a point
+ * together with a tangent vector at it.
+ */
 data class DualVector<V : Any>(
     val primal: V,
     val tangent: V
@@ -25,10 +28,10 @@ fun <V : Any> printableDualVector(prV: Printable<V>): Printable<DualVector<V>> =
 
 object DualModules {
     /**
-     * Given a base vector space `V` over a field `F` and the dual ring `Dual(F)`,
-     * build the scalar-extension module:
+     * Given a module `V` over a commutative ring `R` (in particular a vector space over a field),
+     * build the scalar-extension module over the dual ring `Dual(R)`:
      * ```text
-     * V ⊗_F Dual(F) = V ⊗_F F[ε]/(ε²) ≅ V × V
+     * V ⊗_R Dual(R) = V ⊗_R R[ε]/(ε²) ≅ V × V
      * ```
      * with action:
      * ```text
@@ -45,14 +48,15 @@ object DualModules {
      * ```text
      * f(p + εv) = f(p) + ε D_v f(p).
      * ```
+     *
+     * The scalars are the dual ring over the scalars of [base], so the two can never disagree.
      */
-    fun <F : Any, V : Any> scalarExtension(
-        base: VectorSpace<F, V>,
-        dual: DualAlgebras.DualCommutativeRing<F>,
-    ): RModule<Dual<F>, DualVector<V>> =
-        object : RModule<Dual<F>, DualVector<V>> {
+    fun <R : Any, V : Any> scalarExtension(
+        base: RModule<R, V>
+    ): RModule<Dual<R>, DualVector<V>> =
+        object : RModule<Dual<R>, DualVector<V>> {
 
-            override val scalars: CommutativeRing<Dual<F>> = dual
+            override val scalars: CommutativeRing<Dual<R>> = DualAlgebras.dualRing(base.scalars)
 
             private val zeroV = base.add.identity
 
@@ -75,10 +79,9 @@ object DualModules {
                 }
             )
 
-            override val leftAction: LeftAction<Dual<F>, DualVector<V>> =
+            override val leftAction: LeftAction<Dual<R>, DualVector<V>> =
                 LeftAction(Symbols.TRIANGLE_RIGHT) { s, (primal, tangent) ->
-                    val a = s.f
-                    val b = s.df
+                    val (a, b) = s
 
                     val ax = base.leftAction(a, primal)
                     val ay = base.leftAction(a, tangent)
