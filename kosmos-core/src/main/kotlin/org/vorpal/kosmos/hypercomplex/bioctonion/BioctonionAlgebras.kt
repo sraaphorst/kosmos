@@ -145,8 +145,9 @@ object BioctonionAlgebras {
         bioctonionTier(base).normSq
 
     /**
-     * The complex conjugate over [base]: conjugates each coefficient (`h ↦ -h`). An *automorphism*,
-     * whose fixed ring is `Octonion(R)`.
+     * The complex conjugate over [base]: conjugates each coefficient (`h ↦ -h`). An *automorphism*.
+     * Its fixed ring is `Octonion(R)` when `R` has no 2-torsion; in general `a + bh` is fixed
+     * exactly when `2b = 0`, so in characteristic two it is the identity.
      */
     fun <R : Any> complexConj(
         base: CommutativeRing<R>

@@ -104,7 +104,7 @@ All four arrows are implemented as monomorphisms and tested.
 ℂ ↪ 𝔹 ↪ ℍ ⊗ ℂ ↪ 𝕆 ⊗ ℂ              the complexified tower (canonical CD embeddings)
 ```
 
-**Matrix algebras.** Three of the algebras *are* matrix algebras, and Kosmos provides the
+**Matrix algebras.** Two of the algebras *are* matrix algebras, and Kosmos provides the
 isomorphisms with their inverses:
 
 | Isomorphism | Location | Norm becomes | Conjugation becomes |
@@ -433,7 +433,9 @@ Each complexified algebra has three involutions, and it matters which one is mea
 | Hermitian | both | ℝ only | ✓ | `hermitianConj` |
 
 `conj` is the Cayley–Dickson conjugation, and the norm is `N(q) = q·conj(q)`, which is
-complex-valued. The fixed ring of `complexConj` is the real form ℍ (or 𝕆). Under
+complex-valued. The fixed ring of `complexConj` is the real form ℍ (or 𝕆); over a general base `R` this needs `R`
+to have no 2-torsion, since `a + bh` is fixed exactly when `2b = 0` (over 𝔽₂ the conjugation is the
+identity, and the usual and split doublings coincide). Under
 `ℍ ⊗ ℂ ≅ M₂(ℂ)` the Hermitian conjugate is the conjugate transpose.
 
 Correspondingly there are two star-algebra structures: `BiquaternionStarAlgebra` over ℂ (with
@@ -1266,4 +1268,3 @@ References:
   sedenion side needs the named sedenions first.
 - **Octonion matrices** (also listed in the top-level `TODO.md`), and with them the exceptional
   Jordan algebra.
-

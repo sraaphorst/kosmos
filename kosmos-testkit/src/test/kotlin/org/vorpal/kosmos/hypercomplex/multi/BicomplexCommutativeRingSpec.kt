@@ -21,7 +21,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "reciprocal exists for an invertible bicomplex number" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
             complex(2.0, 1.0),
             complex(3.0, -4.0)
         )
@@ -34,7 +34,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "reciprocal fails for a nonzero zero divisor" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
             complex(0.0, 0.0),
             complex(1.0, 2.0)
         )
@@ -71,7 +71,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "first projection returns alpha" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
             complex(1.0, 2.0),
             complex(3.0, 4.0)
         )
@@ -82,7 +82,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
     }
 
     "second projection returns beta" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField, 
+        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
             complex(1.0, 2.0),
             complex(3.0, 4.0)
         )
