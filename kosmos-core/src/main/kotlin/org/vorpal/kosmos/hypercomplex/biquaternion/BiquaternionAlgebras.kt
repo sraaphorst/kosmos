@@ -154,7 +154,8 @@ object BiquaternionAlgebras {
 
     /**
      * The complex conjugate over [base]: conjugates each coefficient (`h ↦ -h`). A ring
-     * *automorphism*, whose fixed ring is `Quaternion(R)`.
+     * *automorphism*. Its fixed ring is `Quaternion(R)` when `R` has no 2-torsion; in general
+     * `a + bh` is fixed exactly when `2b = 0`, so in characteristic two it is the identity.
      */
     fun <R : Any> complexConj(
         base: CommutativeRing<R>
