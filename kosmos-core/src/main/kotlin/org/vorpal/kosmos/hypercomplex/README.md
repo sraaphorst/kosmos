@@ -14,11 +14,12 @@ Every one of them is an instance of a single construction, Cayley–Dickson doub
 4. [The division tower and its coefficient rings](#the-tower-diagram)
 5. [Split forms](#split-forms)
 6. [Complexifications](#complexifications)
-7. Embedding families: [complex → quaternion (×6)](#embeddings-complex--quaternion-6),
+7. [Dual numbers](#dual-numbers) and [why they differentiate](#why-dual-numbers-differentiate)
+8. Embedding families: [complex → quaternion (×6)](#embeddings-complex--quaternion-6),
    [quaternion → octonion (×168)](#embeddings-quaternion--octonion-168-or-84-normalized)
-8. [Combinatorics of the octonion multiplication table](#combinatorics-of-the-octonion-multiplication-table)
-9. [Quick reference](#quick-reference-monomorphisms-and-conversions)
-10. [What remains to be done](#what-remains-to-be-done)
+9. [Combinatorics of the octonion multiplication table](#combinatorics-of-the-octonion-multiplication-table)
+10. [Quick reference](#quick-reference-monomorphisms-and-conversions)
+11. [What remains to be done](#what-remains-to-be-done)
 
 ---
 
@@ -475,6 +476,209 @@ and over the finite field 𝔽₃. `ComplexifiedTowerSpec` checks the raw constr
 
 ---
 
+## Dual Numbers
+
+The dual numbers over a commutative ring $R$ are
+
+$$\mathrm{Dual}(R) \;=\; R[\varepsilon]/(\varepsilon^2) \;=\; \{\,a + b\varepsilon : a, b \in R\,\}, \qquad \varepsilon^2 = 0 .$$
+
+They are the third two-dimensional algebra produced by the commutative doubling: with a trivial
+involution on $R$ the Cayley–Dickson product $(a,b)(c,d) = (ac - \sigma\, db,\; da + bc)$ gives the
+complex numbers at $\sigma = 1$, the split-complex numbers at $\sigma = -1$ and the dual numbers at
+$\sigma = 0$. Over ℝ these are, up to isomorphism, the *only* two-dimensional unital algebras:
+$\mathbb{R}[x]/(x^2 + px + q)$ is determined by the sign of its discriminant, and the three signs
+give $\mathbb{C}$ (negative), $\mathbb{R} \times \mathbb{R}$ (positive) and $\mathrm{Dual}(\mathbb{R})$ (zero).
+
+In Kosmos `Dual<R>` is a value class over `CD<R>` with accessors `a` (primal part) and `b` (tangent
+part), also available under their differentiation names `f` and `df`.
+
+### Arithmetic
+
+| | Formula |
+|---|---|
+| Sum | $(a + b\varepsilon) + (c + d\varepsilon) = (a + c) + (b + d)\varepsilon$ |
+| Product | $(a + b\varepsilon)(c + d\varepsilon) = ac + (ad + bc)\varepsilon$ |
+| Conjugate | $\overline{a + b\varepsilon} = a - b\varepsilon$ |
+| Norm | $N(z) = z\bar z = a^2$ |
+| Reciprocal | $(a + b\varepsilon)^{-1} = \bar z / N(z) = a^{-1} - b\,a^{-2}\varepsilon$, when $a$ is a unit |
+
+The ring is commutative and associative for every commutative $R$. The norm is multiplicative, but
+*degenerate*: it does not see $b$ at all, and $N(z) = 0$ on the whole line $\varepsilon R$.
+
+### Structure
+
+Write $\pi(a + b\varepsilon) = a$ for the **primal projection** and $\iota(a) = a + 0\varepsilon$
+for the scalar embedding.
+
+- **$\pi$ is a ring homomorphism**, with kernel the ideal $(\varepsilon) = \varepsilon R$, and
+  $\pi \circ \iota = \mathrm{id}$. So there is a split exact sequence
+  $0 \to \varepsilon R \to \mathrm{Dual}(R) \to R \to 0$, and $\mathrm{Dual}(R)/(\varepsilon) \cong R$.
+- **$\varepsilon$ is nilpotent**, so $\mathrm{Dual}(R)$ is never an integral domain, and never a field.
+- **Units.** $a + b\varepsilon$ is a unit iff $a$ is a unit of $R$. If $a$ is a unit the formula
+  above is an inverse; conversely $\pi$ is a ring homomorphism, so it sends units to units.
+- **Over a field** $F$: the non-units are exactly $\varepsilon F$, which is therefore the unique
+  maximal ideal. $\mathrm{Dual}(F)$ is a *local ring*, every non-unit is a zero divisor (it is killed
+  by $\varepsilon$), and the only idempotents are 0 and 1.
+
+That last point is the contrast with the split-complex numbers. Both have zero divisors, but for
+opposite reasons: $\mathrm{SplitComplex}(F)$ has two complementary idempotents and falls apart into
+$F \times F$ (when 2 is invertible), while $\mathrm{Dual}(F)$ has none and cannot be decomposed at
+all. It is $F$ with an infinitesimal thickening glued on.
+
+| | $\mathbb{C}$ | split-complex | dual |
+|---|---|---|---|
+| New unit squares to | $-1$ | $+1$ | $0$ |
+| $\mathbb{R}[x]/(\ldots)$ | $x^2 + 1$, irreducible | $(x - 1)(x + 1)$, distinct roots | $x^2$, repeated root |
+| Structure | field | $\mathbb{R} \times \mathbb{R}$ | local ring, not reduced |
+| Norm | $a^2 + b^2$, definite | $a^2 - b^2$, indefinite | $a^2$, degenerate |
+| Non-units | $0$ | the two lines $a = \pm b$ | the line $a = 0$ |
+| Unit "circle" $N = 1$ | circle | hyperbola | two parallel lines $a = \pm 1$ |
+| $\exp(b\,u)$ for the new unit $u$ | $\cos b + i \sin b$ | $\cosh b + j \sinh b$ | $1 + b\varepsilon$ |
+| Geometry | rotations | Lorentz boosts | shears (Galilean boosts) |
+
+The matrix representation makes the same point. Acting on the basis $(1, \varepsilon)$ by
+multiplication gives
+
+$$a + b\varepsilon \;\longmapsto\; \begin{pmatrix} a & 0 \\ b & a \end{pmatrix},
+\qquad \varepsilon \;\longmapsto\; \begin{pmatrix} 0 & 0 \\ 1 & 0 \end{pmatrix},$$
+
+a single Jordan block: the determinant is the norm $a^2$, and the matrix is not diagonalizable
+unless $b = 0$.
+
+| What | Where |
+|---|---|
+| Ring, any commutative `R` | `DualAlgebras.dualRing(base)` |
+| Ring with reciprocal, over a field | `DualAlgebras.dualRingWithReciprocal(field, isZero)` |
+| Norm $a^2$ | `DualAlgebras.normSq(base)` |
+| $\varepsilon$ | `DualAlgebras.infinitesimalUnit(base)`, `DualAlgebras.epsilon` (real) |
+| $\iota$, $\pi$ | `DualAlgebras.scalarEmbedding(base)`, `DualAlgebras.primalProjection(base)` |
+| Matrix representation | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
+| Module, algebra, star algebra over `R` | `dualModule`, `dualAlgebra`, `dualStarAlgebra` |
+| Real conveniences | `RealDualRing`, `RealDualStarAlgebra`, `DualRealVectorSpace` |
+
+`Dual<Real>` is deliberately **not** a `RealNormedDivisionAlgebra`: it is not a division algebra and
+its norm is degenerate. `RealDualRing.hasReciprocal` follows the floating-point policy of
+`HasReciprocal` (the primal part must be finite and not approximately zero), and additionally
+requires the tangent part $b/a^2$ of the inverse to be finite, since that can overflow even when
+$a$ is safely nonzero.
+
+### Why dual numbers differentiate
+
+**Polynomials: an exact identity.** For any commutative ring $R$ and any polynomial $p \in R[x]$,
+
+$$p(a + b\varepsilon) \;=\; p(a) + b\,p'(a)\,\varepsilon ,$$
+
+where $p'$ is the formal derivative. The proof is the binomial theorem:
+$(a + b\varepsilon)^n = a^n + n a^{n-1} b\,\varepsilon + \binom{n}{2} a^{n-2} b^2 \varepsilon^2 + \cdots$,
+and every term from the third on contains $\varepsilon^2 = 0$. Extend linearly over the monomials.
+
+Said differently: Taylor's formula $p(a + h) = p(a) + p'(a)\,h + h^2 q(a, h)$ is an identity of
+polynomials in $a$ and $h$. The dual numbers are the ring in which $h^2 = 0$ has been imposed, so
+substituting $h = b\varepsilon$ deletes the remainder. Nothing is approximated and no limit is
+taken; $\varepsilon$ is an "$h$ so small that its square is zero", made into honest algebra.
+
+**Why the two components divide the work.** The two coordinates of a dual number obey two different
+laws, and both are read straight off the product formula $ac + (ad + bc)\varepsilon$:
+
+- the primal part $\pi$ is a **ring homomorphism**: $\pi(zw) = \pi(z)\,\pi(w)$;
+- the tangent part $\tau(a + b\varepsilon) = b$ is a **derivation over $\pi$**: it is additive and
+  $\tau(zw) = \pi(z)\,\tau(w) + \tau(z)\,\pi(w)$.
+
+The second line is the Leibniz rule. So the multiplication table of the ring *is* the product
+rule, and the other rules of calculus are the other ring operations:
+
+| Rule of differentiation | Fact about $\mathrm{Dual}(R)$ |
+|---|---|
+| $(f + g)' = f' + g'$ | addition is componentwise |
+| $(fg)' = f'g + fg'$ | the $\varepsilon$-coefficient of a product |
+| $(1/g)' = -g'/g^2$ | the reciprocal formula $a^{-1} - b\,a^{-2}\varepsilon$ |
+| $(c)' = 0$, $(x)' = 1$ | the seeds $c + 0\varepsilon$ and $x + 1\varepsilon$ |
+| $(g \circ f)' = (g' \circ f)\, f'$ | composing two lifted maps (below) |
+
+The primal slot computes the function exactly as it would have been computed anyway, and the
+tangent slot rides along, being updated at each operation by exactly the rule that operation
+demands. That is why one evaluation yields both $f(x)$ and $f'(x)$.
+
+**Functions that are not polynomials.** For a differentiable $f : \mathbb{R} \to \mathbb{R}$, *define*
+its lift by
+
+$$\hat f(a + b\varepsilon) \;=\; f(a) + b\,f'(a)\,\varepsilon .$$
+
+For analytic $f$ this is not a choice: substituting $a + b\varepsilon$ into the power series of $f$
+about $a$ truncates in the same way as a polynomial. The lift is compatible with everything:
+$\widehat{f + g} = \hat f + \hat g$ and $\widehat{fg} = \hat f\,\hat g$ in the dual ring, and
+
+$$\hat g(\hat f(a + b\varepsilon)) \;=\; \hat g\bigl(f(a) + b f'(a)\varepsilon\bigr)
+\;=\; g(f(a)) + b\,f'(a)\,g'(f(a))\,\varepsilon \;=\; \widehat{g \circ f}(a + b\varepsilon),$$
+
+which is the chain rule. Hence any expression built from ring operations and lifted primitives
+carries its exact derivative in the tangent slot. This is first-order **forward-mode automatic
+differentiation**: it has no step size and no truncation error, only the rounding of the
+underlying arithmetic.
+
+**The structural statement.** For a commutative $R$-algebra $A$ and a homomorphism
+$\varphi_0 : A \to R$, the $R$-algebra homomorphisms $A \to \mathrm{Dual}(R)$ that reduce to
+$\varphi_0$ under $\pi$ are exactly the maps $\varphi_0 + D\,\varepsilon$ with $D$ a derivation
+$A \to R$ over $\varphi_0$. With $A = R[x]$ and $\varphi_0$ evaluation at $a$, the derivations are
+the multiples $b \cdot \frac{d}{dx}\big|_a$, which recovers the formula at the top. This is the
+sense in which a dual number is "a point together with a tangent vector", and it is how algebraic
+geometry defines tangent vectors.
+
+### Differentiation in Kosmos
+
+| What | Where |
+|---|---|
+| Seed of the independent variable, $x + 1\varepsilon$ | `DualAlgebras.variable(base, x)` |
+| Seed of a constant, $c + 0\varepsilon$ | `DualAlgebras.constant(base, c)` |
+| $(f(x), f'(x))$ for `f: Endo<Dual<R>>` | `DualAlgebras.diffAt(base, f, x)`, `diffAtReal(f, x)` |
+| Lifted elementary functions on `Dual<Real>` | `DualRealFns` |
+| Lifted rational functions on `Dual<Rational>` | `DualRationalFns` |
+| Directional derivatives in a module | `DualModules.scalarExtension(module)` |
+
+```kotlin
+// Exact, over ℚ: p(x) = 3x³ − 2x + 5 at x = 2 gives (25, 34).
+val q = RationalAlgebras.RationalField
+val ring = DualAlgebras.dualRing(q)
+fun c(n: Int) = DualAlgebras.constant(q, Rational.of(n))
+
+val p = Endo<Dual<Rational>> { x ->
+    ring.add(ring.add(ring.mul(c(3), ring.mul.pow(x, 3)), ring.add.inverse(ring.mul(c(2), x))), c(5))
+}
+val (value, derivative) = DualAlgebras.diffAt(q, p, Rational.of(2))
+
+// Over ℝ: d/dx exp(sin x) = cos(x)·exp(sin x).
+val (v, d) = DualAlgebras.diffAtReal(Endo { x -> DualRealFns.exp(DualRealFns.sin(x)) }, 0.5)
+```
+
+- **`DualRealFns`** lifts `sin`, `cos`, `tan`, `sec`, `cot`, `csc`, `exp`, `expm1`, `log`, `log1p`,
+  `sqrt`, `asin`, `acos`, `atan`, the six hyperbolic functions, `sigmoid`, `inv` and `pow` (integer
+  and real exponents), each by the rule $f(a) + b f'(a)\varepsilon$. It has one failure rule: an
+  argument outside the domain of the function is an `IllegalArgumentException`; a pole, where the
+  value *or the derivative* would divide by zero (`inv` at 0, `cot` at 0, the derivative of `sqrt`
+  at 0), is an `ArithmeticException`.
+- **`DualRationalFns`** provides `inv`, `pow`, `square`, `cube` and the Möbius map
+  $(ax + b)/(cx + d)$ with derivative $(ad - bc)/(cx + d)^2$, all exact.
+- **Directions.** For an $R$-module $V$, `DualModules.scalarExtension` builds
+  $V \otimes_R \mathrm{Dual}(R) \cong V \times V$ with action
+  $(a + b\varepsilon)(x, y) = (ax,\; ay + bx)$. A `DualVector(primal = p, tangent = v)` is a point
+  with a direction, and a lifted map sends it to $f(p) + \varepsilon\, D_v f(p)$. One pass gives
+  one directional derivative, so a gradient in $n$ variables costs $n$ passes; that is the
+  forward-mode trade-off.
+- **Second derivatives.** $\varepsilon^2 = 0$ discards everything past first order. Because
+  `dualRing` accepts any commutative ring, it can be applied to itself: `Dual<Dual<R>>` is
+  $R[\varepsilon_1, \varepsilon_2]/(\varepsilon_1^2, \varepsilon_2^2)$, and evaluating at
+  $x + \varepsilon_1 + \varepsilon_2$ returns
+  $f + f'\varepsilon_1 + f'\varepsilon_2 + f''\varepsilon_1\varepsilon_2$.
+
+**Tests.** `DualRingSpec` checks the ring, module, algebra and star-algebra laws exactly over ℚ and
+ℤ, the unit and zero-divisor characterization, and the matrix representation.
+`DualDifferentiationSpec` checks the rules of differentiation *as exact identities* over ℚ
+(linearity, product, quotient, chain and power rules, and the nested second derivative), then
+`diffAtReal` against closed forms. `DualRealFnsSpec` and `DualRationalFnsSpec` check every lifted
+function and every failure case; `DualModulesSpec` checks the scalar extension.
+
+---
+
 ## Embeddings: Complex → Quaternion (×6)
 
 ### The Idea
@@ -846,7 +1050,7 @@ Entries marked (≈) are **not** morphisms: they are `UnaryOp` conversions into 
 `dualRingWithReciprocal(field)`, `normSq`, module, algebra, star algebra, and the real conveniences
 `RealDualRing`, `RealDualStarAlgebra` and `DualRealVectorSpace`. On top of that it carries
 forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elementary functions in
-`DualRealFns` and `DualRationalFns`.
+`DualRealFns` and `DualRationalFns`. See [Dual numbers](#dual-numbers) for the mathematics.
 
 ### Split forms
 
