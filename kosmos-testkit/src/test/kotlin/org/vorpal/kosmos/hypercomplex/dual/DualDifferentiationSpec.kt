@@ -127,6 +127,31 @@ class DualDifferentiationSpec : StringSpec({
         }
     }
 
+    "nested duals carry the second derivative: Dual<Dual<ℚ>> evaluates (f, f', f', f'')" {
+        // Over the ring Dual(ℚ), seed the point (a + 1·ε₁) with outer tangent 1.
+        val inner = DualAlgebras.dualRing(q)
+        val outer = DualAlgebras.dualRing(inner)
+        fun lift(n: Int): Dual<Dual<Rational>> =
+            DualAlgebras.constant(inner, DualAlgebras.constant(q, Rational.of(n)))
+
+        checkAll(arbQ) { a ->
+            val seed = DualAlgebras.variable(inner, DualAlgebras.variable(q, a))
+            // p(x) = 3x³ - 2x + 5, p'(x) = 9x² - 2, p''(x) = 18x.
+            val y = outer.add(
+                outer.add(
+                    outer.mul(lift(3), outer.mul.pow(seed, 3)),
+                    outer.add.inverse(outer.mul(lift(2), seed))
+                ),
+                lift(5)
+            )
+            val value = Rational.of(3) * a * a * a - Rational.of(2) * a + Rational.of(5)
+            val first = Rational.of(9) * a * a - Rational.of(2)
+            val second = Rational.of(18) * a
+
+            y shouldBe dual(dual(value, first), dual(first, second))
+        }
+    }
+
     "diffAtReal differentiates compositions of elementary functions" {
         val eq = RealAlgebras.eqRealApprox
         checkAll(Arb.double(-3.0..3.0)) { a ->
