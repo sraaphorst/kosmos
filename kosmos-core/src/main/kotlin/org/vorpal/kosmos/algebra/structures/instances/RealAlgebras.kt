@@ -4,6 +4,7 @@ import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
@@ -16,7 +17,7 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras.ComplexField
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import java.math.BigInteger
@@ -42,8 +43,15 @@ object RealAlgebras {
             op = BinOp(Symbols.ASTERISK, Real::times)
         )
 
+        /**
+         * The floating-point policy of [HasReciprocal]: `x` is invertible iff it is finite and not
+         * approximately zero, so `NaN`, `±∞` and subnormal-scale values are rejected.
+         */
+        override fun hasReciprocal(a: Real): Boolean =
+            a.isFinite() && eqRealApprox.neqv(a, 0.0)
+
         override val reciprocal: Endo<Real> = Endo(Symbols.INVERSE) { x ->
-            require(eqRealApprox.neqv(x, 0.0) && x.isFinite()) { "0 has no reciprocal." }
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, Symbols.BB_R)
             1.0 / x
         }
 
@@ -66,13 +74,13 @@ object RealAlgebras {
             Endo(Symbols.NORM_SQ_SYMBOL) { a -> a * a }
     }
 
-    object RealToComplexMonomorphism: RingMonomorphism<Real, Complex> {
+    object RealToComplexMonomorphism: RingMonomorphism<Real, RealComplex> {
         override val domain = RealAlgebras.RealField
         override val codomain = ComplexField
-        override val map = UnaryOp<Real, Complex> { r -> complex(r, 0.0) }
+        override val map = UnaryOp<Real, RealComplex> { r -> complex(r, 0.0) }
     }
 
-    fun Real.toComplex(): Complex =
+    fun Real.toComplex(): RealComplex =
         RealToComplexMonomorphism(this)
 
     val eqRealApprox: Eq<Real> = Eqs.realApprox()

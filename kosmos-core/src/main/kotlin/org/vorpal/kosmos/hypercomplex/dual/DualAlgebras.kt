@@ -1,313 +1,479 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
+import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
+import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
+import org.vorpal.kosmos.algebra.structures.Algebra
+import org.vorpal.kosmos.algebra.structures.CD
+import org.vorpal.kosmos.algebra.structures.CarrierTransport
+import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.HasNormSq
 import org.vorpal.kosmos.algebra.structures.HasReciprocal
+import org.vorpal.kosmos.algebra.structures.RModule
+import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
+import org.vorpal.kosmos.core.contramap
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.linear.values.DenseMat
-import java.math.BigInteger
 
+/**
+ * Algebraic structures and utilities for dual numbers `a + bε`, `ε² = 0`.
+ *
+ * Main constructions:
+ * - [dualRing]: the dual ring `R[ε]/(ε²)` over a commutative base ring.
+ * - [dualRingWithReciprocal]: the same over a field, with partial reciprocals.
+ * - [infinitesimalUnit]: the element `ε` over a given base.
+ * - [normSq]: the (degenerate) norm `N(a + bε) = a²`.
+ * - [dualLeftAction]: scalar action `r ⊳ (a + bε) = (ra) + (rb)ε`.
+ * - [dualModule]: `Dual<R>` as a free `R`-module of rank 2.
+ * - [dualAlgebra]: `Dual<R>` as an `R`-algebra.
+ * - [dualStarAlgebra]: `Dual<R>` as an `R`-star-algebra (with conjugation).
+ *
+ * The arithmetic is not implemented here: it is the Cayley-Dickson doubling of `R` (with the
+ * trivial involution) at `σ = 0`, i.e. [CayleyDickson.commutative], transported to the [Dual]
+ * carrier.
+ *
+ * Real conveniences:
+ * - [RealDualRing]: dual ring over `Real`, with numerically guarded reciprocals.
+ * - [RealDualStarAlgebra]: dual star algebra over `Real`.
+ * - [DualRealVectorSpace]: two-dimensional real vector space.
+ * - [epsilon]: the element `ε` over the reals.
+ *
+ * Morphisms:
+ * - [scalarEmbedding]: embeds `R` into `Dual<R>`, `r ↦ r + 0ε`.
+ * - [primalProjection]: the augmentation `Dual<R> → R`, `a + bε ↦ a` (set `ε = 0`).
+ * - [dualToRank2MatrixMonomorphism]: embeds `a + bε` as `[[a, 0], [b, a]]`.
+ *
+ * Differentiation:
+ * - [variable], [constant]: the seeds `a + 1ε` and `a + 0ε` of forward-mode differentiation.
+ * - [diffAt], [diffAtReal]: the value and derivative of a scalar map at a point.
+ *
+ * Elementary functions on dual numbers live in [DualRealFns] and [DualRationalFns].
+ */
 object DualAlgebras {
 
-    open class DualCommutativeRing<F : Any>(
-        protected val base: CommutativeRing<F>
-    ) : CommutativeRing<Dual<F>> {
-
-        override val add = AbelianGroup.of(
-            identity = dual(base.zero, base.zero),
-            op = BinOp(Symbols.PLUS) { x, y ->
-                dual(
-                    base.add(x.a, y.a),
-                    base.add(x.b, y.b)
-                )
-            },
-            inverse = Endo(Symbols.MINUS) { x ->
-                dual(
-                    base.add.inverse(x.a),
-                    base.add.inverse(x.b)
-                )
-            }
+    private fun <R : Any> transport(): CarrierTransport<CD<R>, Dual<R>> =
+        CarrierTransport(
+            wrap = UnaryOp { cd -> Dual(cd) },
+            unwrap = UnaryOp { d -> d.cd }
         )
-
-        override val mul = CommutativeMonoid.of(
-            identity = dual(base.one, base.zero),
-            op = BinOp(Symbols.ASTERISK) { x, y ->
-                val ac = base.mul(x.a, y.a)
-                val ad = base.mul(x.a, y.b)
-                val bc = base.mul(x.b, y.a)
-
-                dual(
-                    ac,
-                    base.add(ad, bc)
-                )
-            }
-        )
-
-        /**
-         * Embed an element a ∈ F as a + 0ε.
-         */
-        fun lift(a: F): Dual<F> =
-            dual(a, base.zero)
-
-        /**
-         * Build a pure infinitesimal 0 + bε.
-         */
-        fun eps(b: F): Dual<F> =
-            dual(base.zero, b)
-
-        /**
-         * The canonical infinitesimal ε = 0 + 1ε.
-         */
-        val epsOne: Dual<F>
-            get() = eps(base.one)
-
-        fun variable(a: F): Dual<F> =
-            dual(a, base.one)
-
-        override fun fromBigInt(n: BigInteger): Dual<F> =
-            lift(base.fromBigInt(n))
-    }
 
     /**
-     * Dual numbers over a base field [F].
+     * The element `ε` of the dual ring, which depends on the base ring.
      *
-     * Carrier: `Dual(a, b)` represents `a + bε` with `ε² = 0`.
-     *
-     * The duals form a commutative ring with:
-     * - addition:
-     * ```text
-     * (a,b) + (c,d) = (a + c, b + d)
-     * ```
-     * - multiplication:
-     * ```text
-     * (a,b)(c,d) = (ac, ad + bc)
-     * ```
-     * A dual number is invertible iff its real part `a` is nonzero in the base field.
-     *
-     * In that case:
-     * ```text
-     * (a + bε)^{-1} = a^{-1} - (b / a^2) ε
-     * ```
-     *
-     * Note that if `x = a + bε`, then
-     * ```text
-     * f(x) = f(a) + b f'(a) ε
-     * ```
-     * by the Taylor expansion:
-     * ```text
-     *  f(a + h) = f(a) + f'(a) h + f''(a) h^2 / 2! + f'''(a) h^3 / 3! + ...
-     *           = f(a) + f'(a)(bε) + 0 + ...
-     * ```
-     * since `ε² = 0`, and this is how the autodifferentiation is achieved.
+     * Note that the 0 and 1 elements are accessible via the ring instance.
      */
-    class DualCommutativeRingWithReciprocal<F : Any>(
+    fun <R : Any> infinitesimalUnit(
+        base: CommutativeRing<R>
+    ): Dual<R> =
+        dual(
+            f = base.zero,
+            df = base.one
+        )
+
+    /**
+     * The element `ε` of the dual ring over the Reals.
+     */
+    val epsilon: Dual<Real> =
+        infinitesimalUnit(RealAlgebras.RealField)
+
+    /**
+     * The dual ring over a commutative base ring.
+     *
+     * This is the Cayley-Dickson doubling of [base] equipped with the *trivial* involution at
+     * `σ = 0` (see [CayleyDickson.commutative]), i.e. `R[ε] / (ε²)`.
+     *
+     * Multiplication is:
+     * ```text
+     * (a + bε)(c + dε) = ac + (ad + bc)ε
+     * ```
+     * so `ε² = 0`.
+     *
+     * The involution is the Cayley-Dickson conjugation:
+     * ```text
+     * conj(a + bε) = a - bε
+     * ```
+     */
+    fun <R : Any> dualRing(
+        base: CommutativeRing<R>
+    ): CommutativeInvolutiveRing<Dual<R>> =
+        transport<R>().commutativeInvolutiveRing(
+            CayleyDickson.commutative(
+                base = base,
+                sigma = base.zero
+            )
+        )
+
+    /**
+     * Norm-like quadratic form for a generic commutative ring:
+     * ```text
+     * N(a + bε) = (a + bε)·conj(a + bε) = a²
+     * ```
+     * It is multiplicative but *degenerate*: it ignores the tangent part entirely, and `N(z) = 0`
+     * exactly on the nilpotent ideal `εR` when the base has no zero divisors.
+     */
+    fun <R : Any> normSq(
+        base: CommutativeRing<R>
+    ): UnaryOp<Dual<R>, R> =
+        UnaryOp(Symbols.NORM_SQ_SYMBOL) { z -> base.mul(z.a, z.a) }
+
+    /**
+     * Dual numbers over a field, with reciprocals on the units.
+     *
+     * `a + bε` is invertible iff `a` is invertible in [field], and then
+     * ```text
+     * (a + bε)⁻¹ = conj(a + bε) / N(a + bε) = a⁻¹ - (b / a²) ε.
+     * ```
+     * [isZero] decides when a primal part counts as zero; over an exact field the default equality
+     * is right, while over `Real` a numerical test should be supplied (see [RealDualRing]).
+     */
+    fun <F : Any> dualRingWithReciprocal(
+        field: Field<F>,
+        isZero: UnaryOp<F, Boolean> = UnaryOp { it == field.zero }
+    ): DualRingWithReciprocal<F> =
+        DualRingWithReciprocal(field, isZero)
+
+    class DualRingWithReciprocal<F : Any>(
         private val field: Field<F>,
-        private val isZero: (F) -> Boolean = { it == field.zero }
-    ) : DualCommutativeRing<F>(field),
+        private val isZero: UnaryOp<F, Boolean>
+    ) : CommutativeInvolutiveRing<Dual<F>> by dualRing(field),
+        HasNormSq<Dual<F>, F>,
         HasReciprocal<Dual<F>> {
+
+        override val zero: Dual<F>
+            get() = add.identity
+
+        override val normSq: UnaryOp<Dual<F>, F> =
+            normSq(field)
 
         override fun hasReciprocal(a: Dual<F>): Boolean =
             !isZero(a.a)
 
-        override val reciprocal: Endo<Dual<F>> = Endo(Symbols.INVERSE) { x ->
-            if (!hasReciprocal(x)) throw ArithmeticException("Cannot invert dual number with zero real part: $x")
-
-            val invA = field.reciprocal(x.a)
-            val invA2 = base.mul(invA, invA)
-
-            val minusB = base.add.inverse(x.b)
-            val epsPart = base.mul(minusB, invA2)
-
-            Dual(invA, epsPart)
+        override val reciprocal: Endo<Dual<F>> = Endo(Symbols.INVERSE) { z ->
+            if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the dual numbers")
+            val scale = field.reciprocal(normSq(z))
+            dualLeftAction(field)(scale, conj(z))
         }
-
-        override fun fromBigInt(n: BigInteger): Dual<F> =
-            lift(base.fromBigInt(n))
     }
 
     /**
-     * Convenience function to build the dual ring over a base commutative ring.
+     * The componentwise scalar action of a commutative base ring on `Dual<R>`:
+     * ```text
+     * r ⊳ (a + bε) = (r·a) + (r·b)ε
+     * ```
      */
-    fun <F : Any> CommutativeRing<F>.dualRing(): DualCommutativeRing<F> =
-        DualCommutativeRing(this)
+    fun <R : Any> dualLeftAction(
+        base: CommutativeRing<R>
+    ): LeftAction<R, Dual<R>> =
+        LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, b) ->
+            dual(
+                f = base.mul(r, a),
+                df = base.mul(r, b)
+            )
+        }
 
     /**
-     * Convenience function to build the dual ring over a base field.
-     */
-    fun <F : Any> Field<F>.dualRingWithReciprocal(
-        isZero: (F) -> Boolean = { it == zero }
-    ): DualCommutativeRingWithReciprocal<F> =
-        DualCommutativeRingWithReciprocal(this, isZero)
-
-    /**
-     * Differentiate a function represented on dual numbers, corresponding to a scalar map `F → F`
-     * at a point `x`.
+     * `Dual<R>` as a free `R`-module of rank 2.
      *
-     * Returns `f(x), f'(x)`.
+     * Carrier addition is taken from [dualRing]; the action is [dualLeftAction].
      */
-    fun <F : Any> diffAt(
-        field: Field<F>,
-        f: (Dual<F>) -> Dual<F>,
-        x: F,
-        isZero: (F) -> Boolean = { it == field.zero }
-    ): Pair<F, F> {
-        val d = field.dualRingWithReciprocal(isZero)
-        val y = f(d.variable(x))
+    fun <R : Any> dualModule(
+        base: CommutativeRing<R>
+    ): RModule<R, Dual<R>> =
+        RModule.of(
+            scalars = base,
+            add = dualRing(base).add,
+            leftAction = dualLeftAction(base)
+        )
+
+    /**
+     * `Dual<R>` as an `R`-algebra.
+     *
+     * Combines the commutative ring structure from [dualRing] with the scalar action
+     * [dualLeftAction]. Multiplication is `R`-bilinear by construction.
+     */
+    fun <R : Any> dualAlgebra(
+        base: CommutativeRing<R>
+    ): Algebra<R, Dual<R>> =
+        Algebra.of(
+            scalars = base,
+            algebraRing = dualRing(base),
+            leftAction = dualLeftAction(base)
+        )
+
+    /**
+     * `Dual<R>` as an `R`-star-algebra.
+     *
+     * The involution is the standard dual conjugation `a + bε ↦ a - bε`, supplied by [dualRing].
+     */
+    fun <R : Any> dualStarAlgebra(
+        base: CommutativeRing<R>
+    ): StarAlgebra<R, Dual<R>> =
+        StarAlgebra.of(
+            scalars = base,
+            involutiveRing = dualRing(base),
+            leftAction = dualLeftAction(base)
+        )
+
+    /**
+     * The floating-point zero test of [HasReciprocal]: not finite, or approximately zero.
+     */
+    private val realIsZero: UnaryOp<Real, Boolean> =
+        UnaryOp { n -> !n.isFinite() || RealAlgebras.eqRealApprox(n, 0.0) }
+
+    /**
+     * The dual numbers over the reals.
+     *
+     * Reciprocals follow the floating-point policy of [HasReciprocal]. Algebraically, `a + bε` is
+     * invertible iff `a ≠ 0`. Numerically, it counts as invertible iff `a` is finite and not
+     * approximately zero *and* the inverse `a⁻¹ - (b/a²)ε` is finite: unlike the norm-based
+     * algebras, the tangent part `b/a²` can overflow even when `a` is safely nonzero, so the
+     * predicate checks it directly.
+     */
+    object RealDualRing :
+        CommutativeInvolutiveRing<Dual<Real>> by dualRing(RealAlgebras.RealField),
+        HasNormSq<Dual<Real>, Real>,
+        HasReciprocal<Dual<Real>> {
+
+        private val guarded = dualRingWithReciprocal(
+            field = RealAlgebras.RealField,
+            isZero = realIsZero
+        )
+
+        override val zero: Dual<Real>
+            get() = add.identity
+
+        override val normSq: UnaryOp<Dual<Real>, Real> = guarded.normSq
+
+        override fun hasReciprocal(a: Dual<Real>): Boolean =
+            guarded.hasReciprocal(a) && a.b.isFinite() && (a.b / (a.a * a.a)).isFinite()
+
+        override val reciprocal: Endo<Dual<Real>> = Endo(Symbols.INVERSE) { z ->
+            if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the dual numbers")
+            val invA = 1.0 / z.a
+            dual(f = invA, df = -z.b * invA * invA)
+        }
+    }
+
+    /**
+     * The dual star algebra over the Reals.
+     *
+     * Mirrors `ComplexAlgebras.ComplexStarAlgebra` and `SplitComplexAlgebras.RealSplitComplexStarAlgebra`,
+     * but `Dual<Real>` is *not* a field (`ε` is nilpotent) and its norm form is degenerate, so it is
+     * deliberately not a `RealNormedDivisionAlgebra`. Use [RealDualRing.normSq] when the quadratic
+     * form `a²` is wanted.
+     */
+    object RealDualStarAlgebra :
+        CommutativeInvolutiveRing<Dual<Real>> by RealDualRing,
+        StarAlgebra<Real, Dual<Real>> {
+
+        override val zero: Dual<Real> = RealDualRing.zero
+        override val one: Dual<Real> = RealDualRing.one
+
+        override val scalars = RealAlgebras.RealField
+
+        override val conj: Endo<Dual<Real>> = RealDualRing.conj
+
+        override val leftAction: LeftAction<Real, Dual<Real>> =
+            dualLeftAction(RealAlgebras.RealField)
+    }
+
+    object DualRealVectorSpace : FiniteVectorSpace<Real, Dual<Real>> {
+        override val scalars = RealAlgebras.RealField
+        override val add = RealDualRing.add
+        override val dimension = 2
+        override val leftAction: LeftAction<Real, Dual<Real>> =
+            RealDualStarAlgebra.leftAction
+    }
+
+    /**
+     * A base ring embedding from the ring R to Dual<R>, `r ↦ r + 0ε`.
+     */
+    fun <R : Any> scalarEmbedding(
+        base: CommutativeRing<R>
+    ): RingMonomorphism<R, Dual<R>> =
+        RingMonomorphism.of(
+            domain = base,
+            codomain = dualRing(base),
+            map = UnaryOp { r -> dual(f = r, df = base.zero) }
+        )
+
+    /**
+     * The augmentation `Dual<R> → R`, `a + bε ↦ a`: evaluate at `ε = 0`.
+     *
+     * It is a surjective ring homomorphism with kernel the nilpotent ideal `εR`, and a left inverse
+     * of [scalarEmbedding]. In automatic-differentiation terms it forgets the derivative and keeps
+     * the value. (The tangent part `a + bε ↦ b` is *not* a homomorphism: it is a derivation,
+     * `D(xy) = x₀·D(y) + D(x)·y₀`, which is the product rule.)
+     */
+    fun <R : Any> primalProjection(
+        base: CommutativeRing<R>
+    ): RingHomomorphism<Dual<R>, R> =
+        RingHomomorphism.of(
+            domain = dualRing(base),
+            codomain = base,
+            map = UnaryOp { z -> z.a }
+        )
+
+    /**
+     * The matrix embedding into M₂(R): the regular representation on the basis `{1, ε}`.
+     *
+     * Note that:
+     * ```text
+     * a + bε ↪ [[a, 0], [b, a]]
+     * ```
+     * The columns are the coordinates of `(a + bε)·1` and `(a + bε)·ε`. This is the same
+     * [quadraticRank2MatrixEmbedding] used for the complex (`x² = -1`) and split-complex
+     * (`x² = 1`) numbers; the determinant is the norm `a²`.
+     */
+    fun <R : Any> dualToRank2MatrixMonomorphism(
+        base: CommutativeRing<R>
+    ): RingMonomorphism<Dual<R>, DenseMat<R>> =
+        quadraticRank2MatrixEmbedding(
+            domain = dualRing(base),
+            coefficientRing = base,
+            s = base.zero,
+            t = base.zero,
+            coeffs = UnaryOp { (a, b) -> a to b }
+        )
+
+    /**
+     * The seed `a + 1ε` of an independent variable at the point `a`: its derivative with respect to
+     * itself is 1.
+     */
+    fun <R : Any> variable(
+        base: CommutativeRing<R>,
+        a: R
+    ): Dual<R> =
+        dual(f = a, df = base.one)
+
+    /**
+     * The seed `a + 0ε` of a constant: its derivative is 0. This is [scalarEmbedding] as a plain
+     * function.
+     */
+    fun <R : Any> constant(
+        base: CommutativeRing<R>,
+        a: R
+    ): Dual<R> =
+        dual(f = a, df = base.zero)
+
+    /**
+     * Forward-mode automatic differentiation of a scalar map.
+     *
+     * [f] is a function `R → R` written on dual numbers. Since `ε² = 0`, the Taylor expansion
+     * ```text
+     * f(a + ε) = f(a) + f'(a) ε
+     * ```
+     * terminates, so evaluating [f] at the seed `x + 1ε` produces the value and the derivative
+     * together.
+     *
+     * Returns `(f(x), f'(x))`.
+     */
+    fun <R : Any> diffAt(
+        base: CommutativeRing<R>,
+        f: Endo<Dual<R>>,
+        x: R
+    ): Pair<R, R> {
+        val y = f(variable(base, x))
         return y.f to y.df
     }
 
     /**
-     * Differentiate a function `f` represented on dual numbers, corresponding to a scalar map:
-     * ```text
-     * Real → Real
-     * ```
-     * at a point `x`.
+     * [diffAt] for a scalar map `Real → Real`.
      *
-     * Returns `f(x), f'(x)`.
+     * Returns `(f(x), f'(x))`.
      */
     fun diffAtReal(
-        f: (Dual<Real>) -> Dual<Real>,
+        f: Endo<Dual<Real>>,
         x: Real
     ): Pair<Real, Real> =
         diffAt(
-            field = RealAlgebras.RealField,
+            base = RealAlgebras.RealField,
             f = f,
-            x = x,
-            isZero = { RealAlgebras.eqRealApprox(it, 0.0) }
+            x = x
         )
 
     /**
-     * The matrix embedding into M₂(F).
+     * Eqs
      */
-    fun <F : Any> dualToRank2MatrixMonomorphism(
-        field: Field<F>
-    ): RingMonomorphism<Dual<F>, DenseMat<F>> =
-        RingMonomorphism.of(
-            domain = field.dualRing(),
-            codomain = DenseMatAlgebras.DenseMatRing(field, 2),
-            map = { (a, b) ->
-                DenseMat.ofRows(
-                    listOf(
-                        listOf(a, b),
-                        listOf(field.zero, a)
-                    )
-                )
-            }
+    fun <R : Any> eqDual(eqR: Eq<R>): Eq<Dual<R>> =
+        CD.eq(eqR).contramap { z: Dual<R> -> z.cd }
+
+    /**
+     * Eq specifically based on a strict Real comparison.
+     */
+    val eqDualStrict: Eq<Dual<Real>> =
+        eqDual(RealAlgebras.eqRealStrict)
+
+    /**
+     * Eq specifically based on a Real approximation.
+     */
+    val eqDual: Eq<Dual<Real>> =
+        eqDual(RealAlgebras.eqRealApprox)
+
+    /**
+     * Printables: `a + bε` rendered as a linear combination over the basis `{1, ε}`.
+     */
+    fun <R : Any> printableDual(
+        signed: SignedOps<R>,
+        zero: R,
+        one: R,
+        prR: Printable<R>,
+        eqR: Eq<R>
+    ): Printable<Dual<R>> =
+        ComplexPrintable.complexLikePrintable(
+            signed = signed,
+            zero = zero,
+            one = one,
+            re = UnaryOp { it.a },
+            im = UnaryOp { it.b },
+            basis = Symbols.EPSILON,
+            prA = prR,
+            eqA = eqR
         )
 
-    fun <A : Any> dualEq(
-        eqA: Eq<A>
-    ): Eq<Dual<A>> = Eq {
-        x, y -> eqA(x.a, y.a) && eqA(x.b, y.b)
-    }
-
-    val eqDualReal: Eq<Dual<Real>> =
-        dualEq(RealAlgebras.eqRealApprox)
-
-    /** Always prints "a + bε". */
-    fun <F : Any> liftPrintable(prF: Printable<F>): Printable<Dual<F>> =
-        Printable { x ->
-            "${prF(x.a)} + ${prF(x.b)}${Symbols.EPSILON}"
-        }
+    private fun printableDualRealGenerator(
+        prReal: Printable<Real>,
+        eqReal: Eq<Real>
+    ): Printable<Dual<Real>> =
+        printableDual(
+            signed = RealAlgebras.SignedReal,
+            zero = RealAlgebras.RealField.zero,
+            one = RealAlgebras.RealField.one,
+            prR = prReal,
+            eqR = eqReal
+        )
 
     /**
-     * Prints "a - |b|ε" iff rendered b starts with '-'; otherwise "a + bε".
-     * Purely presentational: does not assume algebraic sign.
+     * For Real.
      */
-    fun <F : Any> liftSigned(prF: Printable<F>): Printable<Dual<F>> =
-        Printable { x ->
-            val a = prF(x.a)
-            val b = prF(x.b)
-
-            if (b.startsWith("-")) "$a - ${b.drop(1).trimStart()}${Symbols.EPSILON}"
-            else "$a + $b${Symbols.EPSILON}"
-        }
-
-    /**
-     * Compact form: drops zero parts, prints ε for coefficient 1.
-     * Does NOT introduce '-' based on negOne; stays algebraically neutral.
-     */
-    fun <F : Any> compact(
-        zero: F,
-        one: F,
-        prF: Printable<F>,
-        eq: Eq<F> = Eq.default(),
-    ): Printable<Dual<F>> =
-        Printable { x ->
-            val a0 = eq(x.a, zero)
-            val b0 = eq(x.b, zero)
-            val b1 = eq(x.b, one)
-
-            when {
-                a0 && b0 -> prF(zero)                             // 0
-                a0 && b1 -> Symbols.EPSILON                           // ε
-                a0       -> "${prF(x.b)}${Symbols.EPSILON}"       // bε
-                b0       -> prF(x.a)                              // a
-                b1       -> "${prF(x.a)} + ${Symbols.EPSILON}"    // a + ε
-                else     -> "${prF(x.a)} + ${prF(x.b)}${Symbols.EPSILON}"
-            }
-        }
-
-    /**
-     * Compact + string-minus prettiness.
-     * Uses '-' only if the rendered coefficient starts with '-'.
-     */
-    fun <F : Any> compactSigned(
-        zero: F,
-        one: F,
-        prF: Printable<F>,
-        eq: Eq<F> = Eq.default(),
-    ): Printable<Dual<F>> =
-        Printable { x ->
-            val a0 = eq(x.a, zero)
-            val b0 = eq(x.b, zero)
-            val b1 = eq(x.b, one)
-
-            when {
-                a0 && b0 -> prF(zero)
-                a0 && b1 -> Symbols.EPSILON
-                a0       -> "${prF(x.b)}${Symbols.EPSILON}"
-                b0       -> prF(x.a)
-                b1       -> "${prF(x.a)} + ${Symbols.EPSILON}"
-                else     -> {
-                    val a = prF(x.a)
-                    val b = prF(x.b)
-
-                    if (b.startsWith("-")) "$a - ${b.drop(1).trimStart()}${Symbols.EPSILON}"
-                    else "$a + $b${Symbols.EPSILON}"
-                }
-            }
-        }
-
     val printableDualReal: Printable<Dual<Real>> =
-        liftPrintable(org.vorpal.kosmos.core.render.Printables.real)
-
-    val printableDualRealSigned: Printable<Dual<Real>> =
-        liftSigned(org.vorpal.kosmos.core.render.Printables.real)
-
-    val printableDualRealCompact: Printable<Dual<Real>> =
-        compact(
-            zero = RealAlgebras.RealField.zero,
-            one = RealAlgebras.RealField.one,
-            prF = org.vorpal.kosmos.core.render.Printables.real,
-            eq = RealAlgebras.eqRealApprox
+        printableDualRealGenerator(
+            prReal = RealAlgebras.printableReal,
+            eqReal = RealAlgebras.eqRealApprox
         )
 
-    val printableDualRealCompactSigned: Printable<Dual<Real>> =
-        compactSigned(
-            zero = RealAlgebras.RealField.zero,
-            one = RealAlgebras.RealField.one,
-            prF = org.vorpal.kosmos.core.render.Printables.real,
-            eq = RealAlgebras.eqRealApprox
+    val printableDualStrict: Printable<Dual<Real>> =
+        printableDualRealGenerator(
+            prReal = RealAlgebras.printableRealStrict,
+            eqReal = RealAlgebras.eqRealStrict
+        )
+
+    val printableDualPretty: Printable<Dual<Real>> =
+        printableDualRealGenerator(
+            prReal = RealAlgebras.printableRealPretty,
+            eqReal = RealAlgebras.eqRealApprox
         )
 }

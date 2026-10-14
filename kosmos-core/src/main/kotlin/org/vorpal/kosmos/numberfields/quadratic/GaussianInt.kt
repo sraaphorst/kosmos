@@ -1,14 +1,21 @@
 package org.vorpal.kosmos.numberfields.quadratic
 
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 import java.math.BigInteger
 
 /**
- * This carrier is mathematically equivalent to a Cayley-Dickson doubling of the integers, though it is currently
- * represented as a named concrete type.
+ * A Gaussian integer `re + im·i ∈ ℤ[i]`: a [Complex] number with integer coefficients.
+ *
+ * `ℤ[i] = ℤ[x]/(x² + 1)` is the Cayley-Dickson doubling of ℤ (with the trivial involution) at
+ * `σ = 1`. The ring arithmetic is supplied by that construction through [GaussianIntAlgebras].
  */
-data class GaussianInt(val re: BigInteger, val im: BigInteger) {
-    companion object {
-        val ZERO = GaussianInt(BigInteger.ZERO, BigInteger.ZERO)
-        val ONE = GaussianInt(BigInteger.ONE, BigInteger.ZERO)
-    }
+typealias GaussianInt = Complex<BigInteger>
+
+/**
+ * The distinguished Gaussian integers.
+ */
+object GaussianInts {
+    val ZERO: GaussianInt = GaussianInt(BigInteger.ZERO, BigInteger.ZERO)
+    val ONE: GaussianInt = GaussianInt(BigInteger.ONE, BigInteger.ZERO)
+    val I: GaussianInt = GaussianInt(BigInteger.ZERO, BigInteger.ONE)
 }

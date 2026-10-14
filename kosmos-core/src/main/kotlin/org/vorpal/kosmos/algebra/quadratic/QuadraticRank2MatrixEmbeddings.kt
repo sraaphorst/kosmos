@@ -34,7 +34,7 @@ fun <A : Any, R : Any> quadraticRank2MatrixEmbedding(
     coefficientRing: CommutativeRing<R>,
     s: R,
     t: R,
-    coeffs: (A) -> Pair<R, R>
+    coeffs: UnaryOp<A, Pair<R, R>>
 ): RingMonomorphism<A, DenseMat<R>> =
     RingMonomorphism.of(
         domain = domain,

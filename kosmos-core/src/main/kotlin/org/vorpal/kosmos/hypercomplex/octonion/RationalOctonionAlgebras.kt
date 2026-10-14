@@ -1,137 +1,143 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
-import org.vorpal.kosmos.algebra.structures.HasNormSq
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
+import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.w
-import org.vorpal.kosmos.hypercomplex.quaternion.x
-import org.vorpal.kosmos.hypercomplex.quaternion.y
-import org.vorpal.kosmos.hypercomplex.quaternion.z
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.render.Printable
-import java.math.BigInteger
+import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
+
+/**
+ * `𝕆_ℚ = Octonion<Rational>`: the rational octonion tier.
+ *
+ * File-level so that initializing [RationalOctonionAlgebras.RationalOctonionDivisionAlgebra] never
+ * recursively initializes [RationalOctonionAlgebras].
+ */
+internal val rationalOctonionTier: OctonionTier<Rational, RationalQuaternion, RationalOctonion> =
+    octonionTier(RationalAlgebras.RationalField)
 
 /**
  * [RationalOctonionAlgebras] contains the algebraic structures over the [RationalOctonion] type, as well as the
- * homomorphisms and [Eq] instances.
+ * homomorphisms, conversions and [Eq] instances.
  *
  * These include:
- * - [RationalOctonionNonAssociativeInvolutiveRing]: the rational octonions.
+ * - [RationalOctonionDivisionAlgebra]: the rational octonions, an exact non-associative normed division algebra.
  * - [RationalOctonionVectorSpace]: the eight-dimensional vector space of rational octonions over the rationals.
  *
- * We have the following homomorphisms:
- * - [LipschitzToRationalOctonionMonomorphism]: a ring homomorphism from the Lipschitz quaternions to the rational octonions.
- * - [RationalQuaternionToRationalOctonionMonomorphism]: a ring homomorphism from the rational quaternions to the rational octonions.
- * - [HurwitzToRationalOctonionMonomorphism]: a ring homomorphism from the Hurwitz quaternions to the rational octonions.
- * - [RationalToOctonionMonomorphism]: a ring homomorphism from the rational octonions to the octonions.
+ * Maps:
+ * - [RationalQuaternionToRationalOctonionMonomorphism]: the canonical Cayley-Dickson embedding `ℍ_ℚ ↪ 𝕆_ℚ`.
+ * - [HurwitzToRationalOctonionMonomorphism]: `𝓗 ↪ ℍ_ℚ ↪ 𝕆_ℚ`.
+ * - [allQuaternionEmbeddings]: the 168 signed-basis-unit embeddings `ℍ_ℚ ↪ 𝕆_ℚ`.
+ * - [rationalOctonionToOctonionApprox]: the floating-point conversion `𝕆_ℚ → 𝕆` (not a monomorphism).
  *
  * We also have the following [Eq]s:
  * - [eqRationalOctonion]: equality on rational octonions.
  */
 object RationalOctonionAlgebras {
 
-    object RationalOctonionNonAssociativeInvolutiveRing:
-        NonAssociativeInvolutiveRing<RationalOctonion>,
-        HasNormSq<RationalOctonion, Rational> {
+    /**
+     * The rational octonions: a non-associative (alternative) normed division algebra over ℚ.
+     *
+     * Every nonzero `x` is invertible, with
+     * ```text
+     * x⁻¹ = conj(x) / N(x),
+     * ```
+     * which is a two-sided inverse because the norm is a composition norm. Arithmetic is exact, so
+     * invertibility is exactly `x ≠ 0`.
+     */
+    object RationalOctonionDivisionAlgebra:
+        NonAssociativeInvolutiveRing<RationalOctonion> by rationalOctonionTier.ring,
+        NormedDivisionAlgebra<Rational, RationalOctonion> {
 
-        internal val base =
-            CayleyDickson.usual(RationalQuaternionAlgebras.RationalQuaternionDivisionRing)
-
-        override val add = base.add
-        override val mul = base.mul
-        override val conj = base.conj
-
-        override fun fromBigInt(n: BigInteger): RationalOctonion =
-            base.fromBigInt(n)
+        override val zero: RationalOctonion = rationalOctonionTier.ring.zero
 
         override val normSq: UnaryOp<RationalOctonion, Rational> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL) { co -> mul(co, conj(co)).a.w }
+            rationalOctonionTier.normSq
 
-        val basisMap: Map<Int, RationalOctonion> = run {
-            val z = Rational.ZERO
-            val o = Rational.ONE
-            mapOf(
-                0 to rationalOctonion(o,z,z,z, z,z,z,z),
-                1 to rationalOctonion(z,o,z,z, z,z,z,z),
-                2 to rationalOctonion(z,z,o,z, z,z,z,z),
-                3 to rationalOctonion(z,z,z,o, z,z,z,z),
-                4 to rationalOctonion(z,z,z,z, o,z,z,z),
-                5 to rationalOctonion(z,z,z,z, z,o,z,z),
-                6 to rationalOctonion(z,z,z,z, z,z,o,z),
-                7 to rationalOctonion(z,z,z,z, z,z,z,o)
-            )
+        override val reciprocal: Endo<RationalOctonion> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "𝕆_${Symbols.BB_Q}")
+            rationalOctonionTier.scalarAction(normSq(x).reciprocal(), conj(x))
         }
+
+        /**
+         * The standard basis `1, e₁, …, e₇`, obtained by doubling the basis `1, i, j, k` of `ℍ_ℚ`.
+         */
+        val basis: List<RationalOctonion> = rationalOctonionTier.basis
+
+        val basisMap: Map<Int, RationalOctonion> = rationalOctonionTier.basisMap
     }
 
     /**
      * ℚ-Vector space over RationalOctonions of dimension 8.
      */
     val RationalOctonionVectorSpace: FiniteVectorSpace<Rational, RationalOctonion> = FiniteVectorSpace.of(
-            RationalAlgebras.RationalField,
-        add = RationalOctonionNonAssociativeInvolutiveRing.add,
+        scalars = RationalAlgebras.RationalField,
+        add = RationalOctonionDivisionAlgebra.add,
         dimension = 8,
-        leftAction = LeftAction { q, ro ->
-            rationalOctonion(
-                q * ro.w, q * ro.x, q * ro.y, q * ro.z,
-                q * ro.u, q * ro.v, q * ro.s, q * ro.t
-            )
-        }
+        leftAction = rationalOctonionTier.scalarAction
     )
 
+    /**
+     * The canonical Cayley-Dickson embedding `ℍ_ℚ ↪ 𝕆_ℚ`, `q ↦ (q, 0)`.
+     */
     val RationalQuaternionToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalQuaternion, RationalOctonion> =
-        CayleyDickson.canonicalEmbedding(
-            base = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-            doubled = RationalOctonionNonAssociativeInvolutiveRing
+        NonAssociativeRingMonomorphism.of(
+            domain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
+            codomain = RationalOctonionDivisionAlgebra,
+            map = rationalOctonionTier.canonicalEmbeddingMap
         )
 
     val HurwitzToRationalOctonionMonomorphism: NonAssociativeRingMonomorphism<HurwitzQuaternion, RationalOctonion> =
-        RationalQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism andThen RationalQuaternionToRationalOctonionMonomorphism
+        HurwitzQuaternionAlgebras.HurwitzToRationalQuaternionMonomorphism andThen RationalQuaternionToRationalOctonionMonomorphism
 
     /**
-     * RationalOctonion to Octonion ring monomorphism.
+     * The floating-point conversion `𝕆_ℚ → 𝕆`, coordinatewise `Rational.toReal()`.
+     *
+     * Not a monomorphism: distinct rationals can round to the same `Double`, and products are preserved
+     * only up to rounding.
      */
-    object RationalToOctonionMonomorphism: NonAssociativeRingMonomorphism<RationalOctonion, Octonion> {
-        override val domain = RationalOctonionNonAssociativeInvolutiveRing
-        override val codomain = OctonionAlgebras.OctonionDivisionAlgebraReal
-        override val map = UnaryOp<RationalOctonion, Octonion> { ro ->
-            octonion(
-                ro.w.toReal(), ro.x.toReal(), ro.y.toReal(), ro.z.toReal(),
-                ro.u.toReal(), ro.v.toReal(), ro.s.toReal(), ro.t.toReal()
-            )
+    val rationalOctonionToOctonionApprox: UnaryOp<RationalOctonion, RealOctonion> =
+        UnaryOp(Symbols.APPROX) { o ->
+            realOctonionTier.fromCoordinates(rationalOctonionTier.coordinates(o).map(Rational::toReal))
         }
-    }
 
-    val eqRationalOctonion: Eq<RationalOctonion> = Eq { o1, o2 -> o1 == o2 }
+    val eqRationalOctonion: Eq<RationalOctonion> = Eq.default()
 
-    val embeddingKit = OctonionEmbeddingKit.OctonionEmbeddingKit(
-        quaternionRing = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-        octonionRing = RationalOctonionNonAssociativeInvolutiveRing,
-        basisMap = RationalOctonionNonAssociativeInvolutiveRing.basisMap,
-        leftAction = RationalOctonionVectorSpace.leftAction,
-        eq = eqRationalOctonion,
-        decompose = { rq -> listOf(rq.w, rq.x, rq.y, rq.z) }
-    )
+    val embeddingKit: OctonionEmbeddingKit.OctonionEmbeddingKit<Rational, RationalQuaternion, RationalOctonion> =
+        rationalOctonionTier.embeddingKit(eqRationalOctonion)
 
-    fun allEmbeddings() = embeddingKit.allEmbeddings()
+    /**
+     * The 168 signed-basis-unit embeddings `ℍ_ℚ ↪ 𝕆_ℚ`. See [OctonionEmbeddingKit].
+     */
+    fun allQuaternionEmbeddings(): Map<OctonionEmbeddingKit.OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<RationalQuaternion, RationalOctonion>> =
+        embeddingKit.allEmbeddings()
+
+    /**
+     * The 84 embeddings normalized so that the image of quaternion `j` is a *positive* basis unit.
+     *
+     * Every one of the 168 embeddings in [allQuaternionEmbeddings] is either normalized or a
+     * normalized embedding precomposed with the quaternion automorphism `i ↦ i, j ↦ -j, k ↦ -k`,
+     * so this is a set of representatives for the embeddings modulo that automorphism.
+     */
+    fun normalizedQuaternionEmbeddings(): Map<OctonionEmbeddingKit.OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<RationalQuaternion, RationalOctonion>> =
+        embeddingKit.normalizedEmbeddings()
 
     val printableRationalOctonion: Printable<RationalOctonion> =
-        OctonionPrintable.octonionPrintable(
-            signed = RationalAlgebras.SignedRational,
-            zero = Rational.ZERO,
-            one = Rational.ONE,
-            prA = RationalAlgebras.printableRational,
-            eqA = RationalAlgebras.eqRational,
-            decompose = { ro -> listOf(ro.w, ro.x, ro.y, ro.z, ro.u, ro.v, ro.s, ro.t) }
+        rationalOctonionTier.printable(
+            RationalAlgebras.SignedRational,
+            RationalAlgebras.printableRational,
+            RationalAlgebras.eqRational
         )
 
     val printableRationalOctonionPretty = printableRationalOctonion

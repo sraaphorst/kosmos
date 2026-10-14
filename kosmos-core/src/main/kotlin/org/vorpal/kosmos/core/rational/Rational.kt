@@ -36,7 +36,7 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
     }
 
     fun reciprocal(): Rational {
-        require(n != BigInteger.ZERO) { "0 has no multiplicative inverse in a field" }
+        if (n == BigInteger.ZERO) throw ArithmeticException("0 has no multiplicative inverse in ℚ.")
         return of(d, n)
     }
 
@@ -110,7 +110,7 @@ data class Rational private constructor(val n: BigInteger, val d: BigInteger): C
 
     companion object {
         fun of(n: BigInteger, d: BigInteger): Rational {
-            require(d != BigInteger.ZERO) { "denominator must be nonzero" }
+            if (d == BigInteger.ZERO) throw ArithmeticException("Division by zero: $n/0 is not a rational number.")
             // move sign to numerator, make denominator positive
             val sign = if (d.signum() < 0) BigInteger.valueOf(-1) else BigInteger.ONE
             val nn = n * sign

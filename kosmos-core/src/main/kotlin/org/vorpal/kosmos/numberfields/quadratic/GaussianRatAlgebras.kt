@@ -4,6 +4,7 @@ import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -16,25 +17,34 @@ import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.complexRingOver
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.rationalQuaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+
+/**
+ * `ℚ(i) = ℚ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℚ (trivial involution) at `σ = 1`,
+ * on the [Complex] carrier. Its involution is complex conjugation.
+ *
+ * File-level so that initializing [GaussianRatAlgebras.GaussianRatField] never recursively
+ * initializes [GaussianRatAlgebras].
+ */
+private val cayleyDicksonGaussianRat: CommutativeInvolutiveRing<GaussianRat> =
+    complexRingOver(RationalAlgebras.RationalField)
 
 /**
  * Main structures:
@@ -67,21 +77,12 @@ object GaussianRatAlgebras {
 
     object GaussianRatField : Field<GaussianRat> {
 
-        override val zero = GaussianRat.ZERO
-        override val one = GaussianRat.ONE
+        override val zero = GaussianRats.ZERO
+        override val one = GaussianRats.ONE
 
-        override val add: AbelianGroup<GaussianRat> = AbelianGroup.of(
-            identity = zero,
-            op = BinOp(Symbols.PLUS) { gq1, gq2 -> GaussianRat(gq1.re + gq2.re, gq1.im + gq2.im) },
-            inverse = Endo(Symbols.MINUS) { gq -> GaussianRat(-gq.re, -gq.im) }
-        )
+        override val add: AbelianGroup<GaussianRat> = cayleyDicksonGaussianRat.add
 
-        override val mul: CommutativeMonoid<GaussianRat> = CommutativeMonoid.of(
-            identity = one,
-            op = BinOp(Symbols.ASTERISK) { gq1, gq2 ->
-                GaussianRat(gq1.re * gq2.re - gq1.im * gq2.im, gq1.re * gq2.im + gq1.im * gq2.re)
-            }
-        )
+        override val mul: CommutativeMonoid<GaussianRat> = cayleyDicksonGaussianRat.mul
 
         override fun fromBigInt(n: BigInteger): GaussianRat =
             GaussianRat(n.toRational(), Rational.ZERO)
@@ -90,14 +91,12 @@ object GaussianRatAlgebras {
             a != zero
 
         override val reciprocal: Endo<GaussianRat> = Endo(Symbols.INVERSE) { gq ->
-            require(gq != zero) { "The reciprocal of $zero is undefined" }
+            if (!hasReciprocal(gq)) throw HasReciprocal.notInvertible(gq, "${Symbols.BB_Q}(i)")
             val n2 = gq.re * gq.re + gq.im * gq.im
             GaussianRat(gq.re / n2, -gq.im / n2)
         }
 
-        internal val conj: Endo<GaussianRat> = Endo(Symbols.CONJ) { a ->
-            GaussianRat(a.re, -a.im)
-        }
+        internal val conj: Endo<GaussianRat> = cayleyDicksonGaussianRat.conj
     }
 
     object GaussianRatStarAlgebra:
@@ -106,8 +105,8 @@ object GaussianRatAlgebras {
         HasNormSq<GaussianRat, Rational>,
         HasReciprocal<GaussianRat> {
 
-        override val zero = GaussianRat.ZERO
-        override val one = GaussianRat.ONE
+        override val zero = GaussianRats.ZERO
+        override val one = GaussianRats.ONE
 
         override val scalars = RationalAlgebras.RationalField
         override val add = GaussianRatField.add
@@ -161,17 +160,17 @@ object GaussianRatAlgebras {
             coefficientRing = RationalAlgebras.RationalField,
             s = -Rational.ONE,
             t = Rational.ZERO,
-            coeffs = { it.re to it.im }
+            coeffs = UnaryOp { it.re to it.im }
         )
 
     /**
      * This may not be a perfect monomorphism due to floating point imprecision of converting
      * Rational to Real when building Complex.
      */
-    object GaussianRatToComplexHomomorphism: RingHomomorphism<GaussianRat, Complex> {
+    object GaussianRatToComplexHomomorphism: RingHomomorphism<GaussianRat, RealComplex> {
         override val domain = GaussianRatField
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<GaussianRat, Complex> { gq ->
+        override val map = UnaryOp<GaussianRat, RealComplex> { gq ->
             complex(gq.re.toReal(), gq.im.toReal())
         }
     }
@@ -183,16 +182,7 @@ object GaussianRatAlgebras {
     ): RingMonomorphism<GaussianRat, RationalQuaternion> = RingMonomorphism.of(
         domain = GaussianRatField,
         codomain = RationalQuaternionAlgebras.RationalQuaternionDivisionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = Rational.ZERO,
-                negate = Rational::unaryMinus,
-                mkQuaternion = ::rationalQuaternion
-            )
-        }
+        map = rationalQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**
@@ -203,13 +193,15 @@ object GaussianRatAlgebras {
     ): RationalQuaternion = gaussianRatToRationalQuaternionEmbedding(embedding)(this)
 
     /**
-     * This should theoretically be a ring monomorphism, but since we are mapping from rationals to floating point
-     * quaternions and may lose precision, we use a ring homomorphism instead.
+     * The embedding `ℚ(i) ↪ ℍ_ℚ` followed by the floating-point conversion `ℍ_ℚ → ℍ`.
+     *
+     * A plain conversion, not a homomorphism: rounding breaks exact multiplicativity and injectivity.
      */
-    fun gaussianRatToQuaternionEmbedding(
+    fun gaussianRatToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingHomomorphism<GaussianRat, Quaternion> = gaussianRatToRationalQuaternionEmbedding(embedding) andThen
-        RationalQuaternionAlgebras.RationalQuaternionToQuaternionMonomorphism
+    ): UnaryOp<GaussianRat, RealQuaternion> =
+        gaussianRatToRationalQuaternionEmbedding(embedding).map andThen
+            RationalQuaternionAlgebras.rationalQuaternionToQuaternionApprox
 
     val eqGaussianRat: Eq<GaussianRat> = Eq { gq1, gq2 -> gq1.re == gq2.re && gq1.im == gq2.im }
 
@@ -218,8 +210,8 @@ object GaussianRatAlgebras {
             signed = RationalAlgebras.SignedRational,
             zero = RationalAlgebras.RationalField.add.identity,
             one = RationalAlgebras.RationalField.mul.identity,
-            re = { it.re },
-            im = { it.im },
+            re = UnaryOp { it.re },
+            im = UnaryOp { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = RationalAlgebras.printableRational,
             eqA = RationalAlgebras.eqRational

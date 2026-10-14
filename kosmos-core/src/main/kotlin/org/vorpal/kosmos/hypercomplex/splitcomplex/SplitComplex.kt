@@ -3,7 +3,7 @@ package org.vorpal.kosmos.hypercomplex.splitcomplex
 import org.vorpal.kosmos.algebra.structures.CD
 
 /**
- * Dumb carrier alias for split-complex-like Cayley-Dickson values.
+ * A split-complex (hyperbolic) number `a + bj` over a base ring [R], with `j² = 1`.
  *
  * Ordinary complex numbers are treated in Kosmos as the concrete scalar type:
  * ```text
@@ -19,33 +19,43 @@ import org.vorpal.kosmos.algebra.structures.CD
  * a + b j, where a, b ∈ R.
  * ```
  *
+ * Algebraically, this is the Cayley-Dickson doubling of `R` (with the trivial involution) at
+ * `σ = -1`; see [org.vorpal.kosmos.algebra.structures.CayleyDickson.commutative]. The carrier is a
+ * [CD] pair and all arithmetic is supplied by that construction through [SplitComplexAlgebras].
+ *
  * Already over Real, split-complex numbers are not a field. They have zero divisors:
  * ```text
  * (1 + j)(1 - j) = 1 - j + j - j² = 0.
  * ```
  *
- * Mental model:
- * ```text
- * Complex:
- *     Real[x] / (x² + 1)
- *     canonical enough to expose as a concrete Real-based type.
- *
- * SplitComplex<R>:
- *     R[x] / (x² - 1)
- *     generic over the chosen base ring.
- * ```
+ * [SplitComplex] is a value class rather than a typealias of [CD] so that `SplitComplex<Real>` is a
+ * distinct Kotlin type from `Complex = CD<Real>` and `Dual<Real>`: the three algebras share a carrier
+ * but not a multiplication, and a complex number must not be accepted by the split-complex ring.
  *
  * This file defines only carrier-level naming and accessors. The actual algebraic
- * structure is supplied by SplitComplexAlgebras.
+ * structure is supplied by [SplitComplexAlgebras].
  */
-typealias SplitComplex<R> = CD<R>
+@JvmInline
+value class SplitComplex<R : Any>(val cd: CD<R>) {
+    constructor(re: R, hy: R) : this(CD(re, hy))
 
-val <R : Any> SplitComplex<R>.re: R get() = a
+    /** The real part `a` of `a + bj`. */
+    val re: R
+        get() = cd.a
 
-val <R : Any> SplitComplex<R>.hy: R get() = b
+    /** The hyperbolic part `b` of `a + bj`. */
+    val hy: R
+        get() = cd.b
+
+    operator fun component1(): R = re
+    operator fun component2(): R = hy
+
+    override fun toString(): String =
+        "SplitComplex(re=$re, hy=$hy)"
+}
 
 fun <R : Any> splitComplex(
     re: R,
     hy: R
 ): SplitComplex<R> =
-    CD(re, hy)
+    SplitComplex(re, hy)

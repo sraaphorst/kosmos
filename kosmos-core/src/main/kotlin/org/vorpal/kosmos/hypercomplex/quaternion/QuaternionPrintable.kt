@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable.basisPrintable
@@ -16,11 +17,11 @@ internal object QuaternionPrintable {
         one: A,
         prA: Printable<A>,
         eqA: Eq<A>,
-        decompose: (Q) -> List<A>
+        decompose: UnaryOp<Q, List<A>>
     ): Printable<Q> =
         basisPrintable(
             labels = listOf("", Symbols.IMAGINARY_I, Symbols.IMAGINARY_J, Symbols.IMAGINARY_K),
-            decompose = decompose,
+            decompose = { decompose(it) },
             signed = signed,
             zero = zero,
             one = one,

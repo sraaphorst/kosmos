@@ -199,10 +199,10 @@ class NumberTheorySpec : StringSpec({
     "modular inverse throws when gcd is not 1" {
         checkAll(smallInts.filter { it > 1 }, smallInts.filter { it > 1 }) { a, m ->
             if (gcd(a, m) != 1) {
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<ArithmeticException> {
                     a.modInverse(m)
                 }
-                shouldThrow<IllegalArgumentException> {
+                shouldThrow<ArithmeticException> {
                     extendedGcd(a, m).modInverse()
                 }
             }

@@ -17,10 +17,10 @@ object ExactDivOps {
      */
     val bigInteger: BinOp<BigInteger> =
         BinOp(Symbols.SLASH) { a, b ->
-            require(b != BigInteger.ZERO) { "Exact division by zero." }
+            if (b == BigInteger.ZERO) throw ArithmeticException("Exact division by zero.")
             val qr = a.divideAndRemainder(b)
-            require(qr[1] == BigInteger.ZERO) {
-                "Division is not exact: $a / $b leaves remainder ${qr[1]}."
+            if (qr[1] != BigInteger.ZERO) {
+                throw ArithmeticException("Division is not exact: $a / $b leaves remainder ${qr[1]}.")
             }
             qr[0]
         }
@@ -31,7 +31,7 @@ object ExactDivOps {
      */
     fun <A : Any> fromField(field: Field<A>): BinOp<A> =
         BinOp(Symbols.SLASH) { a, b ->
-            require(b != field.zero) { "Exact division by zero." }
+            if (!field.hasReciprocal(b)) throw ArithmeticException("Exact division by a non-invertible element: $b.")
             field.mul(a, field.reciprocal(b))
         }
 }

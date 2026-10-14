@@ -16,6 +16,7 @@ import org.vorpal.kosmos.core.ops.Endo
  *
  * Note that unlike in a field, where `reciprocal` is used to find the inverse of elements, in a meadow, we distinguish
  * this inverse operation as `inv` since it is distinct. A field specifically dictates that the reciprocal
+ * is undefined at `0` (see [HasReciprocal]), whereas `inv` is total.
  *
  * Typical model: take a field and extend reciprocal by setting `inv(0) = 0`.
  */
