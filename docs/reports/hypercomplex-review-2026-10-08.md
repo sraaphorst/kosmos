@@ -1,19 +1,21 @@
 # Hypercomplex Review and Completion Report
 
-**Date:** 2026-10-08
-**Branch:** `K249`
-**Scope:** the `algebra` package of `kosmos-core`, the `hypercomplex` package of `kosmos-core`, and
-their tests in `kosmos-testkit`.
+- **Date:** 2026-10-08
+- **Branch:** `K249`
+- **Scope:**
+  - the `algebra` package of `kosmos-core`
+  - the `hypercomplex` package of `kosmos-core`
+  - the related tests in `kosmos-testkit`
 
 ## Summary
 
-| | |
-|---|---|
-| New algebras | split-quaternions, split-octonions, biquaternions, bioctonions |
-| Bugs fixed | 5 (4 reciprocal-contract violations, 1 wrong signature) |
-| New tests | 178, in 13 new spec files and 2 extended ones |
-| Final result | `./gradlew clean build`: **1771 tests, 0 failures** |
-| Tessarines | Already present: they are `Bicomplex` (same algebra, different basis) |
+|   **Note**   | **Change**                                                                  |
+|--------------|-----------------------------------------------------------------------|
+| New algebras | split-quaternions, split-octonions, biquaternions, bioctonions        |
+| Bugs fixed   | 5 (4 reciprocal-contract violations, 1 wrong signature)               |
+| New tests    | 178, in 13 new spec files and 2 extended ones                         |
+| Final result | `./gradlew clean build`: **1771 tests, 0 failures**                   |
+| Tessarines   | Already present: they are `Bicomplex` (same algebra, different basis) |
 
 The existing hypercomplex code was in good shape. Everything is carried by the Cayley–Dickson pair
 and nothing re-implements a product, so the four new algebras could be added without writing any
@@ -75,7 +77,6 @@ invertible, and in 𝔽₂ the old `PrimeField` would have answered "yes" for `1
 
 ### Noticed but left alone
 
-- `Monoid.pow` performs one squaring more than necessary on the last step. Harmless.
 - `IntegralDomain` is a placeholder; `Semimodule` and `Semialgebra` have `TODO: write laws`;
   `InnerProductSpace` has a `TODO` about the sesquilinear (complex) case.
 
@@ -83,10 +84,10 @@ invertible, and in 𝔽₂ the old `PrimeField` would have answered "yes" for `1
 
 ## 2. Review of the existing `hypercomplex` code
 
-**Verdict: sound and consistent.** I found no mathematical errors in ℂ, the split-complex, dual and
+**Verdict: sound and consistent.** No mathematical errors found in ℂ, the split-complex, dual and
 bicomplex numbers, or the quaternion and octonion tiers. The round-2 design (one `QuaternionTier`
 and one `OctonionTier` shared by three coefficient rings; value classes where carriers collide;
-`…Approx` conversions typed as plain `UnaryOp`s) holds up, and I built on it rather than around it.
+`…Approx` conversions typed as plain `UnaryOp`s) holds up, and built on it rather than around it.
 
 The only changes to existing hypercomplex files are to the two tiers, which gained a `split` flag
 and a factory:
@@ -100,8 +101,8 @@ Default arguments keep every existing call site unchanged.
 ### Observations, not changed
 
 - `Symbols.HYPERBOLIC_J` and `Symbols.IMAGINARY_J` are both `"J"`, so a split-complex `j` and a
-  quaternion `j` print identically. The split-quaternions reuse the `I, J, K` labels too.
-- `OctonionEmbeddingKit` returns `NonAssociativeRingHomomorphism`s although the embeddings are
+  quaternion `j` print identically. The split-quaternions reuse the `I, J, K` labels as well.
+- `c` returns `NonAssociativeRingHomomorphism`s although the embeddings are
   injective; the type could be tightened to `…Monomorphism`.
 
 ---
@@ -222,7 +223,7 @@ Every new public declaration has KDoc.
 
 ## 6. Things to be aware of
 
-1. **Your two uncommitted edits are in my commit.** `K249` had uncommitted changes in
+1. **Two uncommitted edits are in the commit.** `K249` had uncommitted changes in
    `CarrierTransport.kt` (KDoc notes) and `CayleyDicksonSpec.kt` (a reformat). I needed to edit both
    files, and could not separate the hunks, so they are included unchanged.
 2. **Incremental compilation went stale once.** After adding files to `kosmos-testkit`, Gradle
@@ -230,7 +231,7 @@ Every new public declaration has KDoc.
    changed; the generated `kosmos-testkit.kotlin_module` had been truncated. `./gradlew
    :kosmos-testkit:clean` fixed it. This is a Kotlin incremental-compilation problem, not a problem
    in the code, and the final verification was a full `clean build`.
-3. **Nothing is pushed.** All work is in local commits on `K249`.
+dx
 
 ## 7. Open questions
 
@@ -254,18 +255,18 @@ that no longer exist.
 
 All checked exhaustively and exactly, from the products of the basis units of `𝕆_ℚ`:
 
-| Claim | Verified |
-|-------|----------|
-| 35 unordered triples of distinct units = 7 Fano lines + 28 non-lines | ✓ |
-| An ordered triple associates iff it is collinear: 42 do, 168 do not | ✓ |
-| The 168 anti-associate, and triples with a repeated unit all associate | ✓ |
-| Each Fano line spans a quaternion subalgebra (a copy of Q₈) | ✓ |
-| The associator is alternating (all three transpositions, random rationals) | ✓ |
-| Reversal pairs the 168 into 84 pairs with opposite associators | ✓ |
-| Exactly 21 permutations preserve the table, forming C₇ ⋊ C₃ | ✓ (element orders 1, 3, 7 with counts 1, 14, 6; normal C₇; nonabelian) |
-| 168 collineations of the unoriented plane; 1344 signed automorphisms | ✓ |
-| 2⁷ · 7! = 645,120 signed permutations give exactly 480 tables | ✓ |
-| 480 = 30 Fano planes × 16 orientations | ✓ |
+| Claim                                                                      | Verified                                                                |
+|----------------------------------------------------------------------------|-------------------------------------------------------------------------|
+| 35 unordered triples of distinct units = 7 Fano lines + 28 non-lines       | ✓                                                                      |
+| An ordered triple associates iff it is collinear: 42 do, 168 do not        | ✓                                                                      |
+| The 168 anti-associate, and triples with a repeated unit all associate     | ✓                                                                      |
+| Each Fano line spans a quaternion subalgebra (a copy of Q₈)                | ✓                                                                      |
+| The associator is alternating (all three transpositions, random rationals) | ✓                                                                      |
+| Reversal pairs the 168 into 84 pairs with opposite associators             | ✓                                                                      |
+| Exactly 21 permutations preserve the table, forming C₇ ⋊ C₃                | ✓ (element orders 1, 3, 7 with counts 1, 14, 6; normal C₇; nonabelian) |
+| 168 collineations of the unoriented plane; 1344 signed automorphisms       | ✓                                                                      |
+| 2⁷ · 7! = 645,120 signed permutations give exactly 480 tables              | ✓                                                                      |
+| 480 = 30 Fano planes × 16 orientations                                     | ✓                                                                      |
 
 One refinement to the statement you quoted: on a nonassociative basis triple the associator is
 exactly `±2·e_m`, where `m` is the single point of the Fano plane not on a line through two of the
@@ -335,9 +336,6 @@ precondition), and membership checks of the Hadamard unit groups.
 - `RationalAlgebras.QToGaussianRatMonomorphism` (an exact duplicate of
   `GaussianRatAlgebras.QToGaussianRatMonomorphism`, and untested).
 
-**Not deleted:** the untracked `_to_delete/` directory at the repository root. It is not under
-version control, so removing it cannot be undone; say the word and I will remove it.
-
 ### F. New and changed tests in this pass
 
 | Spec | Tests | |
@@ -385,8 +383,6 @@ Several existing specs had exception types or carrier construction updated; no a
 | `GaussianInt.ZERO`, `.ONE`, `.I` (and `GaussianRat.…`) | `GaussianInts.ZERO`, … (`GaussianRats.…`): a typealias cannot carry its own companion |
 | `GaussianInt(…).toString()` | prints as `Complex(re=…, im=…)` |
 | `Quaternion<Real>.cd.a` was a `Complex` | it is a raw `CD<Real>`; wrap it with `Complex(q.cd.a)` |
-
-`_to_delete/` has been removed, as you asked.
 
 **One consequence worth knowing.** Before this change the biquaternions shared their raw carrier
 with the real octonions (`CD<CD<CD<Real>>>`). They no longer do, because a biquaternion's
