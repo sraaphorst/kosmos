@@ -1,15 +1,21 @@
 package org.vorpal.kosmos.numberfields.quadratic
 
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 
 /**
- * This carrier is mathematically equivalent to a Cayley-Dickson doubling of the rationals, though it is currently
- * represented as a named concrete type.
+ * A Gaussian rational `re + im·i ∈ ℚ(i)`: a [Complex] number with rational coefficients.
+ *
+ * `ℚ(i) = ℚ[x]/(x² + 1)` is the Cayley-Dickson doubling of ℚ (with the trivial involution) at
+ * `σ = 1`. The ring arithmetic is supplied by that construction through [GaussianRatAlgebras].
  */
-data class GaussianRat(val re: Rational, val im: Rational) {
-    companion object {
-        val ZERO = GaussianRat(Rational.ZERO, Rational.ZERO)
-        val ONE = GaussianRat(Rational.ONE, Rational.ZERO)
-        val I = GaussianRat(Rational.ZERO, Rational.ONE)
-    }
+typealias GaussianRat = Complex<Rational>
+
+/**
+ * The distinguished Gaussian rationals.
+ */
+object GaussianRats {
+    val ZERO: GaussianRat = GaussianRat(Rational.ZERO, Rational.ZERO)
+    val ONE: GaussianRat = GaussianRat(Rational.ONE, Rational.ZERO)
+    val I: GaussianRat = GaussianRat(Rational.ZERO, Rational.ONE)
 }

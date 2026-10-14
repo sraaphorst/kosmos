@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.dual
 
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
 
@@ -25,10 +26,15 @@ import org.vorpal.kosmos.core.rational.toRational
  * Over the rationals, the most natural functions are algebraic ones such as inversion
  * and integer powers. Transcendental functions like `exp`, `sin`, and `log` generally
  * do not stay inside [Rational]: thus, they do not belong here.
+ *
+ * Arithmetic is exact. A division by zero is an [ArithmeticException], as for every reciprocal in
+ * Kosmos.
  */
 object DualRationalFns {
+    private val rationalDuals = DualAlgebras.dualRingWithReciprocal(RationalAlgebras.RationalField)
+
     /**
-     * Reciprocal. We want to show thatL
+     * Reciprocal. We want to show that
      * ```text
      * (a + bε)^(-1) = 1/a - (b/a^2)ε
      * ```
@@ -59,24 +65,18 @@ object DualRationalFns {
      *
      * Requires `a != 0`.
      */
-    fun inv(x: Dual<Rational>): Dual<Rational> {
-        require(x.f != Rational.ZERO) { "inv requires nonzero real part, got ${x.f}" }
-
-        val invA = x.f.reciprocal()
-        val invA2 = invA * invA
-
-        return dual(
-            f = invA,
-            df = -x.df * invA2
-        )
-    }
+    fun inv(x: Dual<Rational>): Dual<Rational> =
+        rationalDuals.reciprocal(x)
 
     /**
-     * Integer power with nonnegative exponent.
+     * Integer power, for any integer exponent.
      * ```text
      * (a + bε)^n = a^n + n b a^(n-1) ε
      * ```
-     * Requires `n >= 0`.
+     * A negative exponent requires `a != 0`, since it involves a reciprocal; `x⁰ = 1` for every `x`.
+     *
+     * @throws ArithmeticException if `n < 0` and `a = 0`.
+     * @throws IllegalArgumentException if `n` is `Int.MIN_VALUE`, which cannot be negated.
      */
     fun pow(x: Dual<Rational>, n: Int): Dual<Rational> {
         require(n != Int.MIN_VALUE) { "pow exponent Int.MIN_VALUE is not supported" }
@@ -156,8 +156,8 @@ object DualRationalFns {
         d: Rational
     ): Dual<Rational> {
         val denominator = c * x.f + d
-        require(denominator != Rational.ZERO) {
-            "mobius undefined when c*f + d = 0, got f=${x.f}"
+        if (denominator == Rational.ZERO) {
+            throw ArithmeticException("mobius undefined when c*f + d = 0, got f=${x.f}")
         }
 
         val numerator = a * x.f + b

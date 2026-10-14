@@ -4,7 +4,7 @@ import io.kotest.assertions.fail
 import io.kotest.core.spec.style.StringSpec
 
 /**
- * Confirms that [OctonionAlgebras.OctonionDivisionAlgebraReal] is *genuinely* non-associative, i.e. that
+ * Confirms that [OctonionAlgebras.OctonionDivisionAlgebra] is *genuinely* non-associative, i.e. that
  * the Cayley-Dickson doubling of the quaternions did not collapse into something accidentally associative.
  *
  * [OctonionAlternativitySpec] confirms the *weak* associativity that the octonions DO satisfy
@@ -19,25 +19,25 @@ import io.kotest.core.spec.style.StringSpec
  * is non-zero; concretely (e1 e2) e4 - e1 (e2 e4) = 2 e7. For an on-line (quaternionic) triple the
  * associator vanishes, since each Fano line spans an associative ℍ-subalgebra.
  *
- * Octonion products are compared with [OctonionAlgebras.eqOctonionStrict] (signed-zero-safe), never the
+ * RealOctonion products are compared with [OctonionAlgebras.eqOctonionStrict] (signed-zero-safe), never the
  * structural `shouldBe`; see [OctonionFanoOrientationSpec].
  */
 class OctonionNonAssociativitySpec : StringSpec({
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    val ring = OctonionAlgebras.OctonionDivisionAlgebra
     val eq = OctonionAlgebras.eqOctonionStrict
     val pr = OctonionAlgebras.printableOctonionStrict
 
-    fun e(i: Int): Octonion = ring.basisMap.getValue(i)
+    fun e(i: Int): RealOctonion = ring.basisMap.getValue(i)
 
     /** The associator [a, b, c] = (a b) c - a (b c). */
-    fun associator(a: Octonion, b: Octonion, c: Octonion): Octonion =
+    fun associator(a: RealOctonion, b: RealOctonion, c: RealOctonion): RealOctonion =
         ring.add(
             ring.mul(ring.mul(a, b), c),
             ring.add.inverse(ring.mul(a, ring.mul(b, c)))
         )
 
-    infix fun Octonion.shouldEqualOctonion(expected: Octonion) {
+    infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
         if (eq.neqv(this, expected))
             fail("expected ${pr(expected)} but was ${pr(this)}")
     }

@@ -40,10 +40,10 @@ class RationalSpec : StringSpec({
     }
 
     "zero denominator throws exception" {
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<ArithmeticException> {
             Rational.of(1, 0)
         }
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<ArithmeticException> {
             Rational.of(BigInteger.ONE, BigInteger.ZERO)
         }
     }
@@ -350,14 +350,14 @@ class RationalSpec : StringSpec({
     // ===== Error handling =====
 
     "reciprocal of zero throws exception" {
-        shouldThrow<IllegalArgumentException> {
+        shouldThrow<ArithmeticException> {
             Rational.ZERO.reciprocal()
         }
     }
 
     "division by zero throws exception" {
         checkAll(ArbRational.small) { r ->
-            shouldThrow<IllegalArgumentException> {
+            shouldThrow<ArithmeticException> {
                 r / Rational.ZERO
             }
         }

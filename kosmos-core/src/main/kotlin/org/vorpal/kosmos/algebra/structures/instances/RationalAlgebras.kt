@@ -1,11 +1,11 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
-import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
 import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.algebra.structures.NormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
@@ -22,8 +22,6 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.times
 import org.vorpal.kosmos.core.render.LinearCombinationPrintable
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import java.math.BigInteger
 
 /**
@@ -37,7 +35,7 @@ import java.math.BigInteger
  * Homomorphisms:
  * - [QToRHomomorphism]: a ring homomorphism from rationals to reals: mathematically, this would be injective, but
  *   given the limitations of the [Real] type, it is not.
- * - [QToGaussianRatMonomorphism]: from rationals to Gaussian rationals.
+ * - `ℚ ↪ ℚ(i)` lives with the Gaussian rationals: `GaussianRatAlgebras.QToGaussianRatMonomorphism`.
  *
  * Eqs:
  * - [eqRational]
@@ -60,9 +58,10 @@ object RationalAlgebras {
             identity = Rational.ONE,
             op = BinOp(Symbols.ASTERISK, Rational::times)
         )
-        // We already check for 0 in the reciprocal function.
-        override val reciprocal: Endo<Rational> =
-            Endo(Symbols.INVERSE, Rational::reciprocal)
+        override val reciprocal: Endo<Rational> = Endo(Symbols.INVERSE) { q ->
+            if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, Symbols.BB_Q)
+            q.reciprocal()
+        }
         override fun fromBigInt(n: BigInteger): Rational =
             Rational.of(n)
     }
@@ -104,14 +103,6 @@ object RationalAlgebras {
         override val domain = RationalField
         override val codomain = RealAlgebras.RealField
         override val map = UnaryOp<Rational, Real> { it.toReal() }
-    }
-
-    object QToGaussianRatMonomorphism: RingMonomorphism<Rational, GaussianRat> {
-        override val domain = RationalField
-        override val codomain = GaussianRatAlgebras.GaussianRatField
-        override val map = UnaryOp<Rational, GaussianRat> {
-            GaussianRat(it, Rational.ZERO)
-        }
     }
 
     val eqRational: Eq<Rational> = Eq.default()

@@ -11,7 +11,7 @@ object ArbQuaternion {
     /**
      * Generic quaternion with reasonably small components.
      */
-    val quaternion: Arb<Quaternion> =
+    val quaternion: Arb<RealQuaternion> =
         Arb.bind(
             ArbReal.smallReal,
             ArbReal.smallReal,
@@ -24,15 +24,15 @@ object ArbQuaternion {
     /**
      * Quaternions safe for reciprocal: norm bounded away from zero and not huge.
      */
-    val reciprocalSafeQuaternion: Arb<Quaternion> =
+    val reciprocalSafeQuaternion: Arb<RealQuaternion> =
         quaternion.filter { q ->
             val n2 = QuaternionAlgebras.QuaternionDivisionRing.normSq(q)
             n2 in 0.01..10_000.0
         }
 
-    val quaternionTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
+    val quaternionTriple: Arb<Triple<RealQuaternion, RealQuaternion, RealQuaternion>> =
         Arb.triple(quaternion, quaternion, quaternion)
 
-    val reciprocalTriple: Arb<Triple<Quaternion, Quaternion, Quaternion>> =
+    val reciprocalTriple: Arb<Triple<RealQuaternion, RealQuaternion, RealQuaternion>> =
         Arb.triple(reciprocalSafeQuaternion, reciprocalSafeQuaternion, reciprocalSafeQuaternion)
 }

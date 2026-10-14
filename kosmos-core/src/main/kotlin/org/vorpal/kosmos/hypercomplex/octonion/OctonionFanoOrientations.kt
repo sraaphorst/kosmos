@@ -6,16 +6,16 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
 /**
  * This is the most important part of the Fano plane octonion classes:
  *
- * We derive the orientation of the Fano plane lines from the actial octonion multiplication, and not
+ * We derive the orientation of the Fano plane lines from the actual octonion multiplication, and not
  * from memory or a diagram.
  */
 object OctonionFanoOrientations {
-    private val ring = OctonionAlgebras.OctonionDivisionAlgebraReal
+    private val ring = OctonionAlgebras.OctonionDivisionAlgebra
 
-    private val basis: Map<Int, Octonion> =
+    private val basis: Map<Int, RealOctonion> =
         (1..7).associateWith { ring.basisMap.getValue(it) }
 
-    private fun neg(o: Octonion): Octonion =
+    private fun neg(o: RealOctonion): RealOctonion =
         ring.add.inverse(o)
 
     /**

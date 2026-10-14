@@ -1,188 +1,361 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
-import org.vorpal.kosmos.algebra.structures.AbelianGroup
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionDivisionRing
-import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
+import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.HasNormSq
+import org.vorpal.kosmos.algebra.structures.HasReciprocal
+import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
-import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
-import org.vorpal.kosmos.algebra.structures.NonAssociativeMonoid
 import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
+import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.QuaternionVectorSpace
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras.eqQuaternionStrict
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.w
-import org.vorpal.kosmos.hypercomplex.quaternion.x
-import org.vorpal.kosmos.hypercomplex.quaternion.y
-import org.vorpal.kosmos.hypercomplex.quaternion.z
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
+import org.vorpal.kosmos.core.render.LinearCombinationPrintable.SignedOps
 import org.vorpal.kosmos.core.render.Printable
-import java.math.BigInteger
+import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.quaternionTier
 
 /**
- * [OctonionAlgebras] contains the algebraic structures over the [Octonion] type, as well as the
- * homomorphisms and [Eq] instances.
+ * The octonion tier over [base]: the usual doubling of the quaternions over [base], on the
+ * [Octonion] carrier.
+ */
+internal fun <R : Any> octonionTier(
+    base: CommutativeRing<R>
+): OctonionTier<R, Quaternion<R>, Octonion<R>> =
+    OctonionTier(
+        quaternions = quaternionTier(base),
+        wrap = { cd -> Octonion(cd) },
+        unwrap = { o -> o.cd }
+    )
+
+/**
+ * `𝕆 = Octonion<Real>`: the real octonion tier.
  *
- * These include:
- * - [OctonionDivisionAlgebraReal]: the real octonion non-associative division algebra.
- * - [OctonionVectorSpace]: the eight-dimensional vector space of rational octonions over the reals.
+ * File-level so that initializing [OctonionAlgebras.OctonionDivisionAlgebra] never recursively
+ * initializes [OctonionAlgebras].
+ */
+internal val realOctonionTier: OctonionTier<Real, RealQuaternion, RealOctonion> =
+    octonionTier(RealAlgebras.RealField)
+
+/**
+ * Algebraic structures and utilities for the octonions.
+ *
+ * Generic constructions, over any commutative base ring `R`:
+ * - [octonionRing]: the octonion ring over `R` (nonassociative, alternative).
+ * - [octonionRingWithReciprocal]: the same over a field, with reciprocals where the norm is
+ *   invertible.
+ * - [basis]: the standard basis `1, e₁, …, e₇`.
+ * - [normSq]: the norm, the sum of the eight squared coordinates.
+ * - [octonionLeftAction]: the coordinatewise scalar action.
+ * - [octonionModule]: `Octonion<R>` as a free `R`-module of rank 8.
+ * - [octonionAlgebra], [octonionStarAlgebra]: as a nonassociative `R`-(star-)algebra.
+ * - [scalarEmbedding]: `R ↪ Octonion<R>`.
+ * - [quaternionToOctonionMonomorphism]: the canonical Cayley-Dickson embedding `q ↦ (q, 0)`.
+ * - [eqOctonion], [printableOctonion] (the overloads taking a base).
+ *
+ * The arithmetic is not implemented here: it is
+ * [org.vorpal.kosmos.algebra.structures.CayleyDickson.usual] applied to the quaternions over `R`,
+ * transported to the [Octonion] carrier.
+ *
+ * The real octonions 𝕆:
+ * - [OctonionDivisionAlgebra]: the real octonion non-associative normed division algebra.
+ * - [OctonionVectorSpace]: the eight-dimensional vector space of octonions over the reals.
  * - [OctonionStarAlgebra]: the non-associative star algebra of octonions over the reals.
- *
- * We have the following homomorphisms:
  * - [QuaternionToOctonionMonomorphism]: canonical CD embedding of quaternions into octonions.
- * - [Quaternion.asOctonion]: convenience extension for the canonical embedding.
+ * - [asOctonion]: convenience extension for the canonical embedding.
+ * - [allQuaternionEmbeddings]: the 168 signed-basis-unit embeddings ℍ ↪ 𝕆.
+ * - [eqOctonionStrict]: strict equality on real octonions.
+ * - [eqOctonion]: approximate equality on real octonions.
  *
- * We also have the following [Eq]s:
- * - [eqOctonionStrict]: strict equality on octonions.
- * - [eqOctonion]: approximate equality on octonions.
+ * The rational octonions and the Gravesian integers have their own objects:
+ * [RationalOctonionAlgebras], [GravesianOctonionAlgebras].
  */
 object OctonionAlgebras {
 
+    // ── Generic, over a commutative ring ─────────────────────────────────────
+
     /**
-     * In this case, the most we can say about the Octonions are that they are an [NonAssociativeDivisionAlgebra].
+     * The octonion ring over a commutative base ring.
      *
-     * We get everything but the reciprocal from the [NonAssociativeInvolutiveRing] returned by the [CayleyDickson] construction.
+     * Writing an element as `(a, b) = a + bℓ` with `a, b` quaternions over `R` and `ℓ² = -1`, the
+     * product is the Cayley-Dickson product at `σ = 1`:
+     * ```text
+     * (a, b)(c, d) = (ac - d*b, da + bc*).
+     * ```
+     * It is alternative and flexible and satisfies the Moufang identities, but it is neither
+     * associative nor commutative. The involution negates all seven imaginary coordinates.
      */
-    object OctonionDivisionAlgebraReal : RealNormedDivisionAlgebra<Octonion> {
+    fun <R : Any> octonionRing(
+        base: CommutativeRing<R>
+    ): NonAssociativeInvolutiveRing<Octonion<R>> =
+        octonionTier(base).ring
 
-        private val base: NonAssociativeInvolutiveRing<Octonion> =
-            CayleyDickson.usual(QuaternionDivisionRing)
+    /**
+     * The standard basis `1, e₁, …, e₇` over [base].
+     */
+    fun <R : Any> basis(
+        base: CommutativeRing<R>
+    ): List<Octonion<R>> =
+        octonionTier(base).basis
 
-        override val add: AbelianGroup<Octonion> = base.add
-        override val mul: NonAssociativeMonoid<Octonion> = base.mul
+    /**
+     * The norm `N(o) = o·conj(o)`, the sum of the eight squared coordinates. It is multiplicative:
+     * the octonions are a composition algebra.
+     */
+    fun <R : Any> normSq(
+        base: CommutativeRing<R>
+    ): UnaryOp<Octonion<R>, R> =
+        octonionTier(base).normSq
 
-        // The only thing that makes octonions invertible is that their norm is a composition norm.
-        override val reciprocal: Endo<Octonion> = Endo(Symbols.SLASH) { o ->
-            val n2: Real = normSq(o)
-            require(RealAlgebras.eqRealApprox.neqv(n2, 0.0) && n2.isFinite()) { "$n2 has no multiplicative inverse in ${Symbols.BB_O}."}
+    /**
+     * The coordinatewise scalar action. The scalars lie in the nucleus and the center, so this is
+     * also multiplication by the embedded scalar.
+     */
+    fun <R : Any> octonionLeftAction(
+        base: CommutativeRing<R>
+    ): LeftAction<R, Octonion<R>> =
+        octonionTier(base).scalarAction
 
-            val oc = conj(o)
-            val scale: Real = 1.0 / n2
+    /**
+     * Octonions over a field, with reciprocals on the units.
+     *
+     * `o` is invertible iff `N(o)` is invertible in [field], and then `o⁻¹ = conj(o) / N(o)`, a
+     * two-sided inverse despite nonassociativity because the algebra is alternative.
+     * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
+     * (see [OctonionDivisionAlgebra]).
+     */
+    fun <F : Any> octonionRingWithReciprocal(
+        field: Field<F>,
+        isZero: UnaryOp<F, Boolean> = UnaryOp { it == field.zero }
+    ): OctonionRingWithReciprocal<F> =
+        OctonionRingWithReciprocal(field, isZero)
 
-            // Use the QuaternionModule's action to scale.
-            // We could use OctonionModule, but we fall back to QuaternionModule to avoid circular dependencies.
-            Octonion(
-                QuaternionVectorSpace.leftAction(scale, oc.a),
-                QuaternionVectorSpace.leftAction(scale, oc.b)
-            )
+    class OctonionRingWithReciprocal<F : Any>(
+        private val field: Field<F>,
+        private val isZero: UnaryOp<F, Boolean>
+    ) : NonAssociativeInvolutiveRing<Octonion<F>> by octonionRing(field),
+        HasNormSq<Octonion<F>, F>,
+        HasReciprocal<Octonion<F>> {
+
+        private val leftAction = octonionLeftAction(field)
+
+        override val zero: Octonion<F>
+            get() = add.identity
+
+        override val normSq: UnaryOp<Octonion<F>, F> =
+            normSq(field)
+
+        override fun hasReciprocal(a: Octonion<F>): Boolean =
+            !isZero(normSq(a))
+
+        override val reciprocal: Endo<Octonion<F>> = Endo(Symbols.INVERSE) { o ->
+            if (!hasReciprocal(o)) throw HasReciprocal.notInvertible(o, "the octonions")
+            leftAction(field.reciprocal(normSq(o)), conj(o))
         }
-
-        override fun fromBigInt(n: BigInteger) =
-            base.fromBigInt(n)
-
-        override val conj: Endo<Octonion> = base.conj
-
-        override val zero = add.identity
-        override val one = mul.identity                                                             // quaternion 1 in "a"
-        val e1 = octonion(0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0) // quaternion i in "a"
-        val e2 = octonion(0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0) // quaternion j in "a"
-        val e3 = octonion(0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0) // quaternion k in "a"
-        val e4 = octonion(0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0) // quaternion 1 in "b"
-        val e5 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0) // quaternion i in "b"
-        val e6 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0) // quaternion j in "b"
-        val e7 = octonion(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0) // quaternion k in "b"
-        val basisMap = mapOf(0 to one, 1 to e1, 2 to e2, 3 to e3, 4 to e4, 5 to e5, 6 to e6, 7 to e7)
-
-        override val normSq: UnaryOp<Octonion, Real> =
-            UnaryOp(Symbols.NORM_SQ_SYMBOL) {o -> mul(o, conj(o)).a.w }
     }
 
     /**
-     * This is the only module from the Cayley-Dickson tower we can define for the octonions, since
-     * the reals lie in the center, so scalar multiplication is safe.
+     * `Octonion<R>` as a free `R`-module of rank 8.
      */
-    val OctonionVectorSpace: FiniteVectorSpace<Real, Octonion> = FiniteVectorSpace.of(
-        scalars = RealAlgebras.RealField,
-        add = OctonionDivisionAlgebraReal.add,
-        dimension = 8,
-        leftAction = LeftAction { r, o -> octonion(
-            r * o.w, r * o.x, r * o.y, r * o.z,
-            r * o.u, r * o.v, r * o.s, r * o.t)
-        }
-    )
-
-    val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, Octonion> = NonAssociativeStarAlgebra.of(
-        scalars = RealAlgebras.RealField,
-        involutiveRing = OctonionDivisionAlgebraReal,
-        leftAction = OctonionVectorSpace.leftAction,
-    )
-
-    val QuaternionToOctonionMonomorphism: NonAssociativeRingMonomorphism<Quaternion, Octonion> =
-        CayleyDickson.canonicalEmbedding(
-            base = QuaternionDivisionRing,
-            doubled = OctonionDivisionAlgebraReal
+    fun <R : Any> octonionModule(
+        base: CommutativeRing<R>
+    ): RModule<R, Octonion<R>> =
+        RModule.of(
+            scalars = base,
+            add = octonionRing(base).add,
+            leftAction = octonionLeftAction(base)
         )
 
     /**
-     * Embed a quaternion number into an octonion.
-     * Note that this corresponds to the first homomorphism from Quaternion to Octonion in the list generated below.
+     * `Octonion<R>` as a nonassociative `R`-algebra.
      */
-    fun Quaternion.asOctonion(): Octonion =
+    fun <R : Any> octonionAlgebra(
+        base: CommutativeRing<R>
+    ): NonAssociativeAlgebra<R, Octonion<R>> =
+        NonAssociativeAlgebra.of(
+            scalars = base,
+            algebraRing = octonionRing(base),
+            leftAction = octonionLeftAction(base)
+        )
+
+    /**
+     * `Octonion<R>` as a nonassociative `R`-star-algebra under the Cayley-Dickson conjugation.
+     */
+    fun <R : Any> octonionStarAlgebra(
+        base: CommutativeRing<R>
+    ): NonAssociativeStarAlgebra<R, Octonion<R>> =
+        NonAssociativeStarAlgebra.of(
+            scalars = base,
+            involutiveRing = octonionRing(base),
+            leftAction = octonionLeftAction(base)
+        )
+
+    /**
+     * The embedding of the base ring as the scalars.
+     */
+    fun <R : Any> scalarEmbedding(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<R, Octonion<R>> {
+        val tier = octonionTier(base)
+        return NonAssociativeRingMonomorphism.of(
+            domain = base,
+            codomain = tier.ring,
+            map = tier.scalarEmbeddingMap
+        )
+    }
+
+    /**
+     * The canonical Cayley-Dickson embedding `Quaternion<R> ↪ Octonion<R>`, `q ↦ (q, 0)`:
+     * `i ↦ e₁`, `j ↦ e₂`, `k ↦ e₃`.
+     */
+    fun <R : Any> quaternionToOctonionMonomorphism(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<Quaternion<R>, Octonion<R>> {
+        val tier = octonionTier(base)
+        return NonAssociativeRingMonomorphism.of(
+            domain = tier.quaternions.ring,
+            codomain = tier.ring,
+            map = tier.canonicalEmbeddingMap
+        )
+    }
+
+    /**
+     * Coordinatewise equality on octonions over any base.
+     */
+    fun <R : Any> eqOctonion(base: CommutativeRing<R>, eqR: Eq<R>): Eq<Octonion<R>> =
+        octonionTier(base).eq(eqR)
+
+    /**
+     * The printable in the basis `1, e₁, …, e₇` over any base, dropping zero terms.
+     */
+    fun <R : Any> printableOctonion(
+        base: CommutativeRing<R>,
+        signed: SignedOps<R>,
+        prR: Printable<R>,
+        eqR: Eq<R>
+    ): Printable<Octonion<R>> =
+        octonionTier(base).printable(signed, prR, eqR)
+
+    // ── The real octonions 𝕆 ─────────────────────────────────────────────────
+
+    /**
+     * The real octonions: a non-associative (but alternative) real normed division algebra.
+     *
+     * Everything but the reciprocal comes from the Cayley-Dickson double of ℍ. Reciprocals follow
+     * the floating-point policy of [HasReciprocal]: `o` is invertible iff `N(o)` is finite and not
+     * approximately zero, and then `o⁻¹ = conj(o) / N(o)`; this works despite nonassociativity
+     * because the norm is a composition norm.
+     */
+    object OctonionDivisionAlgebra :
+        NonAssociativeInvolutiveRing<RealOctonion> by realOctonionTier.ring,
+        RealNormedDivisionAlgebra<RealOctonion> {
+
+        override val zero: RealOctonion = realOctonionTier.ring.zero
+        override val one: RealOctonion = realOctonionTier.ring.one
+
+        override val normSq: UnaryOp<RealOctonion, Real> =
+            realOctonionTier.normSq
+
+        override fun hasReciprocal(a: RealOctonion): Boolean {
+            val n2 = normSq(a)
+            return n2.isFinite() && RealAlgebras.eqRealApprox.neqv(n2, 0.0)
+        }
+
+        override val reciprocal: Endo<RealOctonion> = Endo(Symbols.INVERSE) { o ->
+            if (!hasReciprocal(o)) throw HasReciprocal.notInvertible(o, Symbols.BB_O)
+            realOctonionTier.scalarAction(1.0 / normSq(o), conj(o))
+        }
+
+        /**
+         * The standard basis `1, e₁, …, e₇`, obtained by doubling the basis `1, i, j, k` of ℍ:
+         * `e₁, e₂, e₃` are `i, j, k` in the first slot and `e₄, …, e₇` are `1, i, j, k` in the second.
+         */
+        val basis: List<RealOctonion> = realOctonionTier.basis
+        val basisMap: Map<Int, RealOctonion> = realOctonionTier.basisMap
+
+        val e1: RealOctonion = basis[1]
+        val e2: RealOctonion = basis[2]
+        val e3: RealOctonion = basis[3]
+        val e4: RealOctonion = basis[4]
+        val e5: RealOctonion = basis[5]
+        val e6: RealOctonion = basis[6]
+        val e7: RealOctonion = basis[7]
+    }
+
+    /**
+     * The octonions as an eight-dimensional real vector space. The reals lie in the nucleus (indeed
+     * the center) of 𝕆, so scalar multiplication is well-behaved despite nonassociativity.
+     */
+    val OctonionVectorSpace: FiniteVectorSpace<Real, RealOctonion> = FiniteVectorSpace.of(
+        scalars = RealAlgebras.RealField,
+        add = OctonionDivisionAlgebra.add,
+        dimension = 8,
+        leftAction = realOctonionTier.scalarAction
+    )
+
+    val OctonionStarAlgebra: NonAssociativeStarAlgebra<Real, RealOctonion> = NonAssociativeStarAlgebra.of(
+        scalars = RealAlgebras.RealField,
+        involutiveRing = OctonionDivisionAlgebra,
+        leftAction = OctonionVectorSpace.leftAction,
+    )
+
+    /**
+     * The canonical Cayley-Dickson embedding `ℍ ↪ 𝕆`, `q ↦ (q, 0)`.
+     */
+    val QuaternionToOctonionMonomorphism: NonAssociativeRingMonomorphism<RealQuaternion, RealOctonion> =
+        NonAssociativeRingMonomorphism.of(
+            domain = QuaternionAlgebras.QuaternionDivisionRing,
+            codomain = OctonionDivisionAlgebra,
+            map = realOctonionTier.canonicalEmbeddingMap
+        )
+
+    /**
+     * Embed a quaternion into the octonions via the canonical Cayley-Dickson embedding `q ↦ (q, 0)`.
+     * This is the member of [allQuaternionEmbeddings] with `i ↦ e₁`, `j ↦ e₂` and both signs positive.
+     */
+    fun RealQuaternion.asOctonion(): RealOctonion =
         QuaternionToOctonionMonomorphism(this)
 
-    val eqOctonionStrict: Eq<Octonion> = CD.eq(eqQuaternionStrict)
-    val eqOctonion: Eq<Octonion> = CD.eq(eqQuaternion)
+    val eqOctonionStrict: Eq<RealOctonion> = realOctonionTier.eq(RealAlgebras.eqRealStrict)
+    val eqOctonion: Eq<RealOctonion> = realOctonionTier.eq(RealAlgebras.eqRealApprox)
 
-    val embeddingKit = OctonionEmbeddingKit.OctonionEmbeddingKit(
-        quaternionRing = QuaternionDivisionRing,
-        octonionRing = OctonionDivisionAlgebraReal,
-        basisMap = OctonionDivisionAlgebraReal.basisMap,
-        leftAction = OctonionVectorSpace.leftAction,
-        eq = eqOctonionStrict,
-        decompose = { q -> listOf(q.w, q.x, q.y, q.z) }
-    )
+    val embeddingKit: OctonionEmbeddingKit.OctonionEmbeddingKit<Real, RealQuaternion, RealOctonion> =
+        realOctonionTier.embeddingKit(eqOctonionStrict)
 
     /**
-     * Enumerate the full family of 84 “basis-unit” quaternion embeddings `ℍ ↪ 𝕆` arising from:
-     *
-     * - 7 unordered Fano lines in the standard Fano plane on `{1,…,7}`
-     * - 6 ordered pairs `(i,j)` per line (choice of images for quaternion basis vectors `i` and `j`)
-     * - 2 handedness choices (RIGHT: `i ↦ e_i`, LEFT: `i ↦ -e_i`), which flips the induced k-image sign
-     *
-     *
-     *     Total: 7 * 6 * 2 = 84 embeddings.
-     *
-     * The result is keyed by [Embedding] so callers can deterministically select an embedding and also
-     * inspect the induced [kSign]. A duplicate-key check is included as a guard against bugs in
-     * enumeration or spec construction.
+     * The 168 signed-basis-unit embeddings `ℍ ↪ 𝕆`: 42 ordered pairs of distinct imaginary units
+     * for the images of `i` and `j`, times 4 independent sign choices. See [OctonionEmbeddingKit].
      */
-    fun allQuaternionEmbeddings() = embeddingKit.allEmbeddings()
+    fun allQuaternionEmbeddings(): Map<OctonionEmbeddingKit.OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<RealQuaternion, RealOctonion>> =
+        embeddingKit.allEmbeddings()
 
-    private fun printableOctonionGenerator(
-        prReal: Printable<Real>,
-        eqReal: Eq<Real>
-    ): Printable<Octonion> =
-        OctonionPrintable.octonionPrintable(
-            signed = RealAlgebras.SignedReal,
-            zero = RealAlgebras.RealField.zero,
-            one = RealAlgebras.RealField.one,
-            prA = prReal,
-            eqA = eqReal,
-            decompose = { o -> listOf(o.w, o.x, o.y, o.z, o.u, o.v, o.s, o.t) }
-        )
+    /**
+     * The 84 embeddings normalized so that the image of quaternion `j` is a *positive* basis unit.
+     *
+     * Every one of the 168 embeddings in [allQuaternionEmbeddings] is either normalized or a
+     * normalized embedding precomposed with the quaternion automorphism `i ↦ i, j ↦ -j, k ↦ -k`,
+     * so this is a set of representatives for the embeddings modulo that automorphism.
+     */
+    fun normalizedQuaternionEmbeddings(): Map<OctonionEmbeddingKit.OctonionEmbeddingSpec, NonAssociativeRingHomomorphism<RealQuaternion, RealOctonion>> =
+        embeddingKit.normalizedEmbeddings()
 
-    val printableOctonion: Printable<Octonion> = printableOctonionGenerator(
-        prReal = RealAlgebras.printableReal,
-        eqReal = RealAlgebras.eqRealApprox
-    )
+    val printableOctonion: Printable<RealOctonion> =
+        realOctonionTier.printable(RealAlgebras.SignedReal, RealAlgebras.printableReal, RealAlgebras.eqRealApprox)
 
-    val printableOctonionStrict: Printable<Octonion> = printableOctonionGenerator(
-        prReal = RealAlgebras.printableRealStrict,
-        eqReal = RealAlgebras.eqRealStrict
-    )
+    val printableOctonionStrict: Printable<RealOctonion> =
+        realOctonionTier.printable(RealAlgebras.SignedReal, RealAlgebras.printableRealStrict, RealAlgebras.eqRealStrict)
 
-    val printableOctonionPretty: Printable<Octonion> = printableOctonionGenerator(
-        prReal = RealAlgebras.printableRealPretty,
-        eqReal = RealAlgebras.eqRealApprox
-    )
+    val printableOctonionPretty: Printable<RealOctonion> =
+        realOctonionTier.printable(RealAlgebras.SignedReal, RealAlgebras.printableRealPretty, RealAlgebras.eqRealApprox)
 }

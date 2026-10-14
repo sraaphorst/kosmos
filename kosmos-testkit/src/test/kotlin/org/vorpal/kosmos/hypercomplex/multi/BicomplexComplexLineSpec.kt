@@ -35,9 +35,9 @@ class BicomplexComplexLineSpec : StringSpec({
     "complexToBicomplexAlongJ lands in the ℂ(j) line: a + bi ↦ a + bj (no i or k part)" {
         checkAll(ArbComplex.boundedComplex) { c ->
             val coeffs = embedJ(c).coefficients()   // basis order [1, i, j, k]
-            check(eqR(coeffs[0], c.a))   // real part on 1
+            check(eqR(coeffs[0], c.re))   // real part on 1
             check(eqR(coeffs[1], 0.0))   // no i
-            check(eqR(coeffs[2], c.b))   // imaginary part on j
+            check(eqR(coeffs[2], c.im))   // imaginary part on j
             check(eqR(coeffs[3], 0.0))   // no k
         }
     }

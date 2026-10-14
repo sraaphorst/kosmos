@@ -15,6 +15,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.toReal
+import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -24,7 +25,7 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.syntax.toNearestInt
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.geometry.lattices.EuclideanLattice
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
@@ -113,7 +114,7 @@ object EisensteinIntAlgebras {
             add = EisensteinIntCommutativeRing.add,
             mul = EisensteinIntCommutativeRing.mul,
             divRem = BinaryOp(Symbols.DIV_REM) { alpha, beta ->
-                require(beta != EisensteinInt.ZERO) { "division by zero" }
+                if (beta == EisensteinInt.ZERO) throw ArithmeticException("Division by zero in the Eisenstein integers.")
                 val den = EisensteinIntCommutativeRing.normSq(beta)
                 require(den != BigInteger.ZERO) { "normSq(beta) must be nonzero for beta != 0" }
 
@@ -191,7 +192,7 @@ object EisensteinIntAlgebras {
         override val rank: Int = 2
         private val ring = EisensteinIntCommutativeRing
 
-        override val dot: (EisensteinInt, EisensteinInt) -> Rational = { e1, e2 ->
+        override val dot: BilinearForm<EisensteinInt, Rational> = BilinearForm { e1, e2 ->
             Rational.of(ring.normSq(ring.add(e1, e2)) - ring.normSq(e1) - ring.normSq(e2), BigInteger.TWO)
         }
 
@@ -227,24 +228,24 @@ object EisensteinIntAlgebras {
             coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
             s = -BigInteger.ONE,
             t = -BigInteger.ONE,
-            coeffs = { it.a to it.b }
+            coeffs = UnaryOp { it.a to it.b }
         )
 
     /**
      * Note: due to rounding in Real, for sufficiently large values, this may not precisely meet the exact
      * definition of a ring homomorphism. BigInteger to Real may become lossy quite quickly.
      */
-    object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, Complex> {
+    object EisensteinIntToCHomomorphism: RingHomomorphism<EisensteinInt, RealComplex> {
         override val domain = EisensteinIntCommutativeRing
         override val codomain = ComplexAlgebras.ComplexField
-        override val map = UnaryOp<EisensteinInt, Complex> { e ->
+        override val map = UnaryOp<EisensteinInt, RealComplex> { e ->
             val aReal = e.a.toReal()
             val bReal = e.b.toReal()
             complex(aReal - bReal / 2.0, bReal * sqrt3over2)
         }
     }
 
-    fun EisensteinInt.toComplex(): Complex =
+    fun EisensteinInt.toComplex(): RealComplex =
         EisensteinIntToCHomomorphism(this)
 
     val eqEisensteinInt: Eq<EisensteinInt> = Eq.default()
@@ -254,8 +255,8 @@ object EisensteinIntAlgebras {
             signed = IntegerAlgebras.SignedInteger,
             zero = BigInteger.ZERO,
             one = BigInteger.ONE,
-            re = { it.a },
-            im = { it.b },
+            re = UnaryOp { it.a },
+            im = UnaryOp { it.b },
             basis = Symbols.OMEGA,
             prA = IntegerAlgebras.printableInteger,
             eqA = IntegerAlgebras.eqInteger

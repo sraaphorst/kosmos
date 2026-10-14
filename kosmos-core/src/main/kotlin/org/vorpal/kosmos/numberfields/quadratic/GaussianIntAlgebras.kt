@@ -3,6 +3,7 @@ package org.vorpal.kosmos.numberfields.quadratic
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.quadratic.quadraticRank2MatrixEmbedding
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeInvolutiveRing
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.EuclidMeasure
 import org.vorpal.kosmos.algebra.structures.EuclideanDomain
@@ -13,27 +14,36 @@ import org.vorpal.kosmos.bridge.ZModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.math.toReal
-import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.BinaryOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.hypercomplex.complex.Complex
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.complexRingOver
 import org.vorpal.kosmos.hypercomplex.complex.ComplexPrintable
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings
-import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionEmbeddingKit
+import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternionTier
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
-import org.vorpal.kosmos.hypercomplex.quaternion.Quaternion
+import org.vorpal.kosmos.hypercomplex.quaternion.RealQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.lipschitzQuaternion
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
+
+/**
+ * `ℤ[i] = ℤ[x]/(x² + 1)`: the Cayley-Dickson doubling of ℤ (trivial involution) at `σ = 1`,
+ * on the [Complex] carrier. Its involution is complex conjugation.
+ *
+ * File-level so that initializing [GaussianIntAlgebras.GaussianIntEuclideanDomain] never recursively
+ * initializes [GaussianIntAlgebras].
+ */
+private val cayleyDicksonGaussianInt: CommutativeInvolutiveRing<GaussianInt> =
+    complexRingOver(IntegerAlgebras.IntegerCommutativeRing)
 
 /**
  * Main structures:
@@ -46,7 +56,7 @@ import java.math.BigInteger
  * - [ZToGaussianIntMonomorphism]: embedding homomorphism from the integers to the Gaussian integers.
  * - [GaussianIntToRatMonomorphism]: embedding homomorphism from the Gaussian integers to the Gaussian rationals.
  * - [toGaussianRat]: convenience method for this monomorphism.
- * - [GaussianIntToComplexMonomorphism]: embedding homomorphism from the Gaussian integers to the [Complex] numbers.
+ * - [GaussianIntToComplexMonomorphism]: embedding homomorphism from the Gaussian integers to the [RealComplex] numbers.
  * - [gaussianIntToLipschitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Lipschitz quaternions.
  * - [asLipschitzQuaternion]: convenience method for this monomorphism.
  * - [gaussianIntToHurwitzQuaternionEmbedding]: unital embedding factory from the Gaussian integers to the Hurwitz quaternions.
@@ -83,25 +93,14 @@ object GaussianIntAlgebras {
         InvolutiveRing<GaussianInt>,
         HasNormSq<GaussianInt, BigInteger> {
 
-        override val zero: GaussianInt = GaussianInt.ZERO
-        override val one: GaussianInt = GaussianInt.ONE
+        override val zero: GaussianInt = GaussianInts.ZERO
+        override val one: GaussianInt = GaussianInts.ONE
 
-        override val add: AbelianGroup<GaussianInt> = AbelianGroup.of(
-            identity = zero,
-            op = BinOp(Symbols.PLUS) { gz1, gz2 -> GaussianInt(gz1.re + gz2.re, gz1.im + gz2.im) },
-            inverse = Endo(Symbols.MINUS) { gz -> GaussianInt(-gz.re, -gz.im) }
-        )
+        override val add: AbelianGroup<GaussianInt> = cayleyDicksonGaussianInt.add
 
-        override val mul: CommutativeMonoid<GaussianInt> = CommutativeMonoid.of(
-            identity = one,
-            op = BinOp(Symbols.ASTERISK) { gz1, gz2 ->
-                GaussianInt(gz1.re * gz2.re - gz1.im * gz2.im, gz1.re * gz2.im + gz1.im * gz2.re)
-            }
-        )
+        override val mul: CommutativeMonoid<GaussianInt> = cayleyDicksonGaussianInt.mul
 
-        override val conj: Endo<GaussianInt> = Endo(Symbols.CONJ) { a ->
-            GaussianInt(a.re, -a.im)
-        }
+        override val conj: Endo<GaussianInt> = cayleyDicksonGaussianInt.conj
 
         override val normSq: UnaryOp<GaussianInt, BigInteger> =
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { a ->
@@ -125,7 +124,7 @@ object GaussianIntAlgebras {
          */
         override val divRem: BinaryOp<GaussianInt, GaussianInt, Pair<GaussianInt, GaussianInt>> =
             BinaryOp(Symbols.DIV_REM) { a, b ->
-                require(b != zero) { "division by zero in Gaussian integers" }
+                if (b == zero) throw ArithmeticException("Division by zero in the Gaussian integers.")
 
                 val denominator = normSq(b)
                 val numerator = mul(a, conj(b))
@@ -192,7 +191,7 @@ object GaussianIntAlgebras {
             coefficientRing = IntegerAlgebras.IntegerCommutativeRing,
             s = -BigInteger.ONE,
             t = BigInteger.ZERO,
-            coeffs = { it.re to it.im }
+            coeffs = UnaryOp { it.re to it.im }
         )
 
     /**
@@ -219,11 +218,11 @@ object GaussianIntAlgebras {
     /**
      * The canonical monomorphism `ℤ[i] → ℂ`.
      */
-    object GaussianIntToComplexMonomorphism : RingMonomorphism<GaussianInt, Complex> {
+    object GaussianIntToComplexMonomorphism : RingMonomorphism<GaussianInt, RealComplex> {
         override val domain = GaussianIntEuclideanDomain
         override val codomain = ComplexAlgebras.ComplexField
 
-        override val map = UnaryOp<GaussianInt, Complex> { gz ->
+        override val map = UnaryOp<GaussianInt, RealComplex> { gz ->
             complex(gz.re.toReal(), gz.im.toReal())
         }
     }
@@ -239,16 +238,7 @@ object GaussianIntAlgebras {
     ): RingMonomorphism<GaussianInt, LipschitzQuaternion> = RingMonomorphism.of(
         domain = GaussianIntEuclideanDomain,
         codomain = LipschitzQuaternionAlgebras.LipschitzQuaternionRing,
-        map = UnaryOp { z ->
-            QuaternionEmbeddingKit.embedComplexLike(
-                axisSign = embedding,
-                re = z.re,
-                im = z.im,
-                zero = BigInteger.ZERO,
-                negate = BigInteger::negate,
-                mkQuaternion = ::lipschitzQuaternion
-            )
-        }
+        map = lipschitzQuaternionTier.complexEmbeddingMap(embedding)
     )
 
     /**
@@ -286,15 +276,17 @@ object GaussianIntAlgebras {
 
     /**
      * Apply the [GaussianInt] ↪ [LipschitzQuaternion] monomorphism according to the [embedding] and then
-     * apply the [LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism] to get a [RingMonomorphism]:
+     * the floating-point conversion [LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox]:
      * ```text
-     * GaussianInt ↪ LipschitzQuaternion ↪ Quaternion
+     * GaussianInt ↪ LipschitzQuaternion → Quaternion
      * ```
+     * The result is a plain conversion, not a monomorphism: large integers collide in `Double`.
      */
-    fun gaussianIntToQuaternionEmbedding(
+    fun gaussianIntToQuaternionApprox(
         embedding: AxisSignEmbeddings.AxisSignEmbedding = canonicalEmbedding
-    ): RingMonomorphism<GaussianInt, Quaternion> =
-        gaussianIntToLipschitzQuaternionEmbedding(embedding) andThen LipschitzQuaternionAlgebras.LipschitzToQuaternionMonomorphism
+    ): UnaryOp<GaussianInt, RealQuaternion> =
+        gaussianIntToLipschitzQuaternionEmbedding(embedding).map andThen
+            LipschitzQuaternionAlgebras.lipschitzToQuaternionApprox
 
     val eqGaussianInt: Eq<GaussianInt> = Eq.default()
 
@@ -303,8 +295,8 @@ object GaussianIntAlgebras {
             signed = IntegerAlgebras.SignedInteger,
             zero = IntegerAlgebras.IntegerCommutativeRing.zero,
             one = IntegerAlgebras.IntegerCommutativeRing.one,
-            re = { it.re },
-            im = { it.im },
+            re = UnaryOp { it.re },
+            im = UnaryOp { it.im },
             basis = Symbols.IMAGINARY_I,
             prA = IntegerAlgebras.printableInteger,
             eqA = IntegerAlgebras.eqInteger

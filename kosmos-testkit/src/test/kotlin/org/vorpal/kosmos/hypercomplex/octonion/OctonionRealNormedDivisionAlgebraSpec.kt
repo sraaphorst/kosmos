@@ -5,7 +5,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
 
 /**
- * Property tests for [OctonionAlgebras.OctonionDivisionAlgebraReal] as a
+ * Property tests for [OctonionAlgebras.OctonionDivisionAlgebra] as a
  * [org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra].
  *
  * This is the real "does Cayley-Dickson on the quaternions actually give the octonions" check:
@@ -18,9 +18,9 @@ import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
  * `normSq ≈ 0` guard in the reciprocal, and the multiplicative norm law stays numerically well-conditioned.
  */
 class OctonionRealNormedDivisionAlgebraSpec : StringSpec({
-    "OctonionDivisionAlgebraReal satisfies RealNormedDivisionAlgebraLaws" {
+    "OctonionDivisionAlgebra satisfies RealNormedDivisionAlgebraLaws" {
         RealNormedDivisionAlgebraLaws(
-            algebra = OctonionAlgebras.OctonionDivisionAlgebraReal,
+            algebra = OctonionAlgebras.OctonionDivisionAlgebra,
             arb = ArbOctonion.reciprocalSafeOctonion,
             eqA = OctonionAlgebras.eqOctonion,
             eqReal = RealAlgebras.eqRealApprox,
