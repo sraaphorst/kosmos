@@ -1,0 +1,53 @@
+# Runs the Kosmos test suite on every pull request and on pushes to main.
+#
+# To make passing tests a merge requirement, add the "Tests / testkit" check
+# as a required status check in a branch protection rule (or ruleset) for main:
+# Settings → Rules → Rulesets (or Branches) → Require status checks to pass.
+
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to the same PR cancels the older, now-stale run.
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  testkit:
+    name: testkit
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Run kosmos-testkit tests
+        run: ./gradlew :kosmos-testkit:test --stacktrace
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: testkit-test-reports
+          path: |
+            kosmos-testkit/build/reports/tests/test/
+            kosmos-testkit/build/test-results/test/
+          retention-days: 14
