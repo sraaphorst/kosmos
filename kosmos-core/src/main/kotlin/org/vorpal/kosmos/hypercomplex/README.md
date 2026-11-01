@@ -1365,5 +1365,5 @@ References:
   168 nonassociative octonion triples above to 168 pairs of primitive zero divisors in the
   sedenions, by a `GL(3, 2)`-equivariant bijection. The octonion side is now verified here; the
   sedenion side needs the named sedenions first.
-- **Octonion matrices** (also listed in the top-level `TODO.md`), and with them the exceptional
+- **Octonion matrices**, and with them the exceptional
   Jordan algebra.
