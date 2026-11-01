@@ -101,7 +101,7 @@ object BLAS {
         y: VecLike<Real>,
         a: MatLike<Real>
     ): DenseMat<Real> =
-        DenseVecOps.rank1Update(d, alpha, x, y, a) // if you expose it there
+        DenseVecOps.rank1Update(d, alpha, x, y, a)
 
     fun zgeru(
         alpha: RealComplex,

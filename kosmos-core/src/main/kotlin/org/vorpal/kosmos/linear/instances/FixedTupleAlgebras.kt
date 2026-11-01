@@ -1,8 +1,10 @@
 package org.vorpal.kosmos.linear.instances
 
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
+import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
+import org.vorpal.kosmos.algebra.structures.RModule
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.linear.values.Vec1
 import org.vorpal.kosmos.linear.values.Vec2
@@ -15,9 +17,11 @@ import org.vorpal.kosmos.linear.values.Vec0
 
 /**
  * This file comprises algebraic structures over the vectors [Vec0], [Vec1], [Vec2], [Vec3], and [Vec4].
- * - Given an [AbelianGroup] over `A`, we can extend this to an [AbelianGroup] `A^n`.
- * - Given an [AbelianGroup] over `A`, we can use this to construct a [FiniteVectorSpace] over the [AbelianGroup]
- *   `A^n`.
+ * - Given an [AbelianGroup] over `A`, we can extend this to an [AbelianGroup] `A^n` (`dimNGroup`).
+ * - Given a [CommutativeRing] `R`, `R^n` is a free [RModule] of rank `n` (`vecNModule`).
+ * - Given a [Field] `F`, `F^n` is a [FiniteVectorSpace] of dimension `n` (`vecNSpace`).
+ *
+ * In each case the operations act coordinatewise.
  */
 object FixedTupleAlgebras {
     fun <A : Any> dim0Group(): AbelianGroup<Vec0<A>> = AbelianGroup.of(
@@ -103,6 +107,17 @@ object FixedTupleAlgebras {
         }
     )
 
+    /**
+     * `R^0`, the zero module over [ring].
+     */
+    fun <R : Any> vec0Module(
+        ring: CommutativeRing<R>,
+    ): RModule<R, Vec0<R>> = RModule.of(
+        ring,
+        add = dim0Group(),
+        leftAction = LeftAction(Symbols.TRIANGLE_LEFT) { _, v -> v }
+    )
+
     fun <F : Any> vec0Space(
         field: Field<F>
     ): FiniteVectorSpace<F, Vec0<F>> = FiniteVectorSpace.of(
@@ -112,6 +127,19 @@ object FixedTupleAlgebras {
         leftAction = LeftAction { _, v -> v }
     )
 
+    /**
+     * `R^1` as the free module of rank 1 over [ring], with the coordinatewise scalar action.
+     */
+    fun <R : Any> vec1Module(
+        ring: CommutativeRing<R>,
+    ): RModule<R, Vec1<R>> = RModule.of(
+        ring,
+        add = dim1Group(ring.add),
+        leftAction = LeftAction<R, Vec1<R>>(Symbols.TRIANGLE_LEFT) { s, v ->
+            ring.run { Vec1(mul(s, v[0])) }
+        }
+    )
+
     fun <F : Any> vec1Space(
         field: Field<F>
     ): FiniteVectorSpace<F, Vec1<F>> = FiniteVectorSpace.of(
@@ -119,6 +147,19 @@ object FixedTupleAlgebras {
         add = dim1Group(field.add),
         dimension = 1,
         leftAction = LeftAction { s, v -> Vec1(field.mul(s, v.x)) }
+    )
+
+    /**
+     * `R^2` as the free module of rank 2 over [ring], with the coordinatewise scalar action.
+     */
+    fun <R : Any> vec2Module(
+        ring: CommutativeRing<R>,
+    ): RModule<R, Vec2<R>> = RModule.of(
+        ring,
+        add = dim2Group(ring.add),
+        leftAction = LeftAction<R, Vec2<R>>(Symbols.TRIANGLE_LEFT) { s, v ->
+            ring.run { Vec2(mul(s, v[0]), mul(s, v[1])) }
+        }
     )
 
     fun <F : Any> vec2Space(
@@ -135,6 +176,24 @@ object FixedTupleAlgebras {
         }
     )
 
+    /**
+     * `R^3` as the free module of rank 3 over [ring], with the coordinatewise scalar action.
+     */
+    fun <R : Any> vec3Module(
+        ring: CommutativeRing<R>,
+    ): RModule<R, Vec3<R>> = RModule.of(
+        ring,
+        add = dim3Group(ring.add),
+        leftAction = LeftAction<R, Vec3<R>>(Symbols.TRIANGLE_LEFT) { s, v ->
+            ring.run {
+                Vec3(
+                    mul(s, v[0]),
+                    mul(s, v[1]),
+                    mul(s, v[2]))
+            }
+        }
+    )
+
     fun <F : Any> vec3Space(
         field: Field<F>,
     ): FiniteVectorSpace<F, Vec3<F>> = FiniteVectorSpace.of(
@@ -147,6 +206,26 @@ object FixedTupleAlgebras {
                 field.mul(s, v.y),
                 field.mul(s, v.z)
             )
+        }
+    )
+
+    /**
+     * `R^4` as the free module of rank 4 over [ring], with the coordinatewise scalar action.
+     */
+    fun <R : Any> vec4Module(
+        ring: CommutativeRing<R>,
+    ): RModule<R, Vec4<R>> = RModule.of(
+        ring,
+        add = dim4Group(ring.add),
+        leftAction = LeftAction<R, Vec4<R>>(Symbols.TRIANGLE_LEFT) { s, v ->
+            ring.run {
+                Vec4(
+                    mul(s, v[0]),
+                    mul(s, v[1]),
+                    mul(s, v[2]),
+                    mul(s, v[3])
+                )
+            }
         }
     )
 
