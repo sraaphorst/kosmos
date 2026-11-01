@@ -1,5 +1,7 @@
 # Kosmos
 
+[![Tests](https://github.com/sraaphorst/kosmos/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/sraaphorst/kosmos/actions/workflows/tests.yml?query=branch%3Amain)
+
 *A comprehensive math library for Kotlin.*
 
 This is a work in progress. Some (likely outdated) documentation can be found in the [docs](/docs) directory.
