@@ -2,7 +2,7 @@ package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
+import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.Meadow
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
@@ -10,6 +10,7 @@ import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.AntiHomomorphismLaw
 import org.vorpal.kosmos.laws.property.EndomorphismCommutationLaw
+import org.vorpal.kosmos.laws.property.IdempotencyLaw
 import org.vorpal.kosmos.laws.property.InvolutionLaw
 import org.vorpal.kosmos.laws.property.RestrictedInverseLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -27,7 +28,7 @@ import org.vorpal.kosmos.laws.suiteName
  * - `inv(0) = 0` and `inv(1) = 1`
  * - multiplicativity: `inv(x * y) = inv(x) * inv(y)` (via [AntiHomomorphismLaw], as mul is commutative)
  * - `inv(-x) = -inv(x)` (via [EndomorphismCommutationLaw])
- * - `x * inv(x)` is idempotent
+ * - `x * inv(x)` is idempotent (via [IdempotencyLaw] on the image of `x ↦ x * inv(x)`)
  */
 class MeadowLaws<A : Any>(
     private val meadow: Meadow<A>,
@@ -54,16 +55,11 @@ class MeadowLaws<A : Any>(
             }
         }
 
+    /**
+     * `x * inv(x)` is idempotent: [IdempotencyLaw] on mul, over the image of `x ↦ x * inv(x)`.
+     */
     private val idempotentLaw: TestingLaw =
-        TestingLaw.named("x * inv(x) is idempotent") {
-            checkAll(arb) { x ->
-                val e = meadow.mul(x, meadow.inv(x))
-                val ee = meadow.mul(e, e)
-                withClue("For x = ${pr(x)}: e = x * inv(x) = ${pr(e)}, but e * e = ${pr(ee)}") {
-                    check(eq(ee, e))
-                }
-            }
-        }
+        IdempotencyLaw(meadow.mul.op, arb.map { x -> meadow.mul(x, meadow.inv(x)) }, eq, pr)
 
     private val derivedLaws: List<TestingLaw> = listOf(
         fixedPointLaw("zero", meadow.zero),
