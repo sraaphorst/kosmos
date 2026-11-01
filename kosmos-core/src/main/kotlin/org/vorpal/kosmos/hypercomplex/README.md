@@ -280,6 +280,10 @@ hypercomplex/
 │   ├── SplitOctonion.kt
 │   └── SplitOctonionAlgebras.kt
 │
+├── zorn/                     # Zorn<R>: vector-matrices R ⊕ R³ ⊕ R³ ⊕ R, a model of 𝕆′ without CD
+│   ├── Zorn.kt
+│   └── ZornAlgebras.kt             ring, norm, 𝕆′ ↪ Zorn, 𝕆′_F ≅ Zorn_F
+│
 ├── biquaternion/             # ℍ ⊗ ℂ = CD⟨𝔹⟩ ≅ M₂(ℂ)
 │   ├── Biquaternion.kt
 │   └── BiquaternionAlgebras.kt     three conjugations, real forms, matrix isomorphism
@@ -413,6 +417,97 @@ ring.mul(ring.add(one, e4), ring.add(one, ring.add.inverse(e4)))   // 0
 
 The inverse `o⁻¹ = conj(o)/N(o)` exists off the null cone and is two-sided despite
 nonassociativity, because the algebra is alternative.
+
+### Zorn vector-matrices
+
+A Zorn vector-matrix over a commutative ring `R` is a formal 2 × 2 array with scalars on the
+diagonal and vectors of `R³` off it:
+
+```text
+    ⎛ a  v ⎞
+X = ⎜      ⎟,    a, d ∈ R,   v, w ∈ R³.
+    ⎝ w  d ⎠
+```
+
+The product is matrix multiplication, with the dot product pairing the off-diagonal entries and a
+cross-product correction:
+
+```text
+⎛ a₁ v₁ ⎞ ⎛ a₂ v₂ ⎞   ⎛ a₁a₂ + v₁·w₂              a₁v₂ + d₂v₁ + w₁ × w₂ ⎞
+⎜       ⎟ ⎜       ⎟ = ⎜                                                    ⎟
+⎝ w₁ d₁ ⎠ ⎝ w₂ d₂ ⎠   ⎝ a₂w₁ + d₁w₂ − v₁ × v₂     d₁d₂ + w₁·v₂           ⎠
+```
+
+The identity is `(1, 0, 0, 1)` and the conjugation is `(a, v, w, d) ↦ (d, −v, −w, a)`. The norm is
+the "determinant"
+
+```text
+N(X) = ad − v·w,      X·conj(X) = conj(X)·X = N(X)·1,      N(XY) = N(X)N(Y).
+```
+
+The cross-product terms are what make the algebra nonassociative: with `uᵢ = (0, eᵢ, 0, 0)`,
+`(u₁u₂)u₃ = (0, 0, 0, −1)` but `u₁(u₂u₃) = (−1, 0, 0, 0)`. It is still alternative, flexible and
+Moufang.
+
+```kotlin
+import org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras
+
+val q = RationalAlgebras.RationalField
+val ring = ZornAlgebras.zornRing(q)
+val normSq = ZornAlgebras.normSq(q)                    // ad − v·w
+
+val phi = ZornAlgebras.splitOctonionToZornMonomorphism(q)   // over any commutative ring
+val iso = ZornAlgebras.splitOctonionZornIsomorphism(q)      // when 2 is invertible
+
+val pr = ZornAlgebras.printableZorn(RationalAlgebras.printableRational)
+pr(ring.one)                                           // [[1, (0, 0, 0)], [(0, 0, 0), 1]]
+```
+
+As with the split-octonions, `ZornAlgebras` also provides the entrywise scalar action
+(`zornLeftAction`), the rank-8 module (`zornModule`), the nonassociative algebra and star algebra
+(`zornAlgebra`, `zornStarAlgebra`), `zornRingWithReciprocal` (`X⁻¹ = conj(X)/N(X)` off the null
+cone), the matrix-unit `basis`, and `scalarEmbedding`, `r ↦ (r, 0, 0, r)`. `printableZornPretty`
+renders the same matrix on two aligned lines. Over ℝ there are `RealZornAlgebra`,
+`RealZornStarAlgebra`, `ZornRealVectorSpace`, `RealSplitOctonionZornIsomorphism`, the Eqs
+`eqZorn` / `eqZornStrict` and the printables `printableZornReal`, `…RealStrict` and `…RealPretty`.
+
+**The comparison with the split-octonions.** Write a split-octonion as
+`o = w + x·e₁ + y·e₂ + z·e₃ + u·e₄ + v·e₅ + s·e₆ + t·e₇`, and put `X = (x, y, z)` and
+`Y = (v, s, t)`. Then
+
+```text
+φ(o) = (w + u,  X − Y,  −(X + Y),  w − u)
+```
+
+is a unital ring homomorphism `SplitOctonion<R> → Zorn<R>` over every commutative ring. It commutes
+with conjugation and carries the split norm `w² + |X|² − u² − |Y|²` to `ad − v·w`. When 2 is
+invertible it is an isomorphism, with inverse
+
+```text
+(a, v, w, d) ↦ w = (a + d)/2,   u = (a − d)/2,   X = (v − w)/2,   Y = −(v + w)/2.
+```
+
+**Why it is independent of Cayley–Dickson.** `SplitOctonion<R>` is built by doubling the
+quaternions; `Zorn<R>` is written down directly from the dot and cross products on `R³`, so `φ`
+compares two unrelated constructions, and the specs check it exactly. The two models also differ
+where 2 is not invertible:
+
+- Over ℤ, `φ` is injective but not onto: every image has `a ≡ d (mod 2)`, so the idempotent
+  `(1, 0, 0, 0)` is not in the image (over ℚ its preimage is `(1 + e₄)/2`). The Zorn matrices over ℤ
+  are a strictly larger order than the integral split-octonions.
+- Over 𝔽₂, `φ` is not even injective: `φ(1) = φ(e₄) = (1, 0, 0, 1)`. The doubling cannot tell the
+  usual and split signs apart in characteristic 2, but the Zorn product is still a split
+  composition algebra there, and `splitOctonionZornIsomorphism` refuses to build an isomorphism.
+
+`ZornSpec` checks the ring laws, alternativity, flexibility, the Moufang identities, the norm and
+the inverse over ℚ. `ZornStructuresSpec` checks the module and star-algebra laws over ℚ and ℤ, the
+scalar embedding and the printables, and `RealZornSpec` checks the real versions up to approximate
+equality. `ZornSplitOctonionSpec` checks `φ` and its inverse over ℚ, the ℤ and 𝔽₃ cases,
+and the failure over 𝔽₂.
+
+**Sextonions.** The six-dimensional sextonions sit inside the split-octonions between ℍ′ and 𝕆′,
+and they are easiest to see in Zorn form: they are the Zorn matrices with `v ∈ ⟨e₁, e₂⟩` and
+`w ∈ ⟨e₁, e₃⟩`. These are not implemented yet.
 
 ---
 
@@ -1065,6 +1160,10 @@ forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elemen
 | `R ↪ 𝕆′_R` | `SplitOctonionAlgebras.scalarEmbedding(base)` |
 | `ℍ ↪ 𝕆′` | `SplitOctonionAlgebras.QuaternionToSplitOctonionMonomorphism` |
 | `ℍ′_R ↪ 𝕆′_R` | `SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(base)` |
+| `R ↪ Zorn<R>` | `ZornAlgebras.scalarEmbedding(base)` |
+| `𝕆′_R ↪ Zorn<R>` | `ZornAlgebras.splitOctonionToZornMonomorphism(base)` |
+| `𝕆′_F ≅ Zorn<F>` | `ZornAlgebras.splitOctonionZornIsomorphism(field)` |
+| `𝕆′ ≅ Zorn<Real>` | `ZornAlgebras.RealSplitOctonionZornIsomorphism` |
 
 ### Complexifications
 
@@ -1231,7 +1330,7 @@ References:
 
 ### Gaps in the algebras that exist
 
-- **Split-octonions:** the Zorn vector-matrix representation; the family of embeddings `ℍ ↪ 𝕆′` and
+- **Split-octonions:** the sextonions (see [Zorn vector-matrices](#zorn-vector-matrices)); the family of embeddings `ℍ ↪ 𝕆′` and
   `ℍ′ ↪ 𝕆′` beyond the canonical ones; the isomorphism `CD_usual(ℍ′) ≅ CD_split(ℍ)`.
 - **Biquaternions and bioctonions:** the Lorentz-group action of the biquaternions; a generic
   printable for complex coefficients (only the real ones have one); the matrix isomorphism

@@ -251,7 +251,7 @@ object DenseVecOps {
         a: A,
         x: VecLike<A>,
         y: VecLike<A>
-    ): DenseVec<A> = add(semiring, scale(semiring, a, x), y)
+    ): DenseVec<A> = DenseVecKernel.add(semiring, scale(semiring, a, x), y)
 
     /**
      * Given a vector [x] over [A] and a [Comparator] over [A], determine the index of the smallest element of [x].

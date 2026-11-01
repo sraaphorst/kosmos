@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.linear.values
 
+import org.vorpal.kosmos.algebra.structures.CommutativeRng
+import org.vorpal.kosmos.algebra.structures.Rng
+
 data class Vec0<F : Any>(
     val unit: Unit = Unit
 ): VecLike<F> {
