@@ -1,4 +1,4 @@
-package org.vorpal.kosmos.org.vorpal.kosmos.laws.property
+package org.vorpal.kosmos.laws.property
 
 import io.kotest.assertions.withClue
 import io.kotest.property.Arb
