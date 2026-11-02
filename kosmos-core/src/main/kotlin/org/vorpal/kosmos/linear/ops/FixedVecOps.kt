@@ -2,6 +2,7 @@ package org.vorpal.kosmos.linear.ops
 
 import org.vorpal.kosmos.algebra.structures.CommutativeRng
 import org.vorpal.kosmos.linear.values.Vec3
+import org.vorpal.kosmos.linear.values.VecLike
 
 /**
  * Operations specific to the fixed-arity tuples [org.vorpal.kosmos.linear.values.Vec0] through
@@ -11,7 +12,23 @@ import org.vorpal.kosmos.linear.values.Vec3
  * repeated here: the fixed tuples are [org.vorpal.kosmos.linear.values.VecLike], so use
  * [DenseVecOps] for those.
  */
-object FixedTupleOps {
+object FixedVecOps {
+    /**
+     * Calculate the dot product of [v] and [w] in the context of [rng].
+     *
+     * Note that the size of [v] and [w] must be the same.
+     */
+    fun <R : Any> dot(
+        rng: CommutativeRng<R>,
+        v: VecLike<R>,
+        w: VecLike<R>): R {
+        if (v.size != w.size)
+            throw ArithmeticException("Cannot take dot product of vectors of different lengths: ${v.size} ≠ ${w.size}")
+        return (0 until v.size).fold(rng.zero) { sum, idx ->
+            rng.run { add(sum, mul(v[idx], w[idx])) }
+        }
+    }
+
     /**
      * The three-dimensional cross product over a commutative rng:
      * ```text

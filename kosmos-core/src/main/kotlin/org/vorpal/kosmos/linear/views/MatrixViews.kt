@@ -1,10 +1,21 @@
 package org.vorpal.kosmos.linear.views
 
 import org.vorpal.kosmos.core.ops.Endo
-import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
-import kotlin.math.min
+
+/**
+ * An enum indicating how a `MatLike` should be treated inside an operation:
+ * - [Normal] indicates that the `MatLike` should just be used as-is.
+ * - [Transpose] indicates that the transpose of the `MatLike` should be used.
+ * - [ConjugateTranspose] indicates that the transpose of the conj of the `MatLike` under the action of an
+ *   `InvolutiveRing` should be used.
+ */
+enum class TransposeMode {
+    Normal,
+    Transpose,
+    ConjugateTranspose
+}
 
 /**
  * View a vector as an n×1 matrix (a column matrix).
@@ -79,16 +90,16 @@ class ConjTransposeMatView<A : Any>(
         conj(base[c, r])
 }
 
-fun <A : Any> MatLike<A>.opView(op: MatOp): MatLike<A> = when (op) {
-    MatOp.Normal -> this
-    MatOp.Trans -> this.transposeView()
-    MatOp.ConjTrans -> error("ConjTrans requires a conjugation Endo.")
+fun <A : Any> MatLike<A>.opView(op: TransposeMode): MatLike<A> = when (op) {
+    TransposeMode.Normal -> this
+    TransposeMode.Transpose -> this.transposeView()
+    TransposeMode.ConjugateTranspose -> error("ConjTrans requires a conjugation Endo.")
 }
 
-fun <A : Any> MatLike<A>.opView(op: MatOp, conj: Endo<A>): MatLike<A> = when (op) {
-    MatOp.Normal -> this
-    MatOp.Trans -> this.transposeView()
-    MatOp.ConjTrans -> ConjTransposeMatView(this, conj)
+fun <A : Any> MatLike<A>.opView(op: TransposeMode, conj: Endo<A>): MatLike<A> = when (op) {
+    TransposeMode.Normal -> this
+    TransposeMode.Transpose -> this.transposeView()
+    TransposeMode.ConjugateTranspose -> ConjTransposeMatView(this, conj)
 }
 
 /**

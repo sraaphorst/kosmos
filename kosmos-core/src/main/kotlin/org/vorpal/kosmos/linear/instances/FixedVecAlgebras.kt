@@ -23,7 +23,7 @@ import org.vorpal.kosmos.linear.values.Vec0
  *
  * In each case the operations act coordinatewise.
  */
-object FixedTupleAlgebras {
+object FixedVecAlgebras {
     fun <A : Any> dim0Group(): AbelianGroup<Vec0<A>> = AbelianGroup.of(
         identity = Vec0(),
         op = BinOp(Symbols.PLUS) { _, _ -> Vec0() },

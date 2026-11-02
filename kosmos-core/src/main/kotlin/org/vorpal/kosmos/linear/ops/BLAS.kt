@@ -8,6 +8,8 @@ import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
+import org.vorpal.kosmos.linear.views.TransposeMode
+
 
 /**
  * Basic Linear Algebra Subprograms (standard names for functions in [DenseMatOps] and [DenseVecOps].)
@@ -74,19 +76,19 @@ object BLAS {
     // -----------------------------
 
     fun dgemv(
-        aOp: MatOp,
+        aOp: TransposeMode,
         alpha: Real,
         aMat: MatLike<Real>,
         xVec: VecLike<Real>,
         beta: Real,
         yVec: VecLike<Real>
     ): DenseVec<Real> {
-        require(aOp != MatOp.ConjTrans) { "Cannot use ConjTrans with d* BLAS."}
+        require(aOp != TransposeMode.ConjugateTranspose) { "Cannot use ConjTrans with d* BLAS."}
         return DenseMatOps.affineMatVec(d, alpha, aOp, aMat, xVec, beta, yVec)
     }
 
     fun zgemv(
-        aOp: MatOp,
+        aOp: TransposeMode,
         alpha: RealComplex,
         aMat: MatLike<RealComplex>,
         xVec: VecLike<RealComplex>,
@@ -124,22 +126,22 @@ object BLAS {
     // -----------------------------
 
     fun dgemm(
-        aOp: MatOp,
-        bOp: MatOp,
+        aOp: TransposeMode,
+        bOp: TransposeMode,
         alpha: Real,
         a: MatLike<Real>,
         b: MatLike<Real>,
         beta: Real,
         c: MatLike<Real>
     ): DenseMat<Real> {
-        require(aOp != MatOp.ConjTrans) { "Cannot use ConjTrans with d* BLAS."}
-        require(bOp != MatOp.ConjTrans) { "Cannot use ConjTrans with d* BLAS."}
+        require(aOp != TransposeMode.ConjugateTranspose) { "Cannot use ConjTrans with d* BLAS."}
+        require(bOp != TransposeMode.ConjugateTranspose) { "Cannot use ConjTrans with d* BLAS."}
         return DenseMatOps.affineMul(d, alpha, aOp, a, bOp, b, beta, c)
     }
 
     fun zgemm(
-        aOp: MatOp,
-        bOp: MatOp,
+        aOp: TransposeMode,
+        bOp: TransposeMode,
         alpha: RealComplex,
         a: MatLike<RealComplex>,
         b: MatLike<RealComplex>,

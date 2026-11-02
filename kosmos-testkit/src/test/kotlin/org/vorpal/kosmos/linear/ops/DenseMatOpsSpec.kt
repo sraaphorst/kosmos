@@ -14,6 +14,7 @@ import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
+import org.vorpal.kosmos.linear.views.TransposeMode
 import java.math.BigInteger
 import kotlin.math.abs
 
@@ -127,21 +128,21 @@ class DenseMatOpsSpec : FunSpec({
             val b = m(listOf(1, 2), listOf(3, 4))
             val c = m(listOf(1, 1), listOf(1, 1))
             DenseMatOps.affineMul(
-                z, 2.toBigInteger(), MatOp.Normal, a, MatOp.Normal, b, 3.toBigInteger(), c
+                z, 2.toBigInteger(), TransposeMode.Normal, a, TransposeMode.Normal, b, 3.toBigInteger(), c
             ) shouldBe m(listOf(5, 7), listOf(9, 11))
         }
 
         test("affineMatVec computes alpha·A·x + beta·y") {
             val a = DenseMatOps.identity(z, 2)
             DenseMatOps.affineMatVec(
-                z, 2.toBigInteger(), MatOp.Normal, a, v(1, 2), 3.toBigInteger(), v(1, 1)
+                z, 2.toBigInteger(), TransposeMode.Normal, a, v(1, 2), 3.toBigInteger(), v(1, 1)
             ) shouldBe v(5, 7)
         }
 
         test("affineMul with a transposed operand uses the transpose") {
             val a = m(listOf(1, 2), listOf(3, 4))
             DenseMatOps.affineMul(
-                z, BigInteger.ONE, MatOp.Trans, a, MatOp.Normal, DenseMatOps.identity(z, 2),
+                z, BigInteger.ONE, TransposeMode.Transpose, a, TransposeMode.Normal, DenseMatOps.identity(z, 2),
                 BigInteger.ZERO, DenseMatOps.zero(z, 2, 2)
             ) shouldBe DenseMatOps.generateTranspose(a)
         }

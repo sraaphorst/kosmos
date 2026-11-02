@@ -20,6 +20,7 @@ import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.RowReductionTrace
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
+import org.vorpal.kosmos.linear.views.TransposeMode
 
 object DenseMatOps {
 
@@ -563,9 +564,9 @@ object DenseMatOps {
      * Given a:
      * - [Semiring] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is [MatOp.Trans])
+     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [TransposeMode.Normal], and `n` if [aOp] is [TransposeMode.Transpose])
      * - constant [beta] in [A]
      * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
      * Let:
@@ -575,12 +576,12 @@ object DenseMatOps {
      * alpha A_p x + beta y
      * ```
      * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     * [TransposeMode.ConjugateTranspose] causes an error at there is no way to calculate it.
      */
     fun <A : Any> affineMatVec(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -591,9 +592,9 @@ object DenseMatOps {
      * Given an:
      * - [InvolutiveRing] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is otherwise)
+     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [TransposeMode.Normal], and `n` if [aOp] is otherwise)
      * - constant [beta] in [A]
      * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
      * Let:
@@ -603,12 +604,12 @@ object DenseMatOps {
      * alpha A_p x + beta y
      * ```
      * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     * [TransposeMode.ConjugateTranspose] causes an error at there is no way to calculate it.
      */
     fun <A : Any> affineMatVec(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -619,9 +620,9 @@ object DenseMatOps {
      * Given a:
      * - [Semiring] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
+     * - [bOp] way to treat matrix [bMat] (as per [TransposeMode])
      * - `m×n` matrix `B` over [A]
      * - constant [beta] in [A]
      * - `m×n` matrix `C` over [A]
@@ -633,14 +634,14 @@ object DenseMatOps {
      * alpha A_p B_p + beta C
      * ```
      * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     * [TransposeMode.ConjugateTranspose] causes an error at there is no way to calculate it.
      */
     fun <A : Any> affineMul(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,
@@ -650,9 +651,9 @@ object DenseMatOps {
      * Given an:
      * - [InvolutiveRing] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
+     * - [bOp] way to treat matrix [bMat] (as per [TransposeMode])
      * - `m×n` matrix `B` over [A]
      * - constant [beta] in [A]
      * - `m×n` matrix `C` over [A]
@@ -667,9 +668,9 @@ object DenseMatOps {
     fun <A : Any> affineMul(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,

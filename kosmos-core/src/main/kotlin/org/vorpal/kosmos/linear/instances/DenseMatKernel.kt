@@ -13,7 +13,6 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.getOrElse
-import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
@@ -23,6 +22,7 @@ import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
+import org.vorpal.kosmos.linear.views.TransposeMode
 import kotlin.math.min
 
 /**
@@ -626,13 +626,13 @@ internal object DenseMatKernel {
     fun <A: Any> affineMatVec(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
         yVec: VecLike<A>
     ): DenseVec<A> {
-        require(aOp != MatOp.ConjTrans) { "ConjTrans requires an involutive ring." }
+        require(aOp != TransposeMode.ConjugateTranspose) { "ConjTrans requires an involutive ring." }
 
         val aV = aMat.opView(aOp) // Normal or Trans
         val m = aV.rows
@@ -655,7 +655,7 @@ internal object DenseMatKernel {
     fun <A: Any> affineMatVec(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -682,14 +682,14 @@ internal object DenseMatKernel {
     fun <A : Any> affineMul(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,
     ): DenseMat<A> {
-        require(aOp != MatOp.ConjTrans && bOp != MatOp.ConjTrans) {
+        require(aOp != TransposeMode.ConjugateTranspose && bOp != TransposeMode.ConjugateTranspose) {
             "ConjTrans requires an involutive ring."
         }
 
@@ -727,9 +727,9 @@ internal object DenseMatKernel {
     fun <A : Any> affineMul(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,

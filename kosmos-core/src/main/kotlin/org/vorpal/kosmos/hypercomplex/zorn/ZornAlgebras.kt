@@ -26,9 +26,9 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonion
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitoctonion.splitOctonion
-import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.instances.FixedVecAlgebras
 import org.vorpal.kosmos.linear.ops.DenseVecOps
-import org.vorpal.kosmos.linear.ops.FixedTupleOps
+import org.vorpal.kosmos.linear.ops.FixedVecOps
 import org.vorpal.kosmos.linear.values.Vec3
 
 /**
@@ -75,7 +75,7 @@ object ZornAlgebras {
     fun <R : Any> zornAdditiveGroup(
         group: AbelianGroup<R>
     ): AbelianGroup<Zorn<R>> = object : AbelianGroup<Zorn<R>> {
-        private val v3Group = FixedTupleAlgebras.dim3Group(group)
+        private val v3Group = FixedVecAlgebras.dim3Group(group)
         private val v3Zero = v3Group.identity
 
         override val identity = group.run {
@@ -113,9 +113,9 @@ object ZornAlgebras {
             Zorn(one, vec3z, vec3z, one)
         }
 
-        private val mod3 = FixedTupleAlgebras.vec3Module(ring)
+        private val mod3 = FixedVecAlgebras.vec3Module(ring)
         private val dot = { v: Vec3<R>, w: Vec3<R> -> DenseVecOps.dot(ring, v, w) }
-        private val cross = { v: Vec3<R>, w: Vec3<R> -> FixedTupleOps.cross(ring, v, w) }
+        private val cross = { v: Vec3<R>, w: Vec3<R> -> FixedVecOps.cross(ring, v, w) }
         private val scale = { s: R, v: Vec3<R> -> mod3.leftAction(s, v) }
 
         override val op = BinOp<Zorn<R>>(Symbols.TIMES) { (a1, v1, w1, d1), (a2, v2, w2, d2) ->
@@ -143,7 +143,7 @@ object ZornAlgebras {
     fun <R : Any> zornRing(
         base: CommutativeRing<R>
     ): NonAssociativeInvolutiveRing<Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
+        val mod3 = FixedVecAlgebras.vec3Module(base)
         return NonAssociativeInvolutiveRing.of(
             add = zornAdditiveGroup(base.add),
             mul = zornMultiplicativeMonoid(base),
@@ -185,7 +185,7 @@ object ZornAlgebras {
     fun <R : Any> zornLeftAction(
         base: CommutativeRing<R>
     ): LeftAction<R, Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
+        val mod3 = FixedVecAlgebras.vec3Module(base)
         return LeftAction(Symbols.TRIANGLE_LEFT) { r, (a, v, w, d) ->
             base.run {
                 Zorn(mul(r, a), mod3.leftAction(r, v), mod3.leftAction(r, w), mul(r, d))
@@ -540,7 +540,7 @@ object ZornAlgebras {
     private fun <R : Any> toZorn(
         base: CommutativeRing<R>
     ): UnaryOp<SplitOctonion<R>, Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
+        val mod3 = FixedVecAlgebras.vec3Module(base)
         return UnaryOp(Symbols.PHI) { o ->
             base.run {
                 val x = Vec3(o.x, o.y, o.z)

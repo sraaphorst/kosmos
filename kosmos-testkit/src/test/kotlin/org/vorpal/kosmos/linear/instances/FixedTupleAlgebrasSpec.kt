@@ -14,7 +14,7 @@ import org.vorpal.kosmos.linear.values.arbVec3
 import org.vorpal.kosmos.linear.values.arbVec4
 
 /**
- * Algebraic-law coverage for the fixed-arity tuple structures in [FixedTupleAlgebras],
+ * Algebraic-law coverage for the fixed-arity tuple structures in [FixedVecAlgebras],
  * over the rationals. The [Vec0]..Vec4 types are data classes, so the default structural
  * equality is used.
  */
@@ -30,21 +30,21 @@ class FixedTupleAlgebrasSpec : StringSpec({
 
     "dim0Group satisfies AbelianGroupLaws" {
         AbelianGroupLaws(
-            group = FixedTupleAlgebras.dim0Group<Rational>(),
+            group = FixedVecAlgebras.dim0Group<Rational>(),
             arb = Arb.constant(Vec0<Rational>())
         ).fullTest().throwIfFailed()
     }
 
     "dim2Group satisfies AbelianGroupLaws over the rationals" {
         AbelianGroupLaws(
-            group = FixedTupleAlgebras.dim2Group(q.add),
+            group = FixedVecAlgebras.dim2Group(q.add),
             arb = arbVec2
         ).fullTest().throwIfFailed()
     }
 
     "vec2Space satisfies VectorSpaceLaws over the rationals" {
         VectorSpaceLaws(
-            space = FixedTupleAlgebras.vec2Space(q),
+            space = FixedVecAlgebras.vec2Space(q),
             scalarArb = ArbRational.small,
             vectorArb = arbVec2,
             eqF = eqQ,
@@ -54,7 +54,7 @@ class FixedTupleAlgebrasSpec : StringSpec({
 
     "vec3Space satisfies VectorSpaceLaws over the rationals" {
         VectorSpaceLaws(
-            space = FixedTupleAlgebras.vec3Space(q),
+            space = FixedVecAlgebras.vec3Space(q),
             scalarArb = ArbRational.small,
             vectorArb = arbVec3,
             eqF = eqQ,
@@ -64,7 +64,7 @@ class FixedTupleAlgebrasSpec : StringSpec({
 
     "vec4Space satisfies VectorSpaceLaws over the rationals" {
         VectorSpaceLaws(
-            space = FixedTupleAlgebras.vec4Space(q),
+            space = FixedVecAlgebras.vec4Space(q),
             scalarArb = ArbRational.small,
             vectorArb = arbVec4,
             eqF = eqQ,
