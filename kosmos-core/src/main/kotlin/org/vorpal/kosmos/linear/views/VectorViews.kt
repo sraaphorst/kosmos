@@ -5,7 +5,6 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 import kotlin.math.min
 
-
 /**
  * A lazy view of a single row of a matrix as a vector.
  *
@@ -84,6 +83,12 @@ data class ColMatAsVecView<A : Any>(
         m[i, 0]
 }
 
+/**
+ * A lazy view of the main diagonal of a matrix, `i ↦ mat(i, i)`, of length
+ * `min(rows, cols)`. No data is copied.
+ *
+ * @throws IllegalArgumentException from [get] if the index is out of range
+ */
 data class DiagonalMatView<A : Any>(
     private val mat: MatLike<A>
 ): VecLike<A> {
@@ -98,7 +103,10 @@ data class DiagonalMatView<A : Any>(
 }
 
 /**
- * View a section of a vector as a slice.
+ * A lazy view of the entries `[start, endExclusive)` of a vector. No data is copied.
+ *
+ * @throws IllegalArgumentException if the range is not inside the vector, and from [get] if the
+ * index is out of range
  */
 data class SliceVecView<A : Any>(
     private val v: VecLike<A>,
@@ -108,7 +116,7 @@ data class SliceVecView<A : Any>(
     init {
         require(start in 0..v.size) { "start index out of bounds for slice: $start"}
         require(endExclusive in 0..v.size) { "endExclusive index out of bounds for slice: $endExclusive"}
-        require(start <= endExclusive) { "range invalid: [$start, $endExclusive]" }
+        require(start <= endExclusive) { "range invalid: [$start, $endExclusive)" }
     }
 
     override val size: Int
@@ -120,24 +128,22 @@ data class SliceVecView<A : Any>(
     }
 }
 
-/** Convenience: view row [r] as a vector (no copy). */
+/** A lazy [RowVecView] of row [r] (no copy). */
 fun <A : Any> MatLike<A>.rowView(r: Int): VecLike<A> =
     RowVecView(this, r)
 
-/** Convenience: view column [c] as a vector (no copy). */
+/** A lazy [ColVecView] of column [c] (no copy). */
 fun <A : Any> MatLike<A>.colView(c: Int): VecLike<A> =
     ColVecView(this, c)
 
-/** Convenience: treat a 1×n matrix as a vector. */
+/** A lazy [RowMatAsVecView]: this `1×n` matrix as a vector (no copy). */
 fun <A : Any> MatLike<A>.asRowVecView(): VecLike<A> =
     RowMatAsVecView(this)
 
-/** Convenience: treat an n×1 matrix as a vector. */
+/** A lazy [ColMatAsVecView]: this `n×1` matrix as a vector (no copy). */
 fun <A : Any> MatLike<A>.asColVecView(): VecLike<A> =
     ColMatAsVecView(this)
 
-/**
- * Convenience: get a slice of a vector.
- */
+/** A lazy [SliceVecView] of the entries `[start, endExclusive)` (no copy). */
 fun <A : Any> VecLike<A>.sliceView(start: Int, endExclusive: Int): VecLike<A> =
     SliceVecView(this, start, endExclusive)

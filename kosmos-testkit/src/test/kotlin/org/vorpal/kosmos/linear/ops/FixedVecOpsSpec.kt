@@ -18,7 +18,7 @@ import java.math.BigInteger
 /**
  * The cross product on `R³`, checked exactly over ℤ and ℚ.
  */
-class FixedTupleOpsSpec : StringSpec({
+class FixedVecOpsSpec : StringSpec({
     val z = IntegerAlgebras.IntegerCommutativeRing
     val q = RationalAlgebras.RationalField
     val arbInt = Arb.int(-20..20).map(Int::toBigInteger)

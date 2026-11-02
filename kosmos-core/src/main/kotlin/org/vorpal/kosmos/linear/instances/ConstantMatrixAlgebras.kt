@@ -17,14 +17,22 @@ import org.vorpal.kosmos.functional.datastructures.getOrElse
 import java.math.BigInteger
 
 /**
- * Constant-matrix structures (carrier: `{aJ}`)
- * 1) Unit group: nonzero constants under multiplication
- * 2) Field of constant matrices
- * 3) Algebra over base field
- * 4) Isomorphisms (F ≅ constant matrices)
- * 5) Statistical helper: mean projection
+ * Structures on the constant `n×n` matrices `{aJ | a ∈ F}`, where `J` is the all-ones matrix.
+ *
+ * Because `J² = nJ`, the product of constant matrices is again constant, `(aJ)(bJ) = (nab)J`, so
+ * whenever `n` is invertible in `F` the constant matrices form a field isomorphic to `F`, with
+ * identity `(1/n)J` rather than the identity matrix `I`.
+ * 1. [ConstantMatrixUnitGroup]: the nonzero constant matrices under multiplication.
+ * 2. [ConstantMatrixField]: the field of constant matrices.
+ * 3. [ConstantMatrixAlgebra]: the same as a one-dimensional algebra over `F`.
+ * 4. [fieldIso]: the isomorphism `F ≅ {aJ}`.
+ * 5. [meanProject]: the statistical projection of a vector onto the constant vectors.
  */
 object ConstantMatrixAlgebras {
+    /**
+     * The inverse of [value] (the image of [n] in [field]), or an [ArithmeticException] if it has
+     * none, in which case the constant-matrix structures do not exist.
+     */
     private fun <F : Any> requireInvertibleOrThrow(
         field: Field<F>,
         n: Int,
@@ -87,30 +95,30 @@ object ConstantMatrixAlgebras {
 
     /**
      * The field of constant `n×n` matrices over a base field [F], with carrier:
-     * ```kotlin
+     * ```text
      * {aJ | a ∈ F}
      * ```
      * where `J` is the all-ones matrix.
      *
      * Addition is entrywise, so:
-     * ```kotlin
+     * ```text
      * (aJ) + (bJ) = (a+b)J.
      * ```
      *
      * Multiplication is matrix multiplication, and `J^2 = nJ`, so:
-     * ```kotlin
+     * ```text
      * (aJ)(bJ) = (n·a·b)J.
      * ```
      *
      * The multiplicative identity in this field is:
-     * ```kotlin
+     * ```text
      * 1_A = (1/n)J.
      * ```
      * so this is a field **in its own right**, but it is not a unital subfield of `M_n(F)`
      * unless `n=1` (because its 1 differs from the ambient identity matrix `I`).
      *
      * The multiplicative inverse of a nonzero constant matrix `aJ` is:
-     * ```kotlin
+     * ```text
      * (aJ)^{-1} = (1/(n^2 a))J.
      * ```
      *
@@ -181,6 +189,11 @@ object ConstantMatrixAlgebras {
                 }
             )
 
+        /**
+         * The inverse `(aJ)⁻¹ = (1/(n²a))J`.
+         *
+         * @throws ArithmeticException if `a = 0`
+         */
         override val reciprocal: Endo<DenseMat<F>> =
             Endo(Symbols.INVERSE) { x ->
                 val a = extractScalar(x)
@@ -196,6 +209,9 @@ object ConstantMatrixAlgebras {
                 constMat(inv)
             }
 
+        /**
+         * The integer [n] as `n · 1 = (n/size)J`, where `size` is the side of the matrices.
+         */
         override fun fromBigInt(n: BigInteger): DenseMat<F> {
             // k·1_A = k * (1/n)J = (k/n)J
             val k = base.fromBigInt(n)
@@ -210,11 +226,11 @@ object ConstantMatrixAlgebras {
      * The underlying ring is [fieldOfConstantMatrices], whose multiplicative identity is `(1/n)J`.
      *
      * Scalars act via the unital embedding:
-     * ```kotlin
+     * ```text
      * ι(r) = r · 1_A = (r/n)J
      * ```
      * and the action is left multiplication by `ι(r)`:
-     * ```kotlin
+     * ```text
      * r ⊳ X = ι(r) · X
      * ```
      *
@@ -243,7 +259,10 @@ object ConstantMatrixAlgebras {
     }
 
     /**
-     * Isomorphism between a field over [F] and `n×n` constant matrices `aJ`, over [F].
+     * The field isomorphism `F ≅ {aJ}` between [baseField] and the `n×n` constant matrices over
+     * it: `r ↦ (r/n)J`, with inverse `aJ ↦ na`.
+     *
+     * @throws ArithmeticException if `n` is not invertible in [baseField]
      */
     fun <F : Any> fieldIso(
         baseField: Field<F>,
@@ -272,7 +291,10 @@ object ConstantMatrixAlgebras {
     }
 
     /**
-     * Replace the data vector [x] by its sample mean.
+     * The vector of the same length as [x] with every entry equal to the mean of [x]: the
+     * orthogonal projection of [x] onto the constant vectors, which is multiplication by `(1/n)J`.
+     *
+     * @throws ArithmeticException if the length of [x] is not invertible in [field]
      */
     fun <F : Any> meanProject(
         field: Field<F>,

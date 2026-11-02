@@ -8,9 +8,17 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.linear.values.PermMat
 
+/**
+ * The symmetric and alternating groups as compact [PermMat]s.
+ *
+ * The group operation is [PermMat.andThen], so that the product of `p` and `q` applies `p` first.
+ * For the same groups as full matrices over a semiring, see [PermutationMatrixAlgebras].
+ */
 object PermMatAlgebras {
     /**
-     * Create a group of `n×n` [PermMat] representing the (compressed) matrix representation of the `S_n`.
+     * The symmetric group `S_n` as `n×n` [PermMat]s, under [PermMat.andThen].
+     *
+     * @throws IllegalArgumentException if [n] is negative
      */
     fun symmetricGroup(n: Int): Group<PermMat> {
         require(n >= 0) { "n must be nonnegative: $n" }
@@ -23,7 +31,7 @@ object PermMatAlgebras {
     }
 
     /**
-     * Create the subgroup of `n×n` [PermMat] representing the (compressed) matrix subgroup `A_n` of `S_n`.
+     * The alternating group `A_n`, the even permutations, as a subgroup of [symmetricGroup].
      */
     fun alternatingSubgroup(n: Int): Subgroup<PermMat> =
         symmetricGroup(n).subgroup(PermMat::isEven)

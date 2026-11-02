@@ -55,6 +55,9 @@ class DenseVec<A : Any> private constructor(
     fun <B : Any> map(f: (A) -> B): DenseVec<B> =
         tabulate(size) { f(get(it)) }
 
+    /**
+     * Iterates over the entries in index order.
+     */
     override operator fun iterator(): Iterator<A> =
         object : Iterator<A> {
             private var i = 0
@@ -70,6 +73,11 @@ class DenseVec<A : Any> private constructor(
             }
         }
 
+    /**
+     * Combines this vector with [other] entrywise: the result has entries `f(this[i], other[i])`.
+     *
+     * @throws IllegalArgumentException if the two vectors have different sizes
+     */
     fun <B : Any, C : Any> zipWith(other: DenseVec<B>, f: (A, B) -> C): DenseVec<C> {
         require(size == other.size) { "size mismatch for zipWith: $size versus ${other.size}" }
         return tabulate(size) { f(get(it), other[it]) }
@@ -103,6 +111,10 @@ class DenseVec<A : Any> private constructor(
             31 * h + (data[idx]?.hashCode() ?: 0)
         }
 
+    /**
+     * The entries as a list, e.g. `[1, 2, 3]`. For configurable rendering see
+     * [org.vorpal.kosmos.linear.instances.DenseVecAlgebras.liftPrintablePretty].
+     */
     override fun toString(): String =
         toList().toString()
 
@@ -146,6 +158,11 @@ class DenseVec<A : Any> private constructor(
             return DenseVec(data)
         }
 
+        /**
+         * Wraps [data] without copying or checking it, so the caller must not modify it afterwards
+         * and must have filled it with non-null values of type [A]. Used by the kernels to build
+         * results without a lambda per entry.
+         */
         internal fun <A : Any> fromArrayUnsafe(
             data: Array<Any?>
         ): DenseVec<A> = DenseVec(data)

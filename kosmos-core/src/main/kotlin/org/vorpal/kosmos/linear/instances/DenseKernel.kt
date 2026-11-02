@@ -1,5 +1,8 @@
 package org.vorpal.kosmos.linear.instances
 
+/**
+ * Size checks shared by the dense vector and matrix kernels.
+ */
 internal object DenseKernel {
     /**
      * Convenience method to check that the size of a parameter is nonnegative.
@@ -18,6 +21,9 @@ internal object DenseKernel {
         checkNonnegative(cols, "Cols")
     }
 
+    /**
+     * Check that [n] is positive. [description] names the quantity in the error message.
+     */
     fun checkPositive(n: Int, description: String = "Size") {
         require(n > 0) { "$description must be positive, got: $n" }
     }

@@ -5,7 +5,7 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.map
 
 /**
- * Arbitraries for the fixed-arity tuple types [Vec1], [Vec2], [Vec3], [Vec4].
+ * Arbitraries for the fixed-size vector types [Vec1], [Vec2], [Vec3], [Vec4].
  *
  * Each [Vec`n`] generator is parameterized by the element [Arb], so the same
  * generator works regardless of the scalar field (rationals, reals, complex, etc.).

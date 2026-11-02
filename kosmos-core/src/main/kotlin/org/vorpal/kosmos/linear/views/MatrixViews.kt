@@ -5,20 +5,28 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
 /**
- * An enum indicating how a `MatLike` should be treated inside an operation:
- * - [Normal] indicates that the `MatLike` should just be used as-is.
- * - [Transpose] indicates that the transpose of the `MatLike` should be used.
- * - [ConjugateTranspose] indicates that the transpose of the conj of the `MatLike` under the action of an
- *   `InvolutiveRing` should be used.
+ * How an operation should read a matrix argument, as in the `trans` flags of BLAS
+ * (`N`, `T`, `C`). [opView] turns a mode into the corresponding lazy view.
  */
 enum class TransposeMode {
+    /** Use the matrix as it is: `A`. */
     Normal,
+
+    /** Use the transpose: `Aᵀ`, with `(Aᵀ)ᵢⱼ = Aⱼᵢ`. */
     Transpose,
+
+    /**
+     * Use the conjugate transpose (the adjoint): `A*`, with `(A*)ᵢⱼ = conj(Aⱼᵢ)`. This needs a
+     * conjugation on the entries, so it is only available where one is supplied, e.g. over an
+     * `InvolutiveRing`.
+     */
     ConjugateTranspose
 }
 
 /**
- * View a vector as an n×1 matrix (a column matrix).
+ * A lazy view of a vector of length `n` as an `n×1` matrix (a column). No data is copied.
+ *
+ * @throws IllegalArgumentException from [get] if the position is out of range
  */
 data class VecAsColMatView<A : Any>(
     private val v: VecLike<A>
@@ -37,7 +45,9 @@ data class VecAsColMatView<A : Any>(
 }
 
 /**
- * View a vector as a 1×n matrix (a row matrix).
+ * A lazy view of a vector of length `n` as a `1×n` matrix (a row). No data is copied.
+ *
+ * @throws IllegalArgumentException from [get] if the position is out of range
  */
 data class VecAsRowMatView<A : Any>(
     private val v: VecLike<A>
@@ -74,7 +84,9 @@ data class TransposeMatView<A : Any>(
 }
 
 /**
- * A lazy transpose view of a matrix where each entry is conjugated.
+ * A lazy view of the conjugate transpose `A*` of a matrix: `(A*)(r, c) = conj(base(c, r))`.
+ *
+ * No data is copied; [conj] is applied on every access.
  */
 class ConjTransposeMatView<A : Any>(
     private val base: MatLike<A>,
@@ -90,12 +102,22 @@ class ConjTransposeMatView<A : Any>(
         conj(base[c, r])
 }
 
+/**
+ * The view of this matrix that [op] asks for: itself, or its [transposeView].
+ *
+ * @throws IllegalStateException for [TransposeMode.ConjugateTranspose], which needs a conjugation:
+ * use the overload that takes one
+ */
 fun <A : Any> MatLike<A>.opView(op: TransposeMode): MatLike<A> = when (op) {
     TransposeMode.Normal -> this
     TransposeMode.Transpose -> this.transposeView()
-    TransposeMode.ConjugateTranspose -> error("ConjTrans requires a conjugation Endo.")
+    TransposeMode.ConjugateTranspose -> error("ConjugateTranspose requires a conjugation Endo.")
 }
 
+/**
+ * The view of this matrix that [op] asks for: itself, its [transposeView], or its conjugate
+ * transpose ([ConjTransposeMatView]) with entries conjugated by [conj].
+ */
 fun <A : Any> MatLike<A>.opView(op: TransposeMode, conj: Endo<A>): MatLike<A> = when (op) {
     TransposeMode.Normal -> this
     TransposeMode.Transpose -> this.transposeView()
@@ -103,7 +125,11 @@ fun <A : Any> MatLike<A>.opView(op: TransposeMode, conj: Endo<A>): MatLike<A> = 
 }
 
 /**
- * A lazy view of a row range slice of a matrix.
+ * A lazy view of the rows `[rowStart, rowEndExclusive)` of a matrix, with all its columns.
+ * No data is copied.
+ *
+ * @throws IllegalArgumentException if the range is not inside the matrix, and from [get] if the
+ * position is out of range
  */
 data class RowSliceMatView<A : Any>(
     private val mat: MatLike<A>,
@@ -130,7 +156,11 @@ data class RowSliceMatView<A : Any>(
 }
 
 /**
- * A lazy view of a col range slice of a matrix.
+ * A lazy view of the columns `[colStart, colEndExclusive)` of a matrix, with all its rows.
+ * No data is copied.
+ *
+ * @throws IllegalArgumentException if the range is not inside the matrix, and from [get] if the
+ * position is out of range
  */
 data class ColSliceMatView<A : Any>(
     private val mat: MatLike<A>,
@@ -156,31 +186,36 @@ data class ColSliceMatView<A : Any>(
     }
 }
 
-/** Convenience: transpose view (no copy). */
+/** A lazy [TransposeMatView] of this matrix (no copy). */
 fun <A : Any> MatLike<A>.transposeView(): MatLike<A> =
     TransposeMatView(this)
 
-/** Convenience: treat a vector as an n×1 matrix. */
+/** A lazy [VecAsColMatView]: this vector as an `n×1` matrix (no copy). */
 fun <A : Any> VecLike<A>.asColMatView(): MatLike<A> =
     VecAsColMatView(this)
 
-/** Convenience: treat a vector as a 1×n matrix. */
+/** A lazy [VecAsRowMatView]: this vector as a `1×n` matrix (no copy). */
 fun <A : Any> VecLike<A>.asRowMatView(): MatLike<A> =
     VecAsRowMatView(this)
 
-/** Convenience: view row slice as a matrix (no copy). */
+/** A lazy [RowSliceMatView] of the rows `[rowStart, rowEndExclusive)` (no copy). */
 fun <A : Any> MatLike<A>.rowSliceView(rowStart: Int, rowEndExclusive: Int): MatLike<A> =
     RowSliceMatView(this, rowStart, rowEndExclusive)
 
-/** Convenience: view col slice as a matrix (no copy). */
+/** A lazy [ColSliceMatView] of the columns `[colStart, colEndExclusive)` (no copy). */
 fun <A : Any> MatLike<A>.colSliceView(colStart: Int, colEndExclusive: Int): MatLike<A> =
     ColSliceMatView(this, colStart, colEndExclusive)
 
-/** Convenience: view submatrix as a matrix (no copy). */
-fun <A : Any> MatLike<A>.submatrixView(rowStart: Int,
-                                       rowEndExclusive: Int,
-                                       colStart: Int,
-                                       colEndExclusive: Int): MatLike<A> =
+/**
+ * A lazy view of the submatrix with rows `[rowStart, rowEndExclusive)` and columns
+ * `[colStart, colEndExclusive)` (no copy).
+ */
+fun <A : Any> MatLike<A>.submatrixView(
+    rowStart: Int,
+    rowEndExclusive: Int,
+    colStart: Int,
+    colEndExclusive: Int
+): MatLike<A> =
     ColSliceMatView(
         RowSliceMatView(
             this,
