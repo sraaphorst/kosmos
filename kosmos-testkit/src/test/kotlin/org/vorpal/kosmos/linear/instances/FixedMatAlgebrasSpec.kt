@@ -19,7 +19,6 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitquaternion.ArbSplitQuaternion
-import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 import org.vorpal.kosmos.laws.algebra.AlgebraLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
@@ -47,8 +46,8 @@ import java.math.BigInteger
  * - `Vec2` as a left module (columns), a right module (rows) and an `(R, M₂(R))`-bimodule;
  * - the units over a field, counted exhaustively over 𝔽₃ against `|GL₂(𝔽₃)| = 48`;
  * - the scalar embedding, the identification with 2 × 2 `DenseMat`s, and the split-quaternion
- *   picture: the existing `SplitQuaternion → M₂` embedding lands in a star-algebra map to `Mat2`
- *   sending conjugation to the adjugate and the norm to the determinant.
+ *   picture: the `SplitQuaternion → Mat2` embedding sends conjugation to the adjugate and the
+ *   norm to the determinant.
  */
 class FixedMatAlgebrasSpec : StringSpec({
     val z = IntegerAlgebras.IntegerCommutativeRing
@@ -210,16 +209,14 @@ class FixedMatAlgebrasSpec : StringSpec({
         }
     }
 
-    "SplitQuaternion<ℚ> → M₂(ℚ) → Mat2<ℚ> is a ring homomorphism sending conj to adj and N to det" {
-        val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(q)
-        val toMat2 = FixedMatAlgebras.denseMatIsomorphism(q).backward
+    "SplitQuaternion<ℚ> ↪ Mat2<ℚ> is a ring homomorphism sending conj to adj and N to det" {
+        val phi = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(q)
         val star = FixedMatAlgebras.mat2StarAlgebra(q)
         val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
         val normSq = SplitQuaternionAlgebras.normSq(q)
         val arb = ArbSplitQuaternion.rationalSplitQuaternion
-        fun phi(x: SplitQuaternion<Rational>) = toMat2(mono(x))
 
-        RingHomomorphismLaws(hom = ::phi, domain = splitQuaternions, codomain = star, arb = arb)
+        RingHomomorphismLaws(hom = phi::invoke, domain = splitQuaternions, codomain = star, arb = arb)
             .fullTest().throwIfFailed()
         checkAll(arb) { x ->
             phi(splitQuaternions.conj(x)) shouldBe star.conj(phi(x))

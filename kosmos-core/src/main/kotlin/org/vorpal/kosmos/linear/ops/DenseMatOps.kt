@@ -171,7 +171,7 @@ object DenseMatOps {
      * - Entry `(i, j)` represents the size of the intersection between block `i` and block `j` (`|B_i ∩ B_j|`).
      * - Diagonal entries represent the block sizes (`k`).
      *
-     * For the point-by-point counterpart `M Mᵀ`, see [intersectionMatrix].
+     * For the point-by-point counterpart `M Mᵀ`, see [pointConcurrenceMatrix].
      *
      * @param semiring The semiring definition for the multiplication and addition operations.
      * @param m The source matrix.
@@ -184,7 +184,7 @@ object DenseMatOps {
         DenseMatKernel.matMul(semiring, m.transposeView(), m)
 
     /**
-     * Calculates the intersection matrix `B = M M^T`.
+     * Calculates the point concurrence matrix `C = M Mᵀ`.
      *
      * This computes the inner products of the **rows** of [m].
      *
@@ -193,17 +193,18 @@ object DenseMatOps {
      *
      * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
      * (rows are points, columns are blocks), this calculates the **concurrence matrix** of the
-     * points (despite the function's name, it is [gramMatrix] that intersects blocks).
+     * points:
      * - Entry `(i, j)` represents the number of blocks containing both point `i` and point `j` (`λ_ij`).
      * - Diagonal entries represent the replication numbers (`r`) for each point.
      *
-     * For a balanced incomplete block design this is `(r − λ)I + λJ`.
+     * For a balanced incomplete block design this is `(r − λ)I + λJ`. For the block-by-block
+     * counterpart `Mᵀ M` (the block intersection matrix), see [gramMatrix].
      *
      * @param semiring The semiring definition for the multiplication and addition operations.
      * @param m The source matrix.
-     * @return An `r×r` matrix where `B_ij = ⟨row_i, row_j⟩`.
+     * @return An `r×r` matrix where `C_ij = ⟨row_i, row_j⟩`.
      */
-    fun <A: Any> intersectionMatrix(
+    fun <A : Any> pointConcurrenceMatrix(
         semiring: Semiring<A>,
         m: MatLike<A>
     ): DenseMat<A> =

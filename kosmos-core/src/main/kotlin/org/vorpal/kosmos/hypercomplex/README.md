@@ -396,7 +396,8 @@ val exact = SplitQuaternionAlgebras.splitQuaternionRing(RationalAlgebras.Rationa
 val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(RationalAlgebras.RationalField)
 ```
 
-The matrix representation is `w + xi + yj + zk ↦ [[w − z, y − x], [x + y, w + z]]`. It is an
+The matrix representation is `w + xi + yj + zk ↦ [[w − z, y − x], [x + y, w + z]]`, landing in
+the fixed-size `Mat2<R>` (see `FixedMatAlgebras`), where conjugation becomes the adjugate. It is an
 isomorphism when 2 is invertible. Over ℤ it is injective but not surjective (entries on each
 diagonal share a parity), and in characteristic 2 the isomorphism is refused.
 

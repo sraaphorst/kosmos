@@ -186,7 +186,7 @@ object ZornAlgebras {
         base: CommutativeRing<R>
     ): LeftAction<R, Zorn<R>> {
         val mod3 = FixedVecAlgebras.vec3Module(base)
-        return LeftAction(Symbols.TRIANGLE_LEFT) { r, (a, v, w, d) ->
+        return LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, v, w, d) ->
             base.run {
                 Zorn(mul(r, a), mod3.leftAction(r, v), mod3.leftAction(r, w), mul(r, d))
             }

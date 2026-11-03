@@ -100,11 +100,11 @@ class DenseMatOpsSpec : FunSpec({
                 )
         }
 
-        test("gramMatrix and intersectionMatrix equal the corresponding products") {
+        test("gramMatrix and pointConcurrenceMatrix equal the corresponding products") {
             val a = m(listOf(1, 2), listOf(3, 4))
             DenseMatOps.gramMatrix(z, a) shouldBe
                 DenseMatOps.matMul(z, DenseMatOps.generateTranspose(a), a)
-            DenseMatOps.intersectionMatrix(z, a) shouldBe
+            DenseMatOps.pointConcurrenceMatrix(z, a) shouldBe
                 DenseMatOps.matMul(z, a, DenseMatOps.generateTranspose(a))
         }
 

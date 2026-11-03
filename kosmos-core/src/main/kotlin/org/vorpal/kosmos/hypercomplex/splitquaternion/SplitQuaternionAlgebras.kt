@@ -29,8 +29,8 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
-import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
-import org.vorpal.kosmos.linear.values.DenseMat
+import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
+import org.vorpal.kosmos.linear.values.Mat2
 
 /**
  * The split-quaternion tier over [base]: the split doubling of `R[i]/(i² + 1)`.
@@ -328,14 +328,12 @@ object SplitQuaternionAlgebras {
 
     private fun <R : Any> toMatrix(
         base: CommutativeRing<R>
-    ): UnaryOp<SplitQuaternion<R>, DenseMat<R>> =
+    ): UnaryOp<SplitQuaternion<R>, Mat2<R>> =
         UnaryOp { (w, x, y, z) ->
             fun minus(a: R, b: R): R = base.add(a, base.add.inverse(b))
-            DenseMat.ofRows(
-                listOf(
-                    listOf(minus(w, z), minus(y, x)),
-                    listOf(base.add(x, y), base.add(w, z))
-                )
+            Mat2(
+                minus(w, z), minus(y, x),
+                base.add(x, y), base.add(w, z)
             )
         }
 
@@ -348,16 +346,18 @@ object SplitQuaternionAlgebras {
      * ```text
      * w + xi + yj + zk ↦ [[w - z, y - x], [x + y, w + z]].
      * ```
-     * The norm becomes the determinant. Over a ring in which 2 is invertible this is onto (see
+     * The matrices are [Mat2]s in the ring [FixedMatAlgebras.mat2Ring]. The norm becomes the
+     * determinant and conjugation becomes the adjugate (the conjugation of
+     * [FixedMatAlgebras.mat2StarAlgebra]). Over a ring in which 2 is invertible this is onto (see
      * [splitQuaternionMatrixIsomorphism]); over ℤ it is injective but not surjective, since the
      * diagonal entries `w ∓ z` (and the off-diagonal ones) always have equal parity.
      */
     fun <R : Any> splitQuaternionToRank2MatrixMonomorphism(
         base: CommutativeRing<R>
-    ): RingMonomorphism<SplitQuaternion<R>, DenseMat<R>> =
+    ): RingMonomorphism<SplitQuaternion<R>, Mat2<R>> =
         RingMonomorphism.of(
             domain = splitQuaternionRing(base),
-            codomain = DenseMatAlgebras.DenseMatRing(base, 2),
+            codomain = FixedMatAlgebras.mat2Ring(base),
             map = toMatrix(base)
         )
 
@@ -372,7 +372,7 @@ object SplitQuaternionAlgebras {
      */
     fun <F : Any> splitQuaternionMatrixIsomorphism(
         field: Field<F>
-    ): RingIsomorphism<SplitQuaternion<F>, DenseMat<F>> {
+    ): RingIsomorphism<SplitQuaternion<F>, Mat2<F>> {
         val two = field.add(field.one, field.one)
         require(field.hasReciprocal(two)) {
             "The split-quaternions are isomorphic to M₂(F) only when 2 is invertible in F."
@@ -382,7 +382,7 @@ object SplitQuaternionAlgebras {
         fun minus(a: F, b: F): F = field.add(a, field.add.inverse(b))
 
         val splitQuaternions = splitQuaternionRing(field)
-        val matrices = DenseMatAlgebras.DenseMatRing(field, 2)
+        val matrices = FixedMatAlgebras.mat2Ring(field)
 
         return RingIsomorphism.of(
             forward = RingHomomorphism.of(
@@ -393,9 +393,7 @@ object SplitQuaternionAlgebras {
             backward = RingHomomorphism.of(
                 domain = matrices,
                 codomain = splitQuaternions,
-                map = UnaryOp { m ->
-                    val (p, q) = m[0, 0] to m[0, 1]
-                    val (r, s) = m[1, 0] to m[1, 1]
+                map = UnaryOp { (p, q, r, s) ->
                     splitQuaternion(
                         w = halfOf(field.add(p, s)),
                         x = halfOf(minus(r, q)),
