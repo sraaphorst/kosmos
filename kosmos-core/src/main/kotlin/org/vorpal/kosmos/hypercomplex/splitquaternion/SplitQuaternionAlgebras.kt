@@ -5,7 +5,6 @@ import org.vorpal.kosmos.algebra.morphisms.RingIsomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -33,7 +32,10 @@ import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
 import org.vorpal.kosmos.linear.values.Mat2
 
 /**
- * The split-quaternion tier over [base]: the split doubling of `R[i]/(i² + 1)`.
+ * The split-quaternion tier over [base]: the split doubling of:
+ * ```math
+ * R[i]/(i² + 1).
+ * ```
  */
 internal fun <R : Any> splitQuaternionTier(
     base: CommutativeRing<R>
@@ -57,8 +59,12 @@ internal fun <R : Any> splitQuaternionTier(
  * - [splitQuaternionModule]: `SplitQuaternion<R>` as a free `R`-module of rank 4.
  * - [splitQuaternionAlgebra], [splitQuaternionStarAlgebra]: as an `R`-(star-)algebra.
  *
- * The arithmetic is not implemented here: it is [CayleyDickson.associativeSplit] applied to
- * `R[i]/(i² + 1)`, transported to the [SplitQuaternion] carrier.
+ * The arithmetic is not implemented here: it is [org.vorpal.kosmos.algebra.structures.CayleyDickson.associativeSplit]
+ * applied to
+ * ```math
+ * R[i]/(i² + 1),
+ * ```
+ * transported to the [SplitQuaternion] carrier.
  *
  * Real conveniences:
  * - [RealSplitQuaternionRing]: split-quaternions over `Real`, with numerically guarded reciprocals.

@@ -214,8 +214,9 @@ object FixedMatAlgebras {
      * which is exactly the structure of the split-quaternions: when 2 is invertible,
      * `SplitQuaternion<R> ≅ M₂(R)` as star algebras.
      *
-     * The transpose is also an involutive anti-automorphism over a commutative ring, but it is not
-     * this one: `M·Mᵀ` is not a scalar matrix in general.
+     *  The transpose is also an involutive anti-automorphism over a commutative ring, but it is not
+     *  the conjugation used here: `M·Mᵀ` is not a scalar matrix in general (for example
+     *  `[[1, 1], [0, 1]]·[[1, 0], [1, 1]] = [[2, 1], [1, 1]]`), so it does not define a norm.
      */
     fun <R : Any> mat2StarAlgebra(
         ring: CommutativeRing<R>

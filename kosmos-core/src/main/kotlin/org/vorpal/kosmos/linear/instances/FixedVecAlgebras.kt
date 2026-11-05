@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
 import org.vorpal.kosmos.algebra.structures.RModule
+import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -276,4 +277,24 @@ object FixedVecAlgebras {
             )
         }
     )
+
+    /**
+     * Eqs
+     */
+
+    /** Componentwise equality of vectors from an equality [eqA] on the entry. */
+    fun <A : Any> eqVec1(eqA: Eq<A>): Eq<Vec1<A>> =
+        Eq { u, v -> eqA(u.x, v.x) }
+
+    /** Componentwise equality of vectors from an equality [eqA] on the entries. */
+    fun <A : Any> eqVec2(eqA: Eq<A>): Eq<Vec2<A>> =
+        Eq { u, v -> eqA(u.x, v.x) && eqA(u.y, v.y) }
+
+    /** Componentwise equality of vectors from an equality [eqA] on the entries. */
+    fun <A : Any> eqVec3(eqA: Eq<A>): Eq<Vec3<A>> =
+        Eq { u, v -> eqA(u.x, v.x) && eqA(u.y, v.y) && eqA(u.z, v.z) }
+
+    /** Componentwise equality of vectors from an equality [eqA] on the entries. */
+    fun <A : Any> eqVec4(eqA: Eq<A>): Eq<Vec4<A>> =
+        Eq { u, v -> eqA(u.x, v.x) && eqA(u.y, v.y) && eqA(u.z, v.z) && eqA(u.w, v.w) }
 }
