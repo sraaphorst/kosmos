@@ -134,6 +134,9 @@ object QuaternionAlgebras {
      * field where the norm is anisotropic (ℚ, ℝ) that is every nonzero `q`.
      * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
      * (see [QuaternionDivisionRing]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> quaternionRingWithReciprocal(
         field: Field<F>,
@@ -157,7 +160,7 @@ object QuaternionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Quaternion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Quaternion<F>> = Endo(Symbols.INVERSE) { q ->
             if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, "the quaternions")

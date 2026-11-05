@@ -403,7 +403,9 @@ val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(RationalAlgeb
 The matrix representation is `w + xi + yj + zk ↦ [[w − z, y − x], [x + y, w + z]]`, landing in
 the fixed-size `Mat2<R>` (see `FixedMatAlgebras`), where conjugation becomes the adjugate. It is an
 isomorphism when 2 is invertible. Over ℤ it is injective but not surjective (entries on each
-diagonal share a parity), and in characteristic 2 the isomorphism is refused.
+diagonal share a parity). In characteristic 2 it is not even injective (`1` and `k` both map to
+the identity), so `splitQuaternionToRank2MatrixHomomorphism` is typed as a homomorphism, and the
+isomorphism is refused.
 
 ### Split-octonions
 
@@ -461,7 +463,7 @@ val q = RationalAlgebras.RationalField
 val ring = ZornAlgebras.zornRing(q)
 val normSq = ZornAlgebras.normSq(q)                    // ad − v·w
 
-val phi = ZornAlgebras.splitOctonionToZornMonomorphism(q)   // over any commutative ring
+val phi = ZornAlgebras.splitOctonionToZornHomomorphism(q)   // any commutative ring; injective iff no 2-torsion
 val iso = ZornAlgebras.splitOctonionZornIsomorphism(q)      // when 2 is invertible
 
 val pr = ZornAlgebras.printableZorn(RationalAlgebras.printableRational)
@@ -605,8 +607,8 @@ Neither is an associative action: `A·(B·ν) = νBA`, not `νAB`. If it were, `
 and `n` in `V`. It deliberately does not implement `RSBiModule`, whose laws assume associative
 actions.
 
-The same maps through the split-quaternions are `splitQuaternionToSextonionMonomorphism(base)`
-(`ℍ′ ↪ S` over any commutative ring) and `sextonionToSplitQuaternionHomomorphism(field)` (`S → ℍ′`,
+The same maps through the split-quaternions are `splitQuaternionToSextonionHomomorphism(base)`
+(`ℍ′ → S` over any commutative ring, injective when 2 is not a zero divisor) and `sextonionToSplitQuaternionHomomorphism(field)` (`S → ℍ′`,
 which needs 2 to be invertible). Over ℤ the first one misses most of `M₂(ℤ)`: the diagonal entries
 `w ∓ z` of its image always have the same parity. That is why the general statement is `S = M₂(R) ⋉ V`
 and not `ℍ′(R) ⋉ V`.
@@ -1291,13 +1293,13 @@ forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elemen
 | `ℍ ↪ 𝕆′` | `SplitOctonionAlgebras.QuaternionToSplitOctonionMonomorphism` |
 | `ℍ′_R ↪ 𝕆′_R` | `SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(base)` |
 | `R ↪ Zorn<R>` | `ZornAlgebras.scalarEmbedding(base)` |
-| `𝕆′_R ↪ Zorn<R>` | `ZornAlgebras.splitOctonionToZornMonomorphism(base)` |
+| `𝕆′_R → Zorn<R>` (injective when 2 is not a zero divisor) | `ZornAlgebras.splitOctonionToZornHomomorphism(base)` |
 | `𝕆′_F ≅ Zorn<F>` | `ZornAlgebras.splitOctonionZornIsomorphism(field)` |
 | `𝕆′ ≅ Zorn<Real>` | `ZornAlgebras.RealSplitOctonionZornIsomorphism` |
 | `R ↪ S_R` | `SextonionAlgebras.scalarEmbedding(base)` |
 | `M₂(R) ↪ S_R` | `SextonionAlgebras.mat2ToSextonionMonomorphism(base)` |
 | `S_R → M₂(R)` (retraction) | `SextonionAlgebras.sextonionMat2Retraction(base)` |
-| `ℍ′_R ↪ S_R` | `SextonionAlgebras.splitQuaternionToSextonionMonomorphism(base)` |
+| `ℍ′_R → S_R` (injective when 2 is not a zero divisor) | `SextonionAlgebras.splitQuaternionToSextonionHomomorphism(base)` |
 | `S_F → ℍ′_F` (2 invertible) | `SextonionAlgebras.sextonionToSplitQuaternionHomomorphism(field)` |
 | `S_R ↪ Zorn<R>` | `ZornAlgebras.sextonionToZornMonomorphism(base)` |
 | `S_F ↪ 𝕆′_F` (2 invertible) | `ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)` |
@@ -1325,7 +1327,7 @@ forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elemen
 | `Dual<R> ↪ M₂(R)` | `DualAlgebras.dualToRank2MatrixMonomorphism(base)` |
 | `𝔹 ↪ M₂(ℂ)` | `BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism`, `…ToDiagonalMatrixMonomorphism` |
 | `ℍ ↪ M₂(ℂ)` | `QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism` |
-| `ℍ′_R ↪ M₂(R)` | `SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base)` |
+| `ℍ′_R → M₂(R)` (injective when 2 is not a zero divisor) | `SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(base)` |
 | `ℍ′_F ≅ M₂(F)` | `SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(field)` |
 | `ℍ ⊗ ℂ ≅ M₂(ℂ)` | `BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism` |
 

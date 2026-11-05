@@ -34,8 +34,9 @@ import java.math.BigInteger
  *   `ρ ∘ ι = id` (a retraction, checked by hand until the retraction law of issue #270 exists).
  * - `M₂(R)` acts on `J` by `(A, 0)(0, ν) = (0, νA)` and `(0, ν)(A, 0) = (0, ν·adj A)`. These are not
  *   associative actions: `J` is the Cayley bimodule, with `x·n = n·x̄`.
- * - Through the split-quaternions: `H′(R) ↪ S` over any commutative ring, and `S → H′(F)` when
- *   2 is invertible in `F`.
+ * - Through the split-quaternions: `H′(R) → S` over any commutative ring, injective exactly when
+ *   2 is not a zero divisor (so over ℤ and ℚ, but not over 𝔽₂), and `S → H′(F)` when 2 is
+ *   invertible in `F`.
  */
 class SextonionMat2Spec : StringSpec({
     val q = RationalAlgebras.RationalField
@@ -179,7 +180,7 @@ class SextonionMat2Spec : StringSpec({
     // ---------- Through the split-quaternions ----------
 
     "H′(ℚ) → S(ℚ) is an injective unital ring homomorphism" {
-        val sigma = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(q)
+        val sigma = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
         NonAssociativeRingHomomorphismLaws(
             hom = sigma::invoke,
             domain = SplitQuaternionAlgebras.splitQuaternionRing(q),
@@ -190,15 +191,15 @@ class SextonionMat2Spec : StringSpec({
     }
 
     "H′ → S sends w + xi + yj + zk to ([[w − z, y − x], [x + y, w + z]], 0)" {
-        val sigma = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(q)
+        val sigma = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
         checkAll(ArbSplitQuaternion.rationalSplitQuaternion) { h ->
             val (w, x, y, zz) = h
             sigma(h) shouldBe Sextonion(Mat2(w - zz, y - x, x + y, w + zz), zeroVec)
         }
     }
 
-    "H′(ℤ) → S(ℤ) is a homomorphism but misses most of ι(M₂(ℤ)): the diagonal entries always have equal parity" {
-        val sigmaZ = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(z)
+    "H′(ℤ) → S(ℤ) is an injective homomorphism but misses most of ι(M₂(ℤ)): the diagonal entries always have equal parity" {
+        val sigmaZ = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(z)
         NonAssociativeRingHomomorphismLaws(
             hom = sigmaZ::invoke,
             domain = SplitQuaternionAlgebras.splitQuaternionRing(z),
@@ -213,10 +214,11 @@ class SextonionMat2Spec : StringSpec({
             (m.b - m.c).mod(two) shouldBe BigInteger.ZERO
             nu shouldBe Vec2(BigInteger.ZERO, BigInteger.ZERO)
         }
+        injectivityLaw(hom = sigmaZ::invoke, arbA = ArbSplitQuaternion.integerSplitQuaternion).test()
     }
 
     "S(ℚ) → H′(ℚ) is a unital ring homomorphism with kernel J that undoes H′ → S" {
-        val sigma = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(q)
+        val sigma = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
         val pi = SextonionAlgebras.sextonionToSplitQuaternionHomomorphism(q)
         val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
         NonAssociativeRingHomomorphismLaws(
@@ -249,7 +251,7 @@ class SextonionMat2Spec : StringSpec({
     }
 
     "over 𝔽₃ both maps exist and S → H′ undoes H′ → S" {
-        val sigma3 = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(f3)
+        val sigma3 = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(f3)
         val pi3 = SextonionAlgebras.sextonionToSplitQuaternionHomomorphism(f3)
         NonAssociativeRingHomomorphismLaws(
             hom = pi3::invoke,
@@ -263,13 +265,20 @@ class SextonionMat2Spec : StringSpec({
         }
     }
 
-    "over 𝔽₂ the embedding H′ → S still exists, but S → H′ does not: it throws IllegalArgumentException" {
+    "over 𝔽₂, H′ → S is a homomorphism but not injective (1 and k collide), and S → H′ throws IllegalArgumentException" {
+        val sigma2 = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(f2)
         NonAssociativeRingHomomorphismLaws(
-            hom = SextonionAlgebras.splitQuaternionToSextonionMonomorphism(f2)::invoke,
+            hom = sigma2::invoke,
             domain = SplitQuaternionAlgebras.splitQuaternionRing(f2),
             codomain = SextonionAlgebras.sextonionRing(f2),
             arb = ArbSplitQuaternion.splitQuaternionOf(arbF2)
         ).fullTest().throwIfFailed()
+
+        val basis = SplitQuaternionAlgebras.basis(f2)
+        val (unit, k) = basis[0] to basis[3]
+        (unit == k) shouldBe false
+        sigma2(unit) shouldBe sigma2(k)
+        sigma2(k) shouldBe SextonionAlgebras.sextonionRing(f2).one
 
         shouldThrow<IllegalArgumentException> {
             SextonionAlgebras.sextonionToSplitQuaternionHomomorphism(f2)

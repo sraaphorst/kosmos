@@ -55,7 +55,8 @@ import org.vorpal.kosmos.linear.values.Vec3
  *
  * Morphisms:
  * - [scalarEmbedding]: `R ↪ Zorn<R>`, `r ↦ (r, 0, 0, r)`.
- * - [splitOctonionToZornMonomorphism]: `SplitOctonion<R> ↪ Zorn<R>` over any commutative ring.
+ * - [splitOctonionToZornHomomorphism]: `SplitOctonion<R> → Zorn<R>` over any commutative ring,
+ *   injective when 2 is not a zero divisor.
  * - [splitOctonionZornIsomorphism]: `SplitOctonion<F> ≅ Zorn<F>` when 2 is invertible.
  * - [RealSplitOctonionZornIsomorphism]: `𝕆′ ≅ Zorn<Real>`, between the real conveniences.
  * - [sextonionToZornMonomorphism]: `Sextonion<R> ↪ Zorn<R>` over any commutative ring.
@@ -169,7 +170,7 @@ object ZornAlgebras {
      * N(a, v, w, d) = ad − v·w.
      * ```
      * `X·conj(X) = conj(X)·X = N(X)·1`, and `N` is multiplicative, `N(XY) = N(X)N(Y)`: the Zorn
-     * ring is a composition algebra. Under [splitOctonionToZornMonomorphism], it is the split norm
+     * ring is a composition algebra. Under [splitOctonionToZornHomomorphism], it is the split norm
      * of signature `(4, 4)`.
      */
     fun <R : Any> normSq(
@@ -265,6 +266,9 @@ object ZornAlgebras {
      * a two-sided inverse despite nonassociativity, because the algebra is alternative.
      * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
      * (see [RealZornAlgebra]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> zornRingWithReciprocal(
         field: Field<F>,
@@ -288,7 +292,7 @@ object ZornAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Zorn<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Zorn<F>> = Endo(Symbols.INVERSE) { x ->
             if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the Zorn vector-matrices")
@@ -301,6 +305,7 @@ object ZornAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `X` is invertible iff `N(X)`
      * is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealZornAlgebra :
         NonAssociativeInvolutiveRing<Zorn<Real>> by zornRing(RealAlgebras.RealField),
@@ -317,10 +322,20 @@ object ZornAlgebras {
 
         override val normSq: UnaryOp<Zorn<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: Zorn<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<Zorn<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<Zorn<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the Zorn vector-matrices")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: Zorn<Real>): Boolean =
+            q.a.isFinite() && q.d.isFinite() && listOf(q.v, q.w).all { u -> u.x.isFinite() && u.y.isFinite() && u.z.isFinite() }
 
         /**
          * The matrix-unit basis `E_a, V₁, V₂, V₃, W₁, W₂, W₃, E_d`.
@@ -402,15 +417,17 @@ object ZornAlgebras {
      * `φ` is a unital ring homomorphism, commutes with conjugation, and sends the split norm
      * `w² + |X|² − u² − |Y|²` to `ad − v·w`.
      *
-     * It is injective whenever 2 is not a zero divisor in [base], and an isomorphism when 2 is
-     * invertible (see [splitOctonionZornIsomorphism]). Over ℤ it is injective but not surjective:
-     * every image has `a ≡ d (mod 2)`, so for example `(1, 0, 0, 0)` is not in the image. Over 𝔽₂
-     * it is not injective, since `φ(1) = φ(e₄) = (1, 0, 0, 1)`.
+     * Its kernel is `{ o : u = w, Y = X, 2w = 0, 2X = 0 }`, so it is injective exactly when 2 is
+     * not a zero divisor in [base] (ℤ, ℚ, any field of characteristic other than 2), and an
+     * isomorphism when 2 is invertible (see [splitOctonionZornIsomorphism]). That is why the type
+     * is only a homomorphism. Over ℤ it is injective but not surjective: every image has
+     * `a ≡ d (mod 2)`, so for example `(1, 0, 0, 0)` is not in the image. Over 𝔽₂ it is not
+     * injective, since `φ(1) = φ(e₄) = (1, 0, 0, 1)`.
      */
-    fun <R : Any> splitOctonionToZornMonomorphism(
+    fun <R : Any> splitOctonionToZornHomomorphism(
         base: CommutativeRing<R>
-    ): NonAssociativeRingMonomorphism<SplitOctonion<R>, Zorn<R>> =
-        NonAssociativeRingMonomorphism.of(
+    ): NonAssociativeRingHomomorphism<SplitOctonion<R>, Zorn<R>> =
+        NonAssociativeRingHomomorphism.of(
             domain = SplitOctonionAlgebras.splitOctonionRing(base),
             codomain = zornRing(base),
             map = splitOctonionToZorn(base)
@@ -440,7 +457,7 @@ object ZornAlgebras {
 
     /**
      * The isomorphism `SplitOctonion<F> ≅ Zorn<F>` over a field in which 2 is invertible: the map
-     * of [splitOctonionToZornMonomorphism], with inverse
+     * of [splitOctonionToZornHomomorphism], with inverse
      * ```text
      * (a, v, w, d) ↦ w = (a + d)/2,   u = (a − d)/2,   X = (v − w)/2,   Y = −(v + w)/2.
      * ```
@@ -603,7 +620,7 @@ object ZornAlgebras {
         }
 
     /**
-     * The map underlying [splitOctonionToZornMonomorphism].
+     * The map underlying [splitOctonionToZornHomomorphism].
      */
     private fun <R : Any> splitOctonionToZorn(
         base: CommutativeRing<R>

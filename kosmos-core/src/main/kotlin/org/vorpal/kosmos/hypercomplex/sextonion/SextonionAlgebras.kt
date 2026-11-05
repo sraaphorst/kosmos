@@ -48,8 +48,8 @@ import org.vorpal.kosmos.linear.values.Vec2
  * - [scalarEmbedding]: `R ↪ Sextonion<R>`, `r ↦ (rI, 0)`.
  * - [mat2ToSextonionMonomorphism] (`ι`) and [sextonionMat2Retraction] (`ρ`): the split extension
  *   `S(R) = M₂(R) ⋉ J`, with `J = { (0, ν) }` square-zero and `ρ ∘ ι = id`.
- * - [splitQuaternionToSextonionMonomorphism] and [sextonionToSplitQuaternionHomomorphism] (the
- *   latter needs 2 invertible): the same through the split-quaternions.
+ * - [splitQuaternionToSextonionHomomorphism] (injective when 2 is not a zero divisor) and
+ *   [sextonionToSplitQuaternionHomomorphism] (needs 2 invertible): the same through the split-quaternions.
  * - The embeddings into the Zorn vector-matrices and the split-octonions live with the bigger
  *   algebra: [org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras.sextonionToZornMonomorphism] and
  *   [org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras.sextonionToSplitOctonionMonomorphism].
@@ -252,6 +252,9 @@ object SextonionAlgebras {
      *
      * @param isZero decides when a norm counts as zero (exact equality by default; pass a tolerance
      *   for floating-point fields).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> sextonionRingWithReciprocal(
         field: Field<F>,
@@ -279,7 +282,7 @@ object SextonionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Sextonion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Sextonion<F>> = Endo(Symbols.INVERSE) { s ->
             if (!hasReciprocal(s)) throw HasReciprocal.notInvertible(s, "the sextonions")
@@ -310,7 +313,7 @@ object SextonionAlgebras {
      * *Cayley bimodule* of `M₂(R)`, characterized by `x·n = n·x̄` for `x ∈ M₂(R)`, `n ∈ J`.
      * So `J` deliberately does not implement [org.vorpal.kosmos.algebra.structures.RSBiModule].
      *
-     * @see splitQuaternionToSextonionMonomorphism for the same embedding starting from the
+     * @see splitQuaternionToSextonionHomomorphism for the same map starting from the
      *   split-quaternions.
      */
     fun <R : Any> mat2ToSextonionMonomorphism(
@@ -351,20 +354,23 @@ object SextonionAlgebras {
         )
 
     /**
-     * The split-quaternions inside the sextonions, over any commutative ring: the matrix
-     * representation [SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism] followed by
+     * The split-quaternions mapped into the sextonions, over any commutative ring: the matrix
+     * representation [SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism] followed by
      * [mat2ToSextonionMonomorphism],
      * ```text
      * w + xi + yj + zk ↦ ([[w − z, y − x], [x + y, w + z]], 0).
      * ```
-     * Over a ring in which 2 is invertible its image is the whole matrix part `ι(M₂(R))`. Over ℤ
-     * it is a proper subring of it, since `SplitQuaternion<ℤ> → M₂(ℤ)` is not onto. That is why
-     * the sextonions are described as `M₂(R) ⋉ R²` and not `H′(R) ⋉ R²` in general.
+     * It is injective exactly when 2 is not a zero divisor in [base] (ℤ, ℚ, any field of
+     * characteristic other than 2), so the type is only a homomorphism: over 𝔽₂ both `1` and `k`
+     * map to `(I, 0)`. Over a ring in which 2 is invertible its image is the whole matrix part
+     * `ι(M₂(R))`. Over ℤ it is a proper subring of it, since `SplitQuaternion<ℤ> → M₂(ℤ)` is not
+     * onto. That is why the sextonions are described as `M₂(R) ⋉ R²` and not `H′(R) ⋉ R²` in
+     * general.
      */
-    fun <R : Any> splitQuaternionToSextonionMonomorphism(
+    fun <R : Any> splitQuaternionToSextonionHomomorphism(
         base: CommutativeRing<R>
-    ): NonAssociativeRingMonomorphism<SplitQuaternion<R>, Sextonion<R>> =
-        SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base) andThen mat2ToSextonionMonomorphism(base)
+    ): NonAssociativeRingHomomorphism<SplitQuaternion<R>, Sextonion<R>> =
+        SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(base) andThen mat2ToSextonionMonomorphism(base)
 
     /**
      * The retraction of the sextonions onto the split-quaternions over a field of characteristic
@@ -374,7 +380,7 @@ object SextonionAlgebras {
      * ([[p, q], [r, s]], ν) ↦ (p + s)/2 + (r − q)/2·i + (q + r)/2·j + (s − p)/2·k.
      * ```
      * It is a surjective unital ring homomorphism with kernel `J = { (0, ν) }`, and it undoes
-     * [splitQuaternionToSextonionMonomorphism].
+     * [splitQuaternionToSextonionHomomorphism].
      *
      * @throws IllegalArgumentException if 2 is not invertible in [field].
      */

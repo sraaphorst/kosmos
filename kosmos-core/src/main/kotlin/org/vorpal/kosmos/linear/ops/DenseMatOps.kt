@@ -135,7 +135,9 @@ object DenseMatOps {
     ): DenseMat<R> = DenseMatKernel.entrywise(semiring.mul, mat1, mat2)
 
     /**
-     * Determine if a matrix [mat] is a unit under the Hadamard operation, i.e. has no zero entries.
+     * Determine if a matrix [mat] is a unit under the Hadamard operation: every entry is
+     * invertible in [field] (`field.hasReciprocal`), and none is zero according to [eq], which can
+     * only make the test stricter. The empty matrix is a unit.
      */
     fun <A : Any> isHadamardUnit(
         field: Field<A>,

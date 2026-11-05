@@ -130,6 +130,9 @@ object SplitOctonionAlgebras {
      * a two-sided inverse despite nonassociativity, because the algebra is alternative.
      * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
      * (see [RealSplitOctonionAlgebra]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> splitOctonionRingWithReciprocal(
         field: Field<F>,
@@ -153,7 +156,7 @@ object SplitOctonionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: SplitOctonion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<SplitOctonion<F>> = Endo(Symbols.INVERSE) { o ->
             if (!hasReciprocal(o)) throw HasReciprocal.notInvertible(o, "the split-octonions")
@@ -202,6 +205,7 @@ object SplitOctonionAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `o` is invertible iff `N(o)`
      * is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealSplitOctonionAlgebra :
         NonAssociativeInvolutiveRing<SplitOctonion<Real>> by splitOctonionRing(RealAlgebras.RealField),
@@ -218,10 +222,20 @@ object SplitOctonionAlgebras {
 
         override val normSq: UnaryOp<SplitOctonion<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: SplitOctonion<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<SplitOctonion<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<SplitOctonion<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the split-octonions")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: SplitOctonion<Real>): Boolean =
+            q.coefficients().all(Real::isFinite)
 
         /**
          * The standard basis `1, e₁, …, e₇`.

@@ -142,8 +142,9 @@ object DenseVecOps {
     ): Boolean = DenseVecKernel.isAll(x, a, eq)
 
     /**
-     * Returns true iff [x] has no zero entries, i.e. it is invertible under the entrywise
-     * (Hadamard) product over a [Field].
+     * Returns true iff every entry of [x] is invertible in [field] (`field.hasReciprocal`), i.e.
+     * [x] is invertible under the entrywise (Hadamard) product. Over `Real` this rejects tiny,
+     * infinite and NaN entries, matching what inversion accepts. The empty vector is a unit.
      */
     fun <A : Any> isHadamardUnit(
         field: Field<A>,

@@ -27,7 +27,7 @@ class SplitQuaternionMatrixSpec : StringSpec({
     val q = RationalAlgebras.RationalField
     val ring = SplitQuaternionAlgebras.splitQuaternionRing(q)
     val normSq = SplitQuaternionAlgebras.normSq(q)
-    val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(q)
+    val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(q)
     val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(q)
     val matrices = FixedMatAlgebras.mat2Ring(q)
     val arb = ArbSplitQuaternion.rationalSplitQuaternion
@@ -94,7 +94,7 @@ class SplitQuaternionMatrixSpec : StringSpec({
 
     "over ℤ the embedding is injective but not surjective: entries on each diagonal share a parity" {
         val z = IntegerAlgebras.IntegerCommutativeRing
-        val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(z)
+        val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(z)
         val two = BigInteger.TWO
 
         checkAll(ArbSplitQuaternion.integerSplitQuaternion) { x ->
@@ -103,6 +103,15 @@ class SplitQuaternionMatrixSpec : StringSpec({
             (m.b - m.c).mod(two) shouldBe BigInteger.ZERO
         }
         injectivityLaw(hom = integerMono::invoke, arbA = ArbSplitQuaternion.integerSplitQuaternion).test()
+    }
+
+    "over 𝔽₂ the matrix map is a homomorphism but not injective: 1 and k both map to the identity" {
+        val f2 = FiniteFieldAlgebras.F2
+        val hom = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(f2)
+        val basis = SplitQuaternionAlgebras.basis(f2)
+        (basis[0] == basis[3]) shouldBe false
+        hom(basis[0]) shouldBe hom(basis[3])
+        hom(basis[3]) shouldBe FixedMatAlgebras.mat2Ring(f2).one
     }
 
     "the isomorphism is refused in characteristic 2, where 2 is not invertible" {

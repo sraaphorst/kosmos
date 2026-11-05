@@ -37,9 +37,14 @@ class PermMat private constructor(
 
     /**
      * The matrix entry in row [r] and column [c]: 1 if `p(c) = r`, and 0 otherwise.
+     *
+     * @throws IndexOutOfBoundsException if either index is out of range.
      */
-    override operator fun get(r: Int, c: Int): Int =
-        if (p[c] == r) 1 else 0
+    override operator fun get(r: Int, c: Int): Int {
+        if (r !in 0 until rows || c !in 0 until cols)
+            throw IndexOutOfBoundsException("Index ($r, $c) out of bounds for a $rows × $cols matrix")
+        return if (p[c] == r) 1 else 0
+    }
 
     /**
      * The permutation that applies this one first and then [other]:

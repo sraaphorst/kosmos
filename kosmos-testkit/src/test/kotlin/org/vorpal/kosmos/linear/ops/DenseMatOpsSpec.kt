@@ -225,17 +225,17 @@ class DenseMatOpsSpec : FunSpec({
             DenseMatOps.isHadamardUnit(q, qm(listOf(Rational.ONE, Rational.ZERO))) shouldBe false
         }
 
-        test("isHadamardUnit honours the supplied Eq for the zero comparison") {
-            // A matrix whose only "suspicious" entry is 1e-15: nonzero exactly, but indistinguishable
-            // from zero under a reasonable approximate equality.
-            val almostZero: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-15)))
-            val approxZero: Eq<Real> = Eq { a, b -> abs(a - b) < 1e-10 }
+        test("isHadamardUnit uses the field's predicate, and the supplied Eq can only make it stricter") {
+            // 1e-15 is nonzero, but RealField cannot invert it, so it is never a Hadamard unit.
+            val tooSmall: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-15)))
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, tooSmall) shouldBe false
 
-            // Default Eq is `==`, so 1e-15 ≠ 0.0 exactly → the matrix is a Hadamard unit.
-            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero) shouldBe true
-
-            // Approximate Eq treats 1e-15 as zero → the matrix is NOT a Hadamard unit.
-            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero, approxZero) shouldBe false
+            // 1e-3 is invertible in RealField: a unit under the default Eq, but not under an Eq
+            // that treats it as zero.
+            val smallButFine: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-3)))
+            val coarseZero: Eq<Real> = Eq { a, b -> abs(a - b) < 1e-2 }
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, smallButFine) shouldBe true
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, smallButFine, coarseZero) shouldBe false
         }
 
         test("diagonal dominance") {

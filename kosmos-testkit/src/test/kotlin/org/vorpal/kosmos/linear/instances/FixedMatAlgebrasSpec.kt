@@ -210,7 +210,7 @@ class FixedMatAlgebrasSpec : StringSpec({
     }
 
     "SplitQuaternion<ℚ> ↪ Mat2<ℚ> is a ring homomorphism sending conj to adj and N to det" {
-        val phi = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(q)
+        val phi = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(q)
         val star = FixedMatAlgebras.mat2StarAlgebra(q)
         val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
         val normSq = SplitQuaternionAlgebras.normSq(q)

@@ -282,6 +282,13 @@ object FixedMatAlgebras {
      * ```
      * [isZero] decides when a determinant counts as zero; over an exact field the default equality
      * is right, while over `Real` a numerical test should be supplied.
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
+     *
+     * Over `Real` the determinant is indefinite, so a safely nonzero determinant does not bound the
+     * inverse: `[[0.1, 1e308], [0, 1]]` has determinant 0.1 but an infinite entry in its inverse.
+     * Callers who need finite inverses should check the result.
      */
     fun <F : Any> mat2RingWithReciprocal(
         field: Field<F>,
@@ -306,7 +313,7 @@ object FixedMatAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Mat2<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Mat2<F>> = Endo(Symbols.INVERSE) { m ->
             if (!hasReciprocal(m)) throw HasReciprocal.notInvertible(m, "the 2 × 2 matrices")

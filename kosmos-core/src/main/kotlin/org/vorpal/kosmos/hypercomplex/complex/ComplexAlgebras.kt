@@ -167,6 +167,9 @@ object ComplexAlgebras {
      * and `Complex<F>` is a field; otherwise the norm is isotropic and there are zero divisors.
      * [isZero] decides when a norm counts as zero; over `Real` use [ComplexField], which applies the
      * floating-point policy.
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> complexRingWithReciprocal(
         field: Field<F>,
@@ -188,7 +191,7 @@ object ComplexAlgebras {
             UnaryOp(Symbols.NORM_SQ_SYMBOL) { (a, b) -> field.add(field.mul(a, a), field.mul(b, b)) }
 
         override fun hasReciprocal(a: Complex<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Complex<F>> = Endo(Symbols.INVERSE) { z ->
             if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the complex numbers over the given field")

@@ -198,7 +198,8 @@ internal object DenseMatKernel {
     ): Boolean {
         for (r in 0 until mat.rows) {
             for (c in 0 until mat.cols) {
-                if (eq(mat[r, c], field.zero)) return false
+                val entry = mat[r, c]
+                if (eq(entry, field.zero) || !field.hasReciprocal(entry)) return false
             }
         }
         return true

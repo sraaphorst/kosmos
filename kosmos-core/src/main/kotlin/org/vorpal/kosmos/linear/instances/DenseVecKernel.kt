@@ -74,7 +74,7 @@ internal object DenseVecKernel {
     ): Boolean {
         var r = 0
         while (r < x.size) {
-            if (x[r] == field.zero) return false
+            if (!field.hasReciprocal(x[r])) return false
             r += 1
         }
         return true

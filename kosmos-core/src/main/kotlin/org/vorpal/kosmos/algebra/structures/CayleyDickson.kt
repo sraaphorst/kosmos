@@ -67,15 +67,20 @@ class CayleyDickson<A : Any> private constructor(
     /**
      * We only ever use `sigma` via left multiplication.
      * - If the base is commutative (ℤ, ℚ, ℝ, ℂ, finite fields, etc.), this is never an issue.
-     * - If the base is noncommutative, Cayley–Dickson behaves as expected when `sigma`lies in the center.
+     * - If the base is noncommutative, Cayley–Dickson behaves as expected when `sigma` lies in the center.
+     *
+     * The term `σ·d*·b` is evaluated as `(σ·d*)·b`, not `σ·(d*·b)`. The two agree whenever `σ` is a
+     * scalar (central and in the nucleus; in practice `σ ∈ {1, −1, 0}`), but over floating-point
+     * bases the second can overflow: for the dual numbers (`σ = 0`) a large tangent product
+     * `d*·b = ∞` would give `0·∞ = NaN` in the primal part. Multiplying by `σ` first keeps
+     * `0·d* = 0` exact.
      */
     override val mul: NonAssociativeMonoid<CD<A>> = NonAssociativeMonoid.of(
         identity = CD(base.mul.identity, base.add.identity),
         op = BinOp<CD<A>>(Symbols.ASTERISK) { (a, b), (c, d) ->
             // (a, b)(c, d) = (ac - sigma * d* b, da + b c*)
             val ac = base.mul(a, c)
-            val dbs = base.mul(base.conj(d), b)
-            val sigDbs = base.mul(sigma, dbs)
+            val sigDbs = base.mul(base.mul(sigma, base.conj(d)), b)
             val first = base.add(ac, base.add.inverse(sigDbs))
 
             val da = base.mul(d, a)

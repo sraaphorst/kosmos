@@ -149,6 +149,18 @@ object ConstantMatrixAlgebras {
         }
 
         /**
+         * `aJ` is invertible iff it is an `n × n` constant matrix and `n²a` is invertible in the base
+         * field: exactly the divisor [reciprocal] uses, so the two always agree. Total: any other
+         * matrix (wrong shape, not constant) is simply not invertible.
+         */
+        override fun hasReciprocal(a: DenseMat<F>): Boolean {
+            if (a.rows != n || a.cols != n) return false
+            val elem = a[0, 0]
+            for (r in 0 until n) for (c in 0 until n) if (a[r, c] != elem) return false
+            return base.hasReciprocal(base.mul(n2, elem))
+        }
+
+        /**
          * Convenience function to avoid having to call into [org.vorpal.kosmos.linear.instances.DenseMatKernel] with the size.
          */
         private fun constMat(a: F): DenseMat<F> =

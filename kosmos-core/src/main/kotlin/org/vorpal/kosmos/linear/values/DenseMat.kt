@@ -51,10 +51,16 @@ class DenseMat<A : Any> private constructor(
     /**
      * Return the element at row [r], column [c].
      *
-     * @throws IndexOutOfBoundsException if indices are out of range.
+     * Both coordinates are checked separately: checking only the flat index `r * cols + c` would
+     * let `[0, cols]` alias `[1, 0]`, or `[1, -1]` alias `[0, cols - 1]`.
+     *
+     * @throws IndexOutOfBoundsException if either index is out of range.
      */
-    override operator fun get(r: Int, c: Int): A =
-        flatGet(indexOf(r, c))
+    override operator fun get(r: Int, c: Int): A {
+        if (r !in 0 until rows || c !in 0 until cols)
+            throw IndexOutOfBoundsException("Index ($r, $c) out of bounds for a $rows × $cols matrix")
+        return flatGet(indexOf(r, c))
+    }
 
     /**
      * The entries as a list of rows, each a list of entries.

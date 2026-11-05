@@ -77,7 +77,8 @@ internal fun <R : Any> splitQuaternionTier(
  * - [ComplexToSplitQuaternionMonomorphism]: the Cayley-Dickson embedding `ℂ ↪ ℍ'`, `a + bi ↦ a + bi`.
  * - [splitComplexToSplitQuaternionMonomorphism], [splitComplexToSplitQuaternionAlongK]: the
  *   split-complex numbers along `j` and along `k`.
- * - [splitQuaternionToRank2MatrixMonomorphism]: `SplitQuaternion<R> ↪ M₂(R)`.
+ * - [splitQuaternionToRank2MatrixHomomorphism]: `SplitQuaternion<R> → M₂(R)`, injective when 2 is
+ *   not a zero divisor.
  * - [splitQuaternionMatrixIsomorphism]: `SplitQuaternion<F> ≅ M₂(F)` when 2 is invertible.
  */
 object SplitQuaternionAlgebras {
@@ -149,6 +150,9 @@ object SplitQuaternionAlgebras {
      * ```
      * [isZero] decides when a norm counts as zero; over an exact field the default equality is
      * right, while over `Real` a numerical test should be supplied (see [RealSplitQuaternionRing]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> splitQuaternionRingWithReciprocal(
         field: Field<F>,
@@ -172,7 +176,7 @@ object SplitQuaternionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: SplitQuaternion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<SplitQuaternion<F>> = Endo(Symbols.INVERSE) { q ->
             if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, "the split-quaternions")
@@ -222,6 +226,7 @@ object SplitQuaternionAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `q` is invertible iff
      * `N(q) = w² + x² - y² - z²` is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealSplitQuaternionRing :
         InvolutiveRing<SplitQuaternion<Real>> by splitQuaternionRing(RealAlgebras.RealField),
@@ -238,10 +243,20 @@ object SplitQuaternionAlgebras {
 
         override val normSq: UnaryOp<SplitQuaternion<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: SplitQuaternion<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<SplitQuaternion<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<SplitQuaternion<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the split-quaternions")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: SplitQuaternion<Real>): Boolean =
+            q.coefficients().all(Real::isFinite)
 
         /**
          * The standard basis `1, i, j, k`.
@@ -344,7 +359,7 @@ object SplitQuaternionAlgebras {
         }
 
     /**
-     * The matrix representation `SplitQuaternion<R> ↪ M₂(R)` determined by
+     * The matrix representation `SplitQuaternion<R> → M₂(R)` determined by
      * ```text
      * i ↦ [[0, -1], [1, 0]],   j ↦ [[0, 1], [1, 0]],   k ↦ [[-1, 0], [0, 1]],
      * ```
@@ -354,14 +369,19 @@ object SplitQuaternionAlgebras {
      * ```
      * The matrices are [Mat2]s in the ring [FixedMatAlgebras.mat2Ring]. The norm becomes the
      * determinant and conjugation becomes the adjugate (the conjugation of
-     * [FixedMatAlgebras.mat2StarAlgebra]). Over a ring in which 2 is invertible this is onto (see
-     * [splitQuaternionMatrixIsomorphism]); over ℤ it is injective but not surjective, since the
-     * diagonal entries `w ∓ z` (and the off-diagonal ones) always have equal parity.
+     * [FixedMatAlgebras.mat2StarAlgebra]).
+     *
+     * Its kernel is `{ w + xi + xj + wk : 2w = 0, 2x = 0 }`, so it is injective exactly when 2 is
+     * not a zero divisor in [base] (ℤ, ℚ, any field of characteristic other than 2). That is why
+     * the type is only a homomorphism. Over 𝔽₂, for example, `1` and `k` both map to the identity.
+     * Over a ring in which 2 is invertible it is onto (see [splitQuaternionMatrixIsomorphism]);
+     * over ℤ it is injective but not surjective, since the diagonal entries `w ∓ z` (and the
+     * off-diagonal ones) always have equal parity.
      */
-    fun <R : Any> splitQuaternionToRank2MatrixMonomorphism(
+    fun <R : Any> splitQuaternionToRank2MatrixHomomorphism(
         base: CommutativeRing<R>
-    ): RingMonomorphism<SplitQuaternion<R>, Mat2<R>> =
-        RingMonomorphism.of(
+    ): RingHomomorphism<SplitQuaternion<R>, Mat2<R>> =
+        RingHomomorphism.of(
             domain = splitQuaternionRing(base),
             codomain = FixedMatAlgebras.mat2Ring(base),
             map = toMatrix(base)
