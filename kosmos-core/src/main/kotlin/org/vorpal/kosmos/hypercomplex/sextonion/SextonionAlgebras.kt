@@ -46,6 +46,10 @@ import org.vorpal.kosmos.linear.values.Vec2
  *
  * Morphisms:
  * - [scalarEmbedding]: `R ↪ Sextonion<R>`, `r ↦ (rI, 0)`.
+ * - [mat2ToSextonionMonomorphism] (`ι`) and [sextonionMat2Retraction] (`ρ`): the split extension
+ *   `S(R) = M₂(R) ⋉ J`, with `J = { (0, ν) }` square-zero and `ρ ∘ ι = id`.
+ * - [splitQuaternionToSextonionMonomorphism] and [sextonionToSplitQuaternionHomomorphism] (the
+ *   latter needs 2 invertible): the same through the split-quaternions.
  * - The embeddings into the Zorn vector-matrices and the split-octonions live with the bigger
  *   algebra: [org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras.sextonionToZornMonomorphism] and
  *   [org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras.sextonionToSplitOctonionMonomorphism].
@@ -284,17 +288,30 @@ object SextonionAlgebras {
     }
 
     /**
-     * A monomorphism from the 2x2 matrices over any commutative ring
-     * to the sextonions:
+     * The embedding of the 2 × 2 matrices as the matrix part of the sextonions, over any
+     * commutative ring:
      * ```text
-     * ι: M₂(R) → S
-     *        A ↦ (A, 0)
+     * ι : M₂(R) → S(R),   A ↦ (A, 0).
      * ```
-     * This works because:
+     * It is a unital ring homomorphism because `(A, 0)(B, 0) = (AB, 0·A + 0·adj B) = (AB, 0)` and
+     * `ι(I) = (I, 0)` is the identity. It is clearly injective.
+     *
+     * Together with [sextonionMat2Retraction] it exhibits the sextonions as a split extension
      * ```text
-     * (A,0)(B,0) = (AB, 0)
-     * 1 ↦ (I, 0)
+     * S(R) = ι(M₂(R)) ⊕ J,   J = { (0, ν) },   J² = 0,
      * ```
+     * of `M₂(R)` by the square-zero ideal `J ≅ R²`. Reading the products off the multiplication,
+     * `M₂(R)` acts on `J` by
+     * ```text
+     * (A, 0)(0, ν) = (0, νA),   (0, ν)(A, 0) = (0, ν·adj A).
+     * ```
+     * Neither action is an associative module action (`A·(B·ν) = νBA`, not `νAB`), which is
+     * exactly where the nonassociativity of the sextonions comes from: `J` is the two-dimensional
+     * *Cayley bimodule* of `M₂(R)`, characterized by `x·n = n·x̄` for `x ∈ M₂(R)`, `n ∈ J`.
+     * So `J` deliberately does not implement [org.vorpal.kosmos.algebra.structures.RSBiModule].
+     *
+     * @see splitQuaternionToSextonionMonomorphism for the same embedding starting from the
+     *   split-quaternions.
      */
     fun <R : Any> mat2ToSextonionMonomorphism(
         base: CommutativeRing<R>
@@ -308,15 +325,21 @@ object SextonionAlgebras {
     }
 
     /**
-     * Given a commutative ring `R`, this is a retraction from the sextonions
-     * over `R` to the ring of 2x2 matrices over `R`:
+     * The projection of the sextonions onto their matrix part, over any commutative ring:
      * ```text
-     *   ρ: S → M₂(R)
-     * (A, ν) ↦ A.
+     * ρ : S(R) → M₂(R),   (A, ν) ↦ A.
      * ```
-     * This is also a ring homomorphism for any `R`, since the matrix part of the product is just `AB`.
+     * Unlike the coordinate projection from the Zorn matrices, this one is multiplicative: the
+     * matrix part of `(A, ν)(B, μ)` is just `AB`, and `ρ(I, 0) = I`. So `ρ` is a surjective unital
+     * ring homomorphism with
+     * ```text
+     * ker ρ = J = { (0, ν) },   ρ ∘ ι = id,
+     * ```
+     * where `ι` is [mat2ToSextonionMonomorphism]. That makes `ρ` a retraction of `S(R)` onto
+     * `M₂(R)` (and `S(R)/J ≅ M₂(R)`), the Wedderburn–Malcev splitting into the semisimple part and
+     * the radical.
      *
-     * Its kernel is `J`, and `ρ∘ι = id`.
+     * Kosmos has no retraction type yet; the type here is the plain ring homomorphism.
      */
     fun <R : Any> sextonionMat2Retraction(
         base: CommutativeRing<R>
@@ -327,11 +350,34 @@ object SextonionAlgebras {
             map = UnaryOp(Sextonion<R>::m)
         )
 
+    /**
+     * The split-quaternions inside the sextonions, over any commutative ring: the matrix
+     * representation [SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism] followed by
+     * [mat2ToSextonionMonomorphism],
+     * ```text
+     * w + xi + yj + zk ↦ ([[w − z, y − x], [x + y, w + z]], 0).
+     * ```
+     * Over a ring in which 2 is invertible its image is the whole matrix part `ι(M₂(R))`. Over ℤ
+     * it is a proper subring of it, since `SplitQuaternion<ℤ> → M₂(ℤ)` is not onto. That is why
+     * the sextonions are described as `M₂(R) ⋉ R²` and not `H′(R) ⋉ R²` in general.
+     */
     fun <R : Any> splitQuaternionToSextonionMonomorphism(
         base: CommutativeRing<R>
     ): NonAssociativeRingMonomorphism<SplitQuaternion<R>, Sextonion<R>> =
         SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base) andThen mat2ToSextonionMonomorphism(base)
 
+    /**
+     * The retraction of the sextonions onto the split-quaternions over a field of characteristic
+     * other than 2: [sextonionMat2Retraction] followed by the inverse of
+     * [SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism],
+     * ```text
+     * ([[p, q], [r, s]], ν) ↦ (p + s)/2 + (r − q)/2·i + (q + r)/2·j + (s − p)/2·k.
+     * ```
+     * It is a surjective unital ring homomorphism with kernel `J = { (0, ν) }`, and it undoes
+     * [splitQuaternionToSextonionMonomorphism].
+     *
+     * @throws IllegalArgumentException if 2 is not invertible in [field].
+     */
     fun <F : Any> sextonionToSplitQuaternionHomomorphism(
         field: Field<F>
     ): NonAssociativeRingHomomorphism<Sextonion<F>, SplitQuaternion<F>> =

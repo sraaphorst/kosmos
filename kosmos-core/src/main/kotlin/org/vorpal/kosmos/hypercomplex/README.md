@@ -543,7 +543,7 @@ N(A, ν) = det A,      x·conj(x) = conj(x)·x = N(x)·1,      N(xy) = N(x)N(y).
 The norm is multiplicative but degenerate: it ignores `ν` entirely. So the sextonions are not a
 composition algebra. Their shape is
 
-- the pairs `(A, 0)`: a copy of `M₂(R) ≅ ℍ′`;
+- the pairs `(A, 0)`: a copy of `M₂(R)` (which is `ℍ′` when 2 is invertible);
 - the pairs `(0, ν)`: an ideal `V` with `V·V = 0`, on which the norm vanishes;
 - `S / V ≅ M₂(R)`: the map `(A, ν) ↦ A` is a homomorphism.
 
@@ -584,6 +584,33 @@ nonassociative algebra and star algebra (`sextonionAlgebra`, `sextonionStarAlgeb
 ⎝ 10   3 ⎠ ⊕ (4, -5)
 ```
 
+**A split extension of `M₂`.** The two halves above are typed maps in `SextonionAlgebras`, over
+any commutative ring:
+
+```text
+ι = mat2ToSextonionMonomorphism:   M₂(R) → S,   A ↦ (A, 0)
+ρ = sextonionMat2Retraction:       S → M₂(R),   (A, ν) ↦ A
+```
+
+Both are unital ring homomorphisms, `ρ ∘ ι = id` and `ker ρ = V`. So `S = M₂(R) ⋉ V`, the
+Wedderburn–Malcev splitting into the semisimple part and the radical. The interesting part is how
+`M₂` acts on `V`:
+
+```text
+(A, 0)(0, ν) = (0, νA),        (0, ν)(A, 0) = (0, ν·adj A).
+```
+
+Neither is an associative action: `A·(B·ν) = νBA`, not `νAB`. If it were, `S` would be associative.
+`V` is the two-dimensional *Cayley bimodule* of `M₂`, characterized by `x·n = n·x̄` for `x` in `M₂`
+and `n` in `V`. It deliberately does not implement `RSBiModule`, whose laws assume associative
+actions.
+
+The same maps through the split-quaternions are `splitQuaternionToSextonionMonomorphism(base)`
+(`ℍ′ ↪ S` over any commutative ring) and `sextonionToSplitQuaternionHomomorphism(field)` (`S → ℍ′`,
+which needs 2 to be invertible). Over ℤ the first one misses most of `M₂(ℤ)`: the diagonal entries
+`w ∓ z` of its image always have the same parity. That is why the general statement is `S = M₂(R) ⋉ V`
+and not `ℍ′(R) ⋉ V`.
+
 **Into the Zorn matrices and the split-octonions.** The embedding into the Zorn matrices is
 
 ```text
@@ -608,7 +635,8 @@ for now the specs check it by hand.
 identities, the associator formula above, the nucleus, the ideal `V`, the norm and the units
 (exhaustively over 𝔽₃: `|GL₂(𝔽₃)|·3² = 432` of the 729 sextonions are units).
 `SextonionStructuresSpec` checks the module and star-algebra laws, the scalar embedding, equality and
-the printables. `SextonionZornSpec` checks both embeddings, the projection, and that the only
+the printables. `SextonionMat2Spec` checks `ι`, `ρ` and the split-quaternion maps over ℚ, ℤ, 𝔽₂ and
+𝔽₃, the actions on `V` and the Cayley identity. `SextonionZornSpec` checks both embeddings, the projection, and that the only
 idempotents of the split-octonions over 𝔽₂ are 0 and 1.
 
 ---
@@ -1267,6 +1295,10 @@ forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elemen
 | `𝕆′_F ≅ Zorn<F>` | `ZornAlgebras.splitOctonionZornIsomorphism(field)` |
 | `𝕆′ ≅ Zorn<Real>` | `ZornAlgebras.RealSplitOctonionZornIsomorphism` |
 | `R ↪ S_R` | `SextonionAlgebras.scalarEmbedding(base)` |
+| `M₂(R) ↪ S_R` | `SextonionAlgebras.mat2ToSextonionMonomorphism(base)` |
+| `S_R → M₂(R)` (retraction) | `SextonionAlgebras.sextonionMat2Retraction(base)` |
+| `ℍ′_R ↪ S_R` | `SextonionAlgebras.splitQuaternionToSextonionMonomorphism(base)` |
+| `S_F → ℍ′_F` (2 invertible) | `SextonionAlgebras.sextonionToSplitQuaternionHomomorphism(field)` |
 | `S_R ↪ Zorn<R>` | `ZornAlgebras.sextonionToZornMonomorphism(base)` |
 | `S_F ↪ 𝕆′_F` (2 invertible) | `ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)` |
 
@@ -1436,7 +1468,9 @@ References:
 ### Gaps in the algebras that exist
 
 - **Sextonions:** the typed projection `Zorn<R> → Sextonion<R>` (needs `R`-module homomorphisms,
-  issue #270); `ℍ′ ↪ S`; real conveniences like `RealZornAlgebra`; the derivation algebra `Der(S)`.
+  issue #270); a typed retraction for `ρ` (also #270); a generic split-null-extension construction
+  `A ⋉ M` (sextonions as `M₂ ⋉ R²`, dual numbers as `R ⋉ R`); real conveniences like
+  `RealZornAlgebra`; the derivation algebra `Der(S)`.
 - **Split-octonions:** the family of embeddings `ℍ ↪ 𝕆′` and
   `ℍ′ ↪ 𝕆′` beyond the canonical ones; the isomorphism `CD_usual(ℍ′) ≅ CD_split(ℍ)`.
 - **Biquaternions and bioctonions:** the Lorentz-group action of the biquaternions; a generic
