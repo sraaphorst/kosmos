@@ -282,7 +282,11 @@ hypercomplex/
 │
 ├── zorn/                     # Zorn<R>: vector-matrices R ⊕ R³ ⊕ R³ ⊕ R, a model of 𝕆′ without CD
 │   ├── Zorn.kt
-│   └── ZornAlgebras.kt             ring, norm, 𝕆′ ↪ Zorn, 𝕆′_F ≅ Zorn_F
+│   └── ZornAlgebras.kt             ring, norm, 𝕆′ ↪ Zorn, 𝕆′_F ≅ Zorn_F, S ↪ Zorn, S_F ↪ 𝕆′_F
+│
+├── sextonion/                # Sextonion<R>: pairs (A, ν) ∈ M₂(R) ⊕ R², with ℍ′ ⊂ S ⊂ 𝕆′
+│   ├── Sextonion.kt
+│   └── SextonionAlgebras.kt        ring, norm det A, units, module and star algebra
 │
 ├── biquaternion/             # ℍ ⊗ ℂ = CD⟨𝔹⟩ ≅ M₂(ℂ)
 │   ├── Biquaternion.kt
@@ -506,9 +510,106 @@ scalar embedding and the printables, and `RealZornSpec` checks the real versions
 equality. `ZornSplitOctonionSpec` checks `φ` and its inverse over ℚ, the ℤ and 𝔽₃ cases,
 and the failure over 𝔽₂.
 
-**Sextonions.** The six-dimensional sextonions sit inside the split-octonions between ℍ′ and 𝕆′,
-and they are easiest to see in Zorn form: they are the Zorn matrices with `v ∈ ⟨e₁, e₂⟩` and
-`w ∈ ⟨e₁, e₃⟩`. These are not implemented yet.
+### Sextonions
+
+The sextonions `S` are a six-dimensional algebra sitting between the split-quaternions and the
+split-octonions, `ℍ′ ⊂ S ⊂ 𝕆′`. In Zorn form they are the vector-matrices with `v ∈ ⟨e₁, e₂⟩` and
+`w ∈ ⟨e₁, e₃⟩`, but Kosmos does not store them that way (that would mean eight slots with two forced
+to zero). A `Sextonion<R>` is a pair
+
+```text
+(A, ν) ∈ M₂(R) ⊕ R²,      A a Mat2, ν a row Vec2,
+```
+
+and every pair is a sextonion. The product, with identity `(I, 0)`, is
+
+```text
+(A, ν)(B, μ) = (AB,  μA + ν·adj(B)).
+```
+
+Two details carry all of the structure:
+
+- **The order in `μA`.** The right factor's vector multiplies the left factor's matrix. That keeps
+  the product bilinear and makes it nonassociative.
+- **The adjugate in `ν·adj(B)`.** With plain `B` the product would not be alternative; with
+  `adj(B)` it is (and flexible, and Moufang).
+
+Conjugation is `(A, ν) ↦ (adj A, −ν)` and the norm is the determinant of the matrix part:
+
+```text
+N(A, ν) = det A,      x·conj(x) = conj(x)·x = N(x)·1,      N(xy) = N(x)N(y).
+```
+
+The norm is multiplicative but degenerate: it ignores `ν` entirely. So the sextonions are not a
+composition algebra. Their shape is
+
+- the pairs `(A, 0)`: a copy of `M₂(R) ≅ ℍ′`;
+- the pairs `(0, ν)`: an ideal `V` with `V·V = 0`, on which the norm vanishes;
+- `S / V ≅ M₂(R)`: the map `(A, ν) ↦ A` is a homomorphism.
+
+Even the copy of `M₂` is not associative inside `S`. For any `A, B, C` and vectors `b, c`,
+
+```text
+((A, 0), (B, b), (C, c)) = (0,  c[A, B] + b[A, adj C]),
+```
+
+where `(x, y, z) = (xy)z − x(yz)` is the associator. So `(A, 0)` associates with everything only
+when `A` commutes with every matrix, i.e. `A = rI`. Over a field the nucleus and the center are
+exactly the scalars `F·(I, 0)`. A unit is exactly an `x` with `det A` invertible, and then
+`x⁻¹ = conj(x)/N(x) = (A⁻¹, −ν/det A)`; the vector part never matters.
+
+```kotlin
+import org.vorpal.kosmos.hypercomplex.sextonion.Sextonion
+import org.vorpal.kosmos.hypercomplex.sextonion.SextonionAlgebras
+
+val q = RationalAlgebras.RationalField
+val ring = SextonionAlgebras.sextonionRing(q)
+val normSq = SextonionAlgebras.normSq(q)                       // det A
+
+val phi = ZornAlgebras.sextonionToZornMonomorphism(q)          // over any commutative ring
+val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q) // when 2 is invertible
+
+val pr = SextonionAlgebras.printableSextonion(RationalAlgebras.printableRational)
+pr(ring.one)                                                   // ([[1, 0], [0, 1]], (0, 0))
+```
+
+`SextonionAlgebras` also provides the entrywise scalar action (`sextonionLeftAction`, which is
+multiplication by `(rI, 0)` on either side), the rank-6 module (`sextonionModule`), the
+nonassociative algebra and star algebra (`sextonionAlgebra`, `sextonionStarAlgebra`),
+`sextonionRingWithReciprocal`, the `basis` `E₁₁, E₁₂, E₂₁, E₂₂, n₁, n₂` (the order of
+`Sextonion.coefficients()`), `scalarEmbedding`, `eqSextonion` and `printableSextonionPretty`:
+
+```text
+⎛  1  -2 ⎞
+⎝ 10   3 ⎠ ⊕ (4, -5)
+```
+
+**Into the Zorn matrices and the split-octonions.** The embedding into the Zorn matrices is
+
+```text
+φ([[a, b], [c, d]], (e, f)) = [[a, (b, e, 0)], [(c, 0, −f), d]],
+```
+
+a unital ring homomorphism over every commutative ring, compatible with conjugation and carrying
+`det A` to `ad − v·w`. The sign on `f` is what turns the Zorn product into the formula above.
+Composing with the inverse of `splitOctonionZornIsomorphism` gives `Sextonion<F> ↪ SplitOctonion<F>`,
+and this one needs 2 to be invertible. That is not an artifact of the construction: `(E₁₁, 0)` is an
+idempotent other than 0 and 1, and in Cayley-Dickson coordinates `x = w + v` satisfies
+`x² = 2w·x − N(x)`, so an idempotent has `(2w − 1)·v = 0`. Over ℤ or in characteristic 2 that forces
+`v = 0`, and the only idempotents of `SplitOctonion<R>` are 0 and 1. Over ℚ, `(E₁₁, 0)` lands on
+`(1 + e₄)/2`. Both maps live in `ZornAlgebras`, so that the splitoctonion package does not depend on
+the zorn package.
+
+The coordinate projection `Zorn<R> → Sextonion<R>` is `R`-linear and undoes `φ`, but it is not
+multiplicative. It will become a typed module map once `R`-module homomorphisms exist (issue #270);
+for now the specs check it by hand.
+
+`SextonionSpec` checks the ring laws over ℚ, ℤ and 𝔽₅, alternativity, flexibility, the Moufang
+identities, the associator formula above, the nucleus, the ideal `V`, the norm and the units
+(exhaustively over 𝔽₃: `|GL₂(𝔽₃)|·3² = 432` of the 729 sextonions are units).
+`SextonionStructuresSpec` checks the module and star-algebra laws, the scalar embedding, equality and
+the printables. `SextonionZornSpec` checks both embeddings, the projection, and that the only
+idempotents of the split-octonions over 𝔽₂ are 0 and 1.
 
 ---
 
@@ -1165,6 +1266,9 @@ forward-mode differentiation (`variable`, `constant`, `diffAt`), with the elemen
 | `𝕆′_R ↪ Zorn<R>` | `ZornAlgebras.splitOctonionToZornMonomorphism(base)` |
 | `𝕆′_F ≅ Zorn<F>` | `ZornAlgebras.splitOctonionZornIsomorphism(field)` |
 | `𝕆′ ≅ Zorn<Real>` | `ZornAlgebras.RealSplitOctonionZornIsomorphism` |
+| `R ↪ S_R` | `SextonionAlgebras.scalarEmbedding(base)` |
+| `S_R ↪ Zorn<R>` | `ZornAlgebras.sextonionToZornMonomorphism(base)` |
+| `S_F ↪ 𝕆′_F` (2 invertible) | `ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)` |
 
 ### Complexifications
 
@@ -1331,7 +1435,9 @@ References:
 
 ### Gaps in the algebras that exist
 
-- **Split-octonions:** the sextonions (see [Zorn vector-matrices](#zorn-vector-matrices)); the family of embeddings `ℍ ↪ 𝕆′` and
+- **Sextonions:** the typed projection `Zorn<R> → Sextonion<R>` (needs `R`-module homomorphisms,
+  issue #270); `ℍ′ ↪ S`; real conveniences like `RealZornAlgebra`; the derivation algebra `Der(S)`.
+- **Split-octonions:** the family of embeddings `ℍ ↪ 𝕆′` and
   `ℍ′ ↪ 𝕆′` beyond the canonical ones; the isomorphism `CD_usual(ℍ′) ≅ CD_split(ℍ)`.
 - **Biquaternions and bioctonions:** the Lorentz-group action of the biquaternions; a generic
   printable for complex coefficients (only the real ones have one); the matrix isomorphism

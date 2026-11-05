@@ -33,7 +33,7 @@ import org.vorpal.kosmos.linear.values.Mat2
 
 /**
  * The split-quaternion tier over [base]: the split doubling of:
- * ```math
+ * ```text
  * R[i]/(i² + 1).
  * ```
  */
@@ -61,7 +61,7 @@ internal fun <R : Any> splitQuaternionTier(
  *
  * The arithmetic is not implemented here: it is [org.vorpal.kosmos.algebra.structures.CayleyDickson.associativeSplit]
  * applied to
- * ```math
+ * ```text
  * R[i]/(i² + 1),
  * ```
  * transported to the [SplitQuaternion] carrier.

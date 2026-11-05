@@ -58,6 +58,9 @@ import org.vorpal.kosmos.linear.values.Vec3
  * - [splitOctonionToZornMonomorphism]: `SplitOctonion<R> ↪ Zorn<R>` over any commutative ring.
  * - [splitOctonionZornIsomorphism]: `SplitOctonion<F> ≅ Zorn<F>` when 2 is invertible.
  * - [RealSplitOctonionZornIsomorphism]: `𝕆′ ≅ Zorn<Real>`, between the real conveniences.
+ * - [sextonionToZornMonomorphism]: `Sextonion<R> ↪ Zorn<R>` over any commutative ring.
+ * - [sextonionToSplitOctonionMonomorphism]: `Sextonion<F> ↪ SplitOctonion<F>` when 2 is
+ *   invertible.
  *
  * Printables:
  * - [printableZorn]: one line, `[[a, (v₁, v₂, v₃)], [(w₁, w₂, w₃), d]]`.
@@ -367,6 +370,16 @@ object ZornAlgebras {
         )
     }
 
+    /**
+     * The sextonions as a subalgebra of the Zorn vector-matrices, over any commutative ring:
+     * ```text
+     * ([[a, b], [c, d]], (e, f)) ↦ [[a, (b, e, 0)], [(c, 0, −f), d]].
+     * ```
+     * The image is the six-dimensional subalgebra with `v ⊥ e₃` and `w ⊥ e₂`; the cross-product
+     * terms of the Zorn product land back in it. The sign on `f` is what turns the Zorn product
+     * into `(A, ν)(B, μ) = (AB, μA + ν·adj(B))`. The norm `det A` is the Zorn norm `ad − v·w`
+     * restricted to the image.
+     */
     fun <R : Any> sextonionToZornMonomorphism(
         base: CommutativeRing<R>
     ): NonAssociativeRingMonomorphism<Sextonion<R>, Zorn<R>> =
@@ -376,10 +389,8 @@ object ZornAlgebras {
             map = sextonionToZorn(base)
         )
 
-    /**
-     * TODO: We want an R-module epimorphism from Zorn<R> to Sextonion<R>.
-     * TODO: This requires K270 to be done first, as we don't have R-module homomorphisms yet.
-     */
+    // TODO(#270): add the R-linear projection Zorn<R> → Sextonion<R>, a retraction of
+    //  sextonionToZornMonomorphism. It needs R-module homomorphisms, which do not exist yet.
 
     /**
      * The split-octonions as Zorn matrices over any commutative ring. Writing
@@ -420,12 +431,12 @@ object ZornAlgebras {
      */
     fun <F : Any> sextonionToSplitOctonionMonomorphism(
         field: Field<F>
-    ): NonAssociativeRingMonomorphism<Sextonion<F>, SplitOctonion<F>>
-    = NonAssociativeRingMonomorphism.of(
-        domain = SextonionAlgebras.sextonionRing(field),
-        codomain = SplitOctonionAlgebras.splitOctonionRing(field),
-        map = sextonionToZorn(field) andThen splitOctonionZornIsomorphism(field).backward.map
-    )
+    ): NonAssociativeRingMonomorphism<Sextonion<F>, SplitOctonion<F>> =
+        NonAssociativeRingMonomorphism.of(
+            domain = SextonionAlgebras.sextonionRing(field),
+            codomain = SplitOctonionAlgebras.splitOctonionRing(field),
+            map = sextonionToZorn(field) andThen splitOctonionZornIsomorphism(field).backward.map
+        )
 
     /**
      * The isomorphism `SplitOctonion<F> ≅ Zorn<F>` over a field in which 2 is invertible: the map
@@ -577,7 +588,7 @@ object ZornAlgebras {
      * The map behind the monomorphism from `Sextonion<R>` to `Zorn<R>`,
      * which takes:
      * ```text
-     * ((a, b, c, d), (e, f)) ↦ ((a, (b, e, 0)), ((c, 0, -f), d).
+     * ([[a, b], [c, d]], (e, f)) ↦ [[a, (b, e, 0)], [(c, 0, −f), d]].
      * ```
      */
     private fun <R : Any> sextonionToZorn(
