@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.hypercomplex.sextonion
 
+import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -18,6 +19,9 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternion
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras.splitQuaternionRing
 import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
 import org.vorpal.kosmos.linear.instances.FixedVecAlgebras
 import org.vorpal.kosmos.linear.ops.FixedMatOps
@@ -278,6 +282,60 @@ object SextonionAlgebras {
             leftAction(field.reciprocal(normSq(s)), conj(s))
         }
     }
+
+    /**
+     * A monomorphism from the 2x2 matrices over any commutative ring
+     * to the sextonions:
+     * ```text
+     * ι: M₂(R) → S
+     *        A ↦ (A, 0)
+     * ```
+     * This works because:
+     * ```text
+     * (A,0)(B,0) = (AB, 0)
+     * 1 ↦ (I, 0)
+     * ```
+     */
+    fun <R : Any> mat2ToSextonionMonomorphism(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<Mat2<R>, Sextonion<R>> {
+        val vecZero = Vec2(base.zero, base.zero)
+        return NonAssociativeRingMonomorphism.of(
+            domain = FixedMatAlgebras.mat2Ring(base),
+            codomain = sextonionRing(base),
+            map = UnaryOp { m -> Sextonion(m, vecZero) }
+        )
+    }
+
+    /**
+     * Given a commutative ring `R`, this is a retraction from the sextonions
+     * over `R` to the ring of 2x2 matrices over `R`:
+     * ```text
+     *   ρ: S → M₂(R)
+     * (A, ν) ↦ A.
+     * ```
+     * This is also a ring homomorphism for any `R`, since the matrix part of the product is just `AB`.
+     *
+     * Its kernel is `J`, and `ρ∘ι = id`.
+     */
+    fun <R : Any> sextonionMat2Retraction(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingHomomorphism<Sextonion<R>, Mat2<R>> =
+        NonAssociativeRingHomomorphism.of(
+            domain = sextonionRing(base),
+            codomain = FixedMatAlgebras.mat2Ring(base),
+            map = UnaryOp(Sextonion<R>::m)
+        )
+
+    fun <R : Any> splitQuaternionToSextonionMonomorphism(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<SplitQuaternion<R>, Sextonion<R>> =
+        SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(base) andThen mat2ToSextonionMonomorphism(base)
+
+    fun <F : Any> sextonionToSplitQuaternionHomomorphism(
+        field: Field<F>
+    ): NonAssociativeRingHomomorphism<Sextonion<F>, SplitQuaternion<F>> =
+        sextonionMat2Retraction(field) andThen SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(field).backward
 
     /**
      * The embedding of the base ring as the scalars, `r ↦ (rI, 0)`. Over a field its image is
