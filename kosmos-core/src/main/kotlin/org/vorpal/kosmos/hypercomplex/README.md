@@ -58,6 +58,10 @@ where each level loses a property ($\mathbb{C}$ loses ordering, $\mathbb{H}$ com
 $\mathbb{O}$ associativity) but keeps a multiplicative norm and so remains a division algebra.
 The other branches trade the division property for zero divisors.
 
+Not everything here is a doubling. The [sextonions](#sextonions) `S` (dimension 6, not a power of 2)
+sit strictly between two levels of the split branch, `ℍ′ ⊂ S ⊂ 𝕆′`, and the
+[Zorn vector-matrices](#zorn-vector-matrices) are a second model of `𝕆′` itself.
+
 ### Properties at a glance
 
 | Algebra | dim / ℝ | Built as | Commutative | Associative | Alternative | Division | Norm | Isomorphic to |
@@ -69,6 +73,7 @@ The other branches trade the division property for zero divisors.
 | ℍ′ split-quaternions | 4 | `CD(ℂ)`, σ = −1 | ✗ | ✓ | ✓ | ✗ | $w^2 + x^2 - y^2 - z^2$ | M₂(ℝ) |
 | 𝔹 bicomplex | 4 | `CD(ℂ)`, σ = 1, trivial involution | ✓ | ✓ | ✓ | ✗ | $z_1^2 + z_2^2 \in \mathbb{C}$ | ℂ ⊕ ℂ |
 | 𝕆 | 8 | `CD(ℍ)`, σ = 1 | ✗ | ✗ | ✓ | ✓ | sum of 8 squares | |
+| S sextonions | 6 | `M₂ ⊕ R²`, not a doubling | ✗ | ✗ | ✓ | ✗ | $\det A$, degenerate (ignores the $R^2$ part) | `M₂(ℝ) ⋉ ℝ²`, between ℍ′ and 𝕆′ |
 | 𝕆′ split-octonions | 8 | `CD(ℍ)`, σ = −1 | ✗ | ✗ | ✓ | ✗ | signature (4, 4) | Zorn vector-matrices |
 | ℍ ⊗ ℂ biquaternions | 8 | `CD(𝔹)`, σ = 1 | ✗ | ✓ | ✓ | ✗ | $w^2 + x^2 + y^2 + z^2 \in \mathbb{C}$ | M₂(ℂ) |
 | 𝕆 ⊗ ℂ bioctonions | 16 | `CD(ℍ ⊗ ℂ)`, σ = 1 | ✗ | ✗ | ✓ | ✗ | sum of 8 squares in ℂ | |
@@ -628,6 +633,18 @@ idempotent other than 0 and 1, and in Cayley-Dickson coordinates `x = w + v` sat
 `v = 0`, and the only idempotents of `SplitOctonion<R>` are 0 and 1. Over ℚ, `(E₁₁, 0)` lands on
 `(1 + e₄)/2`. Both maps live in `ZornAlgebras`, so that the splitoctonion package does not depend on
 the zorn package.
+
+Following `ℍ′ → S` with this embedding gives a second route `ℍ′ → 𝕆′`. It has the same image as
+the direct `splitQuaternionToSplitOctonionMonomorphism` (the span of `1, e₁, e₄, e₅`), but it is not
+the same map:
+
+```
+w + xi + yj + zk  ↦  w − x·e₁ − z·e₄ − y·e₅      (through S)
+w + xi + yj + zk  ↦  w + x·e₁ + y·e₄ + z·e₅      (direct)
+```
+
+The two differ by the involutive automorphism `α : i ↦ −i, j ↦ −k, k ↦ −j` of `ℍ′`: the route
+through `S` is the direct embedding composed with `α`. `SextonionZornSpec` checks this over ℚ and 𝔽₃.
 
 The coordinate projection `Zorn<R> → Sextonion<R>` is `R`-linear and undoes `φ`, but it is not
 multiplicative. It will become a typed module map once `R`-module homomorphisms exist (issue #270);
