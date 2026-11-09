@@ -5,6 +5,10 @@ import org.vorpal.kosmos.algebra.structures.Semigroup
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.asNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -19,11 +23,13 @@ class SemigroupLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): LawSuite {
+): StructuredLawSuite {
 
     override val name = suiteName("Semigroup", semigroup.op.symbol)
 
-    override fun laws(): List<TestingLaw> =
-        MagmaLaws(semigroup, arb, pr).laws() +
-                listOf(AssociativityLaw(semigroup.op, arb, eq, pr))
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(
+            MagmaLaws(semigroup, arb, pr).node(mode),
+            AssociativityLaw(semigroup.op, arb, eq, pr).asNode()
+        )
 }

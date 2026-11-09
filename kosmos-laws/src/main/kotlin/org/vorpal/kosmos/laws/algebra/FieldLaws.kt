@@ -5,6 +5,10 @@ import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.CommutativityLaw
 import org.vorpal.kosmos.laws.property.DistinctIdentitiesLaw
@@ -21,7 +25,7 @@ class FieldLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName("Field", field.add.op.symbol, field.mul.op.symbol, field.reciprocal.symbol)
 
@@ -32,9 +36,6 @@ class FieldLaws<A : Any>(
         DistinctIdentitiesLaw(field.add.identity, field.mul.identity, eq, pr)
     )
 
-    override fun laws(): List<TestingLaw> =
-        divisionRingLaws.laws() + structureLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        divisionRingLaws.fullLaws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(divisionRingLaws.node(mode)) + structureLaws.asNodes()
 }

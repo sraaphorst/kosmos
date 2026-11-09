@@ -113,3 +113,9 @@ object LawGraphs {
         visit(root)
     }
 }
+
+/** Lift this law into a graph leaf. */
+fun TestingLaw.asNode(): LawNode = LawNode.Leaf(this)
+
+/** Lift these laws into graph leaves, in order. */
+fun List<TestingLaw>.asNodes(): List<LawNode> = map { LawNode.Leaf(it) }

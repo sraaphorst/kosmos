@@ -7,6 +7,10 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.property.InvertibilityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -23,7 +27,7 @@ class DivisionRingLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "DivisionRing",
@@ -52,9 +56,6 @@ class DivisionRingLaws<A : Any>(
         )
     )
 
-    override fun laws(): List<TestingLaw> =
-        ringLaws.laws() + structureLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        ringLaws.fullLaws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(ringLaws.node(mode)) + structureLaws.asNodes()
 }
