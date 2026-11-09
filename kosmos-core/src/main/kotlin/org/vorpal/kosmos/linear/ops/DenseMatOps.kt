@@ -20,14 +20,30 @@ import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.RowReductionTrace
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.transposeView
+import org.vorpal.kosmos.linear.views.TransposeMode
 
+/**
+ * Operations on matrices of any shape.
+ *
+ * Every function accepts [MatLike], so it works on [DenseMat], on
+ * [org.vorpal.kosmos.linear.values.Mat2], on [org.vorpal.kosmos.linear.values.PermMat] and on the
+ * lazy views in [org.vorpal.kosmos.linear.views], and returns a freshly allocated [DenseMat] (or a
+ * scalar, vector or predicate). Each function takes the weakest structure on the entries it needs:
+ * a [Semiring] for sums and products, a [CommutativeRing] for determinants, a [Field] for row
+ * reduction.
+ *
+ * Shape mismatches throw [IllegalArgumentException]. The implementations are in the internal
+ * `DenseMatKernel`. The standard BLAS names for some of these are in [BLAS]; closed-form versions
+ * for 2 × 2 matrices are in [FixedMatOps].
+ */
 object DenseMatOps {
 
     /**
      * Given
      * - A [Semiring] over [A]
-     * - [mat1] and [mat2], two matrices of the same size over [A]
-     * Return a matrix that comprises the sum of [mat1] and [mat2] using the [semiring].
+     * - [mat1] and [mat2], two matrices of the same shape over [A]
+     *
+     * return their entrywise sum `mat1 + mat2`.
      */
     fun <A : Any> matAdd(
         semiring: Semiring<A>,
@@ -35,12 +51,12 @@ object DenseMatOps {
         mat2: MatLike<A>
     ): DenseMat<A> = DenseMatKernel.entrywise(semiring.add, mat1, mat2)
 
-
     /**
      * Given:
      * - A [Semiring] over [A]
      * - A matrix of shape `m×n` over [A]
      * - A matrix of shape `n×p` over [A]
+     *
      * multiply them together to get a matrix of shape `m×p` over [A].
      */
     fun <A : Any> matMul(
@@ -48,7 +64,6 @@ object DenseMatOps {
         mat1: MatLike<A>,
         mat2: MatLike<A>
     ): DenseMat<A> = DenseMatKernel.matMul(semiring, mat1, mat2)
-
 
     /**
      * Given a matrix of shape `m×n` and a vector of length `n` all over [A], multiply them together to
@@ -61,6 +76,16 @@ object DenseMatOps {
     ): DenseVec<A> = DenseMatKernel.matVec(semiring, mat, vec)
 
     /**
+     * Given a [Semiring] over [A] and a scalar [s], the scalar multiple `s·mat`, multiplying each
+     * entry by [s] on the left.
+     */
+    fun <A : Any> scale(
+        semiring: Semiring<A>,
+        s: A,
+        mat: MatLike<A>
+    ): DenseMat<A> = DenseMatKernel.scale(semiring, s, mat)
+
+    /**
      * Given a [Semiring], create the `n×n` identity matrix.
      */
     fun <A : Any> identity(
@@ -69,7 +94,7 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.identity(semiring, n)
 
     /**
-     * Given a value [a], create a constant `m×n` matrix of [a].
+     * Given a value [a], create the constant `rows×cols` matrix with every entry [a].
      */
     fun <A : Any> constMat(
         a: A,
@@ -78,7 +103,7 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.constMat(a, rows, cols)
 
     /**
-     * Given a [Semiring], create an ``m×n` matrix consisting of the additive monoid identity.
+     * Given a [Semiring], create the `rows×cols` zero matrix (every entry the additive identity).
      */
     fun <A : Any> zero(
         semiring: Semiring<A>,
@@ -87,7 +112,8 @@ object DenseMatOps {
     ): DenseMat<A> = constMat(semiring.add.identity, rows, cols)
 
     /**
-     * Given a [Semiring], create an ``m×n` matrix consisting of the multiplicative monoid identity.
+     * Given a [Semiring], create the `rows×cols` all-ones matrix `J` (every entry the
+     * multiplicative identity). This is not the identity matrix: see [identity].
      */
     fun <A: Any> one(
         semiring: Semiring<A>,
@@ -108,9 +134,10 @@ object DenseMatOps {
         mat2: MatLike<R>
     ): DenseMat<R> = DenseMatKernel.entrywise(semiring.mul, mat1, mat2)
 
-
     /**
-     * Determine if a matrix [mat] is a unit under the Hadamard operation, i.e. has no zero entries.
+     * Determine if a matrix [mat] is a unit under the Hadamard operation: every entry is
+     * invertible in [field] (`field.hasReciprocal`), and none is zero according to [eq], which can
+     * only make the test stricter. The empty matrix is a unit.
      */
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
@@ -142,9 +169,11 @@ object DenseMatOps {
      * The resulting matrix has dimensions `c×c` (where `c` is the number of columns in [m]).
      *
      * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
-     * (rows are points, columns are blocks), this calculates the **concurrence matrix** (or block intersection matrix).
+     * (rows are points, columns are blocks), this calculates the **block intersection matrix**.
      * - Entry `(i, j)` represents the size of the intersection between block `i` and block `j` (`|B_i ∩ B_j|`).
      * - Diagonal entries represent the block sizes (`k`).
+     *
+     * For the point-by-point counterpart `M Mᵀ`, see [pointConcurrenceMatrix].
      *
      * @param semiring The semiring definition for the multiplication and addition operations.
      * @param m The source matrix.
@@ -157,32 +186,36 @@ object DenseMatOps {
         DenseMatKernel.matMul(semiring, m.transposeView(), m)
 
     /**
-     * Calculates the intersection matrix `B = M M^T`.
+     * Calculates the point concurrence matrix `C = M Mᵀ`.
      *
      * This computes the inner products of the **rows** of [m].
      *
      * If the semiring’s multiplication is commutative, the result is symmetric.
-     * The resulting matrix has dimensions `r×r` (where $r$ is the number of rows in [m]).
+     * The resulting matrix has dimensions `r×r` (where `r` is the number of rows in [m]).
      *
      * In the context of combinatorial design theory, if [m] is a point-block incidence matrix
-     * (rows are points, columns are blocks), this calculates the point-connectivity.
+     * (rows are points, columns are blocks), this calculates the **concurrence matrix** of the
+     * points:
      * - Entry `(i, j)` represents the number of blocks containing both point `i` and point `j` (`λ_ij`).
      * - Diagonal entries represent the replication numbers (`r`) for each point.
      *
+     * For a balanced incomplete block design this is `(r − λ)I + λJ`. For the block-by-block
+     * counterpart `Mᵀ M` (the block intersection matrix), see [gramMatrix].
+     *
      * @param semiring The semiring definition for the multiplication and addition operations.
      * @param m The source matrix.
-     * @return An `r×r` matrix where `B_ij = ⟨row_i, row_j⟩`.
+     * @return An `r×r` matrix where `C_ij = ⟨row_i, row_j⟩`.
      */
-    fun <A: Any> intersectionMatrix(
+    fun <A : Any> pointConcurrenceMatrix(
         semiring: Semiring<A>,
         m: MatLike<A>
     ): DenseMat<A> =
         DenseMatKernel.matMul(semiring, m, m.transposeView())
 
-
     /**
-     * Instead of a separate `BlockConstraintMatrix` class, we can blow up points using this [pointInflation] function.
-     * This is what is needed for a GDD (group divisible design) construction.
+     * Inflate each point (row) of the incidence matrix [mat] into [blockSize] copies, the
+     * "blow up points" step of a GDD (group divisible design) construction. This replaces a
+     * separate `BlockConstraintMatrix` class.
      */
     fun <R : Any> pointInflation(
         mat: DenseMat<R>,
@@ -405,6 +438,10 @@ object DenseMatOps {
         order: TotalOrder<B>
     ): Option<A> = argmaxBy(mat, f, order).map { mat[it.first, it.second] }
 
+    /**
+     * Returns true iff every entry of [mat] equals [a] under [eq]. Vacuously true for an empty
+     * matrix.
+     */
     fun <A : Any> isAll(
         mat: MatLike<A>,
         a: A,
@@ -465,8 +502,8 @@ object DenseMatOps {
     ): Boolean = DenseMatKernel.isDiagonal(mat, zero, eq)
 
     /**
-     * Given an `m×n` matrix [mat], calculate the sum across the rows using the [CommutativeMonoid] and return
-     * the length `m` vector of sums.
+     * Given an `m×n` matrix [mat], map each entry by [f] and sum along each row in the
+     * [CommutativeMonoid], returning the length `m` vector of row sums.
      */
     fun <A : Any, B : Any> rowReduce(
         add: CommutativeMonoid<B>,
@@ -475,8 +512,8 @@ object DenseMatOps {
     ): DenseVec<B> = DenseMatKernel.rowReduce(add, mat, f)
 
     /**
-     * Given an `m×n` matrix [mat], calculate the sum across the cols using the [CommutativeMonoid] and return
-     * the length `n` vector of sums.
+     * Given an `m×n` matrix [mat], map each entry by [f] and sum down each column in the
+     * [CommutativeMonoid], returning the length `n` vector of column sums.
      */
     fun <A : Any, B : Any> colReduce(
         add: CommutativeMonoid<B>,
@@ -526,8 +563,8 @@ object DenseMatOps {
     ): DenseMat<A> = fromDiagonal(zero, vec.size, vec.size, vec::get)
 
     /**
-     * Given a square `n×n` matrix [mat], calculate its [pow] power using the given [Semiring] through repeated
-     * squaring.
+     * Given a square `n×n` matrix [mat], calculate `mat^pow` using the given [Semiring] by
+     * repeated squaring. `mat^0` is the identity matrix.
      */
     fun <A : Any> power(
        semiring: Semiring<A>,
@@ -536,7 +573,7 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.power(semiring, mat, pow)
 
     /**
-     * Determine is the matrix [mat] is a permutation matrix. This requires:
+     * Determine if the matrix [mat] is a permutation matrix. This requires:
      * - [mat] be square (i.e. `n×n`)
      * - [mat] be a binary matrix (all entries are either zero or one)
      * - Each row of [mat] sums exactly to one
@@ -563,24 +600,24 @@ object DenseMatOps {
      * Given a:
      * - [Semiring] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is [MatOp.Trans])
+     * - vector [xVec] over [A], of length `n` if [aOp] is [TransposeMode.Normal] and `m` if it is
+     *   [TransposeMode.Transpose]
      * - constant [beta] in [A]
-     * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
-     * Let:
-     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
-     * calculate the affine product:
+     * - vector [yVec] over [A], of the length of the result (`m` for `Normal`, `n` for `Transpose`)
+     *
+     * let `A_p` be [aMat] read as [aOp] says, and calculate the affine product (BLAS `gemv`):
      * ```
      * alpha A_p x + beta y
      * ```
-     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     * A [Semiring] has no conjugation, so [TransposeMode.ConjugateTranspose] is rejected with an
+     * [IllegalArgumentException]; use the [InvolutiveRing] overload for it.
      */
     fun <A : Any> affineMatVec(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -591,24 +628,22 @@ object DenseMatOps {
      * Given an:
      * - [InvolutiveRing] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
      * - `m×n` matrix [aMat] over [A]
-     * - `m` or `n` sized vector [xVec] over [A] (`m` if [aOp] is [MatOp.Normal], and `n` if [aOp] is otherwise)
+     * - vector [xVec] over [A], of length `n` if [aOp] is [TransposeMode.Normal] and `m` otherwise
      * - constant [beta] in [A]
-     * - `m` or `n` sized vector [yVec] over [A] (same size as [xVec])`
-     * Let:
-     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
-     * calculate the affine product:
+     * - vector [yVec] over [A], of the length of the result (`m` for `Normal`, `n` otherwise)
+     *
+     * let `A_p` be [aMat] read as [aOp] says, using the ring's conjugation for
+     * [TransposeMode.ConjugateTranspose], and calculate the affine product (BLAS `gemv`):
      * ```
      * alpha A_p x + beta y
      * ```
-     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
      */
     fun <A : Any> affineMatVec(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -619,28 +654,28 @@ object DenseMatOps {
      * Given a:
      * - [Semiring] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
-     * - `m×n` matrix [aMat] over [A]
-     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
-     * - `m×n` matrix `B` over [A]
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
+     * - matrix [aMat] over [A]
+     * - [bOp] way to treat matrix [bMat] (as per [TransposeMode])
+     * - matrix [bMat] over [A]
      * - constant [beta] in [A]
-     * - `m×n` matrix `C` over [A]
-     * Let:
-     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
-     * - `B_p` be the matrix [bMat] be adjusted by [bOp]
-     * calculate the affine product:
+     * - matrix [cMat] over [A]
+     *
+     * let `A_p` and `B_p` be [aMat] and [bMat] read as [aOp] and [bOp] say, with `A_p` of shape
+     * `m×k`, `B_p` of shape `k×n` and [cMat] of shape `m×n`, and calculate the affine product
+     * (BLAS `gemm`):
      * ```
      * alpha A_p B_p + beta C
      * ```
-     * Note that since we are using a [Semiring] here, we have no `conj` function available to us, so specifying
-     * [MatOp.ConjTrans] causes an error at there is no way to calculate it.
+     * A [Semiring] has no conjugation, so [TransposeMode.ConjugateTranspose] is rejected with an
+     * [IllegalArgumentException]; use the [InvolutiveRing] overload for it.
      */
     fun <A : Any> affineMul(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,
@@ -650,16 +685,16 @@ object DenseMatOps {
      * Given an:
      * - [InvolutiveRing] over [A]
      * - constant [alpha] in [A]
-     * - [aOp] way to treat matrix [aMat] (as per [MatOp])
-     * - `m×n` matrix [aMat] over [A]
-     * - [bOp] way to treat matrix [bMat] (as per [MatOp])
-     * - `m×n` matrix `B` over [A]
+     * - [aOp] way to treat matrix [aMat] (as per [TransposeMode])
+     * - matrix [aMat] over [A]
+     * - [bOp] way to treat matrix [bMat] (as per [TransposeMode])
+     * - matrix [bMat] over [A]
      * - constant [beta] in [A]
-     * - `m×n` matrix `C` over [A]
-     * Let:
-     * - `A_p` be the matrix [aMat] be adjusted by [aOp]
-     * - `B_p` be the matrix [bMat] be adjusted by [bOp]
-     * calculate the affine product:
+     * - matrix [cMat] over [A]
+     *
+     * let `A_p` and `B_p` be [aMat] and [bMat] read as [aOp] and [bOp] say, using the ring's
+     * conjugation for [TransposeMode.ConjugateTranspose], with `A_p` of shape `m×k`, `B_p` of
+     * shape `k×n` and [cMat] of shape `m×n`, and calculate the affine product (BLAS `gemm`):
      * ```
      * alpha A_p B_p + beta C
      * ```
@@ -667,9 +702,9 @@ object DenseMatOps {
     fun <A : Any> affineMul(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,
@@ -692,7 +727,7 @@ object DenseMatOps {
     fun <A : Any> concatDiagonal(
         zero: A,
         vararg matrices: MatLike<A>
-    ) = DenseMatKernel.concatDiagonal(matrices.asList(), zero)
+    ): DenseMat<A> = DenseMatKernel.concatDiagonal(matrices.asList(), zero)
 
     /**
      * Concatenate a list of matrices diagonal to one another, inserting [zero] in other positions.
@@ -714,7 +749,7 @@ object DenseMatOps {
     ): DenseMat<A> = DenseMatKernel.concatDiagonal(matrices, zero)
 
     /**
-     * Return true iff for all j > i, m_ij = 0.
+     * Return true iff [mat] is lower triangular: `m_ij = 0` (under [eq]) whenever `j > i`.
      */
     fun <A : Any> isLowerTriangular(
         mat: MatLike<A>,
@@ -723,7 +758,7 @@ object DenseMatOps {
     ): Boolean = DenseMatKernel.isLowerTriangular(mat, zero, eq)
 
     /**
-     * Return true iff for all j < i, m_ij = 0.
+     * Return true iff [mat] is upper triangular: `m_ij = 0` (under [eq]) whenever `j < i`.
      */
     fun <A : Any> isUpperTriangular(
         mat: MatLike<A>,
@@ -732,7 +767,7 @@ object DenseMatOps {
     ): Boolean = DenseMatKernel.isUpperTriangular(mat, zero, eq)
 
     /**
-     * Return true iff for all i, j, m_ij = m_ji.
+     * Return true iff [mat] is square and symmetric: `m_ij = m_ji` (under [eq]) for all `i`, `j`.
      */
     fun <A : Any> isSymmetric(
         mat: MatLike<A>,
@@ -740,8 +775,8 @@ object DenseMatOps {
     ): Boolean = DenseMatKernel.isSymmetric(mat, eq)
 
     /**
-     * Return true iff mat1 and mat2 have the same size and their entries are
-     * pairwise equal.
+     * Return true iff [mat1] and [mat2] have the same shape and their entries are pairwise equal
+     * under [eq].
      */
     fun <A : Any> isEqual(
         mat1: MatLike<A>,
@@ -876,12 +911,13 @@ object DenseMatOps {
     ): A = DenseMatKernel.detByPermutation(ring, mat)
 
     /**
-     * Add an O(n^3) fraction-free determinant algorithm for dense matrices over a CommutativeRing when an exact division BinOp is supplied.
+     * Computes the determinant with Bareiss's fraction-free elimination, in `O(n³)` ring
+     * operations, over a [CommutativeRing] in which the needed divisions are exact (e.g. ℤ).
      *
-     * The API should not require Field and should not add exact division to CommutativeRing. Instead, Bareiss should accept exactDiv:
-     * BinOp<A> as an explicit proof-of-capability.
-     *
-     * The implementation should be tested against the existing Leibniz/permutation determinant on small matrices.
+     * Rather than requiring a [Field], the caller supplies [exactDiv], a division that is only
+     * ever applied when the quotient exists in the ring: it serves as a proof of the capability.
+     * Every intermediate value is itself a minor of [mat], so nothing leaves the ring. The result
+     * agrees with [detByPermutation], which the tests use as an oracle.
      */
     fun <A : Any> detBareiss(
         ring: CommutativeRing<A>,
@@ -911,7 +947,6 @@ object DenseMatOps {
     ): RowEchelonForm<A> =
         DenseMatKernel.rowEchelonForm(field, mat, eq, null)
 
-
     /**
      * Calculate the row echelon form of a matrix along with the row operations that were performed to obtain it.
      */
@@ -937,7 +972,7 @@ object DenseMatOps {
      * @param field The field over which the matrix is defined.
      * @param mat The matrix of which to compute the reduced row echelon form.
      * @param eq The equality function for the field.
-     * @return The row echelon form of the given matrix.
+     * @return The reduced row echelon form of the given matrix.
      */
     fun <A : Any> reducedRowEchelonForm(
         field: Field<A>,

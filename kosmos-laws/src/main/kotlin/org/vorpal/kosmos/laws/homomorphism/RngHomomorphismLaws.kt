@@ -25,7 +25,7 @@ class RngHomomorphismLaws<A : Any, B : Any>(
     private val prB: Printable<B> = Printable.default()
     ) : LawSuite {
     override val name =
-        "rng homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
+        "rng homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
 
     override fun laws(): List<TestingLaw> = listOf(
         preservesBinaryOpLaw(

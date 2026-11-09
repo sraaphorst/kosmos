@@ -1,29 +1,26 @@
 package org.vorpal.kosmos.linear.values
 
-import org.vorpal.kosmos.algebra.structures.CommutativeRng
-
 /**
- * An interface to an object that behaves like a vector, i.e.:
- * - it has a [size]
- * - it has an accessor to get an entry in a given position
+ * Anything that can be read as a vector: a length and an entry at each index.
+ *
+ * Implemented by the stored vectors ([DenseVec], [Vec0] through [Vec4]) and by the lazy views in
+ * [org.vorpal.kosmos.linear.views] (rows and columns of a matrix, slices, the diagonal). The
+ * operations in [org.vorpal.kosmos.linear.ops.DenseVecOps] accept any [VecLike], so they work on
+ * all of these without copying.
+ *
+ * Indices are zero-based.
  */
 interface VecLike<out A : Any> {
+    /**
+     * The number of entries.
+     */
     val size: Int
-    operator fun get(i: Int): A
-}
 
-/**
- * Calculate the dot product of [v] and [w] in the context of [rng].
- *
- * Note that the size of [v] and [w] must be the same.
- */
-fun <R : Any> dot(
-    v: VecLike<R>,
-    w: VecLike<R>,
-    rng: CommutativeRng<R>): R {
-    if (v.size != w.size)
-        throw ArithmeticException("Cannot take dot product of vectors of different lengths: ${v.size} ≠ ${w.size}")
-    return (0 until v.size).fold(rng.zero) { sum, idx ->
-        rng.run { add(sum, mul(v[idx], w[idx])) }
-    }
+    /**
+     * The entry at index [i], for `0 ≤ i < size`.
+     *
+     * @throws IndexOutOfBoundsException (or [IllegalArgumentException] for some views) if [i] is
+     * out of range
+     */
+    operator fun get(i: Int): A
 }

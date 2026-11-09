@@ -13,7 +13,6 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.getOrElse
-import org.vorpal.kosmos.linear.ops.MatOp
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
@@ -23,20 +22,19 @@ import org.vorpal.kosmos.linear.values.RowOp
 import org.vorpal.kosmos.linear.values.VecLike
 import org.vorpal.kosmos.linear.views.opView
 import org.vorpal.kosmos.linear.views.transposeView
+import org.vorpal.kosmos.linear.views.TransposeMode
 import kotlin.math.min
 
 /**
- * Note that this file contains functions that accept [MatLike] objects but return results as [DenseMat]: hence,
- * we keep them in [DenseMatKernel].
- */
-
-/**
- * This comprises private code shared by the classes in [DenseMatAlgebras] and DenseMatOps.
+ * The implementations behind [org.vorpal.kosmos.linear.ops.DenseMatOps] and the structures in
+ * [DenseMatAlgebras]. The functions accept [MatLike] and return [DenseMat].
  *
- * It also isolates the non-FP code to be contained in this file. We opt for standard
- * looping instead of using ranges since then no lambdas or [IntRange]s get created: using
- * a functional programming approach instead typically results in runtimes between 2 - 10x
- * longer that the loop-based approach.
+ * A function with a public wrapper in `DenseMatOps` is documented there, under the same name; only
+ * the helpers with no public counterpart carry their own documentation here.
+ *
+ * This object also isolates the non-FP code. We use plain loops instead of ranges and higher-order
+ * functions, so that no lambdas or [IntRange]s get created: the functional style typically runs
+ * 2 to 10 times slower here.
  */
 internal object DenseMatKernel {
     /**
@@ -88,7 +86,7 @@ internal object DenseMatKernel {
     ): A {
         require(mat.rows != 0 && mat.cols != 0) { "Matrix cannot be empty." }
         val elem = mat[0, 0]
-        require(elem != zero) { "Expected constant nonzero matrix, but got: $zero" }
+        require(elem != zero) { "Expected constant nonzero matrix, but its entries are $elem." }
 
         for (r in 0 until mat.rows) {
             for (c in 0 until mat.cols) {
@@ -100,6 +98,9 @@ internal object DenseMatKernel {
         return elem
     }
 
+    /**
+     * The `n×n` identity matrix with [one] on the diagonal and [zero] elsewhere.
+     */
     fun <A : Any> identity(
         zero: A,
         one: A,
@@ -197,7 +198,8 @@ internal object DenseMatKernel {
     ): Boolean {
         for (r in 0 until mat.rows) {
             for (c in 0 until mat.cols) {
-                if (eq(mat[r, c], field.zero)) return false
+                val entry = mat[r, c]
+                if (eq(entry, field.zero) || !field.hasReciprocal(entry)) return false
             }
         }
         return true
@@ -470,6 +472,9 @@ internal object DenseMatKernel {
         mat: MatLike<A>
     ): DenseVec<A> = rowSums(semiring, mat.transposeView())
 
+    /**
+     * The scalar multiple `s·mat`, multiplying each entry by [s] on the left.
+     */
     fun <A : Any> scale(
         semiring: Semiring<A>,
         s: A,
@@ -509,6 +514,9 @@ internal object DenseMatKernel {
         f: (A) -> B
     ): DenseVec<B> = rowReduce(add, mat.transposeView(), f)
 
+    /**
+     * Whether [mat] has as many rows as columns.
+     */
     fun isSquare(
         mat: MatLike<*>
     ): Boolean =
@@ -626,13 +634,13 @@ internal object DenseMatKernel {
     fun <A: Any> affineMatVec(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
         yVec: VecLike<A>
     ): DenseVec<A> {
-        require(aOp != MatOp.ConjTrans) { "ConjTrans requires an involutive ring." }
+        require(aOp != TransposeMode.ConjugateTranspose) { "ConjugateTranspose requires an involutive ring." }
 
         val aV = aMat.opView(aOp) // Normal or Trans
         val m = aV.rows
@@ -655,7 +663,7 @@ internal object DenseMatKernel {
     fun <A: Any> affineMatVec(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
         xVec: VecLike<A>,
         beta: A,
@@ -676,21 +684,21 @@ internal object DenseMatKernel {
             val right = ring.mul(beta, yVec[i])
             out[i] = ring.add(left, right)
         }
-        return DenseVec.fromArrayUnsafe(out)// Normal/Trans/ConjTrans
+        return DenseVec.fromArrayUnsafe(out)
     }
 
     fun <A : Any> affineMul(
         semiring: Semiring<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,
     ): DenseMat<A> {
-        require(aOp != MatOp.ConjTrans && bOp != MatOp.ConjTrans) {
-            "ConjTrans requires an involutive ring."
+        require(aOp != TransposeMode.ConjugateTranspose && bOp != TransposeMode.ConjugateTranspose) {
+            "ConjugateTranspose requires an involutive ring."
         }
 
         val aV = aMat.opView(aOp)
@@ -727,9 +735,9 @@ internal object DenseMatKernel {
     fun <A : Any> affineMul(
         ring: InvolutiveRing<A>,
         alpha: A,
-        aOp: MatOp,
+        aOp: TransposeMode,
         aMat: MatLike<A>,
-        bOp: MatOp,
+        bOp: TransposeMode,
         bMat: MatLike<A>,
         beta: A,
         cMat: MatLike<A>,

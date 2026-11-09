@@ -16,8 +16,20 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.VecLike
-import kotlin.require
 
+/**
+ * Algebraic structures on dense vectors `A^n` of a fixed length `n`:
+ * - [DenseVecGroup]: the coordinatewise additive group.
+ * - [DenseVectorSpace]: `F^n` over a field.
+ * - [hadamardMonoid]: the entrywise (Hadamard) product, and [DenseVecHadamardUnitGroup] for its
+ *   units over a field.
+ * - [liftPrintableStrict], [liftPrintablePretty], [liftEq]: printing and equality from those of
+ *   the entries.
+ *
+ * Every structure checks that its arguments have length `n` and throws
+ * [IllegalArgumentException] otherwise. The fixed-size vectors have their own structures in
+ * [FixedVecAlgebras].
+ */
 object DenseVecAlgebras {
     /**
      * Build the additive abelian group structure on `A^n` (dense coordinate vectors),
@@ -55,23 +67,16 @@ object DenseVecAlgebras {
         override val add: AbelianGroup<DenseVec<F>> =
             DenseVecGroup(scalars.add, dimension)
 
-        override val leftAction: LeftAction<F, DenseVec<F>> = LeftAction { s, v ->
+        override val leftAction: LeftAction<F, DenseVec<F>> = LeftAction(Symbols.TRIANGLE_RIGHT) { s, v ->
             DenseKernel.requireSize(v.size, dimension)
             v.map { x -> scalars.mul(s, x) }
         }
     }
 
-    private fun <A : Any> hadamardOp(
-        mul: Monoid<A>,
-        size: Int
-    ): BinOp<DenseVec<A>> =
-        BinOp(Symbols.HADAMARD) { x, y ->
-            DenseKernel.requireSize(x.size, size)
-            DenseKernel.requireSize(y.size, size)
-            DenseVecKernel.hadamard(mul, x, y)
-        }
-
-
+    /**
+     * The entrywise (Hadamard) product on `A^n` from a [Monoid] on the entries, with the constant
+     * vector of the identity as unit.
+     */
     fun <A : Any> hadamardMonoid(
         monoid: Monoid<A>,
         dimension: Int
@@ -84,7 +89,10 @@ object DenseVecAlgebras {
         }
     )
 
-
+    /**
+     * The entrywise (Hadamard) product on `A^n` from a [CommutativeMonoid] on the entries; it is
+     * then commutative too.
+     */
     fun <A : Any> hadamardMonoid(
         commutativeMonoid: CommutativeMonoid<A>,
         dimension: Int
@@ -98,9 +106,9 @@ object DenseVecAlgebras {
     )
 
     /**
-     * The multiplicative abelian group of Hadamard-units in `A^(r*c)`, for a base field [A].
+     * The multiplicative abelian group of Hadamard units in `A^n`, for a base field [A].
      *
-     * Carrier: `rc` vectors with *no zero entries*.
+     * Carrier: vectors of length `n` with *no zero entries*.
      *
      * Operation: Hadamard (entrywise) multiplication.
      * Identity: all-ones vector.
@@ -220,6 +228,9 @@ object DenseVecAlgebras {
             "${v.size}-vector:\n$body"
         }
 
+    /**
+     * Equality of dense vectors: the same length and entries equal under [eqA].
+     */
     fun <A : Any> liftEq(eqA: Eq<A>): Eq<DenseVec<A>> =
         Eq { x, y ->
             if (x.size != y.size) false

@@ -14,6 +14,7 @@ import org.vorpal.kosmos.core.relations.TotalOrder
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.DenseVec
+import org.vorpal.kosmos.linear.views.TransposeMode
 import java.math.BigInteger
 import kotlin.math.abs
 
@@ -99,11 +100,11 @@ class DenseMatOpsSpec : FunSpec({
                 )
         }
 
-        test("gramMatrix and intersectionMatrix equal the corresponding products") {
+        test("gramMatrix and pointConcurrenceMatrix equal the corresponding products") {
             val a = m(listOf(1, 2), listOf(3, 4))
             DenseMatOps.gramMatrix(z, a) shouldBe
                 DenseMatOps.matMul(z, DenseMatOps.generateTranspose(a), a)
-            DenseMatOps.intersectionMatrix(z, a) shouldBe
+            DenseMatOps.pointConcurrenceMatrix(z, a) shouldBe
                 DenseMatOps.matMul(z, a, DenseMatOps.generateTranspose(a))
         }
 
@@ -127,21 +128,21 @@ class DenseMatOpsSpec : FunSpec({
             val b = m(listOf(1, 2), listOf(3, 4))
             val c = m(listOf(1, 1), listOf(1, 1))
             DenseMatOps.affineMul(
-                z, 2.toBigInteger(), MatOp.Normal, a, MatOp.Normal, b, 3.toBigInteger(), c
+                z, 2.toBigInteger(), TransposeMode.Normal, a, TransposeMode.Normal, b, 3.toBigInteger(), c
             ) shouldBe m(listOf(5, 7), listOf(9, 11))
         }
 
         test("affineMatVec computes alpha·A·x + beta·y") {
             val a = DenseMatOps.identity(z, 2)
             DenseMatOps.affineMatVec(
-                z, 2.toBigInteger(), MatOp.Normal, a, v(1, 2), 3.toBigInteger(), v(1, 1)
+                z, 2.toBigInteger(), TransposeMode.Normal, a, v(1, 2), 3.toBigInteger(), v(1, 1)
             ) shouldBe v(5, 7)
         }
 
         test("affineMul with a transposed operand uses the transpose") {
             val a = m(listOf(1, 2), listOf(3, 4))
             DenseMatOps.affineMul(
-                z, BigInteger.ONE, MatOp.Trans, a, MatOp.Normal, DenseMatOps.identity(z, 2),
+                z, BigInteger.ONE, TransposeMode.Transpose, a, TransposeMode.Normal, DenseMatOps.identity(z, 2),
                 BigInteger.ZERO, DenseMatOps.zero(z, 2, 2)
             ) shouldBe DenseMatOps.generateTranspose(a)
         }
@@ -224,17 +225,17 @@ class DenseMatOpsSpec : FunSpec({
             DenseMatOps.isHadamardUnit(q, qm(listOf(Rational.ONE, Rational.ZERO))) shouldBe false
         }
 
-        test("isHadamardUnit honours the supplied Eq for the zero comparison") {
-            // A matrix whose only "suspicious" entry is 1e-15: nonzero exactly, but indistinguishable
-            // from zero under a reasonable approximate equality.
-            val almostZero: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-15)))
-            val approxZero: Eq<Real> = Eq { a, b -> abs(a - b) < 1e-10 }
+        test("isHadamardUnit uses the field's predicate, and the supplied Eq can only make it stricter") {
+            // 1e-15 is nonzero, but RealField cannot invert it, so it is never a Hadamard unit.
+            val tooSmall: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-15)))
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, tooSmall) shouldBe false
 
-            // Default Eq is `==`, so 1e-15 ≠ 0.0 exactly → the matrix is a Hadamard unit.
-            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero) shouldBe true
-
-            // Approximate Eq treats 1e-15 as zero → the matrix is NOT a Hadamard unit.
-            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, almostZero, approxZero) shouldBe false
+            // 1e-3 is invertible in RealField: a unit under the default Eq, but not under an Eq
+            // that treats it as zero.
+            val smallButFine: DenseMat<Real> = DenseMat.ofRows(listOf(listOf(1.0, 1e-3)))
+            val coarseZero: Eq<Real> = Eq { a, b -> abs(a - b) < 1e-2 }
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, smallButFine) shouldBe true
+            DenseMatOps.isHadamardUnit(RealAlgebras.RealField, smallButFine, coarseZero) shouldBe false
         }
 
         test("diagonal dominance") {

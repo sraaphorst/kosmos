@@ -51,11 +51,20 @@ class DenseMat<A : Any> private constructor(
     /**
      * Return the element at row [r], column [c].
      *
-     * @throws IndexOutOfBoundsException if indices are out of range.
+     * Both coordinates are checked separately: checking only the flat index `r * cols + c` would
+     * let `[0, cols]` alias `[1, 0]`, or `[1, -1]` alias `[0, cols - 1]`.
+     *
+     * @throws IndexOutOfBoundsException if either index is out of range.
      */
-    override operator fun get(r: Int, c: Int): A =
-        flatGet(indexOf(r, c))
+    override operator fun get(r: Int, c: Int): A {
+        if (r !in 0 until rows || c !in 0 until cols)
+            throw IndexOutOfBoundsException("Index ($r, $c) out of bounds for a $rows × $cols matrix")
+        return flatGet(indexOf(r, c))
+    }
 
+    /**
+     * The entries as a list of rows, each a list of entries.
+     */
     fun toListOfRows(): List<List<A>> =
         List(rows) { r ->
             List(cols) { c ->
@@ -69,6 +78,9 @@ class DenseMat<A : Any> private constructor(
     fun <B : Any> map(f: (A) -> B): DenseMat<B> =
         tabulate(rows, cols) { r, c -> f(get(r, c)) }
 
+    /**
+     * Iterates over the entries in row-major order.
+     */
     override operator fun iterator(): Iterator<A> =
         object : Iterator<A> {
             private var idx = 0
@@ -87,7 +99,9 @@ class DenseMat<A : Any> private constructor(
         }
 
     /**
-     * Zip two matrices entrywise.
+     * Combines this matrix with [other] entrywise: the result has entries `f(this[r, c], other[r, c])`.
+     *
+     * @throws IllegalArgumentException if the two matrices have different shapes
      */
     fun <B : Any, C : Any> zipWith(other: DenseMat<B>, f: (A, B) -> C): DenseMat<C> {
         require(rows == other.rows && cols == other.cols) {
@@ -96,6 +110,9 @@ class DenseMat<A : Any> private constructor(
         return tabulate(rows, cols) { r, c -> f(get(r, c), other[r, c]) }
     }
 
+    /**
+     * Two matrices are equal if they have the same shape and equal entries (by [equals]).
+     */
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (other !is DenseMat<*>) return false
@@ -104,24 +121,32 @@ class DenseMat<A : Any> private constructor(
         return data.indices.all { data[it] == other.data[it] }
     }
 
+    /**
+     * A hash code consistent with [equals], combining the shape and the entries.
+     */
     override fun hashCode(): Int =
         data.indices.fold((31 + rows) * 31 + cols) { h, idx ->
             31 * h + (data[idx]?.hashCode() ?: 0)
         }
 
+    /**
+     * The entries as a list of rows, e.g. `[[1, 2], [3, 4]]`. For configurable rendering see
+     * [org.vorpal.kosmos.linear.instances.DenseMatAlgebras.liftPrintablePretty].
+     */
     override fun toString(): String =
         toListOfRows().toString()
 
     /**
      * Convert a coordinate pair (r, c) into a position in the flat data array.
-      */
+     */
     private fun indexOf(r: Int, c: Int): Int =
         r * cols + c
 
     companion object {
         /**
-         * An unsafe constructor from an already-filled array.
-         * This allows us to build results of multiplication without per-entry lambdas.
+         * Wraps an already-filled row-major array without copying it, so the caller must not
+         * modify [data] afterwards and must have filled it with non-null values of type [A]. This
+         * lets the kernels build results of multiplication without per-entry lambdas.
          */
         internal fun <A : Any> fromArrayUnsafe(
             rows: Int,
@@ -130,6 +155,12 @@ class DenseMat<A : Any> private constructor(
         ): DenseMat<A> =
             DenseMat(rows, cols, data)
 
+        /**
+         * The `rows×cols` matrix whose entry at `(r, c)` is `f(r, c)`.
+         *
+         * @throws IllegalArgumentException if [rows] or [cols] is negative
+         * @throws ArithmeticException if `rows × cols` overflows an [Int]
+         */
         fun <A : Any> tabulate(
             rows: Int,
             cols: Int,
@@ -147,6 +178,11 @@ class DenseMat<A : Any> private constructor(
             return DenseMat(rows, cols, data)
         }
 
+        /**
+         * The matrix with the given rows. An empty list gives the `0×0` matrix.
+         *
+         * @throws IllegalArgumentException if the rows do not all have the same length
+         */
         fun <A : Any> ofRows(
             rows: List<List<A>>
         ): DenseMat<A> {

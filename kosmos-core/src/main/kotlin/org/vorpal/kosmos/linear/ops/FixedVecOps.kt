@@ -4,14 +4,15 @@ import org.vorpal.kosmos.algebra.structures.CommutativeRng
 import org.vorpal.kosmos.linear.values.Vec3
 
 /**
- * Operations specific to the fixed-arity tuples [org.vorpal.kosmos.linear.values.Vec0] through
+ * Operations specific to the fixed-size vectors [org.vorpal.kosmos.linear.values.Vec0] through
  * [org.vorpal.kosmos.linear.values.Vec4].
  *
  * Operations that make sense in every dimension (dot products, norms, scaling, and so on) are not
- * repeated here: the fixed tuples are [org.vorpal.kosmos.linear.values.VecLike], so use
- * [DenseVecOps] for those.
+ * repeated here: the fixed-size vectors are [org.vorpal.kosmos.linear.values.VecLike], so use
+ * [DenseVecOps] for those. Products of [org.vorpal.kosmos.linear.values.Vec2] with
+ * [org.vorpal.kosmos.linear.values.Mat2] are in [FixedMatOps].
  */
-object FixedTupleOps {
+object FixedVecOps {
     /**
      * The three-dimensional cross product over a commutative rng:
      * ```text
@@ -26,7 +27,8 @@ object FixedTupleOps {
      */
     fun <R : Any> cross(
         rng: CommutativeRng<R>,
-        v: Vec3<R>, w: Vec3<R>
+        v: Vec3<R>,
+        w: Vec3<R>
     ): Vec3<R> =
         rng.run {
             Vec3(

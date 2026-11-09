@@ -16,13 +16,19 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.PermMat
 import org.vorpal.kosmos.linear.views.transposeView
 
+/**
+ * The symmetric and alternating groups as full [DenseMat] permutation matrices over a semiring.
+ *
+ * These are slower than the compact [PermMat]s of [PermMatAlgebras], but their elements can be
+ * combined with any other dense matrix.
+ */
 object PermutationMatrixAlgebras {
 
     /**
      * Create a group of `n×n` [DenseMat] representing the matrix representation of the `S_n` over a given
      * [Semiring].
      *
-     * Unlike [PermMatAlgebras.symmetric], it uses full [DenseMat] instead of the faster [PermMat].
+     * Unlike [PermMatAlgebras.symmetricGroup], it uses full [DenseMat] instead of the faster [PermMat].
      *
      * Note: the group operation here is composition (∘), implemented as reversed
      * matrix multiplication:
@@ -80,7 +86,7 @@ object PermutationMatrixAlgebras {
     /**
      * Create the subgroup of `n×n` [DenseMat] representing the subgroup `A_n` of `S_n` over a given [Semiring].
      *
-     * Unlike [PermMatAlgebras.alternating], it uses full [DenseMat] instead of the faster [PermMat].
+     * Unlike [PermMatAlgebras.alternatingSubgroup], it uses full [DenseMat] instead of the faster [PermMat].
      *
      * Note: the group operation here is composition (∘), implemented as reversed
      * matrix multiplication:

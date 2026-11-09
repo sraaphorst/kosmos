@@ -5,7 +5,6 @@ import org.vorpal.kosmos.algebra.morphisms.RingIsomorphism
 import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.algebra.structures.CD
-import org.vorpal.kosmos.algebra.structures.CayleyDickson
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.FiniteVectorSpace
@@ -29,11 +28,14 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.QuaternionTier
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
-import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
-import org.vorpal.kosmos.linear.values.DenseMat
+import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
+import org.vorpal.kosmos.linear.values.Mat2
 
 /**
- * The split-quaternion tier over [base]: the split doubling of `R[i]/(i² + 1)`.
+ * The split-quaternion tier over [base]: the split doubling of:
+ * ```text
+ * R[i]/(i² + 1).
+ * ```
  */
 internal fun <R : Any> splitQuaternionTier(
     base: CommutativeRing<R>
@@ -57,8 +59,12 @@ internal fun <R : Any> splitQuaternionTier(
  * - [splitQuaternionModule]: `SplitQuaternion<R>` as a free `R`-module of rank 4.
  * - [splitQuaternionAlgebra], [splitQuaternionStarAlgebra]: as an `R`-(star-)algebra.
  *
- * The arithmetic is not implemented here: it is [CayleyDickson.associativeSplit] applied to
- * `R[i]/(i² + 1)`, transported to the [SplitQuaternion] carrier.
+ * The arithmetic is not implemented here: it is [org.vorpal.kosmos.algebra.structures.CayleyDickson.associativeSplit]
+ * applied to
+ * ```text
+ * R[i]/(i² + 1),
+ * ```
+ * transported to the [SplitQuaternion] carrier.
  *
  * Real conveniences:
  * - [RealSplitQuaternionRing]: split-quaternions over `Real`, with numerically guarded reciprocals.
@@ -71,7 +77,8 @@ internal fun <R : Any> splitQuaternionTier(
  * - [ComplexToSplitQuaternionMonomorphism]: the Cayley-Dickson embedding `ℂ ↪ ℍ'`, `a + bi ↦ a + bi`.
  * - [splitComplexToSplitQuaternionMonomorphism], [splitComplexToSplitQuaternionAlongK]: the
  *   split-complex numbers along `j` and along `k`.
- * - [splitQuaternionToRank2MatrixMonomorphism]: `SplitQuaternion<R> ↪ M₂(R)`.
+ * - [splitQuaternionToRank2MatrixHomomorphism]: `SplitQuaternion<R> → M₂(R)`, injective when 2 is
+ *   not a zero divisor.
  * - [splitQuaternionMatrixIsomorphism]: `SplitQuaternion<F> ≅ M₂(F)` when 2 is invertible.
  */
 object SplitQuaternionAlgebras {
@@ -143,6 +150,9 @@ object SplitQuaternionAlgebras {
      * ```
      * [isZero] decides when a norm counts as zero; over an exact field the default equality is
      * right, while over `Real` a numerical test should be supplied (see [RealSplitQuaternionRing]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> splitQuaternionRingWithReciprocal(
         field: Field<F>,
@@ -166,7 +176,7 @@ object SplitQuaternionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: SplitQuaternion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<SplitQuaternion<F>> = Endo(Symbols.INVERSE) { q ->
             if (!hasReciprocal(q)) throw HasReciprocal.notInvertible(q, "the split-quaternions")
@@ -216,6 +226,7 @@ object SplitQuaternionAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `q` is invertible iff
      * `N(q) = w² + x² - y² - z²` is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealSplitQuaternionRing :
         InvolutiveRing<SplitQuaternion<Real>> by splitQuaternionRing(RealAlgebras.RealField),
@@ -232,10 +243,20 @@ object SplitQuaternionAlgebras {
 
         override val normSq: UnaryOp<SplitQuaternion<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: SplitQuaternion<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<SplitQuaternion<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<SplitQuaternion<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the split-quaternions")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: SplitQuaternion<Real>): Boolean =
+            q.coefficients().all(Real::isFinite)
 
         /**
          * The standard basis `1, i, j, k`.
@@ -328,19 +349,17 @@ object SplitQuaternionAlgebras {
 
     private fun <R : Any> toMatrix(
         base: CommutativeRing<R>
-    ): UnaryOp<SplitQuaternion<R>, DenseMat<R>> =
+    ): UnaryOp<SplitQuaternion<R>, Mat2<R>> =
         UnaryOp { (w, x, y, z) ->
             fun minus(a: R, b: R): R = base.add(a, base.add.inverse(b))
-            DenseMat.ofRows(
-                listOf(
-                    listOf(minus(w, z), minus(y, x)),
-                    listOf(base.add(x, y), base.add(w, z))
-                )
+            Mat2(
+                minus(w, z), minus(y, x),
+                base.add(x, y), base.add(w, z)
             )
         }
 
     /**
-     * The matrix representation `SplitQuaternion<R> ↪ M₂(R)` determined by
+     * The matrix representation `SplitQuaternion<R> → M₂(R)` determined by
      * ```text
      * i ↦ [[0, -1], [1, 0]],   j ↦ [[0, 1], [1, 0]],   k ↦ [[-1, 0], [0, 1]],
      * ```
@@ -348,16 +367,23 @@ object SplitQuaternionAlgebras {
      * ```text
      * w + xi + yj + zk ↦ [[w - z, y - x], [x + y, w + z]].
      * ```
-     * The norm becomes the determinant. Over a ring in which 2 is invertible this is onto (see
-     * [splitQuaternionMatrixIsomorphism]); over ℤ it is injective but not surjective, since the
-     * diagonal entries `w ∓ z` (and the off-diagonal ones) always have equal parity.
+     * The matrices are [Mat2]s in the ring [FixedMatAlgebras.mat2Ring]. The norm becomes the
+     * determinant and conjugation becomes the adjugate (the conjugation of
+     * [FixedMatAlgebras.mat2StarAlgebra]).
+     *
+     * Its kernel is `{ w + xi + xj + wk : 2w = 0, 2x = 0 }`, so it is injective exactly when 2 is
+     * not a zero divisor in [base] (ℤ, ℚ, any field of characteristic other than 2). That is why
+     * the type is only a homomorphism. Over 𝔽₂, for example, `1` and `k` both map to the identity.
+     * Over a ring in which 2 is invertible it is onto (see [splitQuaternionMatrixIsomorphism]);
+     * over ℤ it is injective but not surjective, since the diagonal entries `w ∓ z` (and the
+     * off-diagonal ones) always have equal parity.
      */
-    fun <R : Any> splitQuaternionToRank2MatrixMonomorphism(
+    fun <R : Any> splitQuaternionToRank2MatrixHomomorphism(
         base: CommutativeRing<R>
-    ): RingMonomorphism<SplitQuaternion<R>, DenseMat<R>> =
-        RingMonomorphism.of(
+    ): RingHomomorphism<SplitQuaternion<R>, Mat2<R>> =
+        RingHomomorphism.of(
             domain = splitQuaternionRing(base),
-            codomain = DenseMatAlgebras.DenseMatRing(base, 2),
+            codomain = FixedMatAlgebras.mat2Ring(base),
             map = toMatrix(base)
         )
 
@@ -372,7 +398,7 @@ object SplitQuaternionAlgebras {
      */
     fun <F : Any> splitQuaternionMatrixIsomorphism(
         field: Field<F>
-    ): RingIsomorphism<SplitQuaternion<F>, DenseMat<F>> {
+    ): RingIsomorphism<SplitQuaternion<F>, Mat2<F>> {
         val two = field.add(field.one, field.one)
         require(field.hasReciprocal(two)) {
             "The split-quaternions are isomorphic to M₂(F) only when 2 is invertible in F."
@@ -382,7 +408,7 @@ object SplitQuaternionAlgebras {
         fun minus(a: F, b: F): F = field.add(a, field.add.inverse(b))
 
         val splitQuaternions = splitQuaternionRing(field)
-        val matrices = DenseMatAlgebras.DenseMatRing(field, 2)
+        val matrices = FixedMatAlgebras.mat2Ring(field)
 
         return RingIsomorphism.of(
             forward = RingHomomorphism.of(
@@ -393,9 +419,7 @@ object SplitQuaternionAlgebras {
             backward = RingHomomorphism.of(
                 domain = matrices,
                 codomain = splitQuaternions,
-                map = UnaryOp { m ->
-                    val (p, q) = m[0, 0] to m[0, 1]
-                    val (r, s) = m[1, 0] to m[1, 1]
+                map = UnaryOp { (p, q, r, s) ->
                     splitQuaternion(
                         w = halfOf(field.add(p, s)),
                         x = halfOf(minus(r, q)),

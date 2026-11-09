@@ -16,16 +16,17 @@ import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
 /**
- * These functions accept [VecLike] inputs and return [DenseVec] outputs.
+ * The implementations behind [org.vorpal.kosmos.linear.ops.DenseVecOps]. The functions accept
+ * [VecLike] and return [DenseVec].
  *
  * They comprise:
  * - hot loop plumbing
  * - unsafe constructors
  * - shape checks
  *
- * We don't necessarily want to freeze these as API or support them forever; hence we use
- * an `internal object` here and expose public wrappers with stable names in an `Operations` object or as extensions
- * and keep kernel internals internal.
+ * We don't necessarily want to freeze these as API or support them forever; hence we use an
+ * `internal object` here and expose public wrappers with stable names in `DenseVecOps`. A function
+ * with a public wrapper is documented there, under the same name.
  */
 internal object DenseVecKernel {
 
@@ -73,7 +74,7 @@ internal object DenseVecKernel {
     ): Boolean {
         var r = 0
         while (r < x.size) {
-            if (x[r] == field.zero) return false
+            if (!field.hasReciprocal(x[r])) return false
             r += 1
         }
         return true

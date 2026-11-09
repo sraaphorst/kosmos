@@ -4,7 +4,6 @@ import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.bind
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.FiniteFieldAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
@@ -12,8 +11,9 @@ import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
-import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
-import org.vorpal.kosmos.linear.values.DenseMat
+import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
+import org.vorpal.kosmos.linear.values.Mat2
+import org.vorpal.kosmos.linear.values.arbMat2
 import java.math.BigInteger
 
 /**
@@ -27,21 +27,16 @@ class SplitQuaternionMatrixSpec : StringSpec({
     val q = RationalAlgebras.RationalField
     val ring = SplitQuaternionAlgebras.splitQuaternionRing(q)
     val normSq = SplitQuaternionAlgebras.normSq(q)
-    val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(q)
+    val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(q)
     val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(q)
-    val matrices = DenseMatAlgebras.DenseMatRing(q, 2)
+    val matrices = FixedMatAlgebras.mat2Ring(q)
     val arb = ArbSplitQuaternion.rationalSplitQuaternion
 
-    val arbMatrix: Arb<DenseMat<Rational>> =
-        ArbSplitQuaternion.smallRational.let { r ->
-            Arb.bind(r, r, r, r) { a, b, c, d -> DenseMat.ofRows(listOf(listOf(a, b), listOf(c, d))) }
-        }
+    val arbMatrix: Arb<Mat2<Rational>> = arbMat2(ArbSplitQuaternion.smallRational)
+    val det = FixedMatAlgebras.normSq(q)
 
-    fun det(m: DenseMat<Rational>): Rational =
-        m[0, 0] * m[1, 1] - m[0, 1] * m[1, 0]
-
-    fun matrix(a: Int, b: Int, c: Int, d: Int): DenseMat<Rational> =
-        DenseMat.ofRows(listOf(listOf(Rational.of(a), Rational.of(b)), listOf(Rational.of(c), Rational.of(d))))
+    fun matrix(a: Int, b: Int, c: Int, d: Int): Mat2<Rational> =
+        Mat2(Rational.of(a), Rational.of(b), Rational.of(c), Rational.of(d))
 
     "the images of the units: i ↦ [[0,-1],[1,0]], j ↦ [[0,1],[1,0]], k ↦ [[-1,0],[0,1]]" {
         val (one, i, j, k) = SplitQuaternionAlgebras.basis(q)
@@ -99,15 +94,24 @@ class SplitQuaternionMatrixSpec : StringSpec({
 
     "over ℤ the embedding is injective but not surjective: entries on each diagonal share a parity" {
         val z = IntegerAlgebras.IntegerCommutativeRing
-        val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixMonomorphism(z)
+        val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(z)
         val two = BigInteger.TWO
 
         checkAll(ArbSplitQuaternion.integerSplitQuaternion) { x ->
             val m = integerMono(x)
-            (m[0, 0] - m[1, 1]).mod(two) shouldBe BigInteger.ZERO
-            (m[0, 1] - m[1, 0]).mod(two) shouldBe BigInteger.ZERO
+            (m.a - m.d).mod(two) shouldBe BigInteger.ZERO
+            (m.b - m.c).mod(two) shouldBe BigInteger.ZERO
         }
         injectivityLaw(hom = integerMono::invoke, arbA = ArbSplitQuaternion.integerSplitQuaternion).test()
+    }
+
+    "over 𝔽₂ the matrix map is a homomorphism but not injective: 1 and k both map to the identity" {
+        val f2 = FiniteFieldAlgebras.F2
+        val hom = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(f2)
+        val basis = SplitQuaternionAlgebras.basis(f2)
+        (basis[0] == basis[3]) shouldBe false
+        hom(basis[0]) shouldBe hom(basis[3])
+        hom(basis[3]) shouldBe FixedMatAlgebras.mat2Ring(f2).one
     }
 
     "the isomorphism is refused in characteristic 2, where 2 is not invertible" {

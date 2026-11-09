@@ -134,6 +134,9 @@ object OctonionAlgebras {
      * two-sided inverse despite nonassociativity because the algebra is alternative.
      * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
      * (see [OctonionDivisionAlgebra]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> octonionRingWithReciprocal(
         field: Field<F>,
@@ -157,7 +160,7 @@ object OctonionAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Octonion<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Octonion<F>> = Endo(Symbols.INVERSE) { o ->
             if (!hasReciprocal(o)) throw HasReciprocal.notInvertible(o, "the octonions")

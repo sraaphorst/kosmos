@@ -15,10 +15,23 @@ import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 import org.vorpal.kosmos.linear.values.VecLike
 
+/**
+ * Operations on vectors of any length.
+ *
+ * Every function accepts [VecLike], so it works on [DenseVec], on the fixed-size vectors
+ * ([org.vorpal.kosmos.linear.values.Vec0] through [org.vorpal.kosmos.linear.values.Vec4]) and on
+ * the lazy views in [org.vorpal.kosmos.linear.views], and returns a freshly allocated [DenseVec]
+ * (or a scalar). Each function takes the weakest structure on the entries it needs, usually a
+ * [Semiring].
+ *
+ * Vectors combined entrywise must have the same length; a mismatch throws
+ * [IllegalArgumentException]. The implementations are in the internal `DenseVecKernel`. The
+ * standard BLAS names for some of these are in [BLAS].
+ */
 object DenseVecOps {
 
     /**
-     * * Entrywise combination of two vectors under a [Semigroup].
+     * Entrywise combination of two vectors under a [Semigroup].
      */
     fun <A : Any> hadamard(
         semigroup: Semigroup<A>,
@@ -45,7 +58,8 @@ object DenseVecOps {
     ): DenseVec<A> = DenseVecKernel.add(semiring, vec1, vec2)
 
     /**
-     * Dot product over a [Semiring].
+     * The dot product `x · y = Σ xᵢyᵢ` over a [Semiring], with no conjugation (BLAS `dotu`).
+     * The empty sum is zero.
      */
     fun <A : Any> dot(
         semiring: Semiring<A>,
@@ -54,7 +68,7 @@ object DenseVecOps {
     ): A = DenseVecKernel.dot(semiring, x, y)
 
     /**
-     * normSq of a vector over a [Semiring].
+     * The squared norm `x · x = Σ xᵢ²` over a [Semiring], with no conjugation.
      */
     fun <A : Any> normSq(
         semiring: Semiring<A>,
@@ -62,7 +76,8 @@ object DenseVecOps {
     ): A = DenseVecKernel.normSq(semiring, x)
 
     /**
-     * Dot product over an [InvolutiveRing] where x is conjugated.
+     * The Hermitian dot product `Σ conj(xᵢ) yᵢ` over an [InvolutiveRing], conjugating [x]: this is
+     * BLAS `dotc`.
      */
     fun <A : Any> dotConjX(
         involutiveRing: InvolutiveRing<A>,
@@ -71,9 +86,10 @@ object DenseVecOps {
     ): A = DenseVecKernel.dotConjX(involutiveRing, x, y)
 
     /**
-     * Dot product over an [InvolutiveRing] where y is conjugated.
+     * The Hermitian dot product `Σ xᵢ conj(yᵢ)` over an [InvolutiveRing], conjugating [y]: the
+     * convention common in mathematics texts.
      *
-     * Note: This is not the standard BLAS formulation, which is actually [dotConjX].
+     * Note: this is not the standard BLAS formulation, which is [dotConjX].
      */
     fun <A : Any> dotConjY(
         involutiveRing: InvolutiveRing<A>,
@@ -101,7 +117,7 @@ object DenseVecOps {
     ): DenseVec<A> = DenseVecKernel.constantVec(s, n)
 
     /**
-     * All-zeros vector of length [n] of the additive identity of a [Semiring] repeated.
+     * The zero vector of length [n]: the additive identity of [semiring] in every entry.
      */
     fun <A : Any> zeroVec(
         semiring: Semiring<A>,
@@ -109,7 +125,7 @@ object DenseVecOps {
     ): DenseVec<A> = DenseVecKernel.zeroVec(semiring, n)
 
     /**
-     * All-ones vector of length [n] of the multiplicative identity of a [Semiring] repeated.
+     * The all-ones vector of length [n]: the multiplicative identity of [semiring] in every entry.
      */
     fun <A : Any> oneVec(
         semiring: Semiring<A>,
@@ -126,7 +142,9 @@ object DenseVecOps {
     ): Boolean = DenseVecKernel.isAll(x, a, eq)
 
     /**
-     * Returns true iff x has no zero entries, thus indicating that it is Hadamard-invertible over a [Field].
+     * Returns true iff every entry of [x] is invertible in [field] (`field.hasReciprocal`), i.e.
+     * [x] is invertible under the entrywise (Hadamard) product. Over `Real` this rejects tiny,
+     * infinite and NaN entries, matching what inversion accepts. The empty vector is a unit.
      */
     fun <A : Any> isHadamardUnit(
         field: Field<A>,
@@ -134,7 +152,7 @@ object DenseVecOps {
     ): Boolean = DenseVecKernel.isHadamardUnit(field, x)
 
     /**
-     * Given a vector, execute the map [f] on it.
+     * The vector with entries `f(x[i])`.
      */
     fun <A : Any, B : Any> map(
         x: VecLike<A>,
@@ -142,7 +160,7 @@ object DenseVecOps {
     ): DenseVec<B> = DenseVecKernel.map(x, f)
 
     /**
-     * Given a vector, execute the map [f] on it.
+     * The vector with entries `f(i, x[i])`.
      */
     fun <A : Any, B : Any> mapIndexed(
         x: VecLike<A>,
@@ -239,9 +257,8 @@ object DenseVecOps {
     ): Boolean = !any(x, predicate)
 
     /**
-     * axpy is used in many BLAS (basic linear algebra subprograms).
-     *
-     * Given a [Semiring], a constant [a], and vectors [x] and [y], calculate:
+     * The BLAS `axpy` operation: given a [Semiring], a constant [a], and vectors [x] and [y] of
+     * the same length,
      * ```
      * ax + y
      * ```
@@ -338,7 +355,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [Comparator] over [B]
-     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * determine the index of the element of [x] whose image under [f] is smallest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -354,7 +372,7 @@ object DenseVecOps {
      * - a function [f] from [A] to [B]
      * - a [Comparator] over [B]
      *
-     * determine the index of the smallest element of [x] with respect to [B].
+     * determine the element of [x] whose image under [f] is smallest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -364,14 +382,13 @@ object DenseVecOps {
         comparator: Comparator<B>
     ): Option<A> = argminBy(x, f, comparator).map(x::get)
 
-
     /**
      * Given
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [TotalOrder] over [B]
      *
-     * determine the index of the smallest element of [x] with respect to [B].
+     * determine the index of the element of [x] whose image under [f] is smallest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -386,7 +403,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [TotalOrder] over [B]
-     * determine the index of the smallest element of [x] with respect to [B].
+     *
+     * determine the element of [x] whose image under [f] is smallest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -401,7 +419,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [Comparator] over [B]
-     * determine the index of the largest element of [x] with respect to [B].
+     *
+     * determine the index of the element of [x] whose image under [f] is largest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -416,7 +435,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [Comparator] over [B]
-     * determine the largest element of [x] with respect to [B].
+     *
+     * determine the element of [x] whose image under [f] is largest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -431,7 +451,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [TotalOrder] over [B]
-     * determine the index of the largest element of [x] with respect to [B].
+     *
+     * determine the index of the element of [x] whose image under [f] is largest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -446,7 +467,8 @@ object DenseVecOps {
      * - a vector [x] over [A]
      * - a function [f] from [A] to [B]
      * - a [TotalOrder] over [B]
-     * determine the largest element of [x] with respect to [B].
+     *
+     * determine the element of [x] whose image under [f] is largest.
      *
      * If [x] is empty, [Option.None] is returned.
      */
@@ -461,7 +483,8 @@ object DenseVecOps {
      * - [Semiring]
      * - vector [x]
      * - vector [y]
-     * create the outer product of [x] and [y], i.e. the matrix `M` where:
+     *
+     * create the outer product `x yᵀ` of [x] and [y], i.e. the matrix `M` where:
      * ```
      * M_ij = x[i] * y[j]
      * ```
@@ -478,11 +501,12 @@ object DenseVecOps {
      * - [InvolutiveRing]
      * - vector [x]
      * - vector [y]
-     * create the outer product of [x] and [y], i.e. the matrix `M` where:
+     *
+     * create the conjugated outer product `x y*` of [x] and [y], i.e. the matrix `M` where:
      * ```
      * M_ij = x[i] * conj(y[j])
      * ```
-     * in the [Semiring].
+     * in the [InvolutiveRing].
      */
     fun <A : Any> outerProductConjY(
         involutiveRing: InvolutiveRing<A>,
@@ -492,7 +516,7 @@ object DenseVecOps {
 
     /**
      * Also known as `ger` (general rank-1 update) in BLAS, for a:
-     * - `m×n` matrix `A`
+     * - `m×n` matrix [a]
      * - constant [alpha]
      * - vector [x] of length `m`
      * - vector [y] of length `n`
@@ -511,14 +535,14 @@ object DenseVecOps {
 
     /**
      * Also known as `gerc` (general rank-1 update) in BLAS, for a:
-     * - `m×n` matrix `A`
+     * - `m×n` matrix [a]
      * - constant [alpha]
      * - vector [x] of length `m`
      * - vector [y] of length `n`
      * ```
      * A + alpha x conj(y)^T
      * ```
-     * where `x conj(y)^T` is the [outerProduct] of [x] and [y].
+     * where `x conj(y)^T` is the [outerProductConjY] of [x] and [y].
      */
     fun <A : Any> rank1UpdateConjY(
         involutiveRing: InvolutiveRing<A>,

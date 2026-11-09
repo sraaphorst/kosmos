@@ -32,7 +32,7 @@ class ZornSplitOctonionSpec : StringSpec({
     val q = RationalAlgebras.RationalField
     val splitOctonions = SplitOctonionAlgebras.splitOctonionRing(q)
     val zorns = ZornAlgebras.zornRing(q)
-    val mono = ZornAlgebras.splitOctonionToZornMonomorphism(q)
+    val mono = ZornAlgebras.splitOctonionToZornHomomorphism(q)
     val iso = ZornAlgebras.splitOctonionZornIsomorphism(q)
     val arbO = ArbSplitOctonion.rationalSplitOctonion
     val arbZ = ArbZorn.rationalZorn
@@ -103,7 +103,7 @@ class ZornSplitOctonionSpec : StringSpec({
 
     "over ℤ, φ is an injective homomorphism but not onto: every image has a ≡ d (mod 2)" {
         val z = IntegerAlgebras.IntegerCommutativeRing
-        val integerMono = ZornAlgebras.splitOctonionToZornMonomorphism(z)
+        val integerMono = ZornAlgebras.splitOctonionToZornHomomorphism(z)
         val arbIntO = ArbSplitOctonion.splitOctonionOf(Arb.int(-20..20).map(Int::toBigInteger))
         val two = BigInteger.TWO
 
@@ -156,7 +156,7 @@ class ZornSplitOctonionSpec : StringSpec({
 
     "over 𝔽₂, φ is not injective: φ(1) = φ(e₄) = 1, and the isomorphism is refused" {
         val f2 = FiniteFieldAlgebras.F2
-        val f2Mono = ZornAlgebras.splitOctonionToZornMonomorphism(f2)
+        val f2Mono = ZornAlgebras.splitOctonionToZornHomomorphism(f2)
         val basis = SplitOctonionAlgebras.basis(f2)
         (basis[0] == basis[4]) shouldBe false
         f2Mono(basis[0]) shouldBe f2Mono(basis[4])

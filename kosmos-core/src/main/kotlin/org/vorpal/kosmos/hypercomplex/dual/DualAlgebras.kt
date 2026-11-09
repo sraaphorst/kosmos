@@ -138,6 +138,9 @@ object DualAlgebras {
      * ```
      * [isZero] decides when a primal part counts as zero; over an exact field the default equality
      * is right, while over `Real` a numerical test should be supplied (see [RealDualRing]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> dualRingWithReciprocal(
         field: Field<F>,
@@ -159,12 +162,19 @@ object DualAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Dual<F>): Boolean =
-            !isZero(a.a)
+            !isZero(a.a) && field.hasReciprocal(a.a)
 
+        /**
+         * `(a + bε)⁻¹ = a⁻¹ − b·a⁻²·ε`, computed from `a⁻¹` so that the only division is by the
+         * primal part, exactly the element [hasReciprocal] checked.
+         */
         override val reciprocal: Endo<Dual<F>> = Endo(Symbols.INVERSE) { z ->
             if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the dual numbers")
-            val scale = field.reciprocal(normSq(z))
-            dualLeftAction(field)(scale, conj(z))
+            val invA = field.reciprocal(z.a)
+            dual(
+                f = invA,
+                df = field.add.inverse(field.mul(z.b, field.mul(invA, invA)))
+            )
         }
     }
 

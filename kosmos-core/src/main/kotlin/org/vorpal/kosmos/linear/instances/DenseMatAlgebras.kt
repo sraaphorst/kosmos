@@ -24,6 +24,22 @@ import org.vorpal.kosmos.functional.datastructures.getOrElse
 import org.vorpal.kosmos.linear.values.DenseVec
 import org.vorpal.kosmos.linear.values.MatLike
 
+/**
+ * Algebraic structures on dense matrices of a fixed shape.
+ * - [additiveAbelianGroup], [additiveCommutativeMonoid], [multiplicativeMonoid]: the
+ *   one-operation structures.
+ * - [DenseMatSemiring], [DenseMatRing]: `M_n(S)` and `M_n(R)` under the matrix product.
+ * - [DenseMatSemialgebra], [DenseMatAlgebra]: the same with scalars acting entrywise.
+ * - [DenseMatHadamardSemiring], [DenseMatHadamardRing], [DenseMatHadamardCommutativeRing],
+ *   [DenseMatHadamardUnitGroup]: `A^(r×c)` under the entrywise (Hadamard) product, a direct product
+ *   of copies of the entries.
+ * - [hadamardUnitMatToVecIsomorphism]: flattening the Hadamard units into vectors.
+ * - [liftPrintableStrict], [liftPrintablePretty], [liftEq]: printing and equality from those of
+ *   the entries.
+ *
+ * Every structure checks the shape of its arguments and throws [IllegalArgumentException] on a
+ * mismatch. For 2 × 2 matrices without shape checks, see [FixedMatAlgebras].
+ */
 object DenseMatAlgebras {
     // ------------------------------------
     // ---------- BinOp creators ----------
@@ -57,7 +73,7 @@ object DenseMatAlgebras {
 
 
     /**
-     * Given an [AbelianGroup] over [A], create the inverse [Endo] for `n×n` [DenseMat]s over [A].
+     * Given an [AbelianGroup] over [A], create the negation [Endo] for `m×n` [DenseMat]s over [A].
      */
     private fun <A : Any> negativeOp(
         group: AbelianGroup<A>,
@@ -338,7 +354,8 @@ object DenseMatAlgebras {
     /**
      * The [Ring] structure on `r×c` [DenseMat] over a base ring [A] using:
      * - an additive [AbelianGroup]
-     * - the [hadamardMonoid] entrywise multiplication, which gives a [CommutativeMonoid].
+     * - the [hadamardMonoid] entrywise multiplication, which gives a [Monoid] (commutative only if
+     *   the entries commute: see [DenseMatHadamardCommutativeRing]).
      *
      * Additive identity is the all-zero matrix.
      * Multiplicative identity is the all-ones matrix.
@@ -440,8 +457,11 @@ object DenseMatAlgebras {
 
 
     /**
-     * Determine the `r×c` matrix inverse for the Hadamard unit group in the field over [A], which exists iff
-     * the matrix has no zero entries (throws if any entry is zero).
+     * The entrywise reciprocal of the `rows×cols` matrix [x] over [field]: its inverse in the
+     * Hadamard unit group, which exists iff no entry is zero.
+     *
+     * @throws IllegalArgumentException if [x] does not have shape `rows×cols`
+     * @throws ArithmeticException if any entry of [x] is zero
      */
     fun <A : Any> hadamardReciprocal(
         field: Field<A>,
@@ -462,8 +482,10 @@ object DenseMatAlgebras {
 
 
     /**
-     * Since [MatLike] already carries its size, it isn't necessary to pass in unless we want to ensure that
-     * a fixed size is used.
+     * As the other [hadamardReciprocal], taking the shape from [x] itself: the explicit `rows` and
+     * `cols` are only needed to insist on a particular shape.
+     *
+     * @throws ArithmeticException if any entry of [x] is zero
      */
     fun <A: Any> hadamardReciprocal(field: Field<A>, x: MatLike<A>): DenseMat<A> =
         hadamardReciprocal(field, x, x.rows, x.cols)

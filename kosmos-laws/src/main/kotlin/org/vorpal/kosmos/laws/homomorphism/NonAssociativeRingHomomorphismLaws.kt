@@ -18,7 +18,7 @@ class NonAssociativeRingHomomorphismLaws<A : Any, B : Any>(
 ) : LawSuite {
 
     override val name =
-        "unital non-associative ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
+        "unital non-associative ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
 
     private val base = NonAssociativeRngHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
 

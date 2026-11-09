@@ -10,7 +10,7 @@ import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
-import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.instances.FixedVecAlgebras
 import org.vorpal.kosmos.linear.values.Vec3
 import org.vorpal.kosmos.linear.values.arbVec3
 import java.math.BigInteger
@@ -18,15 +18,15 @@ import java.math.BigInteger
 /**
  * The cross product on `R³`, checked exactly over ℤ and ℚ.
  */
-class FixedTupleOpsSpec : StringSpec({
+class FixedVecOpsSpec : StringSpec({
     val z = IntegerAlgebras.IntegerCommutativeRing
     val q = RationalAlgebras.RationalField
     val arbInt = Arb.int(-20..20).map(Int::toBigInteger)
     val arbZ3 = arbVec3(arbInt)
     val arbQ3 = arbVec3(ArbRational.small)
-    val z3 = FixedTupleAlgebras.vec3Module(z)
+    val z3 = FixedVecAlgebras.vec3Module(z)
 
-    fun cross(v: Vec3<BigInteger>, w: Vec3<BigInteger>) = FixedTupleOps.cross(z, v, w)
+    fun cross(v: Vec3<BigInteger>, w: Vec3<BigInteger>) = FixedVecOps.cross(z, v, w)
     fun dot(v: Vec3<BigInteger>, w: Vec3<BigInteger>) = DenseVecOps.dot(z, v, w)
     val zeroZ = Vec3(BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO)
 
@@ -62,7 +62,7 @@ class FixedTupleOpsSpec : StringSpec({
 
     "Lagrange's identity over ℚ: |u × v|² = |u|²|v|² − (u·v)²" {
         checkAll(arbQ3, arbQ3) { u, v ->
-            val c = FixedTupleOps.cross(q, u, v)
+            val c = FixedVecOps.cross(q, u, v)
             DenseVecOps.normSq(q, c) shouldBe
                 DenseVecOps.normSq(q, u) * DenseVecOps.normSq(q, v) - DenseVecOps.dot(q, u, v).let { it * it }
         }

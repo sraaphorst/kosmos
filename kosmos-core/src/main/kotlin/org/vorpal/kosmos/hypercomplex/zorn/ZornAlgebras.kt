@@ -23,12 +23,14 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.hypercomplex.sextonion.Sextonion
+import org.vorpal.kosmos.hypercomplex.sextonion.SextonionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonion
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitoctonion.splitOctonion
-import org.vorpal.kosmos.linear.instances.FixedTupleAlgebras
+import org.vorpal.kosmos.linear.instances.FixedVecAlgebras
 import org.vorpal.kosmos.linear.ops.DenseVecOps
-import org.vorpal.kosmos.linear.ops.FixedTupleOps
+import org.vorpal.kosmos.linear.ops.FixedVecOps
 import org.vorpal.kosmos.linear.values.Vec3
 
 /**
@@ -53,9 +55,13 @@ import org.vorpal.kosmos.linear.values.Vec3
  *
  * Morphisms:
  * - [scalarEmbedding]: `R ↪ Zorn<R>`, `r ↦ (r, 0, 0, r)`.
- * - [splitOctonionToZornMonomorphism]: `SplitOctonion<R> ↪ Zorn<R>` over any commutative ring.
+ * - [splitOctonionToZornHomomorphism]: `SplitOctonion<R> → Zorn<R>` over any commutative ring,
+ *   injective when 2 is not a zero divisor.
  * - [splitOctonionZornIsomorphism]: `SplitOctonion<F> ≅ Zorn<F>` when 2 is invertible.
  * - [RealSplitOctonionZornIsomorphism]: `𝕆′ ≅ Zorn<Real>`, between the real conveniences.
+ * - [sextonionToZornMonomorphism]: `Sextonion<R> ↪ Zorn<R>` over any commutative ring.
+ * - [sextonionToSplitOctonionMonomorphism]: `Sextonion<F> ↪ SplitOctonion<F>` when 2 is
+ *   invertible.
  *
  * Printables:
  * - [printableZorn]: one line, `[[a, (v₁, v₂, v₃)], [(w₁, w₂, w₃), d]]`.
@@ -75,7 +81,7 @@ object ZornAlgebras {
     fun <R : Any> zornAdditiveGroup(
         group: AbelianGroup<R>
     ): AbelianGroup<Zorn<R>> = object : AbelianGroup<Zorn<R>> {
-        private val v3Group = FixedTupleAlgebras.dim3Group(group)
+        private val v3Group = FixedVecAlgebras.dim3Group(group)
         private val v3Zero = v3Group.identity
 
         override val identity = group.run {
@@ -113,9 +119,9 @@ object ZornAlgebras {
             Zorn(one, vec3z, vec3z, one)
         }
 
-        private val mod3 = FixedTupleAlgebras.vec3Module(ring)
+        private val mod3 = FixedVecAlgebras.vec3Module(ring)
         private val dot = { v: Vec3<R>, w: Vec3<R> -> DenseVecOps.dot(ring, v, w) }
-        private val cross = { v: Vec3<R>, w: Vec3<R> -> FixedTupleOps.cross(ring, v, w) }
+        private val cross = { v: Vec3<R>, w: Vec3<R> -> FixedVecOps.cross(ring, v, w) }
         private val scale = { s: R, v: Vec3<R> -> mod3.leftAction(s, v) }
 
         override val op = BinOp<Zorn<R>>(Symbols.TIMES) { (a1, v1, w1, d1), (a2, v2, w2, d2) ->
@@ -143,7 +149,7 @@ object ZornAlgebras {
     fun <R : Any> zornRing(
         base: CommutativeRing<R>
     ): NonAssociativeInvolutiveRing<Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
+        val mod3 = FixedVecAlgebras.vec3Module(base)
         return NonAssociativeInvolutiveRing.of(
             add = zornAdditiveGroup(base.add),
             mul = zornMultiplicativeMonoid(base),
@@ -164,7 +170,7 @@ object ZornAlgebras {
      * N(a, v, w, d) = ad − v·w.
      * ```
      * `X·conj(X) = conj(X)·X = N(X)·1`, and `N` is multiplicative, `N(XY) = N(X)N(Y)`: the Zorn
-     * ring is a composition algebra. Under [splitOctonionToZornMonomorphism] it is the split norm
+     * ring is a composition algebra. Under [splitOctonionToZornHomomorphism], it is the split norm
      * of signature `(4, 4)`.
      */
     fun <R : Any> normSq(
@@ -185,8 +191,8 @@ object ZornAlgebras {
     fun <R : Any> zornLeftAction(
         base: CommutativeRing<R>
     ): LeftAction<R, Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
-        return LeftAction(Symbols.TRIANGLE_LEFT) { r, (a, v, w, d) ->
+        val mod3 = FixedVecAlgebras.vec3Module(base)
+        return LeftAction(Symbols.TRIANGLE_RIGHT) { r, (a, v, w, d) ->
             base.run {
                 Zorn(mul(r, a), mod3.leftAction(r, v), mod3.leftAction(r, w), mul(r, d))
             }
@@ -260,6 +266,9 @@ object ZornAlgebras {
      * a two-sided inverse despite nonassociativity, because the algebra is alternative.
      * [isZero] decides when a norm counts as zero; over `Real` a numerical test should be supplied
      * (see [RealZornAlgebra]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> zornRingWithReciprocal(
         field: Field<F>,
@@ -283,7 +292,7 @@ object ZornAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: Zorn<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<Zorn<F>> = Endo(Symbols.INVERSE) { x ->
             if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the Zorn vector-matrices")
@@ -296,6 +305,7 @@ object ZornAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `X` is invertible iff `N(X)`
      * is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealZornAlgebra :
         NonAssociativeInvolutiveRing<Zorn<Real>> by zornRing(RealAlgebras.RealField),
@@ -312,10 +322,20 @@ object ZornAlgebras {
 
         override val normSq: UnaryOp<Zorn<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: Zorn<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<Zorn<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<Zorn<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the Zorn vector-matrices")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: Zorn<Real>): Boolean =
+            q.a.isFinite() && q.d.isFinite() && listOf(q.v, q.w).all { u -> u.x.isFinite() && u.y.isFinite() && u.z.isFinite() }
 
         /**
          * The matrix-unit basis `E_a, V₁, V₂, V₃, W₁, W₂, W₃, E_d`.
@@ -366,6 +386,28 @@ object ZornAlgebras {
     }
 
     /**
+     * The sextonions as a subalgebra of the Zorn vector-matrices, over any commutative ring:
+     * ```text
+     * ([[a, b], [c, d]], (e, f)) ↦ [[a, (b, e, 0)], [(c, 0, −f), d]].
+     * ```
+     * The image is the six-dimensional subalgebra with `v ⊥ e₃` and `w ⊥ e₂`; the cross-product
+     * terms of the Zorn product land back in it. The sign on `f` is what turns the Zorn product
+     * into `(A, ν)(B, μ) = (AB, μA + ν·adj(B))`. The norm `det A` is the Zorn norm `ad − v·w`
+     * restricted to the image.
+     */
+    fun <R : Any> sextonionToZornMonomorphism(
+        base: CommutativeRing<R>
+    ): NonAssociativeRingMonomorphism<Sextonion<R>, Zorn<R>> =
+        NonAssociativeRingMonomorphism.of(
+            domain = SextonionAlgebras.sextonionRing(base),
+            codomain = zornRing(base),
+            map = sextonionToZorn(base)
+        )
+
+    // TODO(#270): add the R-linear projection Zorn<R> → Sextonion<R>, a retraction of
+    //  sextonionToZornMonomorphism. It needs R-module homomorphisms, which do not exist yet.
+
+    /**
      * The split-octonions as Zorn matrices over any commutative ring. Writing
      * `o = w + x·e₁ + y·e₂ + z·e₃ + u·e₄ + v·e₅ + s·e₆ + t·e₇`, with `X = (x, y, z)` and
      * `Y = (v, s, t)`,
@@ -375,23 +417,47 @@ object ZornAlgebras {
      * `φ` is a unital ring homomorphism, commutes with conjugation, and sends the split norm
      * `w² + |X|² − u² − |Y|²` to `ad − v·w`.
      *
-     * It is injective whenever 2 is not a zero divisor in [base], and an isomorphism when 2 is
-     * invertible (see [splitOctonionZornIsomorphism]). Over ℤ it is injective but not surjective:
-     * every image has `a ≡ d (mod 2)`, so for example `(1, 0, 0, 0)` is not in the image. Over 𝔽₂
-     * it is not injective, since `φ(1) = φ(e₄) = (1, 0, 0, 1)`.
+     * Its kernel is `{ o : u = w, Y = X, 2w = 0, 2X = 0 }`, so it is injective exactly when 2 is
+     * not a zero divisor in [base] (ℤ, ℚ, any field of characteristic other than 2), and an
+     * isomorphism when 2 is invertible (see [splitOctonionZornIsomorphism]). That is why the type
+     * is only a homomorphism. Over ℤ it is injective but not surjective: every image has
+     * `a ≡ d (mod 2)`, so for example `(1, 0, 0, 0)` is not in the image. Over 𝔽₂ it is not
+     * injective, since `φ(1) = φ(e₄) = (1, 0, 0, 1)`.
      */
-    fun <R : Any> splitOctonionToZornMonomorphism(
+    fun <R : Any> splitOctonionToZornHomomorphism(
         base: CommutativeRing<R>
-    ): NonAssociativeRingMonomorphism<SplitOctonion<R>, Zorn<R>> =
-        NonAssociativeRingMonomorphism.of(
+    ): NonAssociativeRingHomomorphism<SplitOctonion<R>, Zorn<R>> =
+        NonAssociativeRingHomomorphism.of(
             domain = SplitOctonionAlgebras.splitOctonionRing(base),
             codomain = zornRing(base),
-            map = toZorn(base)
+            map = splitOctonionToZorn(base)
+        )
+
+    /**
+     * The embedding `Sextonion<F> ↪ SplitOctonion<F>`, through the Zorn model:
+     * [sextonionToZornMonomorphism] followed by the inverse of [splitOctonionZornIsomorphism].
+     *
+     * It needs 2 to be invertible, and this is unavoidable: `(E₁₁, 0)` is an idempotent other
+     * than 0 and 1, and in Cayley-Dickson coordinates such idempotents have scalar part 1/2.
+     * Over ℤ or in characteristic 2 no embedding exists.
+     *
+     * It lives here rather than in [SplitOctonionAlgebras] so that the splitoctonion package
+     * does not cyclically depend on the zorn package.
+     *
+     * @throws IllegalArgumentException if 2 is not invertible in [field].
+     */
+    fun <F : Any> sextonionToSplitOctonionMonomorphism(
+        field: Field<F>
+    ): NonAssociativeRingMonomorphism<Sextonion<F>, SplitOctonion<F>> =
+        NonAssociativeRingMonomorphism.of(
+            domain = SextonionAlgebras.sextonionRing(field),
+            codomain = SplitOctonionAlgebras.splitOctonionRing(field),
+            map = sextonionToZorn(field) andThen splitOctonionZornIsomorphism(field).backward.map
         )
 
     /**
      * The isomorphism `SplitOctonion<F> ≅ Zorn<F>` over a field in which 2 is invertible: the map
-     * of [splitOctonionToZornMonomorphism], with inverse
+     * of [splitOctonionToZornHomomorphism], with inverse
      * ```text
      * (a, v, w, d) ↦ w = (a + d)/2,   u = (a − d)/2,   X = (v − w)/2,   Y = −(v + w)/2.
      * ```
@@ -416,7 +482,7 @@ object ZornAlgebras {
             forward = NonAssociativeRingHomomorphism.of(
                 domain = splitOctonions,
                 codomain = zorns,
-                map = toZorn(field)
+                map = splitOctonionToZorn(field)
             ),
             backward = NonAssociativeRingHomomorphism.of(
                 domain = zorns,
@@ -457,11 +523,12 @@ object ZornAlgebras {
     /**
      * Eqs
      */
-    fun <R : Any> eqZorn(eqR: Eq<R>): Eq<Zorn<R>> =
-        Eq { (a1, v1, w1, d1), (a2, v2, w2, d2) ->
-            fun eqVec(p: Vec3<R>, r: Vec3<R>) = eqR(p.x, r.x) && eqR(p.y, r.y) && eqR(p.z, r.z)
+    fun <R : Any> eqZorn(eqR: Eq<R>): Eq<Zorn<R>> {
+        val eqVec = FixedVecAlgebras.eqVec3(eqR)
+        return Eq { (a1, v1, w1, d1), (a2, v2, w2, d2) ->
             eqR(a1, a2) && eqVec(v1, v2) && eqVec(w1, w2) && eqR(d1, d2)
         }
+    }
 
     /**
      * Strict equality on real Zorn matrices.
@@ -535,12 +602,30 @@ object ZornAlgebras {
         "(${prR(v.x)}, ${prR(v.y)}, ${prR(v.z)})"
 
     /**
-     * The map underlying [splitOctonionToZornMonomorphism].
+     * The map behind the monomorphism from `Sextonion<R>` to `Zorn<R>`,
+     * which takes:
+     * ```text
+     * ([[a, b], [c, d]], (e, f)) ↦ [[a, (b, e, 0)], [(c, 0, −f), d]].
+     * ```
      */
-    private fun <R : Any> toZorn(
+    private fun <R : Any> sextonionToZorn(
+        base: CommutativeRing<R>
+    ): UnaryOp<Sextonion<R>, Zorn<R>> =
+        UnaryOp(Symbols.PHI) { (m, nu) ->
+            val (a, b, c, d) = m
+            val (e, f) = nu
+            val v = Vec3(b, e, base.zero)
+            val w = Vec3(c, base.zero, base.add.inverse(f))
+            Zorn(a, v, w, d)
+        }
+
+    /**
+     * The map underlying [splitOctonionToZornHomomorphism].
+     */
+    private fun <R : Any> splitOctonionToZorn(
         base: CommutativeRing<R>
     ): UnaryOp<SplitOctonion<R>, Zorn<R>> {
-        val mod3 = FixedTupleAlgebras.vec3Module(base)
+        val mod3 = FixedVecAlgebras.vec3Module(base)
         return UnaryOp(Symbols.PHI) { o ->
             base.run {
                 val x = Vec3(o.x, o.y, o.z)

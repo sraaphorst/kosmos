@@ -26,7 +26,7 @@ class RingHomomorphismLaws<A : Any, B : Any>(
 ) : LawSuite {
 
     override val name =
-        "unital ring homomorphism ((${domain.add.op.symbol}, $domain.mul.op.symbol}} → (${codomain.add.op.symbol}), ${codomain.mul.op.symbol}))"
+        "unital ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
 
     private val base = RngHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
 

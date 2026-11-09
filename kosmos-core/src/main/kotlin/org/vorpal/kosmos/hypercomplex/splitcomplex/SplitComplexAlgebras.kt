@@ -135,6 +135,9 @@ object SplitComplexAlgebras {
      * ```
      * [isZero] decides when a norm counts as zero; over an exact field the default equality is
      * right, while over `Real` a numerical test should be supplied (see [RealSplitComplexRing]).
+     *
+     * Whatever [isZero] says, the divisor must also pass `field.hasReciprocal`, so `hasReciprocal`
+     * always agrees with inversion and `reciprocal` never throws on an accepted element.
      */
     fun <F : Any> splitComplexRingWithReciprocal(
         field: Field<F>,
@@ -156,7 +159,7 @@ object SplitComplexAlgebras {
             normSq(field)
 
         override fun hasReciprocal(a: SplitComplex<F>): Boolean =
-            !isZero(normSq(a))
+            normSq(a).let { n -> !isZero(n) && field.hasReciprocal(n) }
 
         override val reciprocal: Endo<SplitComplex<F>> = Endo(Symbols.INVERSE) { z ->
             if (!hasReciprocal(z)) throw HasReciprocal.notInvertible(z, "the split-complex numbers")
@@ -236,6 +239,7 @@ object SplitComplexAlgebras {
      *
      * Reciprocals follow the floating-point policy of [HasReciprocal]: `z` is invertible iff
      * `N(z) = a² - b²` is finite and not approximately zero.
+     * The inverse must also have finite coordinates, which an indefinite norm does not guarantee.
      */
     object RealSplitComplexRing :
         CommutativeInvolutiveRing<SplitComplex<Real>> by splitComplexRing(RealAlgebras.RealField),
@@ -252,10 +256,20 @@ object SplitComplexAlgebras {
 
         override val normSq: UnaryOp<SplitComplex<Real>, Real> = guarded.normSq
 
+        /**
+         * The norm is indefinite, so a finite, safely nonzero norm does not bound the coordinates
+         * of the inverse: the predicate also requires the inverse itself to be finite.
+         */
         override fun hasReciprocal(a: SplitComplex<Real>): Boolean =
-            guarded.hasReciprocal(a)
+            guarded.hasReciprocal(a) && isFinite(guarded.reciprocal(a))
 
-        override val reciprocal: Endo<SplitComplex<Real>> = guarded.reciprocal
+        override val reciprocal: Endo<SplitComplex<Real>> = Endo(Symbols.INVERSE) { x ->
+            if (!hasReciprocal(x)) throw HasReciprocal.notInvertible(x, "the split-complex numbers")
+            guarded.reciprocal(x)
+        }
+
+        private fun isFinite(q: SplitComplex<Real>): Boolean =
+            q.re.isFinite() && q.hy.isFinite()
     }
 
     /**
