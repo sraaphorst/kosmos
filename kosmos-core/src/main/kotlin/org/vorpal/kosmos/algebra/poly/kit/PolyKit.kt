@@ -4,9 +4,11 @@ import org.vorpal.kosmos.algebra.poly.Poly
 import org.vorpal.kosmos.algebra.poly.kernel.PolyKernel
 import org.vorpal.kosmos.algebra.poly.polyEq
 import org.vorpal.kosmos.algebra.poly.structures.polyCommutativeRing
+import org.vorpal.kosmos.algebra.poly.structures.polyCommutativeSemiring
 import org.vorpal.kosmos.algebra.poly.structures.polyRing
 import org.vorpal.kosmos.algebra.poly.structures.polySemiring
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.core.Eq
@@ -71,10 +73,11 @@ class PolyKit<A : Any> internal constructor(
         get() = gens.size
 
     /**
-     * Canonical embedding `A -> Poly<A>` as constants, normalized.
+     * Embed [a] as a constant. Adding the coefficient zero lets structures such as
+     * prime fields reduce their representatives before the polynomial drops trailing zeros.
      */
     fun embed(a: A): Poly<A> =
-        PolyKernel.constant(a, eqA, zeroA)
+        PolyKernel.constant(coeff.add(zeroA, a), eqA, zeroA)
 
     /**
      * Convenience: the last adjoined variable (univariate: "x").
@@ -107,6 +110,8 @@ class PolyKit<A : Any> internal constructor(
                 (coeff2 as CommutativeRing<Poly<A>>).polyCommutativeRing(eqPolyA, addSymbol, mulSymbol)
             is Ring<*> ->
                 (coeff2 as Ring<Poly<A>>).polyRing(eqPolyA, addSymbol, mulSymbol)
+            is CommutativeSemiring<Poly<A>> ->
+                coeff2.polyCommutativeSemiring(eqPolyA, addSymbol, mulSymbol)
             else ->
                 coeff2.polySemiring(eqPolyA, addSymbol, mulSymbol)
         }
@@ -138,6 +143,10 @@ class PolyKit<A : Any> internal constructor(
     fun subst(p: Poly<A>, q: Poly<A>): Poly<A> =
         PolyKernel.subst(p, q, coeff.add.op, coeff.mul.op, eqA, zeroA)
 
+    /** Formal derivative in the last adjoined variable, holding the coefficients constant. */
+    fun derivative(p: Poly<A>): Poly<A> =
+        PolyKernel.derivative(p, coeff.add, eqA)
+
     companion object {
         /**
          * Univariate kit from a Semiring.
@@ -149,7 +158,11 @@ class PolyKit<A : Any> internal constructor(
             addSymbol: Option<String> = Option.None,
             mulSymbol: Option<String> = Option.None
         ): PolyKit<A> {
-            val poly = coeff.polySemiring(eqA, addSymbol, mulSymbol)
+            val poly = if (coeff is CommutativeSemiring<A>) {
+                coeff.polyCommutativeSemiring(eqA, addSymbol, mulSymbol)
+            } else {
+                coeff.polySemiring(eqA, addSymbol, mulSymbol)
+            }
             val x = PolyKernel.x(coeff.zero, coeff.one, eqA)
 
             return PolyKit(
