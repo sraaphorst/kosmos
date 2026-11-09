@@ -34,8 +34,10 @@ object ArbPoly {
      * The list may contain trailing zeros: the result is normalized by the kit's own arithmetic.
      */
     fun <A : Any> polyOf(kit: PolyKit<A>, coeffs: List<A>): Poly<A> =
-        coeffs.foldRight(kit.zeroP) { c, acc ->
-            kit.addP(kit.embed(c), kit.mulP(acc, kit.x()))
+        kit.run {
+            coeffs.foldRight(zeroP) { c, acc ->
+                addP(embed(c), mulP(acc, x()))
+            }
         }
 
     /**
@@ -60,11 +62,13 @@ object ArbPoly {
 
     /** Naturals in `0..4`. */
     val smallNatural: Arb<Natural> =
-        Arb.int(0..4).map { Natural(it.toBigInteger()) }
+        Arb.int(0..4).map(::Natural)
 
     /** Rationals `p/q` with `|p| ≤ 3`, `1 ≤ q ≤ 3`. */
     val smallRational: Arb<Rational> =
-        Arb.bind(Arb.int(-3..3), Arb.int(1..3)) { p, q -> Rational.of(p, q) }
+        Arb.run {
+            bind(int(-3..3), int(1..3)) { p, q -> Rational.of(p, q) }
+        }
 
     /** Canonical residues `0..p-1`. */
     fun residue(p: Int): Arb<BigInteger> =
@@ -73,6 +77,11 @@ object ArbPoly {
     /** Rational quaternions with integer coordinates in `-2..2`. */
     val smallQuaternion: Arb<RationalQuaternion> =
         Arb.list(Arb.int(-2..2), 4..4).map { (w, x, y, z) ->
-            quaternion(Rational.of(w), Rational.of(x), Rational.of(y), Rational.of(z))
+            quaternion(
+                Rational.of(w),
+                Rational.of(x),
+                Rational.of(y),
+                Rational.of(z)
+            )
         }
 }

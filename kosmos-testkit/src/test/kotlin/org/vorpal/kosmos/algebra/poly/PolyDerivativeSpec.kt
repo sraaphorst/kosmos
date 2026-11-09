@@ -11,7 +11,9 @@ import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
+import org.vorpal.kosmos.combinatorics.Factorial
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import java.math.BigInteger
 
@@ -28,6 +30,7 @@ class PolyDerivativeSpec : FunSpec({
     val zPolys = ArbPoly.poly(zKit, ArbPoly.smallInteger)
     val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
     val nn = NaturalAlgebras.NaturalCommutativeSemiring
+    val nnKit = nn.polyKit(NaturalAlgebras.eqNatural)
 
     fun zPoly(vararg cs: Int) = ArbPoly.polyOf(zKit, ints(*cs))
 
@@ -38,9 +41,9 @@ class PolyDerivativeSpec : FunSpec({
         label: String,
         coeff: Semiring<A>,
         kit: PolyKit<A>,
-        eqA: Eq<A>,
         coeffArb: Arb<A>,
-        maxDegree: Int = 4
+        maxDegree: Int = 4,
+        eqA: Eq<A> = Eq.default()
     ) {
         val model = ListPolyModel(coeff, eqA)
         val polys = ArbPoly.poly(kit, coeffArb, maxDegree)
@@ -54,36 +57,41 @@ class PolyDerivativeSpec : FunSpec({
         }
 
         test("$label: d/dx is additive, (p + q)' = p' + q'") {
-            checkAll(polys, polys) { p, q ->
-                kit.derivative(kit.addP(p, q)) shouldBe kit.addP(kit.derivative(p), kit.derivative(q))
+            kit.run {
+                checkAll(polys, polys) { p, q ->
+                    derivative(addP(p, q)) shouldBe addP(derivative(p), derivative(q))
+                }
             }
         }
 
         test("$label: constants are killed and scale on either side, (c·p)' = c·p' and (p·c)' = p'·c") {
-            checkAll(polys, coeffArb) { p, c ->
-                val cp = kit.embed(c)
-                kit.derivative(cp) shouldBe kit.zeroP
-                kit.derivative(kit.mulP(cp, p)) shouldBe kit.mulP(cp, kit.derivative(p))
-                kit.derivative(kit.mulP(p, cp)) shouldBe kit.mulP(kit.derivative(p), cp)
+            kit.run {
+                checkAll(polys, coeffArb) { p, c ->
+                    val cp = embed(c)
+                    derivative(cp) shouldBe zeroP
+                    derivative(mulP(cp, p)) shouldBe mulP(cp, derivative(p))
+                    derivative(mulP(p, cp)) shouldBe mulP(derivative(p), cp)
+                }
             }
         }
 
         test("$label: Leibniz rule (pq)' = p'q + pq', keeping the order of factors") {
-            checkAll(polys, polys) { p, q ->
-                kit.derivative(kit.mulP(p, q)) shouldBe kit.addP(
-                    kit.mulP(kit.derivative(p), q),
-                    kit.mulP(p, kit.derivative(q))
-                )
+            kit.run {
+                checkAll(polys, polys) { p, q ->
+                    derivative(mulP(p, q)) shouldBe addP(
+                        mulP(derivative(p), q),
+                        mulP(p, derivative(q))
+                    )
+                }
             }
         }
     }
 
-    derivativeChecks("ℕ[x]", nn, nn.polyKit(NaturalAlgebras.eqNatural), NaturalAlgebras.eqNatural, ArbPoly.smallNatural)
-    derivativeChecks("ℤ[x]", zz, zKit, eqZ, ArbPoly.smallInteger)
-    derivativeChecks("𝔽₅[x]", PrimeField(5.toBigInteger()),
-        PrimeField(5.toBigInteger()).polyKit(Eq.default()), Eq.default(), ArbPoly.residue(5))
-    derivativeChecks("ℤ/4[x]", integersMod(4), integersMod(4).polyKit(Eq.default()), Eq.default(), ArbPoly.residue(4))
-    derivativeChecks("ℍ_ℚ[x]", hq, hq.polyKit(Eq.default()), Eq.default(), ArbPoly.smallQuaternion, maxDegree = 3)
+    derivativeChecks("ℕ[x]", nn, nnKit, ArbPoly.smallNatural, eqA = NaturalAlgebras.eqNatural)
+    derivativeChecks("ℤ[x]", zz, zKit,ArbPoly.smallInteger, eqA = eqZ)
+    derivativeChecks("𝔽₅[x]", PrimeField(5.toBigInteger()),PrimeField(5.toBigInteger()).polyKit(), ArbPoly.residue(5))
+    derivativeChecks("ℤ/4[x]", integersMod(4), integersMod(4).polyKit(),ArbPoly.residue(4))
+    derivativeChecks("ℍ_ℚ[x]", hq, hq.polyKit(),ArbRationalQuaternion.smallRationalQuaternion,3)
 
     /* --------------------------
      * ℤ[x]
@@ -117,15 +125,18 @@ class PolyDerivativeSpec : FunSpec({
     }
 
     test("Taylor at 0: the k-th derivative at 0 is k!·cₖ") {
-        checkAll(zPolys) { p ->
-            var d = p
-            var factorial = BigInteger.ONE
-            p.coeffs.indices.forEach { k ->
-                if (k > 0) factorial *= k.toBigInteger()
-                zKit.eval(d, BigInteger.ZERO) shouldBe factorial * p.coeffs[k]
-                d = zKit.derivative(d)
+        zKit.run {
+            checkAll(zPolys) { p ->
+                val cs = p.coeffs
+
+                // p, p', p'', …, p⁽ⁿ⁺¹⁾
+                val derivatives = generateSequence(p,::derivative).take(cs.size + 1).toList()
+
+                cs.zip(derivatives).forEachIndexed { k, (c, d) ->
+                    eval(d, BigInteger.ZERO) shouldBe Factorial(k) * c
+                }
+                derivatives.last() shouldBe zeroP
             }
-            d shouldBe zKit.zeroP
         }
     }
 
@@ -134,24 +145,27 @@ class PolyDerivativeSpec : FunSpec({
      * -------------------------- */
 
     test("𝔽₅[x]: (x⁵)' = 0, a non-constant polynomial with zero derivative") {
-        val kit = PrimeField(5.toBigInteger()).polyKit(Eq.default())
-        kit.derivative(kit.xPow(5)) shouldBe kit.zeroP
-        kit.derivative(kit.xPow(10)) shouldBe kit.zeroP
-        kit.derivative(kit.xPow(6)) shouldBe kit.xPow(5)
+        PrimeField(5.toBigInteger()).polyKit().run {
+            derivative(xPow(5)) shouldBe zeroP
+            derivative(xPow(10)) shouldBe zeroP
+            derivative(xPow(6)) shouldBe xPow(5)
+        }
     }
 
     test("𝔽₅[x]: the 5th derivative of any polynomial is 0") {
-        val kit = PrimeField(5.toBigInteger()).polyKit(Eq.default())
-        checkAll(ArbPoly.poly(kit, ArbPoly.residue(5), maxDegree = 12)) { p ->
-            val fifth = (1..5).fold(p) { acc, _ -> kit.derivative(acc) }
-            fifth shouldBe kit.zeroP
+        PrimeField(5.toBigInteger()).polyKit().run {
+            checkAll(ArbPoly.poly(this, ArbPoly.residue(5), maxDegree = 12)) { p ->
+                val fifth = (1..5).fold(p) { acc, _ -> derivative(acc) }
+                fifth shouldBe zeroP
+            }
         }
     }
 
     test("ℤ/4[x]: (x⁴)' = 4x³ = 0 but (x³)' = 3x²") {
-        val kit = integersMod(4).polyKit(Eq.default())
-        kit.derivative(kit.xPow(4)) shouldBe kit.zeroP
-        kit.derivative(kit.xPow(3)).coeffs shouldBe ints(0, 0, 3)
+        integersMod(4).polyKit().run {
+            derivative(xPow(4)) shouldBe zeroP
+            derivative(xPow(3)).coeffs shouldBe ints(0, 0, 3)
+        }
     }
 
     /* --------------------------
@@ -159,28 +173,27 @@ class PolyDerivativeSpec : FunSpec({
      * -------------------------- */
 
     test("ℤ[x][y]: d/dy treats x as a constant") {
-        val zxy = zKit.extend("y")
-        val x = zxy.gen(0)
-        val y = zxy.gen(1)
-        val two = zxy.embed(zKit.embed(2.toBigInteger()))
+        zKit.extend("y").run {
+            val x = gen(0)
+            val y = gen(1)
+            val two = embed(zKit.embed(2.toBigInteger()))
 
-        zxy.derivative(x) shouldBe zxy.zeroP
-        zxy.derivative(y) shouldBe zxy.oneP
-        // d/dy (x·y²) = 2xy
-        zxy.derivative(zxy.mulP(x, zxy.mulP(y, y))) shouldBe zxy.mulP(two, zxy.mulP(x, y))
-        // d/dy (x³ + y) = 1
-        zxy.derivative(zxy.addP(zxy.mulP(x, zxy.mulP(x, x)), y)) shouldBe zxy.oneP
+            derivative(x) shouldBe zeroP
+            derivative(y) shouldBe oneP
+            // d/dy (x·y²) = 2xy
+            derivative(mulP(x, mulP(y, y))) shouldBe mulP(two, mulP(x, y))
+            // d/dy (x³ + y) = 1
+            derivative(addP(mulP(x, mulP(x, x)), y)) shouldBe oneP
+        }
     }
 
     test("ℤ[x][y]: Leibniz still holds in the tower") {
-        val zxy = zKit.extend("y")
-        val inner = ArbPoly.poly(zKit, ArbPoly.smallInteger, maxDegree = 2)
-        val polys = ArbPoly.poly(zxy, inner, maxDegree = 2)
-        checkAll(polys, polys) { p, q ->
-            zxy.derivative(zxy.mulP(p, q)) shouldBe zxy.addP(
-                zxy.mulP(zxy.derivative(p), q),
-                zxy.mulP(p, zxy.derivative(q))
-            )
+        zKit.extend("y").run {
+            val inner = ArbPoly.poly(zKit, ArbPoly.smallInteger, maxDegree = 2)
+            val polys = ArbPoly.poly(this, inner, maxDegree = 2)
+            checkAll(polys, polys) { p, q ->
+                derivative(mulP(p, q)) shouldBe addP(mulP(derivative(p), q), mulP(p,derivative(q)))
+            }
         }
     }
 })

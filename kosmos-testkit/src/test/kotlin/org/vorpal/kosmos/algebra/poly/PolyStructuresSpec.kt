@@ -27,6 +27,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.functional.datastructures.Option
+import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
@@ -108,7 +109,7 @@ class PolyStructuresSpec : FunSpec({
     test("ℍ_ℚ[x] satisfies RingLaws") {
         RingLaws(
             ring = hq.polyRing(Eq.default()),
-            arb = ArbPoly.poly(hq.polyKit(Eq.default()), ArbPoly.smallQuaternion, maxDegree = 2),
+            arb = ArbPoly.poly(hq.polyKit(Eq.default()), ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2),
         ).fullTest().throwIfFailed()
     }
 
@@ -126,7 +127,7 @@ class PolyStructuresSpec : FunSpec({
 
     test("ℍ_ℚ[x]: x is central (xp = px), but ℍ_ℚ[x] is not commutative") {
         val kit = hq.polyKit(Eq.default())
-        val polys = ArbPoly.poly(kit, ArbPoly.smallQuaternion, maxDegree = 3)
+        val polys = ArbPoly.poly(kit, ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 3)
         checkAll(polys) { p ->
             kit.mulP(kit.x(), p) shouldBe kit.mulP(p, kit.x())
         }
@@ -159,9 +160,9 @@ class PolyStructuresSpec : FunSpec({
             hom = kit::embed,
             domain = hq,
             codomain = hq.polyRing(Eq.default()),
-            arb = ArbPoly.smallQuaternion,
+            arb = ArbRationalQuaternion.smallRationalQuaternion,
         ).fullTest().throwIfFailed()
-        injectivityLaw(hom = kit::embed, arbA = ArbPoly.smallQuaternion).test()
+        injectivityLaw(hom = kit::embed, arbA = ArbRationalQuaternion.smallRationalQuaternion).test()
     }
 
     test("zero is [] and one is [1] in every lifted structure") {
@@ -245,11 +246,12 @@ class PolyStructuresSpec : FunSpec({
     test("𝔽₇: embed reduces raw representatives, so embed(7) = 0 even with Eq.default()") {
         val f7 = PrimeField(7.toBigInteger())
         val kit = f7.polyKit(Eq.default())
-
-        kit.embed(7.toBigInteger()) shouldBe kit.zeroP
-        kit.embed(14.toBigInteger()) shouldBe kit.zeroP
-        kit.embed((-1).toBigInteger()).coeffs shouldBe ints(6)
-        kit.embed(8.toBigInteger()) shouldBe kit.oneP
+        kit.run {
+            embed(7.toBigInteger()) shouldBe zeroP
+            embed(14.toBigInteger()) shouldBe zeroP
+            embed((-1).toBigInteger()).coeffs shouldBe ints(6)
+            embed(8.toBigInteger()) shouldBe oneP
+        }
     }
 
     test("𝔽₇: polynomials built from raw representatives equal those built from residues") {

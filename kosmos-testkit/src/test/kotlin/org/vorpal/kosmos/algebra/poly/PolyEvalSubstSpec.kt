@@ -12,6 +12,7 @@ import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
@@ -58,17 +59,20 @@ class PolyEvalSubstSpec : FunSpec({
         val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
         val kit = hq.polyKit(Eq.default())
         val model = ListPolyModel(hq, Eq.default())
-        checkAll(ArbPoly.poly(kit, ArbPoly.smallQuaternion, maxDegree = 3), ArbPoly.smallQuaternion) { p, a ->
+        val smrq = ArbRationalQuaternion.smallRationalQuaternion
+        checkAll(ArbPoly.poly(kit, smrq, maxDegree = 3), smrq) { p, a ->
             kit.eval(p, a) shouldBe model.eval(p.coeffs, a)
         }
     }
 
     test("evaluating 0, a constant, x, and at 0") {
-        checkAll(points, ArbPoly.smallInteger, polys) { a, c, p ->
-            zKit.eval(zKit.zeroP, a) shouldBe BigInteger.ZERO
-            zKit.eval(zKit.embed(c), a) shouldBe c
-            zKit.eval(zKit.x(), a) shouldBe a
-            zKit.eval(p, BigInteger.ZERO) shouldBe p.coeffs.firstOrNull().let { it ?: BigInteger.ZERO }
+        zKit.run {
+            checkAll(points, ArbPoly.smallInteger, polys) { a, c, p ->
+                eval(zeroP, a) shouldBe BigInteger.ZERO
+                eval(embed(c), a) shouldBe c
+                eval(x(), a) shouldBe a
+                eval(p, BigInteger.ZERO) shouldBe p.coeffs.firstOrNull().let { it ?: BigInteger.ZERO }
+            }
         }
     }
 
@@ -87,13 +91,15 @@ class PolyEvalSubstSpec : FunSpec({
     test("ℍ_ℚ[x]: evaluation is multiplicative at a central (rational) point, but not at i") {
         val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
         val kit = hq.polyKit(Eq.default())
-        val qPolys = ArbPoly.poly(kit, ArbPoly.smallQuaternion, maxDegree = 2)
+        val qPolys = ArbPoly.poly(kit, ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2)
         val central = Arb.int(-3..3).map { n ->
             quaternion(Rational.of(n), Rational.ZERO, Rational.ZERO, Rational.ZERO)
         }
 
-        checkAll(qPolys, qPolys, central) { p, q, a ->
-            kit.eval(kit.mulP(p, q), a) shouldBe hq.mul(kit.eval(p, a), kit.eval(q, a))
+        kit.run {
+            checkAll(qPolys, qPolys, central) { p, q, a ->
+                eval(mulP(p, q), a) shouldBe hq.mul(eval(p, a), eval(q, a))
+            }
         }
 
         // p = x, q = j (constant): pq = j·x, so (pq)(i) = j·i = -k, but p(i)·q(i) = i·j = k.
@@ -102,20 +108,22 @@ class PolyEvalSubstSpec : FunSpec({
         val i = quaternion(zero, one, zero, zero)
         val j = quaternion(zero, zero, one, zero)
         val k = quaternion(zero, zero, zero, one)
-        val p = kit.x()
-        val q = kit.embed(j)
-        kit.eval(kit.mulP(p, q), i) shouldBe hq.add.inverse(k)
-        hq.mul(kit.eval(p, i), kit.eval(q, i)) shouldBe k
+
+        kit.run {
+            val p = x()
+            val q = embed(j)
+            eval(mulP(p, q), i) shouldBe hq.add.inverse(k)
+            hq.mul(eval(p, i), eval(q, i)) shouldBe k
+        }
     }
 
     test("𝔽₅[x]: x⁵ - x is a nonzero polynomial that vanishes on all of 𝔽₅ (Fermat)") {
         val f5 = PrimeField(5.toBigInteger())
         val kit = f5.polyKit(Eq.default())
-        val p = kit.addP(kit.xPow(5), kit.neg(kit.x()))
-
-        (p == kit.zeroP) shouldBe false
-        (0 until 5).forEach { a ->
-            kit.eval(p, a.toBigInteger()) shouldBe BigInteger.ZERO
+        kit.run {
+            val p = addP(xPow(5), neg(x()))
+            (p == zeroP) shouldBe false
+            (0 until 5).forEach { a -> eval(p, a.toBigInteger()) shouldBe BigInteger.ZERO }
         }
     }
 
@@ -130,38 +138,46 @@ class PolyEvalSubstSpec : FunSpec({
     }
 
     test("substitution is compatible with evaluation: (p ∘ q)(a) = p(q(a))") {
-        checkAll(polys, small, points) { p, q, a ->
-            zKit.eval(zKit.subst(p, q), a) shouldBe zKit.eval(p, zKit.eval(q, a))
+        zKit.run {
+            checkAll(polys, small, points) { p, q, a ->
+                eval(subst(p, q), a) shouldBe eval(p, eval(q, a))
+            }
         }
     }
 
     test("x is the identity for ∘ on both sides, and constants absorb on the left") {
-        checkAll(polys, ArbPoly.smallInteger) { p, c ->
-            zKit.subst(p, zKit.x()) shouldBe p
-            zKit.subst(zKit.x(), p) shouldBe p
-            zKit.subst(zKit.embed(c), p) shouldBe zKit.embed(c)
+        zKit.run {
+            checkAll(polys, ArbPoly.smallInteger) { p, c ->
+                subst(p, x()) shouldBe p
+                subst(x(), p) shouldBe p
+                subst(embed(c), p) shouldBe embed(c)
+            }
         }
     }
 
     test("substituting a constant is evaluation: p ∘ c = p(c)") {
-        checkAll(polys, ArbPoly.smallInteger) { p, c ->
-            zKit.subst(p, zKit.embed(c)) shouldBe zKit.embed(zKit.eval(p, c))
+        zKit.run {
+            checkAll(polys, ArbPoly.smallInteger) { p, c ->
+                subst(p, embed(c)) shouldBe embed(eval(p, c))
+            }
         }
     }
 
     test("composition is associative: (p ∘ q) ∘ r = p ∘ (q ∘ r)") {
-        checkAll(small, small, small) { p, q, r ->
-            zKit.subst(zKit.subst(p, q), r) shouldBe zKit.subst(p, zKit.subst(q, r))
+        zKit.run {
+            checkAll(small, small, small) { p, q, r ->
+                subst(subst(p, q), r) shouldBe subst(p, subst(q, r))
+            }
         }
     }
 
     test("substituting q is a ring homomorphism ℤ[x] → ℤ[x]") {
-        checkAll(small, small, small) { p, r, q ->
-            zKit.subst(zKit.addP(p, r), q) shouldBe zKit.addP(zKit.subst(p, q), zKit.subst(r, q))
-            zKit.subst(zKit.mulP(p, r), q) shouldBe zKit.mulP(zKit.subst(p, q), zKit.subst(r, q))
-        }
-        checkAll(small) { q ->
-            zKit.subst(zKit.oneP, q) shouldBe zKit.oneP
+        zKit.run {
+            checkAll(small, small, small) { p, r, q ->
+                subst(addP(p, r), q) shouldBe addP(subst(p, q), subst(r, q))
+                subst(mulP(p, r), q) shouldBe mulP(subst(p, q), subst(r, q))
+            }
+            checkAll(small) { q -> subst(oneP, q) shouldBe oneP }
         }
     }
 

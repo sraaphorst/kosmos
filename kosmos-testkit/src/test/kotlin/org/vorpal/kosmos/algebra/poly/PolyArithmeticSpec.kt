@@ -15,6 +15,7 @@ import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 
@@ -43,9 +44,9 @@ class PolyArithmeticSpec : FunSpec({
         label: String,
         coeff: Semiring<A>,
         kit: PolyKit<A>,
-        eqA: Eq<A>,
         coeffArb: Arb<A>,
-        negA: ((A) -> A)? = null
+        negA: ((A) -> A)? = null,
+        eqA: Eq<A> = Eq.default()
     ) {
         val model = ListPolyModel(coeff, eqA)
         val lists = ArbPoly.coeffLists(coeffArb)
@@ -100,27 +101,23 @@ class PolyArithmeticSpec : FunSpec({
 
     modelChecks("ℕ[x]", NaturalAlgebras.NaturalCommutativeSemiring,
         NaturalAlgebras.NaturalCommutativeSemiring.polyKit(NaturalAlgebras.eqNatural),
-        NaturalAlgebras.eqNatural, ArbPoly.smallNatural)
+        ArbPoly.smallNatural, eqA = NaturalAlgebras.eqNatural)
 
-    modelChecks("ℤ[x]", zz, zKit, eqZ, ArbPoly.smallInteger, zz.add.inverse::invoke)
+    modelChecks("ℤ[x]", zz, zKit, ArbPoly.smallInteger, zz.add.inverse::invoke, eqA = eqZ)
 
-    modelChecks("ℚ[x]", RationalAlgebras.RationalField,
-        RationalAlgebras.RationalField.polyKit(Eq.default()),
-        Eq.default(), ArbPoly.smallRational, RationalAlgebras.RationalField.add.inverse::invoke)
+    modelChecks("ℚ[x]", RationalAlgebras.RationalField, RationalAlgebras.RationalField.polyKit(),
+        ArbPoly.smallRational, RationalAlgebras.RationalField.add.inverse::invoke)
 
-    listOf(2, 5).forEach { p ->
+    listOf(2, 5, 11).forEach { p ->
         val field = PrimeField(p.toBigInteger())
-        modelChecks("𝔽_$p[x]", field, field.polyKit(Eq.default()), Eq.default(),
-            ArbPoly.residue(p), field.add.inverse::invoke)
+        modelChecks("𝔽_$p[x]", field, field.polyKit(),ArbPoly.residue(p), field.add.inverse::invoke)
     }
 
     val z4 = integersMod(4)
-    modelChecks("ℤ/4[x]", z4, z4.polyKit(Eq.default()), Eq.default(),
-        ArbPoly.residue(4), z4.add.inverse::invoke)
+    modelChecks("ℤ/4[x]", z4, z4.polyKit(),ArbPoly.residue(4), z4.add.inverse::invoke)
 
     val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
-    modelChecks("ℍ_ℚ[x]", hq, hq.polyKit(Eq.default()), Eq.default(),
-        ArbPoly.smallQuaternion, hq.add.inverse::invoke)
+    modelChecks("ℍ_ℚ[x]", hq, hq.polyKit(), ArbRationalQuaternion.smallRationalQuaternion, hq.add.inverse::invoke)
 
     /* --------------------------
      * Canonical form and monomials
@@ -159,24 +156,20 @@ class PolyArithmeticSpec : FunSpec({
     test("ℤ[x] is an integral domain: deg(pq) = deg p + deg q for p, q ≠ 0") {
         val polys = ArbPoly.poly(zKit, ArbPoly.smallInteger)
         checkAll(polys, polys) { p, q ->
-            if (p != zKit.zeroP && q != zKit.zeroP) {
-                zKit.mulP(p, q).degree shouldBe p.degree + q.degree
-            }
+            if (p != zKit.zeroP && q != zKit.zeroP) zKit.mulP(p, q).degree shouldBe p.degree + q.degree
         }
     }
 
     test("ℍ_ℚ[x]: no zero divisors either, so degrees still add") {
-        val kit = hq.polyKit(Eq.default())
-        val polys = ArbPoly.poly(kit, ArbPoly.smallQuaternion, maxDegree = 3)
+        val kit = hq.polyKit()
+        val polys = ArbPoly.poly(kit, ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 3)
         checkAll(polys, polys) { p, q ->
-            if (p != kit.zeroP && q != kit.zeroP) {
-                kit.mulP(p, q).degree shouldBe p.degree + q.degree
-            }
+            if (p != kit.zeroP && q != kit.zeroP) kit.mulP(p, q).degree shouldBe p.degree + q.degree
         }
     }
 
     test("ℤ/4[x]: leading coefficients can cancel, so (2x)² = 0 and (2x + 1)² = 1") {
-        val kit = z4.polyKit(Eq.default())
+        val kit = z4.polyKit()
         val twoX = ArbPoly.polyOf(kit, ints(0, 2))
         val twoXPlusOne = ArbPoly.polyOf(kit, ints(1, 2))
 
@@ -205,14 +198,14 @@ class PolyArithmeticSpec : FunSpec({
     }
 
     test("𝔽₂[x]: the freshman's dream (x + 1)² = x² + 1") {
-        val kit = PrimeField(2.toBigInteger()).polyKit(Eq.default())
+        val kit = PrimeField(2.toBigInteger()).polyKit()
         val xPlus1 = ArbPoly.polyOf(kit, ints(1, 1))
 
         kit.mulP(xPlus1, xPlus1).coeffs shouldBe ints(1, 0, 1)
     }
 
     test("𝔽₅[x]: (x + 1)⁵ = x⁵ + 1") {
-        val kit = PrimeField(5.toBigInteger()).polyKit(Eq.default())
+        val kit = PrimeField(5.toBigInteger()).polyKit()
         val xPlus1 = ArbPoly.polyOf(kit, ints(1, 1))
         val fifth = (1 until 5).fold(xPlus1) { acc, _ -> kit.mulP(acc, xPlus1) }
 
@@ -220,7 +213,7 @@ class PolyArithmeticSpec : FunSpec({
     }
 
     test("ℍ_ℚ[x]: coefficients multiply in order, so (i·x)(j·x) = k·x² but (j·x)(i·x) = -k·x²") {
-        val kit = hq.polyKit(Eq.default())
+        val kit = hq.polyKit()
         val zero = Rational.ZERO
         val one = Rational.ONE
         val i = quaternion(zero, one, zero, zero)

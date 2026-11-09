@@ -18,7 +18,7 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.getOrElse
 
 fun <A : Any> Semiring<A>.polySemiring(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
 ): Semiring<Poly<A>> {
@@ -44,7 +44,7 @@ fun <A : Any> Semiring<A>.polySemiring(
 
 /** Adjoin a variable to a commutative coefficient semiring. */
 fun <A : Any> CommutativeSemiring<A>.polyCommutativeSemiring(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
 ): CommutativeSemiring<Poly<A>> {
@@ -53,7 +53,7 @@ fun <A : Any> CommutativeSemiring<A>.polyCommutativeSemiring(
 }
 
 fun <A : Any> Semiring<A>.polyKit(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     name: String = "x",
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
@@ -64,7 +64,7 @@ fun <A : Any> Semiring<A>.polyKit(
  * Used to take a [Ring] or a DivisionRing and make it into a polynomial ring.
  */
 fun <A : Any> Ring<A>.polyRing(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
 ): Ring<Poly<A>> {
@@ -94,7 +94,7 @@ fun <A : Any> Ring<A>.polyRing(
 }
 
 fun <A : Any> Ring<A>.polyKit(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     name: String = "x",
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
@@ -106,7 +106,7 @@ fun <A : Any> Ring<A>.polyKit(
  * Used to take a [CommutativeRing] or a Field and make it into a commutative polynomial ring.
  */
 fun <A : Any> CommutativeRing<A>.polyCommutativeRing(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None
 ): CommutativeRing<Poly<A>> {
@@ -138,7 +138,7 @@ fun <A : Any> CommutativeRing<A>.polyCommutativeRing(
 }
 
 fun <A : Any> CommutativeRing<A>.polyKit(
-    eqA: Eq<A>,
+    eqA: Eq<A> = Eq.default(),
     name: String = "x",
     addSymbol: Option<String> = Option.None,
     mulSymbol: Option<String> = Option.None

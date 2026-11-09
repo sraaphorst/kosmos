@@ -180,7 +180,7 @@ class PolyKitSpec : FunSpec({
 
     test("ℍ_ℚ[x][y] is a Ring but not a CommutativeRing, and x, y commute with each other") {
         val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
-        val kit = hq.polyKit(Eq.default()).extend("y")
+        val kit = hq.polyKit().extend("y")
 
         kit.poly.shouldBeInstanceOf<Ring<*>>()
         kit.poly.shouldNotBeInstanceOf<CommutativeRing<*>>()

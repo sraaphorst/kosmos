@@ -86,13 +86,15 @@ class PolyScopeSpec : FunSpec({
 
     test("ℤ: the DSL agrees with the kit on random polynomials") {
         val polys = ArbPoly.poly(zKit, ArbPoly.smallInteger)
-        checkAll(polys, polys, ArbPoly.smallInteger) { p, q, a ->
-            zz.polyScope(eqZ) {
-                p + q shouldBe zKit.addP(p, q)
-                p * q shouldBe zKit.mulP(p, q)
-                p - q shouldBe zKit.addP(p, zKit.neg(q))
-                a * p shouldBe zKit.mulP(zKit.embed(a), p)
-                p * a shouldBe zKit.mulP(p, zKit.embed(a))
+        zKit.run {
+            checkAll(polys, polys, ArbPoly.smallInteger) { p, q, a ->
+                zz.polyScope(eqZ) {
+                    p + q shouldBe addP(p, q)
+                    p * q shouldBe mulP(p, q)
+                    p - q shouldBe addP(p,neg(q))
+                    a * p shouldBe mulP(embed(a), p)
+                    p * a shouldBe mulP(p, embed(a))
+                }
             }
         }
     }
@@ -105,7 +107,7 @@ class PolyScopeSpec : FunSpec({
     test("ℚ: rational scalars act on polynomials") {
         val qq = RationalAlgebras.RationalField
         val half = Rational.of(1, 2)
-        qq.polyScope(Eq.default()) {
+        qq.polyScope {
             val p = half * x + 1
             p.coeffs shouldBe listOf(Rational.ONE, half)
             (2 * p).coeffs shouldBe listOf(Rational.of(2), Rational.ONE)
@@ -113,7 +115,7 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("𝔽₂: literals are reduced, so 2x = 0 and (x + 1)² = x² + 1") {
-        PrimeField(2.toBigInteger()).polyScope(Eq.default()) {
+        PrimeField(2.toBigInteger()).polyScope {
             2 * x shouldBe zero
             (x + 1) * (x + 1) shouldBe x * x + 1
             x + 1 shouldBe x - 1
@@ -128,7 +130,7 @@ class PolyScopeSpec : FunSpec({
         val j = quaternion(zero, zero, one, zero)
         val k = quaternion(zero, zero, zero, one)
 
-        hq.polyScope(Eq.default()) {
+        hq.polyScope {
             val jx = j * x
             i * jx shouldBe k * x
             jx * i shouldBe -(k * x)
