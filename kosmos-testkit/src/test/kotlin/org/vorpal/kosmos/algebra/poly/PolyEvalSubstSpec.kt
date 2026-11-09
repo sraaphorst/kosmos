@@ -10,7 +10,6 @@ import org.vorpal.kosmos.algebra.poly.structures.polyCommutativeRing
 import org.vorpal.kosmos.algebra.poly.structures.polyKit
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
-import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
@@ -48,8 +47,8 @@ class PolyEvalSubstSpec : FunSpec({
 
     test("ℤ/4[x]: Horner evaluation agrees with Σ cᵢ·aⁱ") {
         val z4 = integersMod(4)
-        val kit = z4.polyKit(Eq.default())
-        val model = ListPolyModel(z4, Eq.default())
+        val kit = z4.polyKit()
+        val model = ListPolyModel(z4)
         checkAll(ArbPoly.poly(kit, ArbPoly.residue(4)), ArbPoly.residue(4)) { p, a ->
             kit.eval(p, a) shouldBe model.eval(p.coeffs, a)
         }
@@ -57,8 +56,8 @@ class PolyEvalSubstSpec : FunSpec({
 
     test("ℍ_ℚ[x]: Horner evaluation agrees with Σ cᵢ·aⁱ (coefficients on the left)") {
         val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
-        val kit = hq.polyKit(Eq.default())
-        val model = ListPolyModel(hq, Eq.default())
+        val kit = hq.polyKit()
+        val model = ListPolyModel(hq)
         val smrq = ArbRationalQuaternion.smallRationalQuaternion
         checkAll(ArbPoly.poly(kit, smrq, maxDegree = 3), smrq) { p, a ->
             kit.eval(p, a) shouldBe model.eval(p.coeffs, a)
@@ -90,7 +89,7 @@ class PolyEvalSubstSpec : FunSpec({
 
     test("ℍ_ℚ[x]: evaluation is multiplicative at a central (rational) point, but not at i") {
         val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
-        val kit = hq.polyKit(Eq.default())
+        val kit = hq.polyKit()
         val qPolys = ArbPoly.poly(kit, ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2)
         val central = Arb.int(-3..3).map { n ->
             quaternion(Rational.of(n), Rational.ZERO, Rational.ZERO, Rational.ZERO)
@@ -119,7 +118,7 @@ class PolyEvalSubstSpec : FunSpec({
 
     test("𝔽₅[x]: x⁵ - x is a nonzero polynomial that vanishes on all of 𝔽₅ (Fermat)") {
         val f5 = PrimeField(5.toBigInteger())
-        val kit = f5.polyKit(Eq.default())
+        val kit = f5.polyKit()
         kit.run {
             val p = addP(xPow(5), neg(x()))
             (p == zeroP) shouldBe false

@@ -20,7 +20,7 @@ import java.math.BigInteger
  */
 internal class ListPolyModel<A : Any>(
     private val coeff: Semiring<A>,
-    private val eqA: Eq<A>
+    private val eqA: Eq<A> = Eq.default()
 ) {
     private val zero = coeff.zero
 
