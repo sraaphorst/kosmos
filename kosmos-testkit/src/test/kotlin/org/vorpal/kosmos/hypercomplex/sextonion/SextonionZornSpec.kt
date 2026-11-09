@@ -9,6 +9,7 @@ import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.FiniteFieldAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
@@ -18,10 +19,14 @@ import org.vorpal.kosmos.hypercomplex.splitoctonion.ArbSplitOctonion
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitoctonion.splitOctonion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.ArbSplitQuaternion
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternion
+import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
+import org.vorpal.kosmos.hypercomplex.splitquaternion.splitQuaternion
 import org.vorpal.kosmos.hypercomplex.zorn.ArbZorn
 import org.vorpal.kosmos.hypercomplex.zorn.Zorn
 import org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
@@ -37,6 +42,10 @@ import java.math.BigInteger
  *
  * Into the Cayley-Dickson split-octonions the embedding needs 2 to be invertible, and that is
  * forced: the idempotent `(E₁₁, 0)` has nowhere to go in `SplitOctonion<ℤ>` or over 𝔽₂.
+ *
+ * Composing with `H′ → S` gives a second embedding `H′ → 𝕆′`. It has the same image as the direct
+ * `splitQuaternionToSplitOctonionMonomorphism` (the span of `1, e₁, e₄, e₅`) but is not equal to it:
+ * the two differ by the automorphism `α : i ↦ −i, j ↦ −k, k ↦ −j` of `H′`.
  */
 class SextonionZornSpec : StringSpec({
     val q = RationalAlgebras.RationalField
@@ -189,5 +198,63 @@ class SextonionZornSpec : StringSpec({
             codomain = SplitOctonionAlgebras.splitOctonionRing(f3),
             arb = ArbSextonion.sextonionOf(Arb.int(0..2).map(Int::toBigInteger))
         ).fullTest().throwIfFailed()
+    }
+
+    // ---------- H′ → S → 𝕆′ against the direct H′ → 𝕆′ ----------
+
+    /**
+     * The automorphism `α` of H′ with `i ↦ −i`, `j ↦ −k`, `k ↦ −j`, which is the difference between
+     * the two routes H′ → 𝕆′.
+     */
+    fun <R : Any> alpha(base: CommutativeRing<R>, x: SplitQuaternion<R>): SplitQuaternion<R> {
+        val neg = base.add.inverse
+        return splitQuaternion(x.w, neg(x.x), neg(x.z), neg(x.y))
+    }
+
+    "α : w + xi + yj + zk ↦ w − xi − zj − yk is an involutive ring automorphism of H′(ℚ)" {
+        val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
+        val arbH = ArbSplitQuaternion.rationalSplitQuaternion
+        RingHomomorphismLaws(
+            hom = { x: SplitQuaternion<Rational> -> alpha(q, x) },
+            domain = splitQuaternions,
+            codomain = splitQuaternions,
+            arb = arbH
+        ).fullTest().throwIfFailed()
+        checkAll(arbH) { x -> alpha(q, alpha(q, x)) shouldBe x }
+    }
+
+    "H′ → S → 𝕆′ sends w + xi + yj + zk to w − x·e₁ − z·e₄ − y·e₅" {
+        val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
+        val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+        checkAll(ArbSplitQuaternion.rationalSplitQuaternion) { x ->
+            val neg = q.add.inverse
+            toO(toS(x)) shouldBe splitOctonion(x.w, neg(x.x), zero, zero, neg(x.z), neg(x.y), zero, zero)
+        }
+    }
+
+    "H′ → S → 𝕆′ is the direct embedding H′ ↪ 𝕆′ twisted by α, over ℚ and 𝔽₃" {
+        suspend fun <F : Any> sameRoute(field: Field<F>, arbH: Arb<SplitQuaternion<F>>) {
+            val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(field)
+            val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)
+            val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(field)
+            checkAll(arbH) { x -> toO(toS(x)) shouldBe direct(alpha(field, x)) }
+        }
+
+        sameRoute(q, ArbSplitQuaternion.rationalSplitQuaternion)
+        sameRoute(
+            PrimeField(BigInteger.valueOf(3)),
+            ArbSplitQuaternion.splitQuaternionOf(Arb.int(0..2).map(Int::toBigInteger))
+        )
+    }
+
+    "the two routes differ: H′ → S → 𝕆′ sends i to −e₁, the direct embedding sends i to e₁" {
+        val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
+        val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+        val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(q)
+        val i = splitQuaternion(zero, one, zero, zero)
+        val minusOne = q.add.inverse(one)
+
+        direct(i) shouldBe splitOctonion(zero, one, zero, zero, zero, zero, zero, zero)
+        toO(toS(i)) shouldBe splitOctonion(zero, minusOne, zero, zero, zero, zero, zero, zero)
     }
 })
