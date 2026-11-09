@@ -12,7 +12,6 @@ import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.math.Natural
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
@@ -91,7 +90,7 @@ class PolyScopeSpec : FunSpec({
                 zz.polyScope(eqZ) {
                     p + q shouldBe addP(p, q)
                     p * q shouldBe mulP(p, q)
-                    p - q shouldBe addP(p,neg(q))
+                    p - q shouldBe addP(p, neg(q))
                     a * p shouldBe mulP(embed(a), p)
                     p * a shouldBe mulP(p, embed(a))
                 }

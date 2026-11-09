@@ -43,7 +43,7 @@ class PolyDerivativeSpec : FunSpec({
         kit: PolyKit<A>,
         coeffArb: Arb<A>,
         maxDegree: Int = 4,
-        eqA: Eq<A> = Eq.default()
+        eqA: Eq<A> = Eq.default(),
     ) {
         val model = ListPolyModel(coeff, eqA)
         val polys = ArbPoly.poly(kit, coeffArb, maxDegree)
@@ -88,10 +88,10 @@ class PolyDerivativeSpec : FunSpec({
     }
 
     derivativeChecks("ℕ[x]", nn, nnKit, ArbPoly.smallNatural, eqA = NaturalAlgebras.eqNatural)
-    derivativeChecks("ℤ[x]", zz, zKit,ArbPoly.smallInteger, eqA = eqZ)
-    derivativeChecks("𝔽₅[x]", PrimeField(5.toBigInteger()),PrimeField(5.toBigInteger()).polyKit(), ArbPoly.residue(5))
-    derivativeChecks("ℤ/4[x]", integersMod(4), integersMod(4).polyKit(),ArbPoly.residue(4))
-    derivativeChecks("ℍ_ℚ[x]", hq, hq.polyKit(),ArbRationalQuaternion.smallRationalQuaternion,3)
+    derivativeChecks("ℤ[x]", zz, zKit, ArbPoly.smallInteger, eqA = eqZ)
+    derivativeChecks("𝔽₅[x]", PrimeField(5.toBigInteger()), PrimeField(5.toBigInteger()).polyKit(), ArbPoly.residue(5))
+    derivativeChecks("ℤ/4[x]", integersMod(4), integersMod(4).polyKit(), ArbPoly.residue(4))
+    derivativeChecks("ℍ_ℚ[x]", hq, hq.polyKit(), ArbRationalQuaternion.smallRationalQuaternion, 3)
 
     /* --------------------------
      * ℤ[x]
@@ -130,7 +130,7 @@ class PolyDerivativeSpec : FunSpec({
                 val cs = p.coeffs
 
                 // p, p', p'', …, p⁽ⁿ⁺¹⁾
-                val derivatives = generateSequence(p,::derivative).take(cs.size + 1).toList()
+                val derivatives = generateSequence(p, ::derivative).take(cs.size + 1).toList()
 
                 cs.zip(derivatives).forEachIndexed { k, (c, d) ->
                     eval(d, BigInteger.ZERO) shouldBe Factorial(k) * c
@@ -192,7 +192,7 @@ class PolyDerivativeSpec : FunSpec({
             val inner = ArbPoly.poly(zKit, ArbPoly.smallInteger, maxDegree = 2)
             val polys = ArbPoly.poly(this, inner, maxDegree = 2)
             checkAll(polys, polys) { p, q ->
-                derivative(mulP(p, q)) shouldBe addP(mulP(derivative(p), q), mulP(p,derivative(q)))
+                derivative(mulP(p, q)) shouldBe addP(mulP(derivative(p), q), mulP(p, derivative(q)))
             }
         }
     }

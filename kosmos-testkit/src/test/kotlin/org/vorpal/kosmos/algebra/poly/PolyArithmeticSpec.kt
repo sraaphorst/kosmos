@@ -46,7 +46,7 @@ class PolyArithmeticSpec : FunSpec({
         kit: PolyKit<A>,
         coeffArb: Arb<A>,
         negA: ((A) -> A)? = null,
-        eqA: Eq<A> = Eq.default()
+        eqA: Eq<A> = Eq.default(),
     ) {
         val model = ListPolyModel(coeff, eqA)
         val lists = ArbPoly.coeffLists(coeffArb)
@@ -99,22 +99,26 @@ class PolyArithmeticSpec : FunSpec({
         }
     }
 
-    modelChecks("ℕ[x]", NaturalAlgebras.NaturalCommutativeSemiring,
+    modelChecks(
+        "ℕ[x]", NaturalAlgebras.NaturalCommutativeSemiring,
         NaturalAlgebras.NaturalCommutativeSemiring.polyKit(NaturalAlgebras.eqNatural),
-        ArbPoly.smallNatural, eqA = NaturalAlgebras.eqNatural)
+        ArbPoly.smallNatural, eqA = NaturalAlgebras.eqNatural
+    )
 
     modelChecks("ℤ[x]", zz, zKit, ArbPoly.smallInteger, zz.add.inverse::invoke, eqA = eqZ)
 
-    modelChecks("ℚ[x]", RationalAlgebras.RationalField, RationalAlgebras.RationalField.polyKit(),
-        ArbPoly.smallRational, RationalAlgebras.RationalField.add.inverse::invoke)
+    modelChecks(
+        "ℚ[x]", RationalAlgebras.RationalField, RationalAlgebras.RationalField.polyKit(),
+        ArbPoly.smallRational, RationalAlgebras.RationalField.add.inverse::invoke
+    )
 
     listOf(2, 5, 11).forEach { p ->
         val field = PrimeField(p.toBigInteger())
-        modelChecks("𝔽_$p[x]", field, field.polyKit(),ArbPoly.residue(p), field.add.inverse::invoke)
+        modelChecks("𝔽_$p[x]", field, field.polyKit(), ArbPoly.residue(p), field.add.inverse::invoke)
     }
 
     val z4 = integersMod(4)
-    modelChecks("ℤ/4[x]", z4, z4.polyKit(),ArbPoly.residue(4), z4.add.inverse::invoke)
+    modelChecks("ℤ/4[x]", z4, z4.polyKit(), ArbPoly.residue(4), z4.add.inverse::invoke)
 
     val hq = RationalQuaternionAlgebras.RationalQuaternionDivisionRing
     modelChecks("ℍ_ℚ[x]", hq, hq.polyKit(), ArbRationalQuaternion.smallRationalQuaternion, hq.add.inverse::invoke)

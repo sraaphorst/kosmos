@@ -23,7 +23,6 @@ import org.vorpal.kosmos.algebra.structures.Semiring
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.functional.datastructures.Option
@@ -84,8 +83,8 @@ class PolyStructuresSpec : FunSpec({
 
     test("ℚ[x] satisfies CommutativeRingLaws") {
         CommutativeRingLaws(
-            ring = qq.polyCommutativeRing(Eq.default()),
-            arb = ArbPoly.poly(qq.polyKit(Eq.default()), ArbPoly.smallRational, maxDegree = 3),
+            ring = qq.polyCommutativeRing(),
+            arb = ArbPoly.poly(qq.polyKit(), ArbPoly.smallRational, maxDegree = 3),
         ).fullTest().throwIfFailed()
     }
 
@@ -93,23 +92,23 @@ class PolyStructuresSpec : FunSpec({
         test("𝔽_$p[x] satisfies CommutativeRingLaws") {
             val field = PrimeField(p.toBigInteger())
             CommutativeRingLaws(
-                ring = field.polyCommutativeRing(Eq.default()),
-                arb = ArbPoly.poly(field.polyKit(Eq.default()), ArbPoly.residue(p)),
+                ring = field.polyCommutativeRing(),
+                arb = ArbPoly.poly(field.polyKit(), ArbPoly.residue(p)),
             ).fullTest().throwIfFailed()
         }
     }
 
     test("ℤ/4[x] satisfies CommutativeRingLaws despite its zero divisors") {
         CommutativeRingLaws(
-            ring = z4.polyCommutativeRing(Eq.default()),
-            arb = ArbPoly.poly(z4.polyKit(Eq.default()), ArbPoly.residue(4)),
+            ring = z4.polyCommutativeRing(),
+            arb = ArbPoly.poly(z4.polyKit(), ArbPoly.residue(4)),
         ).fullTest().throwIfFailed()
     }
 
     test("ℍ_ℚ[x] satisfies RingLaws") {
         RingLaws(
-            ring = hq.polyRing(Eq.default()),
-            arb = ArbPoly.poly(hq.polyKit(Eq.default()), ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2),
+            ring = hq.polyRing(),
+            arb = ArbPoly.poly(hq.polyKit(), ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2),
         ).fullTest().throwIfFailed()
     }
 
@@ -126,7 +125,7 @@ class PolyStructuresSpec : FunSpec({
      * -------------------------- */
 
     test("ℍ_ℚ[x]: x is central (xp = px), but ℍ_ℚ[x] is not commutative") {
-        val kit = hq.polyKit(Eq.default())
+        val kit = hq.polyKit()
         val polys = ArbPoly.poly(kit, ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 3)
         checkAll(polys) { p ->
             kit.mulP(kit.x(), p) shouldBe kit.mulP(p, kit.x())
@@ -155,11 +154,11 @@ class PolyStructuresSpec : FunSpec({
     }
 
     test("embed: ℍ_ℚ → ℍ_ℚ[x] is an injective ring homomorphism") {
-        val kit = hq.polyKit(Eq.default())
+        val kit = hq.polyKit()
         RingHomomorphismLaws(
             hom = kit::embed,
             domain = hq,
-            codomain = hq.polyRing(Eq.default()),
+            codomain = hq.polyRing(),
             arb = ArbRationalQuaternion.smallRationalQuaternion,
         ).fullTest().throwIfFailed()
         injectivityLaw(hom = kit::embed, arbA = ArbRationalQuaternion.smallRationalQuaternion).test()
@@ -167,7 +166,7 @@ class PolyStructuresSpec : FunSpec({
 
     test("zero is [] and one is [1] in every lifted structure") {
         val semi = nn.polySemiring(NaturalAlgebras.eqNatural)
-        val ring = hq.polyRing(Eq.default())
+        val ring = hq.polyRing()
         val comm = zz.polyCommutativeRing(eqZ)
 
         semi.zero.coeffs shouldBe emptyList()
@@ -187,17 +186,17 @@ class PolyStructuresSpec : FunSpec({
         val asRing: Ring<BigInteger> = zz
 
         zz.polyKit(eqZ).poly.shouldBeInstanceOf<CommutativeRing<*>>()
-        qq.polyKit(Eq.default()).poly.shouldBeInstanceOf<CommutativeRing<*>>()
+        qq.polyKit().poly.shouldBeInstanceOf<CommutativeRing<*>>()
 
         asRing.polyKit(eqZ).poly.shouldBeInstanceOf<Ring<*>>()
         asRing.polyKit(eqZ).poly.shouldNotBeInstanceOf<CommutativeRing<*>>()
-        hq.polyKit(Eq.default()).poly.shouldNotBeInstanceOf<CommutativeRing<*>>()
+        hq.polyKit().poly.shouldNotBeInstanceOf<CommutativeRing<*>>()
 
         asSemiring.polyKit(eqZ).poly.shouldNotBeInstanceOf<Ring<*>>()
         // A commutative coefficient semiring gives a commutative polynomial semiring.
         nn.polyKit(NaturalAlgebras.eqNatural).poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
         asSemiring.polyKit(eqZ).poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
-        hq.polyKit(Eq.default()).poly.shouldNotBeInstanceOf<CommutativeSemiring<*>>()
+        hq.polyKit().poly.shouldNotBeInstanceOf<CommutativeSemiring<*>>()
     }
 
     test("polySemiring stays a plain Semiring; polyCommutativeSemiring is commutative") {
@@ -245,7 +244,7 @@ class PolyStructuresSpec : FunSpec({
 
     test("𝔽₇: embed reduces raw representatives, so embed(7) = 0 even with Eq.default()") {
         val f7 = PrimeField(7.toBigInteger())
-        val kit = f7.polyKit(Eq.default())
+        val kit = f7.polyKit()
         kit.run {
             embed(7.toBigInteger()) shouldBe zeroP
             embed(14.toBigInteger()) shouldBe zeroP
@@ -256,7 +255,7 @@ class PolyStructuresSpec : FunSpec({
 
     test("𝔽₇: polynomials built from raw representatives equal those built from residues") {
         val f7 = PrimeField(7.toBigInteger())
-        val kit = f7.polyKit(Eq.default())
+        val kit = f7.polyKit()
         val raw = Arb.list(Arb.int(-20..20).map(Int::toBigInteger), 0..5)
         checkAll(raw) { cs ->
             val reduced = cs.map { c -> c.mod(7.toBigInteger()) }

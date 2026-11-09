@@ -8,8 +8,6 @@ import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.poly.kit.PolyKit
 import org.vorpal.kosmos.core.math.Natural
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternion
-import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import java.math.BigInteger
 
 /**
@@ -73,15 +71,4 @@ object ArbPoly {
     /** Canonical residues `0..p-1`. */
     fun residue(p: Int): Arb<BigInteger> =
         Arb.int(0 until p).map(Int::toBigInteger)
-
-    /** Rational quaternions with integer coordinates in `-2..2`. */
-    val smallQuaternion: Arb<RationalQuaternion> =
-        Arb.list(Arb.int(-2..2), 4..4).map { (w, x, y, z) ->
-            quaternion(
-                Rational.of(w),
-                Rational.of(x),
-                Rational.of(y),
-                Rational.of(z)
-            )
-        }
 }
