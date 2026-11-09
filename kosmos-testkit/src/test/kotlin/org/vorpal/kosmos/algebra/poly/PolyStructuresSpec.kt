@@ -5,12 +5,18 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.types.shouldBeInstanceOf
 import io.kotest.matchers.types.shouldNotBeInstanceOf
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.list
+import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.poly.structures.polyCommutativeRing
+import org.vorpal.kosmos.algebra.poly.structures.polyCommutativeSemiring
 import org.vorpal.kosmos.algebra.poly.structures.polyKit
 import org.vorpal.kosmos.algebra.poly.structures.polyRing
 import org.vorpal.kosmos.algebra.poly.structures.polySemiring
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.Semiring
@@ -24,6 +30,7 @@ import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
+import org.vorpal.kosmos.laws.algebra.CommutativeSemiringLaws
 import org.vorpal.kosmos.laws.algebra.RingLaws
 import org.vorpal.kosmos.laws.algebra.SemiringLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
@@ -57,12 +64,13 @@ class PolyStructuresSpec : FunSpec({
         ).fullTest().throwIfFailed()
     }
 
-    test("ℕ[x] multiplication is commutative, though the type is only Semiring") {
+    test("ℕ[x] satisfies CommutativeSemiringLaws") {
         val kit = nn.polyKit(NaturalAlgebras.eqNatural)
-        val polys = ArbPoly.poly(kit, ArbPoly.smallNatural)
-        checkAll(polys, polys) { p, q ->
-            kit.mulP(p, q) shouldBe kit.mulP(q, p)
-        }
+        CommutativeSemiringLaws(
+            semiring = nn.polyCommutativeSemiring(NaturalAlgebras.eqNatural),
+            arb = ArbPoly.poly(kit, ArbPoly.smallNatural),
+            eq = polyEq(NaturalAlgebras.eqNatural)
+        ).fullTest().throwIfFailed()
     }
 
     test("ℤ[x] satisfies CommutativeRingLaws") {
@@ -185,6 +193,28 @@ class PolyStructuresSpec : FunSpec({
         hq.polyKit(Eq.default()).poly.shouldNotBeInstanceOf<CommutativeRing<*>>()
 
         asSemiring.polyKit(eqZ).poly.shouldNotBeInstanceOf<Ring<*>>()
+        // A commutative coefficient semiring gives a commutative polynomial semiring.
+        nn.polyKit(NaturalAlgebras.eqNatural).poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
+        asSemiring.polyKit(eqZ).poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
+        hq.polyKit(Eq.default()).poly.shouldNotBeInstanceOf<CommutativeSemiring<*>>()
+    }
+
+    test("polySemiring stays a plain Semiring; polyCommutativeSemiring is commutative") {
+        nn.polySemiring(NaturalAlgebras.eqNatural).shouldNotBeInstanceOf<CommutativeSemiring<*>>()
+        nn.polyCommutativeSemiring(NaturalAlgebras.eqNatural).shouldBeInstanceOf<CommutativeSemiring<*>>()
+    }
+
+    test("polyCommutativeSemiring has the same arithmetic as polySemiring") {
+        val kit = nn.polyKit(NaturalAlgebras.eqNatural)
+        val plain = nn.polySemiring(NaturalAlgebras.eqNatural)
+        val comm = nn.polyCommutativeSemiring(NaturalAlgebras.eqNatural)
+        val polys = ArbPoly.poly(kit, ArbPoly.smallNatural)
+        checkAll(polys, polys) { p, q ->
+            comm.add(p, q) shouldBe plain.add(p, q)
+            comm.mul(p, q) shouldBe plain.mul(p, q)
+        }
+        comm.zero shouldBe plain.zero
+        comm.one shouldBe plain.one
     }
 
     test("a kit built from a Semiring has no negation, even if the coefficients are a ring") {
@@ -206,5 +236,29 @@ class PolyStructuresSpec : FunSpec({
         val semi = nn.polySemiring(NaturalAlgebras.eqNatural, Option.Some("∨"), Option.Some("∧"))
         semi.add.op.symbol shouldBe "∨"
         semi.mul.op.symbol shouldBe "∧"
+    }
+
+    /* --------------------------
+     * Reduction of raw representatives
+     * -------------------------- */
+
+    test("𝔽₇: embed reduces raw representatives, so embed(7) = 0 even with Eq.default()") {
+        val f7 = PrimeField(7.toBigInteger())
+        val kit = f7.polyKit(Eq.default())
+
+        kit.embed(7.toBigInteger()) shouldBe kit.zeroP
+        kit.embed(14.toBigInteger()) shouldBe kit.zeroP
+        kit.embed((-1).toBigInteger()).coeffs shouldBe ints(6)
+        kit.embed(8.toBigInteger()) shouldBe kit.oneP
+    }
+
+    test("𝔽₇: polynomials built from raw representatives equal those built from residues") {
+        val f7 = PrimeField(7.toBigInteger())
+        val kit = f7.polyKit(Eq.default())
+        val raw = Arb.list(Arb.int(-20..20).map(Int::toBigInteger), 0..5)
+        checkAll(raw) { cs ->
+            val reduced = cs.map { c -> c.mod(7.toBigInteger()) }
+            ArbPoly.polyOf(kit, cs) shouldBe ArbPoly.polyOf(kit, reduced)
+        }
     }
 })

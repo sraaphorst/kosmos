@@ -10,6 +10,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.poly.kit.PolyKit
 import org.vorpal.kosmos.algebra.poly.structures.polyKit
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
@@ -17,6 +18,8 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
+import org.vorpal.kosmos.laws.algebra.CommutativeSemiringLaws
+import org.vorpal.kosmos.core.math.Natural
 import java.math.BigInteger
 
 /**
@@ -189,8 +192,28 @@ class PolyKitSpec : FunSpec({
         val kit = NaturalAlgebras.NaturalCommutativeSemiring.polyKit(NaturalAlgebras.eqNatural).extend("y")
 
         kit.poly.shouldNotBeInstanceOf<Ring<*>>()
+        kit.poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
         shouldThrow<IllegalStateException> { kit.neg(kit.gen(1)) }
         kit.mulP(kit.gen(0), kit.gen(1)) shouldBe kit.mulP(kit.gen(1), kit.gen(0))
+    }
+
+    test("ℕ[x][y] satisfies CommutativeSemiringLaws") {
+        val nx = NaturalAlgebras.NaturalCommutativeSemiring.polyKit(NaturalAlgebras.eqNatural)
+        val nxy = nx.extend("y")
+        val inner = ArbPoly.poly(nx, ArbPoly.smallNatural, maxDegree = 2)
+        @Suppress("UNCHECKED_CAST")
+        CommutativeSemiringLaws(
+            semiring = nxy.poly as CommutativeSemiring<Poly<Poly<Natural>>>,
+            arb = ArbPoly.poly(nxy, inner, maxDegree = 2),
+            eq = polyEq(polyEq(NaturalAlgebras.eqNatural))
+        ).fullTest().throwIfFailed()
+    }
+
+    test("ℕ[x][y][z] stays commutative all the way up") {
+        val kit = NaturalAlgebras.NaturalCommutativeSemiring.polyKit(NaturalAlgebras.eqNatural)
+            .extend("y").extend("z")
+        kit.poly.shouldBeInstanceOf<CommutativeSemiring<*>>()
+        kit.gens.forEach { a -> kit.gens.forEach { b -> kit.mulP(a, b) shouldBe kit.mulP(b, a) } }
     }
 
     test("extend can override the operation symbols of the new level") {

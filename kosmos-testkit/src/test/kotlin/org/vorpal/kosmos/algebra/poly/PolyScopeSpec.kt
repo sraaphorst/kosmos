@@ -6,6 +6,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.poly.scope.PolyIntLiteralScope
 import org.vorpal.kosmos.algebra.poly.scope.PolyScope
 import org.vorpal.kosmos.algebra.poly.scope.polyScope
+import org.vorpal.kosmos.algebra.poly.scope.polySemiringScope
 import org.vorpal.kosmos.algebra.poly.structures.polyKit
 import org.vorpal.kosmos.algebra.structures.PrimeField
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
@@ -20,17 +21,14 @@ import java.math.BigInteger
 
 /**
  * The operator DSL: [PolyScope] (semiring: `+`, `·`, scalars), `PolyRingScope` (adds `-`) and
- * [PolyIntLiteralScope] (adds `Int`/`Long`/`BigInteger` literals), entered via `polyScope { ... }`.
+ * [PolyIntLiteralScope] (adds `Int`/`Long`/`BigInteger` literals), entered via `polyScope { ... }`
+ * or `polySemiringScope { ... }`.
  *
  * Each expression is checked against the same polynomial built directly through the kit, so the
  * DSL is only sugar over arithmetic already tested in `PolyArithmeticSpec`.
  *
- * Known issue: `Semiring.polyScope`, `Ring.polyScope` and `CommutativeRing.polyScope` overload on
- * the receiver, but their `block` parameters have different receiver types (`PolyScope` vs
- * `PolyIntLiteralScope`). For a ring receiver the Semiring overload is more specific in `block`
- * while the ring overloads are more specific in the receiver, so Kotlin reports an overload
- * resolution ambiguity. Only `Semiring.polyScope` is usable today (from a receiver that is not a
- * ring, such as ℕ).
+ * Rings enter through `polyScope`; semirings through `polySemiringScope` (the names differ because
+ * the two `block` receiver types would otherwise make every ring call site ambiguous).
  */
 class PolyScopeSpec : FunSpec({
 
@@ -40,18 +38,12 @@ class PolyScopeSpec : FunSpec({
 
     fun zPoly(vararg cs: Int) = ArbPoly.polyOf(zKit, ints(*cs))
 
-    // The Ring / CommutativeRing overloads of `polyScope` cannot currently be called: every call
-    // with a ring receiver is ambiguous against the Semiring overload (see the class KDoc). Until
-    // that is resolved, the ring scopes are entered by constructing them directly.
-    fun <R> zScope(name: String = "x", block: PolyIntLiteralScope<BigInteger>.() -> R): R =
-        PolyIntLiteralScope(zz.polyKit(eqZ, name), zz).block()
-
     test("ℤ: 5x² + 3x + 1 reads the way it is written") {
-        zScope { 5 * x * x + 3 * x + 1 } shouldBe zPoly(1, 3, 5)
+        zz.polyScope(eqZ) { 5 * x * x + 3 * x + 1 } shouldBe zPoly(1, 3, 5)
     }
 
     test("ℤ: subtraction, unary minus, and literals on either side") {
-        zScope {
+        zz.polyScope(eqZ) {
             x - 1 shouldBe zPoly(-1, 1)
             1 - x shouldBe zPoly(1, -1)
             -x shouldBe zPoly(0, -1)
@@ -64,7 +56,7 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("ℤ: fromInt, fromLong and fromBigInt all embed the same constant") {
-        zScope {
+        zz.polyScope(eqZ) {
             fromInt(7) shouldBe zPoly(7)
             fromLong(7L) shouldBe zPoly(7)
             fromBigInt(7.toBigInteger()) shouldBe zPoly(7)
@@ -73,7 +65,7 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("ℤ: zero, one, c, x, gen and vars") {
-        zScope(name = "t") {
+        zz.polyScope(eqZ, name = "t") {
             zero shouldBe zKit.zeroP
             one shouldBe zKit.oneP
             c(BigInteger.TEN) shouldBe zPoly(10)
@@ -85,7 +77,7 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("ℤ: eval and subst as extension functions") {
-        zScope {
+        zz.polyScope(eqZ) {
             val p = x * x + 1
             p.eval(3.toBigInteger()) shouldBe 10.toBigInteger()
             p.subst(x + 1) shouldBe x * x + 2 * x + 2
@@ -95,7 +87,7 @@ class PolyScopeSpec : FunSpec({
     test("ℤ: the DSL agrees with the kit on random polynomials") {
         val polys = ArbPoly.poly(zKit, ArbPoly.smallInteger)
         checkAll(polys, polys, ArbPoly.smallInteger) { p, q, a ->
-            zScope {
+            zz.polyScope(eqZ) {
                 p + q shouldBe zKit.addP(p, q)
                 p * q shouldBe zKit.mulP(p, q)
                 p - q shouldBe zKit.addP(p, zKit.neg(q))
@@ -106,14 +98,14 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("the block's result is returned") {
-        val degree: Int = zScope { (x * x * x + 1).degree }
+        val degree: Int = zz.polyScope(eqZ) { (x * x * x + 1).degree }
         degree shouldBe 3
     }
 
     test("ℚ: rational scalars act on polynomials") {
         val qq = RationalAlgebras.RationalField
         val half = Rational.of(1, 2)
-        PolyIntLiteralScope(qq.polyKit(Eq.default()), qq).run {
+        qq.polyScope(Eq.default()) {
             val p = half * x + 1
             p.coeffs shouldBe listOf(Rational.ONE, half)
             (2 * p).coeffs shouldBe listOf(Rational.of(2), Rational.ONE)
@@ -121,8 +113,7 @@ class PolyScopeSpec : FunSpec({
     }
 
     test("𝔽₂: literals are reduced, so 2x = 0 and (x + 1)² = x² + 1") {
-        val f2 = PrimeField(2.toBigInteger())
-        PolyIntLiteralScope(f2.polyKit(Eq.default()), f2).run {
+        PrimeField(2.toBigInteger()).polyScope(Eq.default()) {
             2 * x shouldBe zero
             (x + 1) * (x + 1) shouldBe x * x + 1
             x + 1 shouldBe x - 1
@@ -137,7 +128,7 @@ class PolyScopeSpec : FunSpec({
         val j = quaternion(zero, zero, one, zero)
         val k = quaternion(zero, zero, zero, one)
 
-        PolyIntLiteralScope(hq.polyKit(Eq.default()), hq).run {
+        hq.polyScope(Eq.default()) {
             val jx = j * x
             i * jx shouldBe k * x
             jx * i shouldBe -(k * x)
@@ -149,10 +140,34 @@ class PolyScopeSpec : FunSpec({
     test("ℕ: the semiring scope offers + and · and constants") {
         val nn = NaturalAlgebras.NaturalCommutativeSemiring
         val two = Natural(2.toBigInteger())
-        nn.polyScope(NaturalAlgebras.eqNatural) {
+        nn.polySemiringScope(NaturalAlgebras.eqNatural) {
             val p = x * x + c(two) * x + one
             p.coeffs shouldBe listOf(Natural.ONE, two, Natural.ONE)
             p.eval(Natural(3.toBigInteger())) shouldBe Natural(16.toBigInteger())
         }
+    }
+
+    test("ℤ: p.derivative() inside the scope") {
+        zz.polyScope(eqZ) {
+            (5 * x * x + 3 * x + 1).derivative() shouldBe 10 * x + 3
+            one.derivative() shouldBe zero
+        }
+    }
+
+    test("ℕ: p.derivative() works over a semiring too") {
+        val nn = NaturalAlgebras.NaturalCommutativeSemiring
+        val three = Natural(3.toBigInteger())
+        nn.polySemiringScope(NaturalAlgebras.eqNatural) {
+            (x * x * x + x).derivative() shouldBe c(three) * x * x + one
+        }
+    }
+
+    test("polyScope over a ring hands the block a PolyIntLiteralScope") {
+        val scope: Any = zz.polyScope(eqZ) { this }
+        (scope is PolyIntLiteralScope<*>) shouldBe true
+        val semiScope: Any = NaturalAlgebras.NaturalCommutativeSemiring
+            .polySemiringScope(NaturalAlgebras.eqNatural) { this }
+        (semiScope is PolyIntLiteralScope<*>) shouldBe false
+        (semiScope is PolyScope<*>) shouldBe true
     }
 })

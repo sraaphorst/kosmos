@@ -43,6 +43,12 @@ internal class ListPolyModel<A : Any>(
     fun neg(p: List<A>, negA: (A) -> A): List<A> =
         trim(p.map(negA))
 
+    /** `(p')ₖ = (k+1)·pₖ₊₁`, where `(k+1)·c` is `c` added to itself `k+1` times. */
+    fun derivative(p: List<A>): List<A> =
+        trim(p.drop(1).mapIndexed { k, c ->
+            (0..k).fold(zero) { acc, _ -> coeff.add(acc, c) }
+        })
+
     /** `Σ cᵢ·aⁱ`, with each power computed from scratch (not Horner). */
     fun eval(p: List<A>, a: A): A =
         p.indices.fold(zero) { acc, i ->
