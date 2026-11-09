@@ -69,3 +69,25 @@ See [`law-testing-baseline.md`](law-testing-baseline.md). Departure from #252: i
 holds only for the **full** view, and the path runs through `Semigroup(*)`, because the compact `FieldLaws`
 view does not include multiplicative associativity at all. Whether the compact view *should* include it is a
 coverage question for Sebastian, not something the refactor changes on its own.
+
+### Stage 1 (done)
+
+New in `kosmos-laws` (package `org.vorpal.kosmos.laws`):
+
+- `LawNode.kt`: `LawMode { COMPACT, FULL }`; sealed `LawNode` with `Leaf(law)` and `Branch(label, children)`;
+  `LawNode.flat(...)` compatibility adapter; occurrence-based `flatten()`; `LawGraphs.requireAcyclic` (reference identity,
+  so a shared node is fine and a node that is its own descendant is rejected with `LawGraphCycleException`).
+- `LawReport.kt`: `LawStatus` (ERRORED > FAILED > PASSED > SKIPPED), `LeafOutcome` (keeps the original throwable),
+  `LawCounts`, `LawPath` (labels for display, child indices as the stable selector), `NodeReport`, and `LawReport`
+  with `problems`, `hasEvidence` and a path-based `throwIfFailed(requireEvidence = true)`.
+- `LawRunner.kt`: `LawRunner.run(node, config)` with fresh state per run, cycle check before any leaf runs,
+  collecting by default and `failFast` as an option (later leaves become `Skipped` with a reason), cancellation
+  rethrown. Entry points: `node.verify()`, `suite.verify(mode)`, and the `lawGraph("...") { suite(...); law(...) }` builder.
+- `LawSuite.node(mode)`: defaults to the flat adapter, so every existing suite already works as a node.
+
+Interim classification: `AssertionError` is `Failed`, anything else is `Errored`. Kotest's `checkAll` turns every
+exception in a property body into an `AssertionError`, so a throwing operation inside a property still reads as
+`Failed` until stage 3.
+
+Tests: `kosmos-laws/src/test/.../LawRunnerSpec.kt` (16 tests). CI now runs `:kosmos-laws:test` too, under the same
+`testkit` check name. Existing specs are untouched: 143 specs / 2241 tests pass (baseline + the inventory spec).
