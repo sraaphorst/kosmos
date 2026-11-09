@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.poly.kit.PolyKit
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
+import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.Semiring
@@ -39,6 +40,16 @@ fun <A : Any> Semiring<A>.polySemiring(
     val mulMonoid: Monoid<Poly<A>> = Monoid.of(oneP, mulP)
 
     return Semiring.of(addMonoid, mulMonoid)
+}
+
+/** Adjoin a variable to a commutative coefficient semiring. */
+fun <A : Any> CommutativeSemiring<A>.polyCommutativeSemiring(
+    eqA: Eq<A>,
+    addSymbol: Option<String> = Option.None,
+    mulSymbol: Option<String> = Option.None
+): CommutativeSemiring<Poly<A>> {
+    val poly = polySemiring(eqA, addSymbol, mulSymbol)
+    return CommutativeSemiring.of(poly.add, CommutativeMonoid.of(poly.one, poly.mul.op))
 }
 
 fun <A : Any> Semiring<A>.polyKit(

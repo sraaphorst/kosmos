@@ -10,7 +10,7 @@ import org.vorpal.kosmos.functional.datastructures.Option
 /**
  * Semiring coefficients: only + and * available on Poly.
  */
-fun <A : Any, R> Semiring<A>.polyScope(
+fun <A : Any, R> Semiring<A>.polySemiringScope(
     eqA: Eq<A>,
     name: String = "x",
     addSymbol: Option<String> = Option.None,
@@ -23,7 +23,7 @@ fun <A : Any, R> Semiring<A>.polyScope(
 
 /**
  * Ring coefficients: +, *, unary -, and subtraction available. Also supports Int literals
- * because Ring<A> implements HasFromBigInt<A> in your hierarchy.
+ * because [Ring] implements integer conversion.
  */
 fun <A : Any, R> Ring<A>.polyScope(
     eqA: Eq<A>,
