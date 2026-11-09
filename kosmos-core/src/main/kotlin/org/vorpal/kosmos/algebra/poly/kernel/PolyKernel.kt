@@ -1,6 +1,8 @@
 package org.vorpal.kosmos.algebra.poly.kernel
 
 import org.vorpal.kosmos.algebra.poly.Poly
+import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
+import org.vorpal.kosmos.algebra.structures.pow
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
@@ -192,25 +194,18 @@ internal object PolyKernel {
     }
 
     /**
-     * Derivative: only needs multiplication by small integers.
-     * Then in a PolyRingScope or a PolyIntLiteralScope, you can provide d(p) or p.derivative().
+     * Formal derivative, scaling each coefficient by its degree via repeated addition.
      */
     fun <A : Any> derivative(
         p: Poly<A>,
-        addA: BinOp<A>,
-        mulA: BinOp<A>,
-        fromInt: (Int) -> A,
-        eqA: Eq<A>,
-        zeroA: A
+        addA: CommutativeMonoid<A>,
+        eqA: Eq<A>
     ): Poly<A> {
         val cs = p.coeffs
         if (cs.size <= 1) return Poly.zero()
 
-        val out = (1 until cs.size).map { k ->
-            val kA = fromInt(k)
-            mulA(kA, cs[k])
-        }
+        val out = (1 until cs.size).map { k -> addA.pow(cs[k], k) }
 
-        return normalize(Poly.ofUnsafe(out), eqA, zeroA)
+        return normalize(Poly.ofUnsafe(out), eqA, addA.identity)
     }
 }

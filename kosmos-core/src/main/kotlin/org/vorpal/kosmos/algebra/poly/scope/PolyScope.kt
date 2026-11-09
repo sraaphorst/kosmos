@@ -67,6 +67,10 @@ open class PolyScope<A : Any>(
 
     fun Poly<A>.subst(q: Poly<A>): Poly<A> =
         kit.subst(this, q)
+
+    /** Differentiate with respect to the last adjoined variable. */
+    fun Poly<A>.derivative(): Poly<A> =
+        kit.derivative(this)
 }
 
 /**
