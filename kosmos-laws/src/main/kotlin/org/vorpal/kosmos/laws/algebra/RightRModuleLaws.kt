@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.RightRModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.module.rightRModuleLaws
 import org.vorpal.kosmos.laws.suiteName
 
@@ -28,7 +31,7 @@ class RightRModuleLaws<M : Any, S : Any>(
     eqS: Eq<S> = Eq.default(),
     prM: Printable<M> = Printable.default(),
     prS: Printable<S> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
     private val moduleDescription = "M[${module.add.op.symbol}]"
     private val rightScalarDescription = "S[${module.rightScalars.add.op.symbol}${module.rightScalars.mul.op.symbol}]"
     override val name = suiteName(
@@ -47,11 +50,11 @@ class RightRModuleLaws<M : Any, S : Any>(
     private val structureLaws: List<TestingLaw> =
         rightRModuleLaws(module, vectorArb, scalarArb, eqM, prM, prS)
 
-    override fun laws(): List<TestingLaw> =
-        structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        when (mode) {
+            LawMode.COMPACT -> structureLaws.asNodes()
+            LawMode.FULL -> listOf(ringLaws.node(LawMode.FULL), groupLaws.node(LawMode.FULL)) +
+                structureLaws.asNodes()
+        }
 
-    override fun fullLaws(): List<TestingLaw> =
-        ringLaws.fullLaws() +
-            groupLaws.fullLaws() +
-            structureLaws
 }

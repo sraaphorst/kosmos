@@ -3,8 +3,9 @@ package org.vorpal.kosmos.laws.setoid
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.core.setoid.Setoid
-import org.vorpal.kosmos.laws.LawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.relation.EquivalenceRelationLaws
 
 /**
@@ -16,7 +17,7 @@ class SetoidLaws<A : Any>(
     private val setoid: Setoid<A>,
     private val arb: Arb<A>,
     private val pr: Printable<A> = Printable.default()
-): LawSuite {
-    override fun laws(): List<TestingLaw> =
-        EquivalenceRelationLaws(setoid.relation, arb, pr).laws()
+) : StructuredLawSuite {
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(EquivalenceRelationLaws(setoid.relation, arb, pr).node(mode))
 }

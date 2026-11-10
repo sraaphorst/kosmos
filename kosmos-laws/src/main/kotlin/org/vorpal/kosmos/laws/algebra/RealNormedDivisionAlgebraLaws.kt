@@ -2,6 +2,7 @@ package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
 import io.kotest.property.checkAll
+import kotlin.math.max
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
@@ -10,11 +11,13 @@ import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.functional.datastructures.Option
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.realPositiveDefiniteLaw
 import org.vorpal.kosmos.laws.suiteName
-import kotlin.math.max
 
 /**
  * Laws for [RealNormedDivisionAlgebra]:
@@ -30,7 +33,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
     private val eqReal: Eq<Real> = Eqs.realApprox(absTol = tolerance, relTol = tolerance),
     private val prA: Printable<A> = Printable.default(),
     private val prReal: Printable<Real> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     private val normDesc = "N[${algebra.normSq.symbol}]"
 
@@ -86,9 +89,8 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
         }
     )
 
-    override fun laws(): List<TestingLaw> =
-        base.laws() + realOnly
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(base.node(mode)) +
+            realOnly.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        base.fullLaws() + realOnly
 }

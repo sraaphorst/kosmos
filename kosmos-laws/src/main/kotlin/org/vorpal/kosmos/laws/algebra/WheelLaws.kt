@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Wheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.InvolutionLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -20,7 +23,7 @@ class WheelLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
     override val name = suiteName(
         "Wheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
     )
@@ -32,9 +35,8 @@ class WheelLaws<A : Any>(
     private val structureLaws: List<TestingLaw> =
         listOf(involutionLaw)
 
-    override fun laws(): List<TestingLaw> =
-        addMonoidLaws.laws() + mulMonoidLaws.laws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(addMonoidLaws.node(mode), mulMonoidLaws.node(mode)) +
+            structureLaws.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        addMonoidLaws.fullLaws() + mulMonoidLaws.fullLaws() + structureLaws
 }

@@ -6,8 +6,11 @@ import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.Meadow
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.AntiHomomorphismLaw
 import org.vorpal.kosmos.laws.property.EndomorphismCommutationLaw
 import org.vorpal.kosmos.laws.property.IdempotencyLaw
@@ -35,7 +38,7 @@ class MeadowLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
     override val name = suiteName("Meadow",
         meadow.add.op.symbol, meadow.mul.op.symbol, meadow.inv.symbol
     )
@@ -69,9 +72,13 @@ class MeadowLaws<A : Any>(
         idempotentLaw
     )
 
-    override fun laws(): List<TestingLaw> =
-        commutativeRingLaws.laws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        when (mode) {
+            LawMode.COMPACT -> listOf(commutativeRingLaws.node(LawMode.COMPACT)) +
+                structureLaws.asNodes()
+            LawMode.FULL -> listOf(commutativeRingLaws.node(LawMode.FULL)) +
+                structureLaws.asNodes() +
+                derivedLaws.asNodes()
+        }
 
-    override fun fullLaws(): List<TestingLaw> =
-        commutativeRingLaws.fullLaws() + structureLaws + derivedLaws
 }

@@ -91,3 +91,33 @@ exception in a property body into an `AssertionError`, so a throwing operation i
 
 Tests: `kosmos-laws/src/test/.../LawRunnerSpec.kt` (16 tests). CI now runs `:kosmos-laws:test` too, under the same
 `testkit` check name. Existing specs are untouched: 143 specs / 2241 tests pass (baseline + the inventory spec).
+
+### Stage 2 (done)
+
+`StructuredLawSuite` (in `kosmos-laws`): a suite implements `children(mode): List<LawNode>`, and `laws()` /
+`fullLaws()` are the flattenings of `node(COMPACT)` / `node(FULL)`, so the graph and the flat views cannot drift.
+Child-mode selection is explicit in each `children`: most suites pass `mode` through; where the views differ
+(e.g. `HemiringLaws`, `NonAssociativeRingLaws`, modules, vector spaces, `NonAssociativeAlgebraLaws`,
+`MeadowLaws`, `InnerProductSpaceLaws`) the code uses `when (mode)` and names the child's mode.
+
+All 53 suite classes are migrated, so the flat adapter in `LawSuite.node` is now only used by suites written
+outside `kosmos-laws` (none today) and by ad hoc test fixtures. No law, predicate, generator, equality or
+budget changed.
+
+Coverage checks:
+
+- Golden snapshot (`LawInventorySpec`): 50 suites x 2 views, identical before and after.
+- Whole-suite differential: `test()` / `fullTest()` were temporarily instrumented to dump every suite's ordered law
+  list while the full testkit ran, once on the stage 1 commit and once after migration. All 378 suite invocations
+  in the existing specs (26 suite types, real instances) produced identical lists. The instrumentation was not
+  committed.
+- `FieldLawGraphSpec`: a controlled "field" whose multiplication is non-associative (only when the left factor is
+  itself a product, so no other field law can see it) fails exactly
+  `Field > DivisionRing > Ring > Rng > Hemiring > Semigroup(*) > associativity (*)` in full mode, every ancestor
+  fails and every other branch passes; the compact view passes, as recorded in the baseline. `(ℚ, −, *)` reports all
+  four additive failures (associativity, identity, commutativity, invertibility of `+`).
+
+Suites with no spec that exercises them (checked only by the snapshot): the lattice family and `BooleanAlgebraLaws`,
+`NonAssociativeDivisionAlgebraLaws`, `RngHomomorphismLaws`, `NonAssociativeRngHomomorphismLaws`,
+`EquivalenceRelationLaws`, `SetoidLaws`. `InnerProductSpaceLaws` has no instance at all, so it is checked only by
+compiling. These are candidates for #61.

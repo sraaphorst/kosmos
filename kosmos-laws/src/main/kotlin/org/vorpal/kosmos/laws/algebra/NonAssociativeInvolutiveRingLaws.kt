@@ -4,8 +4,9 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.NonAssociativeInvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.suiteName
 
 class NonAssociativeInvolutiveRingLaws<A : Any>(
@@ -13,7 +14,7 @@ class NonAssociativeInvolutiveRingLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "NonAssociativeInvolutiveRing",
@@ -24,9 +25,7 @@ class NonAssociativeInvolutiveRingLaws<A : Any>(
     private val nonAssociativeRingLaws = NonAssociativeRingLaws(algebra, arb, eq, pr)
     private val conjugationLaws = ConjugationLaws(algebra.conj, algebra.add, algebra.mul, arb, eq, pr)
 
-    override fun laws(): List<TestingLaw> =
-        nonAssociativeRingLaws.laws() + conjugationLaws.laws()
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(nonAssociativeRingLaws.node(mode), conjugationLaws.node(mode))
 
-    override fun fullLaws(): List<TestingLaw> =
-        nonAssociativeRingLaws.fullLaws() + conjugationLaws.fullLaws()
 }

@@ -49,7 +49,7 @@ Uses of the legacy law-running API (by `grep`, so approximate):
 ## Ordered law inventory
 
 `kosmos-testkit/src/test/kotlin/org/vorpal/kosmos/laws/inventory/LawInventorySpec.kt` records, for 32
-representative suites over ℤ and ℚ, the ordered list of laws in both the compact (`laws()`) and full
+representative suites (50 since stage 2, see below) over ℤ and ℚ, the ordered list of laws in both the compact (`laws()`) and full
 (`fullLaws()`) views. The snapshot is `kosmos-testkit/src/test/resources/law-inventory.txt` and is checked
 on every test run, so a structural refactor cannot silently drop, add or reorder a law.
 
@@ -69,3 +69,9 @@ on every test run, so a structural refactor cannot silently drop, add or reorder
    (52 laws) runs the additive abelian-group laws 4 times and `identity (*)`/`distributivity`/`totality (*)`
    3 times. `LeftRModule` and `RModule` full views run the additive group twice.
    These are the targets for stage 4 (run shared nodes once).
+
+### Stage 2 additions
+
+Before migrating the remaining families, 18 more entries (lattices and Boolean algebra on `Boolean`,
+homomorphisms `ℤ → ℤ`, setoid / equivalence relation, `NonAssociativeDivisionAlgebra(ℚ)`) were generated
+against the stage 1 commit (`5ba03fc`, before any suite was migrated) and appended to the snapshot.

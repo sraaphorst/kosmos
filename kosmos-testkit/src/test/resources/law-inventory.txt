@@ -703,3 +703,238 @@ InvolutionLaw | involution (¯)
 InvertibilityLaw | invertibility (*)
 NormSqMultiplicativeLaw | normSq multiplicative: N(xy)=N(x)N(y)
 
+## NonAssociativeDivisionAlgebra(Q) [compact] (7)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+
+## NonAssociativeDivisionAlgebra(Q) [full] (14)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+
+## NonAssociativeRngHomomorphism(Z -> Z) [compact] (3)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+
+## NonAssociativeRngHomomorphism(Z -> Z) [full] (3)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+
+## NonAssociativeRingHomomorphism(Z -> Z) [compact] (4)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+<anonymous> | non-associative ring homomorphism: preserves multiplicative identity
+
+## NonAssociativeRingHomomorphism(Z -> Z) [full] (4)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+<anonymous> | non-associative ring homomorphism: preserves multiplicative identity
+
+## RngHomomorphism(Z -> Z) [compact] (3)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+
+## RngHomomorphism(Z -> Z) [full] (3)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+
+## RingHomomorphism(Z -> Z) [compact] (4)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+<anonymous> | ring homomorphism: preserves multiplicative identity
+
+## RingHomomorphism(Z -> Z) [full] (4)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+<anonymous> | ring homomorphism: preserves multiplicative identity
+
+## JoinSemilattice(Bool) [compact] (3)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+
+## JoinSemilattice(Bool) [full] (3)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+
+## MeetSemilattice(Bool) [compact] (3)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+
+## MeetSemilattice(Bool) [full] (3)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+
+## Lattice(Bool) [compact] (8)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+
+## Lattice(Bool) [full] (8)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+
+## BoundedLattice(Bool) [compact] (12)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+
+## BoundedLattice(Bool) [full] (12)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+
+## DistributiveLattice(Bool) [compact] (14)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+
+## DistributiveLattice(Bool) [full] (14)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+
+## BooleanAlgebra(Bool) [compact] (21)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+<anonymous> | boolean complement: x ∨ ¬x = ⊤
+<anonymous> | boolean complement: x ∧ ¬x = ⊥
+<anonymous> | boolean: ¬⊥ = ⊤
+<anonymous> | boolean: ¬⊤ = ⊥
+InvolutionLaw | involution (¬)
+<anonymous> | de Morgan: ¬(x ∨ y) = ¬x ∧ ¬y
+<anonymous> | de Morgan: ¬(x ∧ y) = ¬x ∨ ¬y
+
+## BooleanAlgebra(Bool) [full] (21)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+<anonymous> | boolean complement: x ∨ ¬x = ⊤
+<anonymous> | boolean complement: x ∧ ¬x = ⊥
+<anonymous> | boolean: ¬⊥ = ⊤
+<anonymous> | boolean: ¬⊤ = ⊥
+InvolutionLaw | involution (¬)
+<anonymous> | de Morgan: ¬(x ∨ y) = ¬x ∧ ¬y
+<anonymous> | de Morgan: ¬(x ∧ y) = ¬x ∨ ¬y
+
+## EquivalenceRelation(Z, =) [compact] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## EquivalenceRelation(Z, =) [full] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## Setoid(Z) [compact] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## Setoid(Z) [full] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+

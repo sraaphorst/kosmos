@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.BooleanAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.InvolutionLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -19,7 +22,7 @@ class BooleanAlgebraLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "BooleanAlgebra",
@@ -42,11 +45,8 @@ class BooleanAlgebraLaws<A : Any>(
         deMorganMeetLaw(algebra.join, algebra.meet, algebra.not, arb, eq, pr),
     )
 
-    override fun laws(): List<TestingLaw> =
-        latticeLaws.laws() +
-            complementAndNegationLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(latticeLaws.node(mode)) +
+            complementAndNegationLaws.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        latticeLaws.fullLaws() +
-            complementAndNegationLaws
 }

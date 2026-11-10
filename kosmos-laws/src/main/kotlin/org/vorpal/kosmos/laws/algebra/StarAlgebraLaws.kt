@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNode
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -22,7 +25,7 @@ class StarAlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "StarAlgebra",
@@ -40,11 +43,7 @@ class StarAlgebraLaws<R : Any, A : Any>(
         AssociativityLaw(algebra.mul.op, algebraArb, eqA, prA)
     }
 
-    override fun laws(): List<TestingLaw> =
-        starAlgebraLaws.laws() +
-            associativityLaw
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(starAlgebraLaws.node(mode), associativityLaw.asNode())
 
-    override fun fullLaws(): List<TestingLaw> =
-        starAlgebraLaws.fullLaws() +
-            associativityLaw
 }

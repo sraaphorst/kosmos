@@ -7,8 +7,11 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.exists
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.NormSqDefiniteLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -41,7 +44,7 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prN: Printable<N> = Printable.default(),
     private val zeroN: Option<N> = Option.None
-) : LawSuite {
+) : StructuredLawSuite {
 
     private val normDesc = "N[${algebra.normSq.symbol}]"
 
@@ -86,9 +89,8 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
         }
     }
 
-    override fun laws(): List<TestingLaw> =
-        divAlgLaws.laws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(divAlgLaws.node(mode)) +
+            structureLaws.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        divAlgLaws.fullLaws() + structureLaws
 }

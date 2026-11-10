@@ -2,32 +2,44 @@ package org.vorpal.kosmos.laws.inventory
 
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.boolean
+import java.io.File
 import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
+import org.vorpal.kosmos.algebra.structures.instances.BooleanAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
+import org.vorpal.kosmos.core.setoid.Setoid
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.AbelianHeapLaws
 import org.vorpal.kosmos.laws.algebra.AlgebraLaws
+import org.vorpal.kosmos.laws.algebra.BooleanAlgebraLaws
+import org.vorpal.kosmos.laws.algebra.BoundedLatticeLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeMonoidLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeRngLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeSemigroupLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeSemiringLaws
 import org.vorpal.kosmos.laws.algebra.ConjugationLaws
+import org.vorpal.kosmos.laws.algebra.DistributiveLatticeLaws
 import org.vorpal.kosmos.laws.algebra.DivisionRingLaws
 import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.laws.algebra.GroupLaws
 import org.vorpal.kosmos.laws.algebra.HeapLaws
 import org.vorpal.kosmos.laws.algebra.HemiringLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
+import org.vorpal.kosmos.laws.algebra.JoinSemilatticeLaws
+import org.vorpal.kosmos.laws.algebra.LatticeLaws
 import org.vorpal.kosmos.laws.algebra.LeftRModuleLaws
 import org.vorpal.kosmos.laws.algebra.LoopLaws
 import org.vorpal.kosmos.laws.algebra.MagmaLaws
+import org.vorpal.kosmos.laws.algebra.MeetSemilatticeLaws
 import org.vorpal.kosmos.laws.algebra.MonoidLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeAlgebraLaws
+import org.vorpal.kosmos.laws.algebra.NonAssociativeDivisionAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeInvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeMonoidLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeRingLaws
@@ -40,7 +52,12 @@ import org.vorpal.kosmos.laws.algebra.RngLaws
 import org.vorpal.kosmos.laws.algebra.SemigroupLaws
 import org.vorpal.kosmos.laws.algebra.SemiringLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
-import java.io.File
+import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRngHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.homomorphism.RngHomomorphismLaws
+import org.vorpal.kosmos.laws.relation.EquivalenceRelationLaws
+import org.vorpal.kosmos.laws.setoid.SetoidLaws
 
 /**
  * Golden snapshot of the ordered law inventory of representative suites, in both
@@ -101,6 +118,9 @@ class LawInventorySpec : StringSpec({
             val qEq = RationalAlgebras.eqRational
             val qPr = RationalAlgebras.printableRationalPretty
 
+            val bool = BooleanAlgebras.BoolAlgebra
+            val boolArb = Arb.boolean()
+
             return listOf(
                 // Single-operation chain on (Z, +) and (Z, *).
                 "Magma(Z,+)" to MagmaLaws(z.add, zArb, zPr),
@@ -145,6 +165,27 @@ class LawInventorySpec : StringSpec({
                 "NormedDivisionAlgebra(Q)" to NormedDivisionAlgebraLaws(
                     q, qArb, q.mul.op, qEq, qEq, qPr, qPr
                 ),
+                "NonAssociativeDivisionAlgebra(Q)" to NonAssociativeDivisionAlgebraLaws(q, qArb, qEq, qPr),
+
+                // Homomorphisms: the identity on Z.
+                "NonAssociativeRngHomomorphism(Z -> Z)" to
+                    NonAssociativeRngHomomorphismLaws({ it }, z, z, zArb, zEq, zPr, zPr),
+                "NonAssociativeRingHomomorphism(Z -> Z)" to
+                    NonAssociativeRingHomomorphismLaws({ it }, z, z, zArb, zEq, zPr, zPr),
+                "RngHomomorphism(Z -> Z)" to RngHomomorphismLaws({ it }, z, z, zArb, zEq, zPr, zPr),
+                "RingHomomorphism(Z -> Z)" to RingHomomorphismLaws({ it }, z, z, zArb, zEq, zPr, zPr),
+
+                // Lattices on Boolean.
+                "JoinSemilattice(Bool)" to JoinSemilatticeLaws(bool, boolArb),
+                "MeetSemilattice(Bool)" to MeetSemilatticeLaws(bool, boolArb),
+                "Lattice(Bool)" to LatticeLaws(bool, boolArb),
+                "BoundedLattice(Bool)" to BoundedLatticeLaws(bool, boolArb),
+                "DistributiveLattice(Bool)" to DistributiveLatticeLaws(bool, boolArb),
+                "BooleanAlgebra(Bool)" to BooleanAlgebraLaws(bool, boolArb),
+
+                // Relations.
+                "EquivalenceRelation(Z, =)" to EquivalenceRelationLaws(Setoid.of(zEq).relation, zArb, zPr),
+                "Setoid(Z)" to SetoidLaws(Setoid.of(zEq), zArb, zPr),
             )
         }
     }
