@@ -200,3 +200,72 @@ Within one run, a node that is reached again executes once and its result is sho
 - Tests: `SharedNodeSpec` (diamond with a counting law, failing shared leaf, re-pathed shared branch, identical labels
   bound separately, same/different suite arguments, compact vs full, binding equality, separate runs, failFast) and
   `SharedSuiteSpec` (StarAlgebra over ℚ). 4 + 145 specs / 44 + 2249 tests green.
+
+### Stage 5 (done)
+
+- **Text renderers** (`LawReportText`, in `kosmos-laws`): `renderTree()` (whole tree, shared repeats collapsed to one
+  line) and `renderFailures()` (failing paths only, then each problem's counterexample, seed with the exact replay
+  call, and cause chain). `throwIfFailed()` now uses `renderFailures()`. Timing only on request, so output is stable.
+- **Seeds by position.** A leaf's seed is now `LawSeeds.leaf(master, indices)` (SplitMix64) instead of the next draw
+  from a sequential generator, so it does not depend on execution order. `LawReport` records the master `seed` and
+  the `config`.
+- **`LawSession`** (`kosmos-laws`): one run whose leaves are requested one at a time. Leaves map to a canonical
+  position (first occurrence of the same instance or key); asking for any occurrence executes the canonical leaf if
+  needed, so a filtered selection still runs. Asking for the same path again (retry) executes again. A cancelled
+  execution stores nothing. Same seeds as `LawRunner` for the same master seed.
+- **JSON export** (`LawReportJson`, `kosmos-testkit`): versioned DTOs (`schema = "kosmos-law-report"`, `version = 1`),
+  node ids with child references and `sharedFrom` ids, exception type and message, cause, seed, counterexample,
+  unavailable fields. Live throwables stay in memory.
+- **Nested Kotest adapter** (`lawTests`, `kosmos-testkit`): branches → `context`, leaves → `test`, one session per
+  execution of the root container; duplicate sibling labels get ` [k]`; explicit skips are disabled tests with the
+  reason in the name.
+- **Pilots**: `RationalFieldSpec` (full `FieldLaws` as nested tests + its 4 examples) and `IntegerCommutativeRingSpec`
+  (three full suites and five norm laws in one `lawGraph`). Same laws and modes as before; the specs moved from
+  `StringSpec` to `FunSpec` because `StringSpec` cannot nest.
+- **Evidence**: `LawReport.evidence()` → `LawEvidence(scope, mode, seed, laws, skipped, executions, config)`; throws
+  for failed, errored or empty reports. No registry wiring.
+- **Docs**: `docs/03-kosmos-laws.md` (authoring, views, sharing, outcomes, replay, Kotest, JSON schema, evidence).
+
+**Dependency changes (explicit):** `kosmos-testkit` main now depends on `kotlinx-serialization-json` (was
+test-only) and `io.kotest:kotest-framework-engine` (for the adapter). `kosmos-laws` has no new dependencies.
+
+**Single-leaf selection, how it was verified.** From Gradle, with Kotest's filter (a regex over the test path,
+containers included):
+`kotest_filter_tests='.*Graph( -- Right( -- shared)?)?' ./gradlew :kosmos-testkit:test --rerun --tests 'org.vorpal.kosmos.testing.laws.KotestLawsSpec'`
+ran exactly one test (`Graph > Right > shared`), whose check is shared with the filtered-out `Graph > Left > shared`;
+it executed and passed. Gradle's own `--tests` cannot select nested Kotest tests ("No tests found").
+`LawSessionSpec` covers the same case directly. Not verified here: the IntelliJ Kotest plugin's gutter run of a
+nested leaf (no IDE in this environment).
+
+## Summary
+
+| Stage | Commit | Result |
+|---|---|---|
+| 0 Baseline | 32fdceb | 142 specs / 2240 tests; law inventory snapshot of 50 suites × 2 views |
+| 1 Graph + runner | 5ba03fc | `LawNode`, `LawRunner`, `LawReport`, `lawGraph`; CI runs both modules |
+| 2 Suites as graphs | c35c61f, 58e6f54 | all 53 suites `StructuredLawSuite`; flat views derived, inventory identical |
+| 3 Diagnostics | 305ea8b, f2dac01 | `lawCheck` / `lawCheckAll` in all 60 law files; Failed vs Errored; seeds; replay |
+| 4 Sharing | 6e58b48 | `LawBinding` on all suites; shared checks run once per run |
+| 5 Render + integrate | (this commit) | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs, evidence |
+
+Final run: `kosmos-laws` 7 specs, `kosmos-testkit` 147 specs; 2361 tests, all passing (1 deliberately disabled test,
+the explicit-skip example in `KotestLawsSpec`).
+
+**Coverage.** No predicate, generator, equality or budget changed. The ordered compact/full law lists are pinned by
+`LawInventorySpec` and did not change. Compact `FieldLaws` still lacks multiplicative associativity (recorded in the
+baseline; kept by decision).
+
+**Departures from #252.**
+- Generator exhaustion cannot be reported as an error: Kotest 6.0.5's `Arb.filter` retries forever.
+- Iteration telemetry is left out: no public attempts count in Kotest 6.0.5.
+- Legacy laws (plain `check` in `checkAll`) keep the compatibility classification; all laws in `kosmos-laws` are
+  migrated, so this only affects laws written in specs.
+- Gradle's `--tests` cannot select a nested law; Kotest's `kotest_filter_tests` can.
+
+**Remaining #61 batches** (spec cleanup, separate work):
+- Move the other specs that call `fullTest()` / `test()` (77 spec files) to `lawTests`, one package at a time,
+  keeping examples.
+- Specs for suites that no spec exercises yet: the lattice family, `BooleanAlgebraLaws`,
+  `NonAssociativeDivisionAlgebraLaws`, `RngHomomorphismLaws`, `NonAssociativeRngHomomorphismLaws`,
+  `EquivalenceRelationLaws`, `SetoidLaws`; `InnerProductSpaceLaws` has no instance yet.
+- New laws written in specs should use `lawCheck` / `lawCheckAll`, so they get Failed vs Errored, seeds and replay.

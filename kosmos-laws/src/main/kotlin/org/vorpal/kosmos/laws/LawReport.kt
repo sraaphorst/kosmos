@@ -194,7 +194,13 @@ fun NodeReport.leaves(): List<NodeReport.LeafReport> = when (this) {
  * A report with no executed leaves is valid but is not evidence of anything:
  * see [hasEvidence].
  */
-data class LawReport(val root: NodeReport) {
+data class LawReport(
+    val root: NodeReport,
+    /** The master seed the run used (for a single-leaf replay: null, since the leaf seed was given). */
+    val seed: Long? = null,
+    /** The settings of the run. */
+    val config: LawRunConfig = LawRunConfig()
+) {
     val status: LawStatus get() = root.status
     val counts: LawCounts get() = root.counts
     val elapsed: Duration get() = root.elapsed
@@ -215,7 +221,9 @@ data class LawReport(val root: NodeReport) {
         get() = root.leaves().filter { it.status.isProblem }
 
     /**
-     * Throws an [AssertionError] listing every failing path from the root.
+     * Throws an [AssertionError] whose message is [renderFailures]: the failing paths from the root, then each
+     * problem's counterexample, seed (with the replay call) and cause chain. The first problem's original
+     * throwable is the error's cause.
      *
      * @param requireEvidence if true (the default), a run in which no leaf passed also throws,
      *   so an empty or fully skipped graph cannot pass silently.
@@ -223,37 +231,7 @@ data class LawReport(val root: NodeReport) {
     fun throwIfFailed(requireEvidence: Boolean = true) {
         if (success && (!requireEvidence || hasEvidence)) return
 
-        val msg = buildString {
-            appendLine("Law check failed: ${root.label}")
-            with(counts) {
-                appendLine("Passed: $passed, failed: $failed, errored: $errored, skipped: $skipped ($executions executions)")
-            }
-            if (problems.isEmpty()) {
-                appendLine("No leaf passed, so this run provides no evidence.")
-            }
-            problems.forEachIndexed { i, leaf ->
-                appendLine()
-                appendLine("#${i + 1} ${leaf.status}: ${leaf.path}")
-                leaf.sharedFrom?.let {
-                    appendLine("  same check as $it (executed once, shown under both paths)")
-                    return@forEachIndexed
-                }
-                val error = (leaf.outcome as? LeafOutcome.Failed)?.error
-                    ?: (leaf.outcome as? LeafOutcome.Errored)?.error
-                val diagnostics = leaf.diagnostics
-                if (diagnostics != null) {
-                    diagnostics.counterexample?.let { appendLine("  counterexample: $it") }
-                    diagnostics.seed?.let { appendLine("  seed: $it (replay with LawRunner.replay(root, ${leaf.path.indices}, $it))") }
-                    val cause = diagnostics.cause
-                    appendLine("  ${cause::class.qualifiedName}")
-                    cause.message?.takeIf { it.isNotBlank() }?.lines()?.forEach { appendLine("  $it") }
-                } else if (error != null) {
-                    appendLine("  ${error::class.qualifiedName}")
-                    error.message?.takeIf { it.isNotBlank() }?.lines()?.forEach { appendLine("  $it") }
-                }
-            }
-        }
-
+        val msg = "Law check failed.\n" + renderFailures()
         val cause = problems.firstOrNull()?.outcome.let {
             (it as? LeafOutcome.Failed)?.error ?: (it as? LeafOutcome.Errored)?.error
         }

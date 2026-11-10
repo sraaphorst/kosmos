@@ -13,8 +13,9 @@ import kotlin.time.TimeSource
  * @param failFast if true, once a leaf fails or errors, every later leaf is reported as
  *   [LeafOutcome.Skipped] instead of being executed. The default collects all results.
  * @param timeSource the clock used for elapsed times (injectable so tests can control it).
- * @param seed master seed for the run. Each leaf gets its own seed drawn from it in traversal order, so the
- *   same master seed reproduces the whole run. Null picks a fresh random master seed.
+ * @param seed master seed for the run. Each leaf's seed is derived from the master seed and the leaf's position
+ *   (see [LawSeeds.leaf]), so the same master seed reproduces the whole run, whatever order leaves run in.
+ *   Null picks a fresh random master seed; the one used is recorded in [LawReport.seed].
  */
 data class LawRunConfig(
     val failFast: Boolean = false,
@@ -36,7 +37,8 @@ object LawRunner {
 
     suspend fun run(root: LawNode, config: LawRunConfig = LawRunConfig()): LawReport {
         LawGraphs.requireAcyclic(root)
-        return LawReport(Run(config).visit(root, LawPath.root(root.label)))
+        val run = Run(config)
+        return LawReport(run.visit(root, LawPath.root(root.label)), run.master, config)
     }
 
     /**
@@ -51,7 +53,7 @@ object LawRunner {
         require(node is LawNode.Leaf) { "Path $indices selects a branch (${node.label}), not a leaf." }
         val mark = config.timeSource.markNow()
         val outcome = execute(node.law, seed)
-        return LawReport(NodeReport.LeafReport(node, LawPath.root(node.label), outcome, mark.elapsedNow()))
+        return LawReport(NodeReport.LeafReport(node, LawPath.root(node.label), outcome, mark.elapsedNow()), null, config)
     }
 
     /**
@@ -82,7 +84,7 @@ object LawRunner {
     private fun unwrapToViolation(t: Throwable): Throwable? =
         generateSequence(t) { it.cause.takeIf { c -> c !== it } }.firstOrNull { it is LawViolation }
 
-    private suspend fun execute(law: TestingLaw, seed: Long): LeafOutcome {
+    internal suspend fun execute(law: TestingLaw, seed: Long): LeafOutcome {
         val capture = PropertyCapture()
         // Catch inside withContext and return the throwable as a value: an exception crossing the
         // withContext boundary can be replaced by a copy (kotlinx.coroutines stack-trace recovery),
@@ -110,7 +112,7 @@ object LawRunner {
 
     private class Run(val config: LawRunConfig) {
         var stopped: String? = null
-        val seeds = Random(config.seed ?: Random.nextLong())
+        val master: Long = config.seed ?: Random.nextLong()
 
         /**
          * First report of every node reached so far in this run, by [LawNode.key] (or by the node instance when
@@ -128,7 +130,7 @@ object LawRunner {
             val mark = config.timeSource.markNow()
             return when (node) {
                 is LawNode.Leaf -> {
-                    val seed = seeds.nextLong()
+                    val seed = LawSeeds.leaf(master, path.indices)
                     val outcome = node.skip?.let { LeafOutcome.Skipped(it) }
                         ?: stopped?.let { LeafOutcome.Skipped(it) }
                         ?: execute(node.law, seed)
@@ -182,4 +184,23 @@ class LawGraphBuilder {
     fun branch(label: String, build: LawGraphBuilder.() -> Unit) { children += lawGraph(label, build) }
 
     internal fun build(label: String): LawNode = LawNode.Branch(label, children.toList())
+}
+
+/** Seed derivation shared by [LawRunner] and [LawSession]. */
+object LawSeeds {
+    /**
+     * The seed of the leaf at [indices] in a run with the given [master] seed: a SplitMix64 hash of both.
+     * It depends only on the master seed and the position, never on execution order.
+     */
+    fun leaf(master: Long, indices: List<Int>): Long =
+        mix(indices.fold(mix(master)) { h, i -> mix(h xor (i + 1L) * GOLDEN) })
+
+    private const val GOLDEN = -0x61c8864680b583ebL
+
+    private fun mix(z0: Long): Long {
+        var z = z0 + GOLDEN
+        z = (z xor (z ushr 30)) * -0x40a7b892e31b1a47L
+        z = (z xor (z ushr 27)) * -0x6b2fb644ecceee15L
+        return z xor (z ushr 31)
+    }
 }
