@@ -121,3 +121,35 @@ Suites with no spec that exercises them (checked only by the snapshot): the latt
 `NonAssociativeDivisionAlgebraLaws`, `RngHomomorphismLaws`, `NonAssociativeRngHomomorphismLaws`,
 `EquivalenceRelationLaws`, `SetoidLaws`. `InnerProductSpaceLaws` has no instance at all, so it is checked only by
 compiling. These are candidates for #61.
+
+### Stage 3 spike (Kotest 6.0.5, `AssociativityLaw`)
+
+Verified with `kosmos-laws/src/test/.../PropertyDiagnosticsSpec.kt`, using only public Kotest API
+(`PropTestConfig(seed = ...)` and the property body):
+
+| Question | Result |
+|---|---|
+| Seed in | Works. The runner draws one seed per leaf from a master seed (`LawRunConfig.seed`) and installs it in the coroutine context; `lawCheckAll` passes it as `PropTestConfig(seed = ...)`. Same master seed, same leaf seeds. |
+| Seed out | We never need to parse it: the runner chose it. Kotest's message ("Repeat this test by using seed N") agrees. |
+| Counterexample out | Works without parsing. `lawCheckAll` records the input of every failing evaluation, rendered with the law's `Printable`. Kotest's shrinker adopts each failing candidate in turn, so the last failing evaluation is the reported shrunk value. The test checks it equals Kotest's "Arg 0" after shrinking. |
+| Replay | Works. `LawRunner.replay(root, path.indices, seed)` reruns one leaf and yields the same counterexample. |
+| False vs threw | Works for migrated laws. A false predicate throws `LawViolation` (via `lawCheck`); Kotest wraps it, and the runner looks at the final failure's own throwable, which `lawCheckAll` records before Kotest wraps it. `LawViolation` is `Failed`; anything else (including an `AssertionError` thrown by the operation) is `Errored`. |
+
+Findings that shape the design:
+
+- **Kotest catches `CancellationException` inside `checkAll`** and wraps it as an `AssertionError`. The runner checks
+  `ensureActive()` and the cause chain after every leaf so cancellation is never recorded as a result.
+- **kotlinx.coroutines may copy an exception that crosses `withContext`** (stack-trace recovery). The runner catches
+  inside the block so the report keeps the original throwable instance.
+- **`Arb.filter { false }` kept retrying for over 10 minutes** in Kotest 6.0.5 (stack in `filter.kt`, no give-up), and the
+  loop does not suspend, so a timeout cannot stop it. Unexpected generator exhaustion is therefore *not* detectable as an
+  error yet; a generator that throws is reported as `Errored` with a seed and no counterexample.
+- **Kotest writes failing seeds to `~/.kotest/seeds`** (`PropertyTesting.writeFailedSeed`, default on) and reuses them
+  when no seed is given. `lawCheckAll` always passes an explicit seed under the runner, so a previous run's seed cannot
+  leak into a new run. Legacy entry points keep Kotest's behaviour.
+- **Iteration telemetry**: `PropertyContext` does not expose attempts publicly in 6.0.5, so it stays out for now.
+- **Legacy laws** (`check` inside plain `checkAll`) keep the compatibility classification: `AssertionError` is `Failed`,
+  so a throwing operation inside a legacy property still reads as `Failed`, and they have no seed. Migrating a law means:
+  `checkAll(arb)` → `lawCheckAll(arb, render)`, and `withClue(msg) { check(p) }` → `lawCheck(p, msg)`. The predicate,
+  generator, equality and default budget (1000 iterations, bounded shrinking) are unchanged.
+- **Explicit skip**: `LawNode.Leaf(law, skip = "reason")` / `lawGraph { skipped(law, reason) }`.

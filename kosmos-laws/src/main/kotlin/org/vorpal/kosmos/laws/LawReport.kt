@@ -24,6 +24,30 @@ enum class LawStatus(val severity: Int) {
     }
 }
 
+/**
+ * What is known about one failed or errored leaf execution, for diagnosis and replay.
+ *
+ * @property seed the seed injected into the law's property checks, or null if the law does not use
+ *   [lawCheckAll] (legacy laws pick their own random seed, which the runner cannot see).
+ * @property counterexample the final (shrunk) failing input, rendered with the law's `Printable`, or null
+ *   if the failure happened outside a property evaluation (a deterministic check, the generator, setup).
+ * @property cause the throwable of the final failing evaluation (for a property, after shrinking);
+ *   the throwable the leaf threw (often Kotest's wrapper) is kept in [LeafOutcome.Failed.error] /
+ *   [LeafOutcome.Errored.error].
+ */
+data class LeafDiagnostics(
+    val seed: Long?,
+    val counterexample: String?,
+    val cause: Throwable
+) {
+    /** Human-readable notes on which fields are missing and why. */
+    val unavailable: List<String>
+        get() = buildList {
+            if (seed == null) add("seed: the law does not use lawCheckAll, so its seed is chosen by Kotest")
+            if (counterexample == null) add("counterexample: the failure did not happen inside a property evaluation")
+        }
+}
+
 /** How a single leaf ended. */
 sealed interface LeafOutcome {
     val status: LawStatus
@@ -32,13 +56,13 @@ sealed interface LeafOutcome {
         override val status = LawStatus.PASSED
     }
 
-    /** The law is false: an assertion failed. [error] is the original throwable. */
-    data class Failed(val error: Throwable) : LeafOutcome {
+    /** The law is false. [error] is the original throwable. */
+    data class Failed(val error: Throwable, val diagnostics: LeafDiagnostics? = null) : LeafOutcome {
         override val status = LawStatus.FAILED
     }
 
-    /** The law could not be evaluated: something other than an assertion threw. */
-    data class Errored(val error: Throwable) : LeafOutcome {
+    /** The law could not be evaluated: something other than the law's own falsity signal was thrown. */
+    data class Errored(val error: Throwable, val diagnostics: LeafDiagnostics? = null) : LeafOutcome {
         override val status = LawStatus.ERRORED
     }
 
@@ -114,6 +138,14 @@ sealed interface NodeReport {
     ) : NodeReport {
         override val status: LawStatus get() = outcome.status
         override val counts: LawCounts get() = LawCounts.of(status)
+
+        /** Diagnostics of a failed or errored leaf, if any. */
+        val diagnostics: LeafDiagnostics?
+            get() = when (outcome) {
+                is LeafOutcome.Failed -> outcome.diagnostics
+                is LeafOutcome.Errored -> outcome.diagnostics
+                else -> null
+            }
     }
 
     data class BranchReport(
@@ -175,7 +207,14 @@ data class LawReport(val root: NodeReport) {
                 appendLine("#${i + 1} ${leaf.status}: ${leaf.path}")
                 val error = (leaf.outcome as? LeafOutcome.Failed)?.error
                     ?: (leaf.outcome as? LeafOutcome.Errored)?.error
-                if (error != null) {
+                val diagnostics = leaf.diagnostics
+                if (diagnostics != null) {
+                    diagnostics.counterexample?.let { appendLine("  counterexample: $it") }
+                    diagnostics.seed?.let { appendLine("  seed: $it (replay with LawRunner.replay(root, ${leaf.path.indices}, $it))") }
+                    val cause = diagnostics.cause
+                    appendLine("  ${cause::class.qualifiedName}")
+                    cause.message?.takeIf { it.isNotBlank() }?.lines()?.forEach { appendLine("  $it") }
+                } else if (error != null) {
                     appendLine("  ${error::class.qualifiedName}")
                     error.message?.takeIf { it.isNotBlank() }?.lines()?.forEach { appendLine("  $it") }
                 }

@@ -26,10 +26,16 @@ sealed interface LawNode {
     /** Display label. Labels are for people; they never establish that two nodes are the same check. */
     val label: String
 
-    /** A single [TestingLaw]. */
+    /**
+     * A single [TestingLaw].
+     *
+     * @param skip if non-null, the leaf is deliberately not executed and is reported as
+     *   [LeafOutcome.Skipped] with this reason.
+     */
     class Leaf(
         val law: TestingLaw,
-        override val label: String = law.name
+        override val label: String = law.name,
+        val skip: String? = null
     ) : LawNode {
         override fun toString(): String = "Leaf($label)"
     }
@@ -84,6 +90,14 @@ class LawGraphCycleException(val cycle: List<String>) :
     IllegalArgumentException("Law graph contains a cycle: ${cycle.joinToString(" > ")}")
 
 object LawGraphs {
+    /** The node reached from [root] by taking child [indices] in turn (a [LawPath.indices] selector). */
+    fun select(root: LawNode, indices: List<Int>): LawNode =
+        indices.fold(root) { node, i ->
+            require(node is LawNode.Branch) { "Cannot descend into leaf ${node.label} with index $i." }
+            require(i in node.children.indices) { "Index $i is out of range for ${node.label}." }
+            node.children[i]
+        }
+
     /**
      * Throws [LawGraphCycleException] if [root] reaches itself.
      *
