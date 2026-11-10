@@ -1,5 +1,6 @@
 package org.vorpal.kosmos.laws
 
+import io.kotest.common.ExperimentalKotest
 import io.kotest.core.Tuple4
 import io.kotest.core.Tuple5
 import io.kotest.property.Arb
@@ -144,6 +145,8 @@ suspend fun <A, B, C> lawCheckAll(
 private suspend fun enter(): LawExecution? =
     currentCoroutineContext()[LawExecution]?.also { it.capture.explicit = true }
 
+// PropTestConfig(seed = ...) is marked experimental in Kotest 6.0.5; it is the supported way to inject a seed.
+@OptIn(ExperimentalKotest::class)
 private fun config(execution: LawExecution?): PropTestConfig =
     if (execution == null) PropTestConfig() else PropTestConfig(seed = execution.seed)
 
