@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -25,6 +26,8 @@ class CommutativeSemiringLaws<A : Any>(
 ): StructuredLawSuite {
 
     override val name = suiteName("CommutativeSemiring", semiring.add.op.symbol, semiring.mul.op.symbol)
+
+    override val binding = LawBinding.of(this, semiring, arb, eq, pr)
 
     private val semiringLaws = SemiringLaws(semiring, arb, eq, pr)
 

@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -40,6 +41,8 @@ class LeftRModuleLaws<R : Any, M : Any>(
         module.leftAction.symbol,
         moduleDescription
     )
+
+    override val binding = LawBinding.of(this, module, scalarArb, vectorArb, eqR, eqM, prR, prM)
 
     private val ringLaws: RingLaws<R> by lazy {
         RingLaws(module.leftScalars, scalarArb, eqR, prR)

@@ -3,6 +3,7 @@ package org.vorpal.kosmos.laws.setoid
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.core.setoid.Setoid
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -18,6 +19,8 @@ class SetoidLaws<A : Any>(
     private val arb: Arb<A>,
     private val pr: Printable<A> = Printable.default()
 ) : StructuredLawSuite {
+    override val binding = LawBinding.of(this, setoid, arb, pr)
+
     override fun children(mode: LawMode): List<LawNode> =
         listOf(EquivalenceRelationLaws(setoid.relation, arb, pr).node(mode))
 }

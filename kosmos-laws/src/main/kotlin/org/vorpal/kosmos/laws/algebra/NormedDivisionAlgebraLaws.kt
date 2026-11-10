@@ -7,6 +7,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.exists
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -56,6 +57,8 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
         algebra.reciprocal.symbol,
         normDesc
     )
+
+    override val binding = LawBinding.of(this, algebra, arbA, mulN, eqA, eqN, prA, prN, zeroN)
 
     private val divAlgLaws =
         NonAssociativeDivisionAlgebraLaws(algebra, arbA, eqA, prA)

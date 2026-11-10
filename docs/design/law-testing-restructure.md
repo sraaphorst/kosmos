@@ -172,3 +172,31 @@ Every property law in `kosmos-laws` now uses the explicit signal (60 files):
 
 Unchanged: all predicates, generators, equalities, budgets; the law inventory snapshot; all 144 specs / 2246 tests.
 Not done: iteration telemetry (no public API in Kotest 6.0.5); detecting generator exhaustion (Kotest's filter hangs).
+
+### Stage 4 (done)
+
+Within one run, a node that is reached again executes once and its result is shown under every parent.
+
+- **What "the same" means.** Each suite declares a `LawBinding`: its class plus every constructor argument
+  (`override val binding = LawBinding.of(this, ring, arb, eq, pr)`, all 53 suites). Arguments compare by
+  **reference identity** (same operation object, generator, equality, printable); plain values (numbers, strings,
+  booleans, enums such as `tolerance` or `includeNormLaw`) compare by value. Names, symbols and labels never take
+  part, so two different operations both called `+` are two checks. `node(mode)` carries the key `(binding, mode)`,
+  so compact and full views are different nodes. A node without a key is shared only with itself (same instance).
+- **Runner.** A per-run cache from key (or node instance) to its first report. A repeat is not executed: the report is
+  copied to the new path, recursively, with `sharedFrom` pointing at the original path and zero elapsed time. Nothing
+  is cached across runs.
+- **Report.** `counts` still counts occurrences (one per path, like `laws()` / `fullLaws()`); the new
+  `LawReport.executions` counts leaves that actually ran. A shared failing leaf appears in `problems` under every path;
+  `throwIfFailed` prints the repeat as "same check as <original path>".
+- **Effect.** `StarAlgebra(Q over Q)` full: 52 occurrences, 32 executions (shared: `Monoid(+)` reached through
+  `AbelianGroup` and `CommutativeMonoid`, `Magma(*)` through `NonAssociativeMonoid` and `Semigroup`, the scalar
+  `CommutativeRing` inside `RModule`, the module's `AbelianGroup(+)`). Sharing happens only when the arguments really
+  are the same objects; for example `RModule(Q over Z)` keeps both additive groups (ℤ and ℚ), even though both are
+  labelled `(+)`.
+- **Coverage.** Unchanged: the law inventory snapshot and `laws()` / `fullLaws()` are occurrence-based and untouched.
+  Sharing can also join sub-suites that ignore an argument: `MagmaLaws` (totality) takes no equality, so two `Monoid`
+  suites differing only in equality share their totality check, which is the same check.
+- Tests: `SharedNodeSpec` (diamond with a counting law, failing shared leaf, re-pathed shared branch, identical labels
+  bound separately, same/different suite arguments, compact vs full, binding equality, separate runs, failFast) and
+  `SharedSuiteSpec` (StarAlgebra over ℚ). 4 + 145 specs / 44 + 2249 tests green.

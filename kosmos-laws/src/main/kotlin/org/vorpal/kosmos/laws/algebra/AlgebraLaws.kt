@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -39,6 +40,8 @@ class AlgebraLaws<R : Any, A : Any>(
         algebra.leftAction.symbol,
         algebraDescription
     )
+
+    override val binding = LawBinding.of(this, algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
 
     private val nonAssociativeAlgebraLaws = NonAssociativeAlgebraLaws(
         algebra, scalarArb, algebraArb, eqR, eqA, prR, prA

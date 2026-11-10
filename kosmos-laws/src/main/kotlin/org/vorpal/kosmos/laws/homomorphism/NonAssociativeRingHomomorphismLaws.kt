@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -21,6 +22,8 @@ class NonAssociativeRingHomomorphismLaws<A : Any, B : Any>(
 
     override val name =
         "unital non-associative ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
+
+    override val binding = LawBinding.of(this, hom, domain, codomain, arb, eqB, prA, prB)
 
     private val base = NonAssociativeRngHomomorphismLaws(hom, domain, codomain, arb, eqB, prA, prB)
 

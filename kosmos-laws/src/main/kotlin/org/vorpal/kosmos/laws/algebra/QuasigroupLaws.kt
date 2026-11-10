@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Quasigroup
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -32,6 +33,8 @@ class QuasigroupLaws<A : Any>(
 
     override val name = suiteName("Quasigroup",
         quasigroup.op.symbol, quasigroup.leftDiv.symbol, quasigroup.rightDiv.symbol)
+
+    override val binding = LawBinding.of(this, quasigroup, arb, eq, pr)
 
     override fun children(mode: LawMode): List<LawNode> =
         listOf(

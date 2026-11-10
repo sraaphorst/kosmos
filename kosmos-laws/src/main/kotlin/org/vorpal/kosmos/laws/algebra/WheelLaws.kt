@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Wheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -27,6 +28,8 @@ class WheelLaws<A : Any>(
     override val name = suiteName(
         "Wheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
     )
+
+    override val binding = LawBinding.of(this, wheel, arb, eq, pr)
 
     private val addMonoidLaws = CommutativeMonoidLaws(wheel.add, arb, eq, pr)
     private val mulMonoidLaws = CommutativeMonoidLaws(wheel.mul, arb, eq, pr)

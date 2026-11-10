@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -33,6 +34,8 @@ class NonAssociativeDivisionAlgebraLaws<A : Any>(
         algebra.conj.symbol,
         algebra.reciprocal.symbol
     )
+
+    override val binding = LawBinding.of(this, algebra, arb, eq, pr)
 
     private val nonAssociativeInvolutiveRingLaws: NonAssociativeInvolutiveRingLaws<A> by lazy {
         NonAssociativeInvolutiveRingLaws(algebra, arb, eq, pr)

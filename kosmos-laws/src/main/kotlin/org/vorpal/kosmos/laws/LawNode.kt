@@ -18,13 +18,20 @@ enum class LawMode { COMPACT, FULL }
  * One node of a law graph: either a single law ([Leaf]) or an ordered group of nodes ([Branch]).
  *
  * Law graphs are directed acyclic graphs: the same node object may appear under several
- * parents. Nodes are definitions only; running them is the job of [LawRunner], which keeps
+ * parents, and so may nodes with equal [key]s. Nodes are definitions only; running them is the job of [LawRunner], which keeps
  * all execution state and results outside the nodes.
  */
 sealed interface LawNode {
 
     /** Display label. Labels are for people; they never establish that two nodes are the same check. */
     val label: String
+
+    /**
+     * Identity of the check this node performs, if known. Within one run, nodes with equal keys are executed
+     * once and the result is shown under every parent. The same node *instance* reached twice is always
+     * shared; a null key never matches a different instance.
+     */
+    val key: LawNodeKey?
 
     /**
      * A single [TestingLaw].
@@ -35,7 +42,8 @@ sealed interface LawNode {
     class Leaf(
         val law: TestingLaw,
         override val label: String = law.name,
-        val skip: String? = null
+        val skip: String? = null,
+        override val key: LawNodeKey? = null
     ) : LawNode {
         override fun toString(): String = "Leaf($label)"
     }
@@ -43,7 +51,8 @@ sealed interface LawNode {
     /** An ordered group of child nodes, such as a law suite or an ad hoc composition. */
     class Branch(
         override val label: String,
-        val children: List<LawNode>
+        val children: List<LawNode>,
+        override val key: LawNodeKey? = null
     ) : LawNode {
         override fun toString(): String = "Branch($label, ${children.size} children)"
     }

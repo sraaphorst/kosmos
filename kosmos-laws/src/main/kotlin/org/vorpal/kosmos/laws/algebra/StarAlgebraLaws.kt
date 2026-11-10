@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.StarAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -34,6 +35,8 @@ class StarAlgebraLaws<R : Any, A : Any>(
         "A[${algebra.add.op.symbol}${algebra.mul.op.symbol}]",
         algebra.conj.symbol
     )
+
+    override val binding = LawBinding.of(this, algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
 
     private val starAlgebraLaws: NonAssociativeStarAlgebraLaws<R, A> by lazy {
         NonAssociativeStarAlgebraLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)

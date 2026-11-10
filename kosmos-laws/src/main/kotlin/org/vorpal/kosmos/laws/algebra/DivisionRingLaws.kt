@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -34,6 +35,8 @@ class DivisionRingLaws<A : Any>(
         ring.mul.op.symbol,
         ring.reciprocal.symbol
     )
+
+    override val binding = LawBinding.of(this, ring, arb, eq, pr)
 
     private val ringLaws = RingLaws(ring, arb, eq, pr)
 

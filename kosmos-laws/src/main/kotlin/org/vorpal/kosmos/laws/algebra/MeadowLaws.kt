@@ -5,6 +5,7 @@ import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.Meadow
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -42,6 +43,8 @@ class MeadowLaws<A : Any>(
     override val name = suiteName("Meadow",
         meadow.add.op.symbol, meadow.mul.op.symbol, meadow.inv.symbol
     )
+
+    override val binding = LawBinding.of(this, meadow, arb, eq, pr)
 
     private val commutativeRingLaws = CommutativeRingLaws(meadow, arb, eq, pr)
 

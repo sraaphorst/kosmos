@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.RSBiModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -54,6 +55,8 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
         module.rightAction.symbol,
         rightScalarDescription
     )
+
+    override val binding = LawBinding.of(this, module, leftScalarArb, vectorArb, rightScalarArb, eqR, eqM, eqS, prR, prM, prS)
 
     // We redefine these here since doing full law testing using LeftRModuleLaws and RightRModuleLaws would test
     // the group twice, which is undesirable.

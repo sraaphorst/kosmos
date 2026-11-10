@@ -6,6 +6,7 @@ import org.vorpal.kosmos.algebra.structures.CarlstromWheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -60,6 +61,8 @@ class CarlstromWheelLaws<A : Any>(
     override val name = suiteName(
         "CarlstromWheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
     )
+
+    override val binding = LawBinding.of(this, wheel, arb, eq, pr)
 
     private val bottom = pr(wheel.bottom).ifEmpty { Symbols.BOTTOM }
     private val infinity = pr(wheel.inf).ifEmpty { Symbols.INFINITY }

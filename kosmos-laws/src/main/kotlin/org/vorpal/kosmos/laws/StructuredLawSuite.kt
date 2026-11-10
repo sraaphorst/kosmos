@@ -18,8 +18,16 @@ interface StructuredLawSuite : LawSuite {
     /** The ordered children of this suite's branch in the given view. */
     fun children(mode: LawMode): List<LawNode>
 
+    /**
+     * What this suite is bound to (see [LawBinding]): normally `LawBinding.of(this, <every constructor argument>)`.
+     * Two suites of the same class built from the same arguments are then run once per run and shared.
+     * Null disables sharing for this suite.
+     */
+    val binding: LawBinding?
+        get() = null
+
     override fun node(mode: LawMode): LawNode =
-        LawNode.Branch(name, children(mode))
+        LawNode.Branch(name, children(mode), binding?.let { LawNodeKey(it, mode) })
 
     override fun laws(): List<TestingLaw> =
         node(LawMode.COMPACT).flatten()

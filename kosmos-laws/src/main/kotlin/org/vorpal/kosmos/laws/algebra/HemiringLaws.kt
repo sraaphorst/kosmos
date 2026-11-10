@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Hemiring
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -27,6 +28,8 @@ class HemiringLaws<A : Any>(
     private val pr: Printable<A> = Printable.default()
 ): StructuredLawSuite {
     override val name = suiteName("Hemiring", hemiring.add.op.symbol, hemiring.mul.op.symbol)
+
+    override val binding = LawBinding.of(this, hemiring, arb, eq, pr)
 
     private val structureLaws: List<TestingLaw> =
         listOf(

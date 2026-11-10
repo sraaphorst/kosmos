@@ -130,12 +130,25 @@ sealed interface NodeReport {
 
     val label: String get() = node.label
 
+    /**
+     * Null if this node was executed at [path]. Otherwise the path at which the same check was executed
+     * earlier in the run; this report repeats that result without running it again (and its [elapsed] is zero).
+     */
+    val sharedFrom: LawPath?
+
+    /** This report, shown at another [path] as a repeat of the original (see [sharedFrom]). */
+    fun sharedAt(path: LawPath): NodeReport
+
     data class LeafReport(
         override val node: LawNode.Leaf,
         override val path: LawPath,
         val outcome: LeafOutcome,
-        override val elapsed: Duration
+        override val elapsed: Duration,
+        override val sharedFrom: LawPath? = null
     ) : NodeReport {
+        override fun sharedAt(path: LawPath): LeafReport =
+            LeafReport(node, path, outcome, Duration.ZERO, sharedFrom ?: this.path)
+
         override val status: LawStatus get() = outcome.status
         override val counts: LawCounts get() = LawCounts.of(status)
 
@@ -152,8 +165,18 @@ sealed interface NodeReport {
         override val node: LawNode.Branch,
         override val path: LawPath,
         val children: List<NodeReport>,
-        override val elapsed: Duration
+        override val elapsed: Duration,
+        override val sharedFrom: LawPath? = null
     ) : NodeReport {
+        override fun sharedAt(path: LawPath): BranchReport =
+            BranchReport(
+                node,
+                path,
+                children.mapIndexed { i, c -> c.sharedAt(path.child(c.label, i)) },
+                Duration.ZERO,
+                sharedFrom ?: this.path
+            )
+
         override val status: LawStatus = LawStatus.worst(children.map { it.status })
         override val counts: LawCounts = children.fold(LawCounts.ZERO) { acc, c -> acc + c.counts }
     }
@@ -178,6 +201,12 @@ data class LawReport(val root: NodeReport) {
 
     val success: Boolean get() = !status.isProblem
 
+    /**
+     * Number of leaf executions in this run: leaves that ran, counted once however many paths reach them.
+     * [counts] counts occurrences (one per path), like the flat `laws()` / `fullLaws()` views.
+     */
+    val executions: Int get() = root.leaves().count { it.sharedFrom == null && it.status != LawStatus.SKIPPED }
+
     /** True if at least one leaf actually ran and passed. */
     val hasEvidence: Boolean get() = counts.passed > 0
 
@@ -197,7 +226,7 @@ data class LawReport(val root: NodeReport) {
         val msg = buildString {
             appendLine("Law check failed: ${root.label}")
             with(counts) {
-                appendLine("Passed: $passed, failed: $failed, errored: $errored, skipped: $skipped")
+                appendLine("Passed: $passed, failed: $failed, errored: $errored, skipped: $skipped ($executions executions)")
             }
             if (problems.isEmpty()) {
                 appendLine("No leaf passed, so this run provides no evidence.")
@@ -205,6 +234,10 @@ data class LawReport(val root: NodeReport) {
             problems.forEachIndexed { i, leaf ->
                 appendLine()
                 appendLine("#${i + 1} ${leaf.status}: ${leaf.path}")
+                leaf.sharedFrom?.let {
+                    appendLine("  same check as $it (executed once, shown under both paths)")
+                    return@forEachIndexed
+                }
                 val error = (leaf.outcome as? LeafOutcome.Failed)?.error
                     ?: (leaf.outcome as? LeafOutcome.Errored)?.error
                 val diagnostics = leaf.diagnostics

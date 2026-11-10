@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.Heap
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -26,6 +27,8 @@ class HeapLaws<H : Any>(
 ): StructuredLawSuite {
     private val dot = Symbols.DOT
     override val name = suiteName("Heap", "[$dot, $dot, $dot]")
+
+    override val binding = LawBinding.of(this, heap, arb, eq, pr)
 
     override fun children(mode: LawMode): List<LawNode> =
         listOf(

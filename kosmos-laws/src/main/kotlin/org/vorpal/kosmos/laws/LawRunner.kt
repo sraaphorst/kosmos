@@ -26,6 +26,9 @@ data class LawRunConfig(
  * Executes [LawNode] graphs and produces [LawReport]s.
  *
  * Every call to [run] uses fresh state, so nothing carries over from one run to the next.
+ *
+ * Within a run, a node reached a second time (the same instance, or a node with an equal [LawNode.key]) is not
+ * executed again: its first report is shown at the new path too, marked with [NodeReport.sharedFrom].
  * Cancellation of the calling coroutine is never swallowed: a [CancellationException] thrown
  * by a law propagates out of [run].
  */
@@ -109,7 +112,19 @@ object LawRunner {
         var stopped: String? = null
         val seeds = Random(config.seed ?: Random.nextLong())
 
+        /**
+         * First report of every node reached so far in this run, by [LawNode.key] (or by the node instance when
+         * it has no key). Lives only as long as the run.
+         */
+        val done = HashMap<Any, NodeReport>()
+
         suspend fun visit(node: LawNode, path: LawPath): NodeReport {
+            val cacheKey: Any = node.key ?: node
+            done[cacheKey]?.let { return it.sharedAt(path) }
+            return fresh(node, path).also { done[cacheKey] = it }
+        }
+
+        private suspend fun fresh(node: LawNode, path: LawPath): NodeReport {
             val mark = config.timeSource.markNow()
             return when (node) {
                 is LawNode.Leaf -> {

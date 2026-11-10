@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
@@ -41,6 +42,8 @@ class VectorSpaceLaws<F : Any, V : Any>(
         space.leftAction.symbol,
         vectorDescription
     )
+
+    override val binding = LawBinding.of(this, space, scalarArb, vectorArb, eqF, eqV, prF, prV)
 
     private val fieldLaws: FieldLaws<F> by lazy {
         FieldLaws(space.scalars, scalarArb, eqF, prF)
