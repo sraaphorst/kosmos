@@ -67,15 +67,7 @@ class LawSession(val root: LawNode, val config: LawRunConfig = LawRunConfig()) {
         private set
 
     /** The path of the node at [indices], with labels from the root. */
-    fun pathOf(indices: List<Int>): LawPath {
-        var node = root
-        var path = LawPath.root(root.label)
-        indices.forEach { i ->
-            node = (node as LawNode.Branch).children[i]
-            path = path.child(node.label, i)
-        }
-        return path
-    }
+    fun pathOf(indices: List<Int>): LawPath = LawGraphs.path(root, indices)
 
     /**
      * The result of the leaf at [indices], executing its canonical leaf if needed (see the class notes).

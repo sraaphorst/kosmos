@@ -100,6 +100,19 @@ class LawGraphCycleException(val cycle: List<String>) :
 
 object LawGraphs {
     /** The node reached from [root] by taking child [indices] in turn (a [LawPath.indices] selector). */
+    /** The [LawPath] of the node at [indices] below [root]: labels from the root down, and the indices. */
+    fun path(root: LawNode, indices: List<Int>): LawPath {
+        var node = root
+        var path = LawPath.root(root.label)
+        indices.forEach { i ->
+            val children = (node as? LawNode.Branch)?.children
+            require(children != null && i in children.indices) { "No node at $indices below ${root.label}." }
+            node = children[i]
+            path = path.child(node.label, i)
+        }
+        return path
+    }
+
     fun select(root: LawNode, indices: List<Int>): LawNode =
         indices.fold(root) { node, i ->
             require(node is LawNode.Branch) { "Cannot descend into leaf ${node.label} with index $i." }

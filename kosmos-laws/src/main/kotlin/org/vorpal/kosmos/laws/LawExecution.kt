@@ -83,6 +83,15 @@ class PropertyCapture internal constructor() {
     /** The throwable of the last failing evaluation. */
     var lastCause: Throwable? = null
         internal set
+
+    /**
+     * A cancellation seen inside a property evaluation (including during shrinking). Kotest catches it and may
+     * report a failure instead, so the runner rethrows it from here.
+     */
+    internal var cancellation: CancellationException? = null
+
+    /** Number of property checks the law has started; the k-th gets its own seed (see [lawCheckAll]). */
+    internal var checks: Int = 0
 }
 
 /**
@@ -100,7 +109,9 @@ internal class LawExecution(
 /**
  * Kotest's `checkAll` for laws: same generator, same default iteration budget and shrinking, plus
  *
- * - when run by [LawRunner], the leaf's seed is injected (`PropTestConfig(seed = ...)`), so the run can be replayed;
+ * - when run by [LawRunner], a seed is injected (`PropTestConfig(seed = ...)`), so the run can be replayed: the first
+ *   check of a leaf uses the leaf's seed, and the k-th further check in the same leaf a seed derived from it, so
+ *   several checks in one law draw independent samples;
  * - every failing evaluation's input is rendered with [render] and recorded, so the final (shrunk)
  *   counterexample is available in the report without parsing Kotest's message.
  *
@@ -145,10 +156,16 @@ suspend fun <A, B, C> lawCheckAll(
 private suspend fun enter(): LawExecution? =
     currentCoroutineContext()[LawExecution]?.also { it.capture.explicit = true }
 
+/** The seed of the next property check in this leaf: the leaf seed first, then seeds derived from it. */
+private fun nextSeed(execution: LawExecution): Long {
+    val k = execution.capture.checks++
+    return if (k == 0) execution.seed else LawSeeds.leaf(execution.seed, listOf(k))
+}
+
 // PropTestConfig(seed = ...) is marked experimental in Kotest 6.0.5; it is the supported way to inject a seed.
 @OptIn(ExperimentalKotest::class)
 private fun config(execution: LawExecution?): PropTestConfig =
-    if (execution == null) PropTestConfig() else PropTestConfig(seed = execution.seed)
+    if (execution == null) PropTestConfig() else PropTestConfig(seed = nextSeed(execution))
 
 private suspend inline fun recording(
     execution: LawExecution?,
@@ -158,6 +175,7 @@ private suspend inline fun recording(
     try {
         body()
     } catch (c: CancellationException) {
+        execution?.capture?.let { if (it.cancellation == null) it.cancellation = c }
         throw c
     } catch (t: Throwable) {
         // Kotest's assumption mechanism skips an iteration with an exception; that is not a failure.

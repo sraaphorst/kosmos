@@ -30,6 +30,7 @@ class KotestLawsSpec : FunSpec({
         branch("Right") { node(sharedNode) }
         law(first)
         law(second)
+        law("same label [2]", Counting("third"))
         skipped(Counting("never"), "not applicable")
     })
 
@@ -44,5 +45,7 @@ class KotestLawsSpec : FunSpec({
     test("separately built leaves with the same label both ran, under distinct names") {
         listOf(first.runs, second.runs) shouldBe listOf(1, 1)
         displayNames(listOf("a", "b", "a", "a")) shouldContainExactly listOf("a", "b", "a [2]", "a [3]")
+        // A suffix never takes a name another sibling already has as its label.
+        displayNames(listOf("a", "a", "a [2]")) shouldContainExactly listOf("a", "a [3]", "a [2]")
     }
 })

@@ -46,14 +46,16 @@ object LawRunner {
      *
      * [indices] is the leaf's [LawPath.indices] in the graph rooted at [root]. With the same code, generator,
      * settings and library versions, a law that uses [lawCheckAll] produces the same counterexample again.
+     * The report's single leaf keeps its full path from [root] (so its replay hint is the same), and a leaf with
+     * an explicit skip reason is reported as skipped, as in a full run.
      */
     suspend fun replay(root: LawNode, indices: List<Int>, seed: Long, config: LawRunConfig = LawRunConfig()): LawReport {
         LawGraphs.requireAcyclic(root)
         val node = LawGraphs.select(root, indices)
         require(node is LawNode.Leaf) { "Path $indices selects a branch (${node.label}), not a leaf." }
         val mark = config.timeSource.markNow()
-        val outcome = execute(node.law, seed)
-        return LawReport(NodeReport.LeafReport(node, LawPath.root(node.label), outcome, mark.elapsedNow()), null, config)
+        val outcome = node.skip?.let { LeafOutcome.Skipped(it) } ?: execute(node.law, seed)
+        return LawReport(NodeReport.LeafReport(node, LawGraphs.path(root, indices), outcome, mark.elapsedNow()), null, config)
     }
 
     /**
@@ -99,10 +101,11 @@ object LawRunner {
                 t
             }
         }
+        // Kotest's checkAll catches every Throwable from a property, including a CancellationException (also during
+        // shrinking, where it can then report the earlier failure instead), and rethrows it wrapped in an
+        // AssertionError. Never turn a cancellation into a result.
+        capture.cancellation?.let { throw it }
         if (thrown == null) return LeafOutcome.Passed
-
-        // Kotest's checkAll catches every Throwable from a property, including a CancellationException,
-        // and rethrows it wrapped in an AssertionError. Never turn a cancellation into a result.
         currentCoroutineContext().ensureActive()
         generateSequence(thrown) { it.cause.takeIf { c -> c !== it } }
             .firstOrNull { it is CancellationException }

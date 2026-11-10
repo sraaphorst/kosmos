@@ -55,12 +55,19 @@ suspend fun FunSpecContainerScope.lawTests(root: LawNode, config: LawRunConfig =
 suspend fun FunSpecContainerScope.lawTests(suite: LawSuite, mode: LawMode = LawMode.FULL, config: LawRunConfig = LawRunConfig()) =
     lawTests(suite.node(mode), config)
 
-/** Kotest display names for siblings: labels, with ` [k]` added to the k-th repeat of a label (k ≥ 2). */
+/**
+ * Kotest display names for siblings: each label, with ` [k]` added to a repeat, and every final name unique.
+ *
+ * Labels are reserved first, so a suffixed name never takes a name that another sibling already has as its label
+ * (labels `a`, `a`, `a [2]` become `a`, `a [3]`, `a [2]`).
+ */
 internal fun displayNames(labels: List<String>): List<String> {
-    val seen = HashMap<String, Int>()
-    return labels.map { label ->
-        val k = seen.merge(label, 1, Int::plus)!!
-        if (k == 1) label else "$label [$k]"
+    val used = HashSet<String>()
+    val firstOf = HashMap<String, Int>()
+    labels.forEachIndexed { i, label -> if (firstOf.putIfAbsent(label, i) == null) used += label }
+    return labels.mapIndexed { i, label ->
+        if (firstOf[label] == i) label
+        else generateSequence(2) { it + 1 }.map { "$label [$it]" }.first { it !in used }.also { used += it }
     }
 }
 

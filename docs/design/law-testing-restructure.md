@@ -237,6 +237,18 @@ it executed and passed. Gradle's own `--tests` cannot select nested Kotest tests
 `LawSessionSpec` covers the same case directly. Not verified here: the IntelliJ Kotest plugin's gutter run of a
 nested leaf (no IDE in this environment).
 
+### Review fixes (after stage 5)
+
+Four findings from a review of 6bfc195, each reproduced by a failing test first (`ReviewFixesSpec`, `KotestLawsSpec`):
+
+- **Cancellation during shrinking** became a failure: Kotest's shrinker caught it and reported the earlier failure.
+  `lawCheckAll` now records any `CancellationException` it sees, and the runner rethrows it.
+- **One seed per property check**: a law with several `lawCheckAll` calls used the leaf seed for each, so they drew
+  the same samples. The first check keeps the leaf seed; the k-th further check uses `LawSeeds.leaf(leafSeed, [k])`.
+- **Replay** now reports the leaf at its full path from the root (same replay hint) and honours an explicit skip.
+- **Kotest sibling names**: a suffixed name could collide with another sibling's label (`a`, `a`, `a [2]`). Labels
+  are now reserved first, so the result is `a`, `a [3]`, `a [2]`.
+
 ## Summary
 
 | Stage | Commit | Result |
