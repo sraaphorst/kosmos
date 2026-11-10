@@ -246,7 +246,7 @@ nested leaf (no IDE in this environment).
 | 2 Suites as graphs | c35c61f, 58e6f54 | all 53 suites `StructuredLawSuite`; flat views derived, inventory identical |
 | 3 Diagnostics | 305ea8b, f2dac01 | `lawCheck` / `lawCheckAll` in all 60 law files; Failed vs Errored; seeds; replay |
 | 4 Sharing | 6e58b48 | `LawBinding` on all suites; shared checks run once per run |
-| 5 Render + integrate | (this commit) | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs, evidence |
+| 5 Render + integrate | 5efe666 | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs, evidence |
 
 Final run: `kosmos-laws` 7 specs, `kosmos-testkit` 147 specs; 2361 tests, all passing (1 deliberately disabled test,
 the explicit-skip example in `KotestLawsSpec`).
