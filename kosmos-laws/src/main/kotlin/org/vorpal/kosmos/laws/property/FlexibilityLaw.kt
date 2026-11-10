@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /**
  * Flexibility is a condition that is implied by but strictly weaker than alternativity:
@@ -27,7 +28,7 @@ class FlexibilityLaw<A : Any>(
     override val name: String = "flexibility (${op.symbol})"
 
     suspend fun flexibilityCheck() {
-        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (x, y) ->
             // x (y x)
             val yx = op(y, x)
             val left = op(x, yx)
@@ -36,9 +37,7 @@ class FlexibilityLaw<A : Any>(
             val xy = op(x, y)
             val right = op(xy, x)
 
-            withClue(flexibilityFail(x, y, yx, xy, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), flexibilityFail(x, y, yx, xy, left, right))
         }
     }
 

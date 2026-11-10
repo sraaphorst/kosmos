@@ -1,14 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.take
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Nilpotent of index n ≥ 2:
@@ -46,33 +46,27 @@ class NilpotentLaw<A : Any>(
     private fun nonzeroProductExists() {
         val m = n - 1
         val listArb = Arb.list(arb, m..m)
-        withClue("Nilpotency failed: no nonzero product over $m elements was found.") {
-            val witness = existsSample(listArb, nonzeroAttempts) { xs ->
-                val v = if (checkAllBracketings) {
-                    allParenthesizations(xs, op).any { !eq(it, zero) }
-                } else {
-                    xs.reduce(op::invoke).let { !eq(it, zero) }
-                }
-                v
+        val witness = existsSample(listArb, nonzeroAttempts) { xs ->
+            val v = if (checkAllBracketings) {
+                allParenthesizations(xs, op).any { !eq(it, zero) }
+            } else {
+                xs.reduce(op::invoke).let { !eq(it, zero) }
             }
-            check(witness != null)
+            v
         }
+        lawCheck(witness != null) { "Nilpotency failed: no nonzero product over $m elements was found." }
     }
 
     /** 1) Every product of n elements is zero (for all bracketings if requested). */
     private suspend fun allLengthNProductsAreZero() {
         val listArb = Arb.list(arb, n..n)
-        checkAll(listArb) { xs ->
+        lawCheckAll(listArb) { xs ->
             if (checkAllBracketings) {
                 val prods = allParenthesizations(xs, op)
-                withClue(zeroFailureMsgAll(xs, prods)) {
-                    check(prods.all { eq(it, zero) })
-                }
+                lawCheck(prods.all { eq(it, zero) }, zeroFailureMsgAll(xs, prods))
             } else {
                 val prod = xs.reduce(op::invoke)
-                withClue(zeroFailureMsg(xs, prod)) {
-                    check(eq(prod, zero))
-                }
+                lawCheck(eq(prod, zero), zeroFailureMsg(xs, prod))
             }
         }
     }

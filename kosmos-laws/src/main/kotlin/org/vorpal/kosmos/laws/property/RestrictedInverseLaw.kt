@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Given a binary operation `op` and an inverse `inv`, the restricted inverse law states that for all `x`:
@@ -25,12 +26,12 @@ class RestrictedInverseLaw<A : Any>(
     override val name = "restricted inverse law (RIL)"
 
     override suspend fun test() {
-        checkAll(arb) { x ->
+        lawCheckAll(arb, render = renderWith(pr)) { x ->
             val xInv = inv(x)
             val xxInv = op(x, xInv)
             val xxxInv = op(x, xxInv)
 
-            withClue(
+            lawCheck(eq(xxxInv, x)) {
                 buildString {
                     val sx = pr(x)
                     val sxInv = pr(xInv)
@@ -40,7 +41,7 @@ class RestrictedInverseLaw<A : Any>(
                     appendLine("Restricted inverse law failed:")
                     appendLine("x * (x * inv(x)) = $sx * ($sx * $sxInv) = $sx * $sxxInv = $sxxxInv (expected $sx)")
                 }
-            ) { check(eq(xxxInv, x))}
+            }
         }
     }
 }

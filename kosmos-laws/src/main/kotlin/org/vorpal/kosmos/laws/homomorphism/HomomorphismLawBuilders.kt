@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.laws.homomorphism
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Op preservation:
@@ -30,11 +30,11 @@ fun <A : Any, B : Any> preservesBinaryOpLaw(
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
     return TestingLaw.named("$label ($arrow)") {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(a), hom(b))
 
-            withClue(
+            lawCheck(eqB(left, right)) {
                 buildString {
                     val sa = prA(a)
                     val sb = prA(b)
@@ -42,8 +42,6 @@ fun <A : Any, B : Any> preservesBinaryOpLaw(
                     appendLine("f($sa ${domainOp.symbol} $sb) = ${prB(left)}")
                     appendLine("f($sa) ${codomainOp.symbol} f($sb) = ${prB(right)}")
                 }
-            ) {
-                check(eqB(left, right))
             }
         }
     }
@@ -82,11 +80,11 @@ fun <A : Any, B : Any> antiPreservesBinaryOpLaw(
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
     return TestingLaw.named("$label ($arrow)") {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(b), hom(a))
 
-            withClue(
+            lawCheck(eqB(left, right)) {
                 buildString {
                     val sa = prA(a)
                     val sb = prA(b)
@@ -94,8 +92,6 @@ fun <A : Any, B : Any> antiPreservesBinaryOpLaw(
                     appendLine("f($sa ${domainOp.symbol} $sb) = ${prB(left)}")
                     appendLine("f($sb) ${codomainOp.symbol} f($sa) = ${prB(right)}")
                 }
-            ) {
-                check(eqB(left, right))
             }
         }
     }
@@ -130,14 +126,12 @@ fun <A : Any, B : Any> preservesIdentityLaw(
     TestingLaw.named(label) {
         val left = hom(domainIdentity)
 
-        withClue(
+        lawCheck(eqB(left, codomainIdentity)) {
             buildString {
                 appendLine("Identity preservation failed:")
                 appendLine("f(${prA(domainIdentity)}) = ${prB(left)}")
                 appendLine("Expected: ${prB(codomainIdentity)}")
             }
-        ) {
-            check(eqB(left, codomainIdentity))
         }
     }
 
@@ -171,12 +165,12 @@ fun <A : Any, B : Any> injectivityLaw(
     val arbPair = TestingLaw.arbPair(arbA)
 
     return TestingLaw.named(label) {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair) { (a, b) ->
             val fa = hom(a)
             val fb = hom(b)
 
             if (eqB(fa, fb)) {
-                withClue(
+                lawCheck(eqA(a, b)) {
                     buildString {
                         val sa = prA(a)
                         val sb = prA(b)
@@ -185,8 +179,6 @@ fun <A : Any, B : Any> injectivityLaw(
                         appendLine("f($sb) = ${prB(fb)}")
                         appendLine("So f($sa) = f($sb), but $sa ≠ $sb")
                     }
-                ) {
-                    check(eqA(a, b))
                 }
             }
         }
@@ -225,11 +217,11 @@ fun <A : Any, B : Any> preservesTernaryOpLaw(
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
     return TestingLaw.named("$label ($arrow)") {
-        checkAll(arbTriple) { (x, y, z) ->
+        lawCheckAll(arbTriple) { (x, y, z) ->
             val left = hom(domainOp(x, y, z))
             val right = codomainOp(hom(x), hom(y), hom(z))
 
-            withClue(
+            lawCheck(eqB(left, right)) {
                 buildString {
                     val sx = prA(x)
                     val sy = prA(y)
@@ -238,8 +230,6 @@ fun <A : Any, B : Any> preservesTernaryOpLaw(
                     appendLine("f([$sx, $sy, $sz]) = ${prB(left)}")
                     appendLine("[f($sx), f($sy), f($sz)] = ${prB(right)}")
                 }
-            ) {
-                check(eqB(left, right))
             }
         }
     }

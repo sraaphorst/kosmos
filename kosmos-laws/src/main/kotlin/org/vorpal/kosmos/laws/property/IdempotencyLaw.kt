@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /**
  * Idempotency Law for a binary operation:
@@ -26,11 +27,9 @@ class IdempotencyLaw<A: Any>(
     override val name = "idempotency (${op.symbol})"
 
     suspend fun idempotencyCheck() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val value = op(a, a)
-            withClue(idempotencyFail(a, value)) {
-                check(eq(a, value))
-            }
+            lawCheck(eq(a, value), idempotencyFail(a, value))
         }
     }
 

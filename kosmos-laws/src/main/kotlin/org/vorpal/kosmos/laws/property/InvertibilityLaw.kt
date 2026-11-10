@@ -1,17 +1,17 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.map
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+
 
 private sealed interface InvertibilityCore<A : Any> {
     val op: BinOp<A>
@@ -28,11 +28,9 @@ private sealed interface InvertibilityCore<A : Any> {
             .map { (a, aInv) -> a to aInv!! }
 
     suspend fun leftInverseCheck() {
-        checkAll(arbInv()) { (a, aInv) ->
+        lawCheckAll(arbInv()) { (a, aInv) ->
             val right = op(aInv, a)
-            withClue(leftInverseFailure(a, aInv, right)) {
-                check(eq(right, identity))
-            }
+            lawCheck(eq(right, identity), leftInverseFailure(a, aInv, right))
         }
     }
 
@@ -58,11 +56,9 @@ private sealed interface InvertibilityCore<A : Any> {
     }
 
     suspend fun rightInverseCheck() {
-        checkAll(arbInv()) { (a, aInv) ->
+        lawCheckAll(arbInv()) { (a, aInv) ->
             val right = op(a, aInv)
-            withClue(rightInverseFailure(a, aInv, right)) {
-                check(eq(right, identity))
-            }
+            lawCheck(eq(right, identity), rightInverseFailure(a, aInv, right))
         }
     }
 

@@ -153,3 +153,22 @@ Findings that shape the design:
   `checkAll(arb)` → `lawCheckAll(arb, render)`, and `withClue(msg) { check(p) }` → `lawCheck(p, msg)`. The predicate,
   generator, equality and default budget (1000 iterations, bounded shrinking) are unchanged.
 - **Explicit skip**: `LawNode.Leaf(law, skip = "reason")` / `lawGraph { skipped(law, reason) }`.
+
+### Stage 3 (done)
+
+Every property law in `kosmos-laws` now uses the explicit signal (60 files):
+
+- `checkAll(...)` → `lawCheckAll(...)` (one-, two- and three-generator forms). Same generators, same default budget.
+- `withClue(message) { check(p) }` → `lawCheck(p) { message }`. Kotest's `withClue` does not attach its clue to an
+  exception it did not create, so the message moved into `lawCheck`; most messages are now built lazily (only on failure).
+- `TotalityLaw` now throws `LawViolation(message, cause)`: for totality, the operation throwing *is* the law being false.
+  In a suite run, an operation that throws therefore shows up as `totality` **Failed** and the other laws on that
+  operation as **Errored** (see `SuiteDiagnosticsSpec`).
+- Counterexamples are printed with the law's `Printable` where the sample type matches one in scope
+  (`render = renderWith(pr)`, 59 call sites); elsewhere (mixed-type tuples such as `(scalar, vector)`) they fall back to
+  `toString`, element by element.
+- Message format change for legacy specs: a failure message is now the law's own message, without Kotest's
+  trailing "Check failed.".
+
+Unchanged: all predicates, generators, equalities, budgets; the law inventory snapshot; all 144 specs / 2246 tests.
+Not done: iteration telemetry (no public API in Kotest 6.0.5); detecting generator exhaustion (Kotest's filter hangs).

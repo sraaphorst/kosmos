@@ -1,11 +1,12 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /** Asymmetry: a R b ⇒ ¬(b R a) */
 class AsymmetryLaw<A : Any>(
@@ -19,11 +20,9 @@ class AsymmetryLaw<A : Any>(
     override val name: String = "asymmetry ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbPair(arb)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (a, b) ->
             if (rel(a, b)) {
-                withClue(failureMessage(a, b)) {
-                    check(!rel(b, a))
-                }
+                lawCheck(!rel(b, a), failureMessage(a, b))
             }
         }
     }

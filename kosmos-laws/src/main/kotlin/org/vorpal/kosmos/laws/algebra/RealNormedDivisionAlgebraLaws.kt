@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import kotlin.math.max
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
@@ -16,6 +15,8 @@ import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.property.realPositiveDefiniteLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -74,13 +75,13 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
         ),
 
         TestingLaw.named("norm consistency: ||a||^2 = max(0, N(a))") {
-            checkAll(arb) { a ->
+            lawCheckAll(arb) { a ->
                 val nSq = algebra.normSq(a)
                 val n = algebra.norm(a)
                 val computed = RealAlgebras.RealField.mul(n, n)
                 val expected = max(0.0, nSq)
 
-                check(eqReal(computed, expected)) {
+                lawCheck(eqReal(computed, expected)) {
                     "Expected ||a||^2 = max(0, N(a)). " +
                         "N(a)=${prReal(nSq)}, ||a||^2=${prReal(computed)}, expected=${prReal(expected)} " +
                         "for a=${prA(a)}"

@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /** Antisymmetry: (a R b ∧ b R a) ⇒ a = b */
 class AntisymmetryLaw<A : Any>(
@@ -21,15 +22,13 @@ class AntisymmetryLaw<A : Any>(
     override val name: String = "antisymmetry ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbPair(arb)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (a, b) ->
             val ab = rel(a, b)
             val ba = rel(b, a)
 
             // Only constrained when both directions hold.
             if (ab && ba) {
-                withClue(failureMessage(a, b)) {
-                    check(eq(a, b))
-                }
+                lawCheck(eq(a, b), failureMessage(a, b))
             }
         }
     }

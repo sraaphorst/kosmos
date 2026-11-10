@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.laws.algebra
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.Meadow
@@ -11,6 +10,7 @@ import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.property.AntiHomomorphismLaw
 import org.vorpal.kosmos.laws.property.EndomorphismCommutationLaw
 import org.vorpal.kosmos.laws.property.IdempotencyLaw
@@ -53,9 +53,7 @@ class MeadowLaws<A : Any>(
     private fun fixedPointLaw(label: String, x: A): TestingLaw =
         TestingLaw.named("inv fixes $label") {
             val invX = meadow.inv(x)
-            withClue("Expected inv(${pr(x)}) = ${pr(x)}, but got ${pr(invX)}") {
-                check(eq(invX, x))
-            }
+            lawCheck(eq(invX, x), "Expected inv(${pr(x)}) = ${pr(x)}, but got ${pr(invX)}")
         }
 
     /**

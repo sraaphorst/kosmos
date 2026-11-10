@@ -2,19 +2,20 @@ package org.vorpal.kosmos.laws.innerproduct
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.pair
-import io.kotest.property.checkAll
-import io.kotest.assertions.withClue
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.BilinearForm
+import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.LeftAction
+import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 import org.vorpal.kosmos.laws.property.bilinearAddLeftLaw
 import org.vorpal.kosmos.laws.property.bilinearAddRightLaw
 import org.vorpal.kosmos.laws.property.bilinearScalarLeftLaw
 import org.vorpal.kosmos.laws.property.bilinearScalarRightLaw
-import org.vorpal.kosmos.core.ops.BinOp
-import org.vorpal.kosmos.core.ops.LeftAction
-import org.vorpal.kosmos.core.math.Real
 
 fun <V : Any> realInnerBilinearityLaws(
     inner: BilinearForm<V, Real>,
@@ -80,11 +81,11 @@ fun <V : Any> realInnerSymmetryLaw(
     prR: Printable<Real> = Printable.default(),
     label: String = "inner: symmetry ⟨v,w⟩ = ⟨w,v⟩"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.pair(vectorArb, vectorArb)) { (v, w) ->
+    lawCheckAll(Arb.pair(vectorArb, vectorArb)) { (v, w) ->
         val left = inner(v, w)
         val right = inner(w, v)
 
-        withClue(
+        lawCheck(eqR(left, right)) {
             buildString {
                 appendLine("Inner symmetry failed:")
                 appendLine("v = ${prV(v)}")
@@ -92,8 +93,6 @@ fun <V : Any> realInnerSymmetryLaw(
                 appendLine("⟨v,w⟩ = ${prR(left)}")
                 appendLine("⟨w,v⟩ = ${prR(right)}")
             }
-        ) {
-            check(eqR(left, right))
         }
     }
 }
@@ -108,12 +107,12 @@ fun <V : Any> realNormConsistencyLaw(
     prR: Printable<Real> = Printable.default(),
     label: String = "norm: ‖v‖² = ⟨v,v⟩ and ‖v‖ ≥ 0"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(vectorArb) { v ->
+    lawCheckAll(vectorArb, render = renderWith(prV)) { v ->
         val n = norm(v)
         val n2 = n * n
         val vv = inner(v, v)
 
-        withClue(
+        val message = {
             buildString {
                 appendLine("Norm consistency failed:")
                 appendLine("v = ${prV(v)}")
@@ -122,9 +121,8 @@ fun <V : Any> realNormConsistencyLaw(
                 appendLine("⟨v,v⟩ = ${prR(vv)}")
                 appendLine("tolerance = $tolerance")
             }
-        ) {
-            check(n >= -tolerance)
-            check(eqR(n2, vv))
         }
+        lawCheck(n >= -tolerance, message)
+        lawCheck(eqR(n2, vv), message)
     }
 }

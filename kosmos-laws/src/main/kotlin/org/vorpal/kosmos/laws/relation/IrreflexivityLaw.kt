@@ -1,11 +1,12 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Irreflexivity:
@@ -23,12 +24,10 @@ class IrreflexivityLaw<A : Any>(
     override val name = "irreflexivity ($symbol)"
 
     override suspend fun test() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val aa = rel(a, a)
 
-            withClue(failureMessage(a, aa)) {
-                check(!aa)
-            }
+            lawCheck(!aa, failureMessage(a, aa))
         }
     }
 

@@ -1,15 +1,15 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.triple
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.BinOp
+import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.util.midfix
 
 private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
@@ -59,13 +59,11 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
      * Left additivity: `f(v1 + v2, w) = f(v1, w) + f(v2, w)`
      */
     suspend fun leftAdditivityCheck() {
-        checkAll(vvwArb()) { (v1, v2, w) ->
+        lawCheckAll(vvwArb()) { (v1, v2, w) ->
             val left = f(addV(v1, v2), w)
             val right = addX(f(v1, w), f(v2, w))
 
-            withClue(leftAdditivityFailure(v1, v2, w, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), leftAdditivityFailure(v1, v2, w, left, right))
         }
     }
 
@@ -90,13 +88,11 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
      * Left homogeneity: `f(s·v, w) = s ⋅ f(v, w)`
      */
     suspend fun leftHomogeneityCheck() {
-        checkAll(svwArb()) { (s, v, w) ->
+        lawCheckAll(svwArb()) { (s, v, w) ->
             val left = f(scalarActionV(s, v), w)
             val right = scalarActionX(s, f(v, w))
 
-            withClue(leftHomogeneityFailure(s, v, w, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), leftHomogeneityFailure(s, v, w, left, right))
         }
     }
 
@@ -121,13 +117,11 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
      * Right additivity: `f(v, w1 + w2) = f(v, w1) + f(v, w2)`
      */
     suspend fun rightAdditivityCheck() {
-        checkAll(vwwArb()) { (v, w1, w2) ->
+        lawCheckAll(vwwArb()) { (v, w1, w2) ->
             val left = f(v, addW(w1, w2))
             val right = addX(f(v, w1), f(v, w2))
 
-            withClue(rightAdditivityFailure(v, w1, w2, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), rightAdditivityFailure(v, w1, w2, left, right))
         }
     }
 
@@ -152,13 +146,11 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
      * Right homogeneity: `f(v, s·w) = s ⋅ f(v, w)`
      */
     suspend fun rightHomogeneityCheck() {
-        checkAll(svwArb()) { (s, v, w) ->
+        lawCheckAll(svwArb()) { (s, v, w) ->
             val left = f(v, scalarActionW(s, w))
             val right = scalarActionX(s, f(v, w))
 
-            withClue(rightHomogeneityFailure(s, v, w, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), rightHomogeneityFailure(s, v, w, left, right))
         }
     }
 

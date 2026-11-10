@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface AnnihilationCore<A : Any> {
     val op: BinOp<A>
@@ -22,11 +23,9 @@ private sealed interface AnnihilationCore<A : Any> {
      * `0a = 0`
      */
     suspend fun leftAnnihilationCheck() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val value = op(zero, a)
-            withClue(leftAnnihilationFailure(a, value)) {
-                check(eq(zero, value))
-            }
+            lawCheck(eq(zero, value), leftAnnihilationFailure(a, value))
         }
     }
 
@@ -50,11 +49,9 @@ private sealed interface AnnihilationCore<A : Any> {
      * `a0 = 0`
      */
     suspend fun rightAnnihilationCheck() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val value = op(a, zero)
-            withClue(rightAnnihilationFailure(a, value)) {
-                check(eq(zero, value))
-            }
+            lawCheck(eq(zero, value), rightAnnihilationFailure(a, value))
         }
     }
 

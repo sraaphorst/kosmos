@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.laws.algebra
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Star-algebra axiom over a scalar ring R (no conjugation on scalars):
@@ -24,11 +24,11 @@ fun <R : Any, A : Any> starCommutesWithScalarActionLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "star: (r ⊳ a)* = r ⊳ (a*)"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(arbR, arbA) { r, a ->
+    lawCheckAll(arbR, arbA) { r, a ->
         val left = star(act(r, a))
         val right = act(r, star(a))
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Star failed to commute with scalar action:")
                 appendLine("r = ${prR(r)}")
@@ -36,8 +36,6 @@ fun <R : Any, A : Any> starCommutesWithScalarActionLaw(
                 appendLine("LHS: ${star.symbol}(${prA(act(r, a))}) = ${prA(left)}")
                 appendLine("RHS: r ${act.symbol} ${star.symbol}(${prA(a)}) = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
