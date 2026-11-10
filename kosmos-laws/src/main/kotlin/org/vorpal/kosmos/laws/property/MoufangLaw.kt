@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface MoufangCore<A : Any> {
     val op: BinOp<A>
@@ -45,15 +46,13 @@ class LeftMoufangLaw<A : Any>(
     override val name = "moufang (left: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (x, y, z) ->
             val xz  = op(x, z)
             val lhs = op(x, op(y, xz))
             val xy  = op(x, y)
             val rhs = op(op(xy, x), z)
 
-            withClue(failMsg("left", x, y, z, lhs, rhs)) {
-                check(eq(lhs, rhs))
-            }
+            lawCheck(eq(lhs, rhs), failMsg("left", x, y, z, lhs, rhs))
         }
     }
 }
@@ -72,12 +71,10 @@ class RightMoufangLaw<A: Any>(
     override val name = "moufang (right: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (x, y, z) ->
             val lhs = op(op(op(z, x), y), x)
             val rhs = op(z, op(x, op(y, x)))
-            withClue(failMsg("right", x, y, z, lhs, rhs)) {
-                check(eq(lhs, rhs))
-            }
+            lawCheck(eq(lhs, rhs), failMsg("right", x, y, z, lhs, rhs))
         }
     }
 }
@@ -99,15 +96,13 @@ class MiddleMoufangLaw<A: Any>(
     override val name = "Moufang (middle: ${op.symbol})"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbTriple(arb)) { (x, y, z) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (x, y, z) ->
             val zx = op(z, x)
             val yz = op(y, z)
             val lhs = op(op(x, y), zx)
             val rhs = op(x, op(yz, x))
 
-            withClue(failMsg("middle", x, y, z, lhs, rhs)) {
-                check(eq(lhs, rhs))
-            }
+            lawCheck(eq(lhs, rhs), failMsg("middle", x, y, z, lhs, rhs))
         }
     }
 }

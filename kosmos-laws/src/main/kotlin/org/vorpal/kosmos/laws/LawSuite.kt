@@ -22,6 +22,15 @@ interface LawSuite {
     fun fullLaws(): List<TestingLaw> = laws()
 
     /**
+     * This suite as a [LawNode] graph in the given view.
+     *
+     * The default is the compatibility adapter: one branch named after the suite whose leaves are
+     * the selected flat list ([laws] or [fullLaws]). Suites that declare their hierarchy override this.
+     */
+    fun node(mode: LawMode = LawMode.COMPACT): LawNode =
+        LawNode.flat(name, if (mode == LawMode.FULL) fullLaws() else laws())
+
+    /**
      * Run all laws and collect results instead of failing fast.
      *
      * If you want fail-fast behaviour inside Kotest, prefer:

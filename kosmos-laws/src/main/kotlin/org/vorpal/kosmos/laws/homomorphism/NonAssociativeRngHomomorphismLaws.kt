@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.asNodes
 
 class NonAssociativeRngHomomorphismLaws<A : Any, B : Any>(
     private val hom: (A) -> B,
@@ -15,12 +18,14 @@ class NonAssociativeRngHomomorphismLaws<A : Any, B : Any>(
     private val eqB: Eq<B> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name =
         "non-associative ring homomorphism ((${domain.add.op.symbol}, ${domain.mul.op.symbol}) → (${codomain.add.op.symbol}, ${codomain.mul.op.symbol}))"
 
-    override fun laws(): List<TestingLaw> = listOf(
+    override val binding = LawBinding.of(this, hom, domain, codomain, arb, eqB, prA, prB)
+
+    override fun children(mode: LawMode): List<LawNode> = listOf(
         preservesBinaryOpLaw(
             domainOp = domain.add.op,
             codomainOp = codomain.add.op,
@@ -50,5 +55,5 @@ class NonAssociativeRngHomomorphismLaws<A : Any, B : Any>(
             prB = prB,
             label = "non-associative ring hom: multiplication"
         )
-    )
+    ).asNodes()
 }

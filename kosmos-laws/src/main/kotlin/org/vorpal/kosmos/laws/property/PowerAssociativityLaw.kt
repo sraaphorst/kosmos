@@ -1,10 +1,11 @@
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Power-associativity:
@@ -31,38 +32,32 @@ class PowerAssociativityLaw<A: Any>(
 
     override suspend fun test() {
 
-        checkAll(arb) { x ->
+        lawCheckAll(arb, render = renderWith(pr)) { x ->
             // Degree-3 witness
             // (xx)x == x(xx)
             val xx = op(x, x)
             val l3 = op(xx, x)
             val r3 = op(x, xx)
-            withClue(paFail("degree-3", x, l3, r3)) {
-                check(eq(l3, r3))
-            }
+            lawCheck(eq(l3, r3), paFail("degree-3", x, l3, r3))
 
             // Degree-4 witness
             // ((xx)x)x
             val l4 = op(l3, x)
             // x(x(xx))
             val r4 = op(x, r3)
-            withClue(paFail("degree-4", x, l4, r4)) {
-                check(eq(l4, r4))
-            }
+            lawCheck(eq(l4, r4), paFail("degree-4", x, l4, r4))
         }
 
         // (x^m)(x^n) == x^(m+n) for 1 ≤ m, n ≤ maxExp, with left-normed powers
         val exps = (1..maxExp).toList()
-        checkAll(arb) { x ->
+        lawCheckAll(arb, render = renderWith(pr)) { x ->
             for (m in exps)
                 for (n in exps) {
                     val xm = powLeft(x, m)
                     val xn = powLeft(x, n)
                     val prod = op(xm, xn)
                     val xmn = powLeft(x, m + n)
-                    withClue(paExpFail(x, m, n, prod, xmn)) {
-                        check(eq(prod, xmn))
-                    }
+                    lawCheck(eq(prod, xmn), paExpFail(x, m, n, prod, xmn))
                 }
         }
     }

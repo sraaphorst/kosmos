@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Laws for a Boolean-style complementation operator ¬ on a bounded lattice:
@@ -42,24 +43,18 @@ class ComplementationLaw<A : Any>(
      * so this format makes sense.
      */
     override suspend fun test() {
-        checkAll(arb) { x ->
+        lawCheckAll(arb, render = renderWith(pr)) { x ->
             val nx = complement(x)
             val nnx = complement(nx)
 
             val xAndNotX = meet(x, nx)
             val xOrNotX = join(x, nx)
 
-            withClue("Real negation failed for $notSym, element ${pr(x)}") {
-                check(eq(nnx, x))
-            }
+            lawCheck(eq(nnx, x), "Real negation failed for $notSym, element ${pr(x)}")
 
-            withClue("x ${meet.symbol} $notSym x = ⊥ failed for element ${pr(x)}") {
-                check(eq(xAndNotX, bottom))
-            }
+            lawCheck(eq(xAndNotX, bottom), "x ${meet.symbol} $notSym x = ⊥ failed for element ${pr(x)}")
 
-            withClue("x ${join.symbol} $notSym x = ⊤ failed for element ${pr(x)}") {
-                check(eq(xOrNotX, top))
-            }
+            lawCheck(eq(xOrNotX, top), "x ${join.symbol} $notSym x = ⊤ failed for element ${pr(x)}")
         }
     }
 }

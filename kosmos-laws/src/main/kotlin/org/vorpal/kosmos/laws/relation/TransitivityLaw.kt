@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /** Transitivity: (a R b ∧ b R c) ⇒ a R c */
 class TransitivityLaw<A : Any>(
@@ -20,16 +21,14 @@ class TransitivityLaw<A : Any>(
     override val name: String = "transitivity ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val ab = rel(a, b)
             val bc = rel(b, c)
 
             // Only constrained when the premise holds.
             if (ab && bc) {
                 val ac = rel(a, c)
-                withClue(failureMessage(a, b, c, ab, bc, ac)) {
-                    check(ac)
-                }
+                lawCheck(ac, failureMessage(a, b, c, ab, bc, ac))
             }
         }
     }

@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface AlternativityCore<A : Any> {
     val op: BinOp<A>
@@ -21,16 +22,14 @@ private sealed interface AlternativityCore<A : Any> {
      * Left alternativity: `x(xy) = (xx)y`
      */
     suspend fun leftAlternativityCheck() {
-        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (x, y) ->
             val xy = op(x, y)
             val left = op(x, xy)
 
             val xx = op(x, x)
             val right = op(xx, y)
 
-            withClue(leftAlternativityFailure(x, y, xy, left, xx, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), leftAlternativityFailure(x, y, xy, left, xx, right))
         }
     }
 
@@ -69,7 +68,7 @@ private sealed interface AlternativityCore<A : Any> {
      * Right alternativity: `(yx)x = y(xx)`
      */
     suspend fun rightAlternativityCheck() {
-        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (x, y) ->
             // (yx)x = y(xx)
             val yx = op(y, x)
             val left = op(yx, x)
@@ -77,9 +76,7 @@ private sealed interface AlternativityCore<A : Any> {
             val xx = op(x, x)
             val right = op(y, xx)
 
-            withClue(rightAlternativityFailure(x, y, yx, left, xx, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), rightAlternativityFailure(x, y, yx, left, xx, right))
         }
     }
 

@@ -4,8 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Quasigroup
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.asNode
 import org.vorpal.kosmos.laws.property.CancellativityLaw
 import org.vorpal.kosmos.laws.property.LeftDivisionLaw
 import org.vorpal.kosmos.laws.property.RightDivisionLaw
@@ -26,18 +29,20 @@ class QuasigroupLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): LawSuite {
+): StructuredLawSuite {
 
     override val name = suiteName("Quasigroup",
         quasigroup.op.symbol, quasigroup.leftDiv.symbol, quasigroup.rightDiv.symbol)
 
-    override fun laws(): List<TestingLaw> =
-        MagmaLaws(quasigroup, arb, pr).laws() +
-            listOf(
-                TotalityLaw(quasigroup.leftDiv, arb, pr),
-                TotalityLaw(quasigroup.rightDiv, arb, pr),
-                LeftDivisionLaw(quasigroup.op, quasigroup.leftDiv, arb, eq, pr),
-                RightDivisionLaw(quasigroup.op, quasigroup.rightDiv, arb, eq, pr),
-                CancellativityLaw(quasigroup.op, arb, eq, pr)
-            )
+    override val binding = LawBinding.of(this, quasigroup, arb, eq, pr)
+
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(
+            MagmaLaws(quasigroup, arb, pr).node(mode),
+            TotalityLaw(quasigroup.leftDiv, arb, pr).asNode(),
+            TotalityLaw(quasigroup.rightDiv, arb, pr).asNode(),
+            LeftDivisionLaw(quasigroup.op, quasigroup.leftDiv, arb, eq, pr).asNode(),
+            RightDivisionLaw(quasigroup.op, quasigroup.rightDiv, arb, eq, pr).asNode(),
+            CancellativityLaw(quasigroup.op, arb, eq, pr).asNode()
+        )
 }

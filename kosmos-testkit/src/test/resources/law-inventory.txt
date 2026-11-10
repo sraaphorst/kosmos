@@ -1,0 +1,940 @@
+## Magma(Z,+) [compact] (1)
+TotalityLaw | totality (+)
+
+## Magma(Z,+) [full] (1)
+TotalityLaw | totality (+)
+
+## Semigroup(Z,+) [compact] (2)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+
+## Semigroup(Z,+) [full] (2)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+
+## CommutativeSemigroup(Z,+) [compact] (3)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+CommutativityLaw | commutativity (+)
+
+## CommutativeSemigroup(Z,+) [full] (3)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+CommutativityLaw | commutativity (+)
+
+## Monoid(Z,*) [compact] (3)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+IdentityLaw | identity (*)
+
+## Monoid(Z,*) [full] (3)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+IdentityLaw | identity (*)
+
+## CommutativeMonoid(Z,*) [compact] (4)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+IdentityLaw | identity (*)
+CommutativityLaw | commutativity (*)
+
+## CommutativeMonoid(Z,*) [full] (4)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+IdentityLaw | identity (*)
+CommutativityLaw | commutativity (*)
+
+## NonAssociativeMonoid(Z,*) [compact] (2)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+
+## NonAssociativeMonoid(Z,*) [full] (2)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+
+## Quasigroup(Z,+) [compact] (6)
+TotalityLaw | totality (+)
+TotalityLaw | totality (\)
+TotalityLaw | totality (/)
+LeftDivisionLaw | left-division (+, \)
+RightDivisionLaw | right-division (+, /)
+CancellativityLaw | cancellative (+)
+
+## Quasigroup(Z,+) [full] (6)
+TotalityLaw | totality (+)
+TotalityLaw | totality (\)
+TotalityLaw | totality (/)
+LeftDivisionLaw | left-division (+, \)
+RightDivisionLaw | right-division (+, /)
+CancellativityLaw | cancellative (+)
+
+## Loop(Z,+) [compact] (7)
+TotalityLaw | totality (+)
+TotalityLaw | totality (\)
+TotalityLaw | totality (/)
+LeftDivisionLaw | left-division (+, \)
+RightDivisionLaw | right-division (+, /)
+CancellativityLaw | cancellative (+)
+IdentityLaw | identity (+)
+
+## Loop(Z,+) [full] (7)
+TotalityLaw | totality (+)
+TotalityLaw | totality (\)
+TotalityLaw | totality (/)
+LeftDivisionLaw | left-division (+, \)
+RightDivisionLaw | right-division (+, /)
+CancellativityLaw | cancellative (+)
+IdentityLaw | identity (+)
+
+## Group(Z,+) [compact] (4)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+
+## Group(Z,+) [full] (4)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+
+## AbelianGroup(Z,+) [compact] (5)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+
+## AbelianGroup(Z,+) [full] (5)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+
+## Heap(Z) [compact] (2)
+ParaAssociativityLaw | ParaAssociativityLaw
+BiunitaryLaw | BiunitaryLaw
+
+## Heap(Z) [full] (2)
+ParaAssociativityLaw | ParaAssociativityLaw
+BiunitaryLaw | BiunitaryLaw
+
+## AbelianHeap(Z) [compact] (3)
+ParaAssociativityLaw | ParaAssociativityLaw
+BiunitaryLaw | BiunitaryLaw
+TernaryCommutativityLaw | TernaryCommutativityLaw
+
+## AbelianHeap(Z) [full] (3)
+ParaAssociativityLaw | ParaAssociativityLaw
+BiunitaryLaw | BiunitaryLaw
+TernaryCommutativityLaw | TernaryCommutativityLaw
+
+## Hemiring(Z) [compact] (2)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+
+## Hemiring(Z) [full] (8)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+
+## Semiring(Z) [compact] (3)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+IdentityLaw | identity (*)
+
+## Semiring(Z) [full] (9)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+IdentityLaw | identity (*)
+
+## CommutativeSemiring(Z) [compact] (4)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+IdentityLaw | identity (*)
+CommutativityLaw | commutativity (*)
+
+## CommutativeSemiring(Z) [full] (10)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+IdentityLaw | identity (*)
+CommutativityLaw | commutativity (*)
+
+## NonAssociativeRing(Z) [compact] (1)
+DistributivityLaw | distributivity (both: * over +)
+
+## NonAssociativeRing(Z) [full] (8)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+
+## Rng(Z) [compact] (3)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+
+## Rng(Z) [full] (9)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+
+## CommutativeRng(Z) [compact] (4)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+
+## CommutativeRng(Z) [full] (10)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+
+## Ring(Z) [compact] (4)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+
+## Ring(Z) [full] (10)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+
+## CommutativeRing(Z) [compact] (5)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+
+## CommutativeRing(Z) [full] (11)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+
+## NonAssociativeInvolutiveRing(Z) [compact] (6)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+
+## NonAssociativeInvolutiveRing(Z) [full] (13)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+
+## InvolutiveRing(Z) [compact] (7)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+AssociativityLaw | associativity (*)
+
+## InvolutiveRing(Z) [full] (14)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+AssociativityLaw | associativity (*)
+
+## Conjugation(Z) [compact] (5)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+
+## Conjugation(Z) [full] (5)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+
+## DivisionRing(Q) [compact] (5)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+InvertibilityLaw | invertibility (*)
+
+## DivisionRing(Q) [full] (11)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+InvertibilityLaw | invertibility (*)
+
+## Field(Q) [compact] (7)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+InvertibilityLaw | invertibility (*)
+CommutativityLaw | commutativity (*)
+DistinctIdentitiesLaw | distinct identities / nontriviality (1 ≠ 0)
+
+## Field(Q) [full] (13)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+InvertibilityLaw | invertibility (*)
+CommutativityLaw | commutativity (*)
+DistinctIdentitiesLaw | distinct identities / nontriviality (1 ≠ 0)
+
+## LeftRModule(Q over Q) [compact] (4)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+
+## LeftRModule(Q over Q) [full] (19)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+
+## RModule(Q over Z) [compact] (4)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+
+## RModule(Q over Z) [full] (20)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+
+## NonAssociativeAlgebra(Q over Q) [compact] (7)
+DistributivityLaw | distributivity (both: * over +)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+
+## NonAssociativeAlgebra(Q over Q) [full] (45)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+<anonymous> | derived: (r ⊳ 1) * a = r ⊳ a
+<anonymous> | derived: a * (r ⊳ 1) = r ⊳ a
+<anonymous> | derived: (r ⊳ 1) * a = a * (r ⊳ 1)
+<anonymous> | derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1
+
+## Algebra(Q over Q) [compact] (8)
+DistributivityLaw | distributivity (both: * over +)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+AssociativityLaw | associativity (*)
+
+## Algebra(Q over Q) [full] (46)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+<anonymous> | derived: (r ⊳ 1) * a = r ⊳ a
+<anonymous> | derived: a * (r ⊳ 1) = r ⊳ a
+<anonymous> | derived: (r ⊳ 1) * a = a * (r ⊳ 1)
+<anonymous> | derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1
+AssociativityLaw | associativity (*)
+
+## NonAssociativeStarAlgebra(Q over Q) [compact] (13)
+DistributivityLaw | distributivity (both: * over +)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+<anonymous> | star: (r ⊳ a)* = r ⊳ (a*)
+
+## NonAssociativeStarAlgebra(Q over Q) [full] (51)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+<anonymous> | derived: (r ⊳ 1) * a = r ⊳ a
+<anonymous> | derived: a * (r ⊳ 1) = r ⊳ a
+<anonymous> | derived: (r ⊳ 1) * a = a * (r ⊳ 1)
+<anonymous> | derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+<anonymous> | star: (r ⊳ a)* = r ⊳ (a*)
+
+## StarAlgebra(Q over Q) [compact] (14)
+DistributivityLaw | distributivity (both: * over +)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+<anonymous> | star: (r ⊳ a)* = r ⊳ (a*)
+AssociativityLaw | associativity (*)
+
+## StarAlgebra(Q over Q) [full] (52)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+AssociativityLaw | associativity (*)
+AnnihilationLaw | annihilator (*)
+DistributivityLaw | distributivity (both: * over +)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (*)
+IdentityLaw | identity (*)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+<anonymous> | module: scalar distributes over addition
+<anonymous> | module: action respects scalar addition
+<anonymous> | module: action associates with scalar multiplication
+<anonymous> | module: scalar unit acts as identity
+<anonymous> | algebra: (r ⊳ a) * b = r ⊳ (a * b)
+<anonymous> | algebra: a * (r ⊳ b) = r ⊳ (a * b)
+<anonymous> | derived: (r ⊳ 1) * a = r ⊳ a
+<anonymous> | derived: a * (r ⊳ 1) = r ⊳ a
+<anonymous> | derived: (r ⊳ 1) * a = a * (r ⊳ 1)
+<anonymous> | derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+<anonymous> | star: (r ⊳ a)* = r ⊳ (a*)
+AssociativityLaw | associativity (*)
+
+## NormedDivisionAlgebra(Q) [compact] (8)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+NormSqMultiplicativeLaw | normSq multiplicative: N(xy)=N(x)N(y)
+
+## NormedDivisionAlgebra(Q) [full] (15)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+NormSqMultiplicativeLaw | normSq multiplicative: N(xy)=N(x)N(y)
+
+## NonAssociativeDivisionAlgebra(Q) [compact] (7)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+
+## NonAssociativeDivisionAlgebra(Q) [full] (14)
+TotalityLaw | totality (+)
+AssociativityLaw | associativity (+)
+IdentityLaw | identity (+)
+InvertibilityLaw | invertibility (+)
+CommutativityLaw | commutativity (+)
+TotalityLaw | totality (*)
+IdentityLaw | identity (*)
+DistributivityLaw | distributivity (both: * over +)
+InvolutionLaw | involution (¯)
+<anonymous> | conj preserves addition (+ → +)
+<anonymous> | conj anti-preserves multiplication (* → *)
+<anonymous> | conj preserves additive identity
+<anonymous> | conj preserves multiplicative identity
+InvertibilityLaw | invertibility (*)
+
+## NonAssociativeRngHomomorphism(Z -> Z) [compact] (3)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+
+## NonAssociativeRngHomomorphism(Z -> Z) [full] (3)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+
+## NonAssociativeRingHomomorphism(Z -> Z) [compact] (4)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+<anonymous> | non-associative ring homomorphism: preserves multiplicative identity
+
+## NonAssociativeRingHomomorphism(Z -> Z) [full] (4)
+<anonymous> | non-associative ring homomorphism: addition (+ → +)
+<anonymous> | non-associative ring hom: preserves additive identity
+<anonymous> | non-associative ring hom: multiplication (* → *)
+<anonymous> | non-associative ring homomorphism: preserves multiplicative identity
+
+## RngHomomorphism(Z -> Z) [compact] (3)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+
+## RngHomomorphism(Z -> Z) [full] (3)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+
+## RingHomomorphism(Z -> Z) [compact] (4)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+<anonymous> | ring homomorphism: preserves multiplicative identity
+
+## RingHomomorphism(Z -> Z) [full] (4)
+<anonymous> | rng homomorphism: addition (+ → +)
+<anonymous> | rng homomorphism: preserves additive identity
+<anonymous> | rng homomorphism: multiplication (* → *)
+<anonymous> | ring homomorphism: preserves multiplicative identity
+
+## JoinSemilattice(Bool) [compact] (3)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+
+## JoinSemilattice(Bool) [full] (3)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+
+## MeetSemilattice(Bool) [compact] (3)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+
+## MeetSemilattice(Bool) [full] (3)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+
+## Lattice(Bool) [compact] (8)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+
+## Lattice(Bool) [full] (8)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+
+## BoundedLattice(Bool) [compact] (12)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+
+## BoundedLattice(Bool) [full] (12)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+
+## DistributiveLattice(Bool) [compact] (14)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+
+## DistributiveLattice(Bool) [full] (14)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+
+## BooleanAlgebra(Bool) [compact] (21)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+<anonymous> | boolean complement: x ∨ ¬x = ⊤
+<anonymous> | boolean complement: x ∧ ¬x = ⊥
+<anonymous> | boolean: ¬⊥ = ⊤
+<anonymous> | boolean: ¬⊤ = ⊥
+InvolutionLaw | involution (¬)
+<anonymous> | de Morgan: ¬(x ∨ y) = ¬x ∧ ¬y
+<anonymous> | de Morgan: ¬(x ∧ y) = ¬x ∨ ¬y
+
+## BooleanAlgebra(Bool) [full] (21)
+AssociativityLaw | associativity (∨)
+CommutativityLaw | commutativity (∨)
+IdempotencyLaw | idempotency (∨)
+AssociativityLaw | associativity (∧)
+CommutativityLaw | commutativity (∧)
+IdempotencyLaw | idempotency (∧)
+AbsorbOverLaw | absorb-over: ∧ over ∨
+OverAbsorbLaw | over-absorb: ∨ over ∧
+IdentityLaw | identity (∨)
+IdentityLaw | identity (∧)
+AnnihilationLaw | annihilator (∧)
+AnnihilationLaw | annihilator (∨)
+DistributivityLaw | distributivity (both: ∧ over ∨)
+DistributivityLaw | distributivity (both: ∨ over ∧)
+<anonymous> | boolean complement: x ∨ ¬x = ⊤
+<anonymous> | boolean complement: x ∧ ¬x = ⊥
+<anonymous> | boolean: ¬⊥ = ⊤
+<anonymous> | boolean: ¬⊤ = ⊥
+InvolutionLaw | involution (¬)
+<anonymous> | de Morgan: ¬(x ∨ y) = ¬x ∧ ¬y
+<anonymous> | de Morgan: ¬(x ∧ y) = ¬x ∨ ¬y
+
+## EquivalenceRelation(Z, =) [compact] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## EquivalenceRelation(Z, =) [full] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## Setoid(Z) [compact] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+
+## Setoid(Z) [full] (3)
+ReflexivityLaw | reflexivity (=)
+SymmetryLaw | symmetry (=)
+TransitivityLaw | transitivity (=)
+

@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /** No zero divisors (two–sided):  (a ≠ 0 ∧ b ≠ 0) ⇒ a ⋆ b ≠ 0. */
 class NoZeroDivisorsLaw<A: Any>(
@@ -21,15 +22,13 @@ class NoZeroDivisorsLaw<A: Any>(
     override val name = "no zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb) { (a, b) ->
+        lawCheckAll(pairArb, render = renderWith(pr)) { (a, b) ->
             val prod = op(a, b)
-            withClue({
+            lawCheck(!eq(prod, zero)) {
                 val sa = pr(a)
                 val sb = pr(b)
                 val s0 = pr(zero)
                 "Zero divisor found: $sa ${op.symbol} $sb = $s0 with $sa ≠ $s0 and $sb ≠ $s0"
-            }) {
-                check(!eq(prod, zero))
             }
         }
     }
@@ -47,16 +46,14 @@ class LeftNoZeroDivisorsLaw<A: Any>(
     override val name = "no left zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb) { (a, b) ->
+        lawCheckAll(pairArb, render = renderWith(pr)) { (a, b) ->
             val prod = op(a, b)
             if (eq(prod, zero)) {
-                withClue({
+                lawCheck(eq(b, zero)) {
                     val sa = pr(a)
                     val sb = pr(b)
                     val s0 = pr(zero)
                     "Left zero divisor: $sa ${op.symbol} $sb = $s0 with $sa ≠ $s0 ⇒ must have $sb = $s0"
-                }) {
-                    check(eq(b, zero))
                 }
             }
         }
@@ -75,16 +72,14 @@ class RightNoZeroDivisorsLaw<A: Any>(
     override val name = "no right zero divisors (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(pairArb) { (a, b) ->
+        lawCheckAll(pairArb, render = renderWith(pr)) { (a, b) ->
             val prod = op(a, b)
             if (eq(prod, zero)) {
-                withClue({
+                lawCheck(eq(a, zero)) {
                     val sa = pr(a)
                     val sb = pr(b)
                     val s0 = pr(zero)
                     "Right zero divisor: $sa ${op.symbol} $sb = $s0 with $sb ≠ $s0 ⇒ must have $sa = $s0"
-                }) {
-                    check(eq(a, zero))
                 }
             }
         }

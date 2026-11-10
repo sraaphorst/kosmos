@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Left division laws for a quasigroup:
@@ -28,20 +29,16 @@ class LeftDivisionLaw<A : Any>(
         "left-division (${op.symbol}, ${leftDiv.symbol})"
 
     override suspend fun test() {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair, render = renderWith(pr)) { (a, b) ->
             val x = leftDiv(a, b)
             val ax = op(a, x)
 
-            withClue(solvesEquationFailure(a, b, x, ax)) {
-                check(eq(ax, b))
-            }
+            lawCheck(eq(ax, b), solvesEquationFailure(a, b, x, ax))
 
             val ab = op(a, b)
             val back = leftDiv(a, ab)
 
-            withClue(undoesLeftMulFailure(a, b, ab, back)) {
-                check(eq(back, b))
-            }
+            lawCheck(eq(back, b), undoesLeftMulFailure(a, b, ab, back))
         }
     }
 

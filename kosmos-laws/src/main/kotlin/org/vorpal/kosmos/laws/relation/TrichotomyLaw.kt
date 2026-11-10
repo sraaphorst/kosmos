@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /**
  * Trichotomy (strict total order):
@@ -27,7 +28,7 @@ class TrichotomyLaw<A : Any>(
     override val name: String = "trichotomy ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbPair(arb)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (a, b) ->
             val ab = rel(a, b)
             val ba = rel(b, a)
             val aeb = eq(a, b)
@@ -37,9 +38,7 @@ class TrichotomyLaw<A : Any>(
                     (if (ba) 1 else 0) +
                     (if (aeb) 1 else 0)
 
-            withClue(failureMessage(a, b, ab, ba, aeb, trueCount)) {
-                check(trueCount == 1)
-            }
+            lawCheck(trueCount == 1, failureMessage(a, b, ab, ba, aeb, trueCount))
         }
     }
 

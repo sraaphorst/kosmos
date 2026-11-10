@@ -4,8 +4,12 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -22,7 +26,7 @@ class AlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
-) : LawSuite {
+) : StructuredLawSuite {
 
     private val scalarDescription =
         "R[${algebra.scalars.add.op.symbol}${algebra.scalars.mul.op.symbol}]"
@@ -37,6 +41,8 @@ class AlgebraLaws<R : Any, A : Any>(
         algebraDescription
     )
 
+    override val binding = LawBinding.of(this, algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
+
     private val nonAssociativeAlgebraLaws = NonAssociativeAlgebraLaws(
         algebra, scalarArb, algebraArb, eqR, eqA, prR, prA
     )
@@ -47,9 +53,8 @@ class AlgebraLaws<R : Any, A : Any>(
         )
     )
 
-    override fun laws(): List<TestingLaw> =
-        nonAssociativeAlgebraLaws.laws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(nonAssociativeAlgebraLaws.node(mode)) +
+            structureLaws.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        nonAssociativeAlgebraLaws.fullLaws() + structureLaws
 }
