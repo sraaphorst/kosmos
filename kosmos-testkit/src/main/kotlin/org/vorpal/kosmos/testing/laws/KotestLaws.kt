@@ -71,17 +71,20 @@ internal fun displayNames(labels: List<String>): List<String> {
     }
 }
 
+/** The name a child is shown under before uniquifying: its label, plus the skip reason for a skipped leaf. */
+internal fun baseName(node: LawNode): String =
+    (node as? LawNode.Leaf)?.skip?.let { "${node.label} (skipped: $it)" } ?: node.label
+
 private suspend fun FunSpecContainerScope.registerChildren(session: LawSession, branch: LawNode.Branch, at: List<Int>) {
-    val names = displayNames(branch.children.map { it.label })
+    // Uniquify the final names (skip annotation included), so no two siblings can collide.
+    val names = displayNames(branch.children.map(::baseName))
     branch.children.forEachIndexed { i, child ->
         val indices = at + i
         when (child) {
             is LawNode.Branch -> context(names[i]) { registerChildren(session, child, indices) }
-            is LawNode.Leaf -> {
-                val skip = child.skip
-                if (skip != null) xtest("${names[i]} (skipped: $skip)") { }
+            is LawNode.Leaf ->
+                if (child.skip != null) xtest(names[i]) { }
                 else test(names[i]) { checkLeaf(session, indices) }
-            }
         }
     }
 }

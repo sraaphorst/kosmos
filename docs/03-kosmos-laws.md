@@ -146,7 +146,7 @@ Ring (+, *)  ERRORED [2/5 passed]
 
 #1 FAILED: Ring (+, *) > Hemiring (+, *) > Semigroup (*) > associativity (*)
   counterexample: a = 1, b = 2, c = 3
-  seed: 812... (replay: LawRunner.replay(root, [0, 1, 0], 812...))
+  seed: 812... (replay: LawRunner.replay(root, listOf(0, 1, 0), 812...L))
   cause: org.vorpal.kosmos.laws.LawViolation: (a*b)*c ≠ a*(b*c)
 ```
 

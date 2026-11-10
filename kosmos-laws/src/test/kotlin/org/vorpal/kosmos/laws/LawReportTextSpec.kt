@@ -73,7 +73,9 @@ class LawReportTextSpec : FunSpec({
         val root = LawNode.branch("Root", AssociativityLaw(op, Arb.int(-5..5), Eq { a, b -> a == b }, Printable { "⟨$it⟩" }).asNode())
         val text = root.verify(LawRunConfig(seed = 3)).renderFailures()
         text shouldContain "counterexample: a = ⟨"
-        Regex("""seed: (-?\d+) \(replay: LawRunner\.replay\(root, \[0], \1\)\)""").containsMatchIn(text) shouldBe true
+        Regex("""seed: (-?\d+) \(replay: LawRunner\.replay\(root, listOf\(0\), \1L\)\)""").containsMatchIn(text) shouldBe true
+        LawReportText.replayCall(listOf(1, 0), -42) shouldBe "LawRunner.replay(root, listOf(1, 0), -42L)"
+        LawReportText.replayCall(emptyList(), 7) shouldBe "LawRunner.replay(root, listOf(), 7L)"
         text shouldContain "cause: java.lang.ArithmeticException: equal inputs"
     }
 

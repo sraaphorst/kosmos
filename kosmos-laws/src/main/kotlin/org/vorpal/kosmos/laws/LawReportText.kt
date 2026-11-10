@@ -85,7 +85,7 @@ object LawReportText {
         }
         val d = leaf.diagnostics
         d?.counterexample?.let { add("counterexample: $it") }
-        d?.seed?.let { add("seed: $it (replay: LawRunner.replay(root, ${leaf.path.indices}, $it))") }
+        d?.seed?.let { add("seed: $it (replay: ${replayCall(leaf.path.indices, it)})") }
         val cause = d?.cause ?: error
         if (cause != null) causeChain(cause).forEachIndexed { i, t ->
             val head = if (i == 0) "cause: " else "caused by: "
@@ -94,6 +94,10 @@ object LawReportText {
             msg.drop(1).forEach { add("  $it") }
         }
     }
+
+    /** The replay call as valid Kotlin, e.g. `LawRunner.replay(root, listOf(1, 0), -42L)`. */
+    fun replayCall(indices: List<Int>, seed: Long): String =
+        "LawRunner.replay(root, listOf(${indices.joinToString(", ")}), ${seed}L)"
 
     private fun causeChain(t: Throwable): List<Throwable> =
         generateSequence(t) { it.cause.takeIf { c -> c !== it } }.take(5).toList()

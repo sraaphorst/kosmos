@@ -248,6 +248,10 @@ Four findings from a review of 6bfc195, each reproduced by a failing test first 
 - **Replay** now reports the leaf at its full path from the root (same replay hint) and honours an explicit skip.
 - **Kotest sibling names**: a suffixed name could collide with another sibling's label (`a`, `a`, `a [2]`). Labels
   are now reserved first, so the result is `a`, `a [3]`, `a [2]`.
+- Second pass: the printed replay call is now valid Kotlin (`LawRunner.replay(root, listOf(1, 0), -42L)`), and the
+  skip annotation is part of a Kotest name *before* it is made unique, so a skipped `a` (reason `x`) and an active
+  sibling labelled `a (skipped: x)` no longer collide. `KotestLawsSpec` runs with `DuplicateTestNameMode.Error`,
+  which reproduced Kotest's `DuplicateTestNameException` before the fix.
 
 ## Summary
 
@@ -260,8 +264,8 @@ Four findings from a review of 6bfc195, each reproduced by a failing test first 
 | 4 Sharing | 6e58b48 | `LawBinding` on all suites; shared checks run once per run |
 | 5 Render + integrate | 5efe666 | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs, evidence |
 
-Final run: `kosmos-laws` 7 specs, `kosmos-testkit` 147 specs; 2361 tests, all passing (1 deliberately disabled test,
-the explicit-skip example in `KotestLawsSpec`).
+Final run: `kosmos-laws` 8 specs, `kosmos-testkit` 147 specs; 2368 tests, all passing (2 deliberately disabled tests,
+the explicit-skip examples in `KotestLawsSpec`).
 
 **Coverage.** No predicate, generator, equality or budget changed. The ordered compact/full law lists are pinned by
 `LawInventorySpec` and did not change. Compact `FieldLaws` still lacks multiplicative associativity (recorded in the
