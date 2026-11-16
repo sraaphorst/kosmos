@@ -216,16 +216,9 @@ Gradle's own `--tests` filter selects specs, not nested tests.
 - Only types and messages of exceptions are exported; live throwables stay in the in-memory report.
 - A change to the shape bumps `version`.
 
-## Evidence
-
-`report.evidence()` turns a passing report into a `LawEvidence`: the scope (root label and view), every law path that
-passed, the skipped ones with reasons, the number of executions, the master seed and the run settings. It throws for
-a failed, errored or empty report. This is the record a future `Lawful<T>` registry can keep; the registry itself is
-separate work.
-
 ## Where things live
 
 - `kosmos-laws/.../laws/`: `LawNode`, `LawBinding`, `LawRunner`, `LawSession`, `LawReport`, `LawReportText`,
-  `LawEvidence`, `LawExecution` (`lawCheck`, `lawCheckAll`), and the suites and property laws.
+  `LawExecution` (`lawCheck`, `lawCheckAll`), and the suites and property laws.
 - `kosmos-testkit/.../testing/laws/`: `KotestLaws` (`lawTests`) and `LawReportJson`.
 - Design notes and the history of this restructure: `docs/design/law-testing-restructure.md`.

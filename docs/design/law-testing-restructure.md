@@ -222,7 +222,7 @@ Within one run, a node that is reached again executes once and its result is sho
 - **Pilots**: `RationalFieldSpec` (full `FieldLaws` as nested tests + its 4 examples) and `IntegerCommutativeRingSpec`
   (three full suites and five norm laws in one `lawGraph`). Same laws and modes as before; the specs moved from
   `StringSpec` to `FunSpec` because `StringSpec` cannot nest.
-- **Evidence**: `LawReport.evidence()` → `LawEvidence(scope, mode, seed, laws, skipped, executions, config)`; throws
+- ~~**Evidence**~~ (removed after review, see below): `LawReport.evidence()` → `LawEvidence(scope, mode, seed, laws, skipped, executions, config)`; throws
   for failed, errored or empty reports. No registry wiring.
 - **Docs**: `docs/03-kosmos-laws.md` (authoring, views, sharing, outcomes, replay, Kotest, JSON schema, evidence).
 
@@ -253,6 +253,19 @@ Four findings from a review of 6bfc195, each reproduced by a failing test first 
   sibling labelled `a (skipped: x)` no longer collide. `KotestLawsSpec` runs with `DuplicateTestNameMode.Error`,
   which reproduced Kotest's `DuplicateTestNameException` before the fix.
 
+### Design change after review: no `Lawful<T>`, complete suites (2026-11-16)
+
+Agreed with Sebastian (after a review with GPT):
+
+- **No `Lawful<T>` and no certificate registry.** No Kosmos algorithm needs a wrapper around a tested structure, and a
+  passing run is evidence about one generator, equality and seed, not a property of the structure. A `LawReport` is
+  the record. `LawEvidence` (stage 5) was removed before merging. #252 section 7 and #131 are to be updated.
+- **Planned for K61 (#61), first step:** every suite is the complete contract of its interface (no compact/full views,
+  no `LawMode`); every atomic law gets a binding like suites have, so equivalent checks anywhere in a graph execute
+  once and show under every path; derived inputs (e.g. a nonzero-filtered generator) are memoised so they dedupe too.
+  Acceptance test: compose overlapping suites without manual avoidance, assert every required law is present, and
+  count exactly one execution per equivalent bound law.
+
 ## Summary
 
 | Stage | Commit | Result |
@@ -262,9 +275,9 @@ Four findings from a review of 6bfc195, each reproduced by a failing test first 
 | 2 Suites as graphs | c35c61f, 58e6f54 | all 53 suites `StructuredLawSuite`; flat views derived, inventory identical |
 | 3 Diagnostics | 305ea8b, f2dac01 | `lawCheck` / `lawCheckAll` in all 60 law files; Failed vs Errored; seeds; replay |
 | 4 Sharing | 6e58b48 | `LawBinding` on all suites; shared checks run once per run |
-| 5 Render + integrate | 5efe666 | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs, evidence |
+| 5 Render + integrate | 5efe666 | text and JSON reports, `LawSession`, nested Kotest adapter, pilots, docs |
 
-Final run: `kosmos-laws` 8 specs, `kosmos-testkit` 147 specs; 2368 tests, all passing (2 deliberately disabled tests,
+Final run: `kosmos-laws` 7 specs, `kosmos-testkit` 147 specs; 2366 tests, all passing (2 deliberately disabled tests,
 the explicit-skip examples in `KotestLawsSpec`).
 
 **Coverage.** No predicate, generator, equality or budget changed. The ordered compact/full law lists are pinned by
