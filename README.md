@@ -26,12 +26,21 @@ Kosmos is in early development. The APIs change freely, and there is no publishe
 ## A taste
 
 ```kotlin
-import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
 
-val half = Rational.of(1, 2)
-RationalField.add(half, half)                 // 1
-RationalField.reciprocal(Rational.of(2, 3))   // 3/2
+fun main() {
+    val pr = RationalAlgebras.printableRationalPretty
+    
+    // You can preface add and reciprocal with RationalField and not use the embedded run if you prefer.
+    RationalField.run {
+        val rHalf = Rational.of(1, 2)
+        val rOne = add(half, half)
+        println(pr(rOne))              // prints 1
+        val threeOverTwo = reciprocal(Rational.of(2, 3))
+        println(pr(threeOverTwo))      // prints 3/2
+    }
+}
 ```
 
 Structures are tested against their laws. A spec registers the law graph of a structure, and every law becomes its own
