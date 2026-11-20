@@ -30,7 +30,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalF
 import org.vorpal.kosmos.core.rational.Rational
 
 val half = Rational.of(1, 2)
-RationalField.add.op(half, half)              // 1
+RationalField.add(half, half)                 // 1
 RationalField.reciprocal(Rational.of(2, 3))   // 3/2
 ```
 
@@ -57,7 +57,7 @@ and call to replay it. See [the law-testing guide](docs/03-kosmos-laws.md).
 | [`kosmos-core`](kosmos-core) | The structures, their instances, and the algorithms on them |
 | [`kosmos-laws`](kosmos-laws) | The laws, the law suites of every structure, and the runner that executes them as a graph |
 | [`kosmos-testkit`](kosmos-testkit) | Generators (Kotest `Arb`s) for Kosmos types, the Kotest integration, and the test specs |
-| `kosmos-noise` | Experimental noise and random-field generation |
+| `kosmos-noise` | Experimental noise and random-field generation (currently outdated)|
 
 ## Building
 
