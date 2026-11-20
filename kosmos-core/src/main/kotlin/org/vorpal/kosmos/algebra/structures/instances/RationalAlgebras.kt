@@ -1,6 +1,7 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import org.vorpal.kosmos.algebra.morphisms.RingHomomorphism
+import org.vorpal.kosmos.algebra.morphisms.RingMonomorphism
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
 import org.vorpal.kosmos.algebra.structures.CommutativeMonoid
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
@@ -33,6 +34,8 @@ import java.math.BigInteger
  * - [ZModuleRational]: the rationals as a module over the integers.
  *
  * Homomorphisms:
+ * - [ZToQMonomorphism]: the canonical embedding of the integers into the rationals, `n ↦ n/1`
+ *   (the same map as `RationalField.fromBigInt`).
  * - [QToRHomomorphism]: a ring homomorphism from rationals to reals: mathematically, this would be injective, but
  *   given the limitations of the [Real] type, it is not.
  * - `ℚ ↪ ℚ(i)` lives with the Gaussian rationals: `GaussianRatAlgebras.QToGaussianRatMonomorphism`.
@@ -97,6 +100,12 @@ object RationalAlgebras {
         override val add = RationalField.add
         override val leftAction: LeftAction<BigInteger, Rational> =
             LeftAction(Symbols.TRIANGLE_RIGHT) { s, r -> s * r }
+    }
+
+    object ZToQMonomorphism: RingMonomorphism<BigInteger, Rational> {
+        override val domain = IntegerAlgebras.IntegerCommutativeRing
+        override val codomain = RationalField
+        override val map = UnaryOp<BigInteger, Rational> { n -> Rational.of(n) }
     }
 
     object QToRHomomorphism: RingHomomorphism<Rational, Real> {

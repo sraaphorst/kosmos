@@ -2,6 +2,7 @@ package org.vorpal.kosmos.core.rational
 
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bigInt
+import io.kotest.property.arbitrary.choice
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
@@ -59,4 +60,11 @@ object ArbRational {
      */
     val nonZeroWide: Arb<Rational> =
         wide.filter { it.n != BigInteger.ZERO }
+
+    /**
+     * Small and wide rationals mixed: small values hit coincidences (equal inputs, zero, integers) often, and wide
+     * ones exercise 64-bit numerators and denominators.
+     */
+    val mixed: Arb<Rational> =
+        Arb.choice(small, wide)
 }

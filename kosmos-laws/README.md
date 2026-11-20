@@ -10,7 +10,7 @@ Packages:
     - `InvertibilityLaw`
     - `DistributivityLaw`
     - `IdempotencyLaw`
-    - `CancellativeLaw`
+    - `CancellativityLaw`
     - `NoZeroDivisorsLaw`
     - `InvolutionLaw`
     - `AlternativityLaw`
@@ -28,6 +28,14 @@ Packages:
   - `GroupLaws`
   - `RingLaws`
   - `FieldLaws`
+  - `OrderedFieldLaws`, `AbsoluteValueLaws`, `NaturalPowerLaws` / `IntegerPowerLaws`
+
+- `org.vorpal.kosmos.laws.relation` — laws of relations (reflexivity, transitivity, trichotomy, ...) and the suites
+  `EquivalenceRelationLaws`, `PreorderLaws`, `PartialOrderLaws`, `TotalOrderLaws`, `StrictPartialOrderLaws`,
+  `StrictTotalOrderLaws`.
+
+- Each suite is the complete contract of its structure, composed from the suites of its parent structures; see
+  [the law-testing guide](../docs/03-kosmos-laws.md).
 
 - Each law is a small class implementing `TestingLaw`, parameterised by:
   - the operation(s) under test (`BinOp<A>`, etc.)

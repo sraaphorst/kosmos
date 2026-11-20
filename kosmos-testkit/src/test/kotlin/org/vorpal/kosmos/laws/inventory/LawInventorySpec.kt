@@ -15,6 +15,7 @@ import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.AbelianHeapLaws
+import org.vorpal.kosmos.laws.algebra.AbsoluteValueLaws
 import org.vorpal.kosmos.laws.algebra.AlgebraLaws
 import org.vorpal.kosmos.laws.algebra.BooleanAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.BoundedLatticeLaws
@@ -30,6 +31,7 @@ import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.laws.algebra.GroupLaws
 import org.vorpal.kosmos.laws.algebra.HeapLaws
 import org.vorpal.kosmos.laws.algebra.HemiringLaws
+import org.vorpal.kosmos.laws.algebra.IntegerPowerLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.JoinSemilatticeLaws
 import org.vorpal.kosmos.laws.algebra.LatticeLaws
@@ -45,6 +47,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeMonoidLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeRingLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.NormedDivisionAlgebraLaws
+import org.vorpal.kosmos.laws.algebra.OrderedFieldLaws
 import org.vorpal.kosmos.laws.algebra.QuasigroupLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.algebra.RingLaws
@@ -58,7 +61,12 @@ import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRngHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RngHomomorphismLaws
 import org.vorpal.kosmos.laws.relation.EquivalenceRelationLaws
+import org.vorpal.kosmos.laws.relation.StrictTotalOrderLaws
+import org.vorpal.kosmos.laws.relation.TotalOrderLaws
 import org.vorpal.kosmos.laws.setoid.SetoidLaws
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.relations.instances.RationalRelations
 import java.io.File
 
 /**
@@ -169,6 +177,11 @@ class LawInventorySpec : StringSpec({
                 // Division ring / field on Q.
                 "DivisionRing(Q)" to DivisionRingLaws(q, qArb, qEq, qPr),
                 "Field(Q)" to FieldLaws(q, qArb, qEq, qPr),
+                "OrderedField(Q)" to OrderedFieldLaws(q, RationalRelations.RationalTotalOrder, qArb, qEq, qPr),
+                "AbsoluteValue(Q)" to AbsoluteValueLaws(
+                    q, RationalRelations.RationalTotalOrder, Endo("|·|") { it.abs() }, qArb, qEq, qPr
+                ),
+                "IntegerPowers(Q)" to IntegerPowerLaws(q.mul, q.reciprocal, Rational::pow, qArb, Rational.ZERO, 10, qEq, qPr),
 
                 // Modules and algebras over Q (and Z).
                 "LeftRModule(Q over Q)" to LeftRModuleLaws(q, qArb, qArb, qEq, qEq, qPr, qPr),
@@ -203,6 +216,9 @@ class LawInventorySpec : StringSpec({
                 // Relations.
                 "EquivalenceRelation(Z, =)" to EquivalenceRelationLaws(Setoid.of(zEq).relation, zArb, zPr),
                 "Setoid(Z)" to SetoidLaws(Setoid.of(zEq), zArb, zPr),
+                "TotalOrder(Q, ≤)" to TotalOrderLaws(RationalRelations.RationalTotalOrder.relation, qArb, qEq, qPr),
+                "StrictTotalOrder(Q, <)" to
+                    StrictTotalOrderLaws(RationalRelations.RationalTotalStrictOrder.strictRelation, qArb, qEq, qPr),
             )
         }
     }
