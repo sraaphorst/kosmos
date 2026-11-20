@@ -10,6 +10,7 @@ import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.FirstPowerLaw
+import org.vorpal.kosmos.laws.property.InverseExistenceLaw
 import org.vorpal.kosmos.laws.property.NegativePowerLaw
 import org.vorpal.kosmos.laws.property.PowerAdditionLaw
 import org.vorpal.kosmos.laws.property.PowerSuccessorLaw
@@ -50,6 +51,8 @@ class NaturalPowerLaws<A : Any>(
  * multiplicative monoid of a field, with [exclude] = 0): on them, `n ↦ xⁿ` is a group homomorphism from (ℤ, +).
  *
  * - [NaturalPowerLaws] (on every element, [exclude] included)
+ * - [InverseExistenceLaw]: every element other than [exclude] has an inverse (the negative-power laws skip
+ *   elements without one, so this is what makes a missing inverse fail)
  * - [NegativePowerLaw]: `x⁻ⁿ = (x⁻¹)ⁿ`
  * - [PowerAdditionLaw]: `xᵐ⁺ⁿ = xᵐ ⋆ xⁿ` for `-maxExponent ≤ m, n ≤ maxExponent`
  */
@@ -69,6 +72,7 @@ class IntegerPowerLaws<A : Any>(
 
     override fun children(): List<LawNode> = listOf(
         NaturalPowerLaws(monoid, pow, arb, maxExponent, eq, pr),
+        InverseExistenceLaw(monoid.op, monoid.identity, arb, inverse, eq, pr, exclude),
         NegativePowerLaw(pow, inverse, arb, maxExponent, eq, pr, exclude),
         PowerAdditionLaw(pow, monoid.op, arb, -maxExponent, maxExponent, eq, pr, exclude)
     ).asNodes()

@@ -130,6 +130,12 @@ class RationalSpec : FunSpec({
                     }
                 }
             })
+            law(local("negating numerator and denominator keeps the value") {
+                lawCheckAll(arb) { r ->
+                    val flipped = Rational.of(-r.n, -r.d)
+                    lawCheck(r == flipped && r.hashCode() == flipped.hashCode()) { "$r, but ${-r.n}/${-r.d} = $flipped" }
+                }
+            })
             law(local("the factories agree") {
                 lawCheckAll(ArbInteger.small, ArbInteger.nonZeroSmall) { n, d ->
                     val r = Rational.of(n)

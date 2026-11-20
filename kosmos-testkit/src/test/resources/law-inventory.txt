@@ -408,11 +408,12 @@ AbsMultiplicativeLaw | multiplicativity (|·|, *)
 TriangleInequalityLaw | triangle inequality (|·|, +)
 AbsFromOrderLaw | agrees with the order (|·|, ≤)
 
-## IntegerPowers(Q) (6 checks, 6 occurrences)
+## IntegerPowers(Q) (7 checks, 7 occurrences)
 ZerothPowerLaw | zeroth power
 FirstPowerLaw | first power
 PowerSuccessorLaw | power successor (*)
 PowerAdditionLaw | power addition (*, exponents 0..10)
+InverseExistenceLaw | inverse exists (⁻¹)
 NegativePowerLaw | negative power (⁻¹)
 PowerAdditionLaw | power addition (*, exponents -10..10)
 

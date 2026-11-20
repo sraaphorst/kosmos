@@ -10,6 +10,7 @@ import io.kotest.property.arbitrary.bind
 import io.kotest.property.arbitrary.int
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.relations.TotalOrder
@@ -106,6 +107,12 @@ class OrderedLawsSpec : FunSpec({
             NaturalPowerLaws(q.mul, badPow, rationals).verify().status shouldBe LawStatus.PASSED
             IntegerPowerLaws(q.mul, q.reciprocal, badPow, rationals, Rational.ZERO).verify().failedLabels() shouldBe
                 setOf("negative power (${q.reciprocal.symbol})", "power addition (*, exponents -10..10)")
+        }
+
+        test("a missing inverse fails the integer power laws, even with correct powers") {
+            val noInverse = UnaryOp<Rational, Rational?>(q.reciprocal.symbol) { null }
+            IntegerPowerLaws(q.mul, noInverse, Rational::pow, rationals, Rational.ZERO).verify().failedLabels() shouldBe
+                setOf("inverse exists (${q.reciprocal.symbol})")
         }
 
         test("a power that is off by one fails the natural power laws") {
