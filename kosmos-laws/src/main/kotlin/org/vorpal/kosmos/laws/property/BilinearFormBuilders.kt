@@ -1,15 +1,15 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.pair
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 fun <F : Any, V : Any> bilinearAddLeftLaw(
     form: BilinearForm<V, F>,
@@ -22,11 +22,12 @@ fun <F : Any, V : Any> bilinearAddLeftLaw(
     label: String = "bilinear: additivity in left argument"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(Arb.pair(arbV, arbV), arbV) { (v1, v2), w ->
+        lawCheckAll(Arb.pair(arbV, arbV), arbV) { (v1, v2), w ->
             val left = form(addV(v1, v2), w)
             val right = addF(form(v1, w), form(v2, w))
 
-            withClue(buildString {
+            lawCheck(eqF(left, right)) {
+                buildString {
                 appendLine("Additivity (left) failed:")
                 appendLine("B(v1 + v2, w) vs B(v1,w) + B(v2,w)")
                 appendLine("v1 = ${prV(v1)}")
@@ -34,8 +35,7 @@ fun <F : Any, V : Any> bilinearAddLeftLaw(
                 appendLine("w  = ${prV(w)}")
                 appendLine("LHS = ${prF(left)}")
                 appendLine("RHS = ${prF(right)}")
-            }) {
-                check(eqF(left, right))
+                }
             }
         }
     }
@@ -52,11 +52,12 @@ fun <F : Any, V : Any> bilinearScalarLeftLaw(
     label: String = "bilinear: homogeneity in left argument"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(arbF, arbV, arbV) { r, v, w ->
+        lawCheckAll(arbF, arbV, arbV) { r, v, w ->
             val left = form(act(r, v), w)
             val right = mulF(r, form(v, w))
 
-            withClue(buildString {
+            lawCheck(eqF(left, right)) {
+                buildString {
                 appendLine("Homogeneity (left) failed:")
                 appendLine("B(r·v, w) vs r * B(v,w)")
                 appendLine("r  = ${prF(r)}")
@@ -64,8 +65,7 @@ fun <F : Any, V : Any> bilinearScalarLeftLaw(
                 appendLine("w  = ${prV(w)}")
                 appendLine("LHS = ${prF(left)}")
                 appendLine("RHS = ${prF(right)}")
-            }) {
-                check(eqF(left, right))
+                }
             }
         }
     }
@@ -81,11 +81,12 @@ fun <F : Any, V : Any> bilinearAddRightLaw(
     label: String = "bilinear: additivity in right argument"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(arbV, Arb.pair(arbV, arbV)) { v, (w1, w2) ->
+        lawCheckAll(arbV, Arb.pair(arbV, arbV)) { v, (w1, w2) ->
             val left = form(v, addV(w1, w2))
             val right = addF(form(v, w1), form(v, w2))
 
-            withClue(buildString {
+            lawCheck(eqF(left, right)) {
+                buildString {
                 appendLine("Additivity (right) failed:")
                 appendLine("B(v, w1 + w2) vs B(v,w1) + B(v,w2)")
                 appendLine("v  = ${prV(v)}")
@@ -93,8 +94,7 @@ fun <F : Any, V : Any> bilinearAddRightLaw(
                 appendLine("w2 = ${prV(w2)}")
                 appendLine("LHS = ${prF(left)}")
                 appendLine("RHS = ${prF(right)}")
-            }) {
-                check(eqF(left, right))
+                }
             }
         }
     }
@@ -111,11 +111,12 @@ fun <F : Any, V : Any> bilinearScalarRightLaw(
     label: String = "bilinear: homogeneity in right argument"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(arbF, arbV, arbV) { r, v, w ->
+        lawCheckAll(arbF, arbV, arbV) { r, v, w ->
             val left = form(v, act(r, w))
             val right = mulF(r, form(v, w))
 
-            withClue(buildString {
+            lawCheck(eqF(left, right)) {
+                buildString {
                 appendLine("Homogeneity (right) failed:")
                 appendLine("B(v, r·w) vs r * B(v,w)")
                 appendLine("r  = ${prF(r)}")
@@ -123,8 +124,7 @@ fun <F : Any, V : Any> bilinearScalarRightLaw(
                 appendLine("w  = ${prV(w)}")
                 appendLine("LHS = ${prF(left)}")
                 appendLine("RHS = ${prF(right)}")
-            }) {
-                check(eqF(left, right))
+                }
             }
         }
     }

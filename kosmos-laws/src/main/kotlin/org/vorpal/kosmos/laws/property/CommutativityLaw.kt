@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /**
  * Commutativity Law: `ab = ba`.
@@ -22,13 +23,11 @@ class CommutativityLaw<A: Any>(
     override val name = "commutativity (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair, render = renderWith(pr)) { (a, b) ->
             val left  = op(a, b)
             val right = op(b, a)
 
-            withClue(failureMessage(a, b, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), failureMessage(a, b, left, right))
         }
     }
 

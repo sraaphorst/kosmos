@@ -4,8 +4,12 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.module.leftRModuleLaws
 import org.vorpal.kosmos.laws.suiteName
 
@@ -24,7 +28,7 @@ class VectorSpaceLaws<F : Any, V : Any>(
     eqV: Eq<V> = Eq.default(),
     prF: Printable<F> = Printable.default(),
     prV: Printable<V> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     private val fieldDescription =
         "F[${space.scalars.add.op.symbol}${space.scalars.mul.op.symbol}]"
@@ -39,6 +43,8 @@ class VectorSpaceLaws<F : Any, V : Any>(
         vectorDescription
     )
 
+    override val binding = LawBinding.of(this, space, scalarArb, vectorArb, eqF, eqV, prF, prV)
+
     private val fieldLaws: FieldLaws<F> by lazy {
         FieldLaws(space.scalars, scalarArb, eqF, prF)
     }
@@ -49,11 +55,11 @@ class VectorSpaceLaws<F : Any, V : Any>(
     private val structureLaws: List<TestingLaw> =
         leftRModuleLaws(space, scalarArb, vectorArb, eqV, prF, prV)
 
-    override fun laws(): List<TestingLaw> =
-        structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        when (mode) {
+            LawMode.COMPACT -> structureLaws.asNodes()
+            LawMode.FULL -> listOf(fieldLaws.node(LawMode.FULL), groupLaws.node(LawMode.FULL)) +
+                structureLaws.asNodes()
+        }
 
-    override fun fullLaws(): List<TestingLaw> =
-        fieldLaws.fullLaws() +
-            groupLaws.fullLaws() +
-            structureLaws
 }

@@ -4,8 +4,12 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.suiteName
 
 /**
@@ -23,7 +27,7 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
-) : LawSuite {
+) : StructuredLawSuite {
 
     private val scalarDescription =
         "R[${algebra.scalars.add.op.symbol}${algebra.scalars.mul.op.symbol}]"
@@ -37,6 +41,8 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
         algebra.leftAction.symbol,
         algebraDescription
     )
+
+    override val binding = LawBinding.of(this, algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
 
     private val scalarRingLaws: CommutativeRingLaws<R> by lazy {
         CommutativeRingLaws(algebra.scalars, scalarArb, eqR, prR)
@@ -98,15 +104,13 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
         ),
     )
 
-    override fun laws(): List<TestingLaw> =
-        ringLaws.laws() +
-            moduleLaws.laws() +
-            structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        when (mode) {
+            LawMode.COMPACT -> listOf(ringLaws.node(LawMode.COMPACT), moduleLaws.node(LawMode.COMPACT)) +
+                structureLaws.asNodes()
+            LawMode.FULL -> listOf(scalarRingLaws.node(LawMode.FULL), ringLaws.node(LawMode.FULL), moduleLaws.node(LawMode.FULL)) +
+                structureLaws.asNodes() +
+                derivedLaws.asNodes()
+        }
 
-    override fun fullLaws(): List<TestingLaw> =
-        scalarRingLaws.fullLaws() +
-            ringLaws.fullLaws() +
-            moduleLaws.fullLaws() +
-            structureLaws +
-            derivedLaws
 }

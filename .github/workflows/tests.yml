@@ -39,8 +39,8 @@ jobs:
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
 
-      - name: Run kosmos-testkit tests
-        run: ./gradlew :kosmos-testkit:test --stacktrace
+      - name: Run kosmos-laws and kosmos-testkit tests
+        run: ./gradlew :kosmos-laws:test :kosmos-testkit:test --stacktrace --continue
 
       - name: Upload test reports
         if: failure()
@@ -48,6 +48,8 @@ jobs:
         with:
           name: testkit-test-reports
           path: |
+            kosmos-laws/build/reports/tests/test/
+            kosmos-laws/build/test-results/test/
             kosmos-testkit/build/reports/tests/test/
             kosmos-testkit/build/test-results/test/
           retention-days: 14

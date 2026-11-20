@@ -1,15 +1,15 @@
 package org.vorpal.kosmos.laws.algebra
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 // ---------------------------------------------------------------------------------------------
 // Axioms (definition-level)
@@ -30,11 +30,11 @@ fun <R : Any, A : Any> leftScalarHomogeneityOfMulLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "algebra: (r ⊳ a) * b = r ⊳ (a * b)"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
+    lawCheckAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
         val left = mulA(act(r, a), b)
         val right = act(r, mulA(a, b))
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Left scalar homogeneity of multiplication failed:")
                 appendLine("r = ${prR(r)}")
@@ -43,8 +43,6 @@ fun <R : Any, A : Any> leftScalarHomogeneityOfMulLaw(
                 appendLine("LHS: (r ${act.symbol} a) ${mulA.symbol} b = ${prA(left)}")
                 appendLine("RHS: r ${act.symbol} (a ${mulA.symbol} b) = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
@@ -64,11 +62,11 @@ fun <R : Any, A : Any> rightScalarHomogeneityOfMulLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "algebra: a * (r ⊳ b) = r ⊳ (a * b)"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
+    lawCheckAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
         val left = mulA(a, act(r, b))
         val right = act(r, mulA(a, b))
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Right scalar homogeneity of multiplication failed:")
                 appendLine("r = ${prR(r)}")
@@ -77,8 +75,6 @@ fun <R : Any, A : Any> rightScalarHomogeneityOfMulLaw(
                 appendLine("LHS: a ${mulA.symbol} (r ${act.symbol} b) = ${prA(left)}")
                 appendLine("RHS: r ${act.symbol} (a ${mulA.symbol} b) = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
@@ -121,12 +117,12 @@ fun <R : Any, A : Any> scalarActsAsLeftMultiplicationLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * a = r ⊳ a"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.pair(arbR, arbA)) { (r, a) ->
+    lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(iota, a)
         val right = act(r, a)
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Scalar acts as left multiplication failed:")
                 appendLine("r = ${prR(r)}")
@@ -135,8 +131,6 @@ fun <R : Any, A : Any> scalarActsAsLeftMultiplicationLaw(
                 appendLine("LHS: ι(r) ${mulA.symbol} a = ${prA(left)}")
                 appendLine("RHS: r ${act.symbol} a = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
@@ -155,12 +149,12 @@ fun <R : Any, A : Any> scalarActsAsRightMultiplicationLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "derived: a * (r ⊳ 1) = r ⊳ a"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.pair(arbR, arbA)) { (r, a) ->
+    lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(a, iota)
         val right = act(r, a)
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Scalar acts as right multiplication failed:")
                 appendLine("r = ${prR(r)}")
@@ -169,8 +163,6 @@ fun <R : Any, A : Any> scalarActsAsRightMultiplicationLaw(
                 appendLine("LHS: a ${mulA.symbol} ι(r) = ${prA(left)}")
                 appendLine("RHS: r ${act.symbol} a = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
@@ -192,12 +184,12 @@ fun <R : Any, A : Any> scalarElementCommutesWithAllLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * a = a * (r ⊳ 1)"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.pair(arbR, arbA)) { (r, a) ->
+    lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(iota, a)
         val right = mulA(a, iota)
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Scalar element commuting failed:")
                 appendLine("r = ${prR(r)}")
@@ -206,8 +198,6 @@ fun <R : Any, A : Any> scalarElementCommutesWithAllLaw(
                 appendLine("LHS: ι(r) ${mulA.symbol} a = ${prA(left)}")
                 appendLine("RHS: a ${mulA.symbol} ι(r) = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }
@@ -226,7 +216,7 @@ fun <R : Any, A : Any> scalarEmbeddingMultiplicativeDerivedLaw(
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1"
 ): TestingLaw = TestingLaw.named(label) {
-    checkAll(Arb.pair(arbR, arbR)) { (r, s) ->
+    lawCheckAll(Arb.pair(arbR, arbR)) { (r, s) ->
         val iR = act(r, oneA)
         val iS = act(s, oneA)
         val left = mulA(iR, iS)
@@ -234,7 +224,7 @@ fun <R : Any, A : Any> scalarEmbeddingMultiplicativeDerivedLaw(
         val rs = mulR(r, s)
         val right = act(rs, oneA)
 
-        withClue(
+        lawCheck(eqA(left, right)) {
             buildString {
                 appendLine("Scalar embedding multiplicativity failed:")
                 appendLine("r = ${prR(r)}")
@@ -244,8 +234,6 @@ fun <R : Any, A : Any> scalarEmbeddingMultiplicativeDerivedLaw(
                 appendLine("LHS: ι(r) ${mulA.symbol} ι(s) = ${prA(left)}")
                 appendLine("RHS: ι(r ${mulR.symbol} s) = ${prA(right)}")
             }
-        ) {
-            check(eqA(left, right))
         }
     }
 }

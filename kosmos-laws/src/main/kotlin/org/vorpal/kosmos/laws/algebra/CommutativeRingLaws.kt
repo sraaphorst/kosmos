@@ -4,8 +4,12 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.IdentityLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -19,18 +23,17 @@ class CommutativeRingLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-): LawSuite {
+): StructuredLawSuite {
 
     override val name = suiteName("CommutativeRing", ring.add.op.symbol, ring.mul.op.symbol)
+
+    override val binding = LawBinding.of(this, ring, arb, eq, pr)
 
     private val commutativeRngLaws = CommutativeRngLaws(ring, arb, eq, pr)
 
     private val structureLaws: List<TestingLaw> =
         listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr))
 
-    override fun laws(): List<TestingLaw> =
-        commutativeRngLaws.laws() + structureLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        commutativeRngLaws.fullLaws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(commutativeRngLaws.node(mode)) + structureLaws.asNodes()
 }

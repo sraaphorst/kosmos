@@ -1,14 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filter
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+
 
 /**
  * Property: two endomorphisms commute on a given domain:
@@ -31,13 +31,11 @@ class EndomorphismCommutationLaw<A : Any>(
         "endomorphisms commute: $fSymbol ∘ $gSymbol = $gSymbol ∘ $fSymbol"
 
     private suspend fun endomorphismCommutationCheck() {
-        checkAll(arb.filter(inDomain)) { a ->
+        lawCheckAll(arb.filter(inDomain)) { a ->
             val fg = f(g(a))
             val gf = g(f(a))
 
-            withClue(endomorphismCommutationFailure(a, fg, gf)) {
-                check(eq(fg, gf))
-            }
+            lawCheck(eq(fg, gf), endomorphismCommutationFailure(a, fg, gf))
         }
     }
 

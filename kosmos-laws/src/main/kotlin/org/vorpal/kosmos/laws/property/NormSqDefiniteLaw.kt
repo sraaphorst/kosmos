@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Definiteness of a squared norm:
@@ -27,12 +28,12 @@ class NormSqDefiniteLaw<A : Any, N : Any>(
     override val name: String = "normSq definite: N(a)=0 ⇔ a=0"
 
     override suspend fun test() {
-        checkAll(arbA) { a ->
+        lawCheckAll(arbA, render = renderWith(prA)) { a ->
             val n = normSq(a)
             val isNormZero = eqN(n, zeroN)
             val isVecZero = eqA(a, zeroA)
 
-            withClue(
+            lawCheck(isNormZero == isVecZero) {
                 buildString {
                     appendLine("NormSq definiteness failed:")
                     appendLine("a          = ${prA(a)}")
@@ -40,8 +41,6 @@ class NormSqDefiniteLaw<A : Any, N : Any>(
                     appendLine("zeroA?     = $isVecZero")
                     appendLine("N(a)=zero? = $isNormZero")
                 }
-            ) {
-                check(isNormZero == isVecZero)
             }
         }
     }

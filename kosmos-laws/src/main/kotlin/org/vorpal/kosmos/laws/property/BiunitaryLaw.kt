@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Biunitary law:
@@ -26,13 +27,11 @@ class BiunitaryLaw<H : Any>(
         "[$left, $middle, $right]"
 
     private suspend fun biunitaryCheck() {
-        checkAll(pairArb) { (h, k) ->
+        lawCheckAll(pairArb, render = renderWith(pr)) { (h, k) ->
             val lhs = op(h, h, k)
             val rhs = op(k, h, h)
 
-            withClue(failureMessage(h, k, lhs, rhs)) {
-                check(eq(lhs, k) && eq(rhs, k))
-            }
+            lawCheck(eq(lhs, k) && eq(rhs, k), failureMessage(h, k, lhs, rhs))
         }
     }
 

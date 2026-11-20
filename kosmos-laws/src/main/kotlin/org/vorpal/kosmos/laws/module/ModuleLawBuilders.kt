@@ -1,8 +1,6 @@
 package org.vorpal.kosmos.laws.module
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.LeftRModule
 import org.vorpal.kosmos.algebra.structures.RightRModule
 import org.vorpal.kosmos.core.Eq
@@ -11,6 +9,9 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.RightAction
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Left module axiom:
@@ -30,11 +31,11 @@ fun <R : Any, M : Any> leftActionDistributesOverAdditionLaw(
     val pairM = TestingLaw.arbPair(arbM)
 
     return TestingLaw.named(label) {
-        checkAll(arbR, pairM) { r, (x, y) ->
+        lawCheckAll(arbR, pairM) { r, (x, y) ->
             val left = act(r, addM(x, y))
             val right = addM(act(r, x), act(r, y))
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sr = prR(r)
                     val sx = prM(x)
@@ -47,8 +48,6 @@ fun <R : Any, M : Any> leftActionDistributesOverAdditionLaw(
                     appendLine("LHS: r ${act.symbol} (x ${addM.symbol} y) = ${prM(left)}")
                     appendLine("RHS: (r ${act.symbol} x) ${addM.symbol} (r ${act.symbol} y) = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -73,11 +72,11 @@ fun <R : Any, M : Any> leftActionRespectsScalarAdditionLaw(
     val pairR = TestingLaw.arbPair(arbR)
 
     return TestingLaw.named(label) {
-        checkAll(pairR, arbM) { (r, s), x ->
+        lawCheckAll(pairR, arbM) { (r, s), x ->
             val left = act(addR(r, s), x)
             val right = addM(act(r, x), act(s, x))
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sr = prR(r)
                     val ss = prR(s)
@@ -90,8 +89,6 @@ fun <R : Any, M : Any> leftActionRespectsScalarAdditionLaw(
                     appendLine("LHS: (r ${addR.symbol} s) ${act.symbol} x = ${prM(left)}")
                     appendLine("RHS: (r ${act.symbol} x) ${addM.symbol} (s ${act.symbol} x) = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -115,11 +112,11 @@ fun <R : Any, M : Any> leftActionAssociatesWithScalarMultiplicationLaw(
     val pairR = TestingLaw.arbPair(arbR)
 
     return TestingLaw.named(label) {
-        checkAll(pairR, arbM) { (r, s), x ->
+        lawCheckAll(pairR, arbM) { (r, s), x ->
             val left = act(mulR(r, s), x)
             val right = act(r, act(s, x))
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sr = prR(r)
                     val ss = prR(s)
@@ -132,8 +129,6 @@ fun <R : Any, M : Any> leftActionAssociatesWithScalarMultiplicationLaw(
                     appendLine("LHS: (r ${mulR.symbol} s) ${act.symbol} x = ${prM(left)}")
                     appendLine("RHS: r ${act.symbol} (s ${act.symbol} x) = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -154,10 +149,10 @@ fun <R : Any, M : Any> leftUnitActsAsIdentityLaw(
     label: String = "module: scalar unit acts as identity"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(arbM) { x ->
+        lawCheckAll(arbM, render = renderWith(prM)) { x ->
             val left = act(oneR, x)
 
-            withClue(
+            lawCheck(eqM(left, x)) {
                 buildString {
                     val s1 = prR(oneR)
                     val sx = prM(x)
@@ -168,8 +163,6 @@ fun <R : Any, M : Any> leftUnitActsAsIdentityLaw(
                     appendLine("LHS: 1 ${act.symbol} x = ${prM(left)}")
                     appendLine("RHS: x = $sx")
                 }
-            ) {
-                check(eqM(left, x))
             }
         }
     }
@@ -192,11 +185,11 @@ fun <M : Any, R : Any> rightActionDistributesOverAdditionLaw(
     val pairM = TestingLaw.arbPair(arbM)
 
     return TestingLaw.named(label) {
-        checkAll(pairM, arbR) { (x, y), r ->
+        lawCheckAll(pairM, arbR) { (x, y), r ->
             val left = act(addM(x, y), r)
             val right = addM(act(x, r), act(y, r))
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sx = prM(x)
                     val sy = prM(y)
@@ -209,8 +202,6 @@ fun <M : Any, R : Any> rightActionDistributesOverAdditionLaw(
                     appendLine("LHS: (x ${addM.symbol} y) ${act.symbol} r = ${prM(left)}")
                     appendLine("RHS: (x ${act.symbol} r) ${addM.symbol} (y ${act.symbol} r) = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -235,11 +226,11 @@ fun <M : Any, R : Any> rightActionRespectsScalarAdditionLaw(
     val pairR = TestingLaw.arbPair(arbR)
 
     return TestingLaw.named(label) {
-        checkAll(arbM, pairR) { x, (r, s) ->
+        lawCheckAll(arbM, pairR) { x, (r, s) ->
             val left = act(x, addR(r, s))
             val right = addM(act(x, r), act(x, s))
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sx = prM(x)
                     val sr = prR(r)
@@ -252,8 +243,6 @@ fun <M : Any, R : Any> rightActionRespectsScalarAdditionLaw(
                     appendLine("LHS: x ${act.symbol} (r ${addR.symbol} s) = ${prM(left)}")
                     appendLine("RHS: (x ${act.symbol} r) ${addM.symbol} (x ${act.symbol} s) = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -277,11 +266,11 @@ fun <M : Any, R : Any> rightActionAssociatesWithScalarMultiplicationLaw(
     val pairR = TestingLaw.arbPair(arbR)
 
     return TestingLaw.named(label) {
-        checkAll(arbM, pairR) { x, (r, s) ->
+        lawCheckAll(arbM, pairR) { x, (r, s) ->
             val left = act(x, mulR(r, s))
             val right = act(act(x, r), s)
 
-            withClue(
+            lawCheck(eqM(left, right)) {
                 buildString {
                     val sx = prM(x)
                     val sr = prR(r)
@@ -294,8 +283,6 @@ fun <M : Any, R : Any> rightActionAssociatesWithScalarMultiplicationLaw(
                     appendLine("LHS: x ${act.symbol} (r ${mulR.symbol} s) = ${prM(left)}")
                     appendLine("RHS: (x ${act.symbol} r) ${act.symbol} s = ${prM(right)}")
                 }
-            ) {
-                check(eqM(left, right))
             }
         }
     }
@@ -316,10 +303,10 @@ fun <M : Any, R : Any> rightUnitActsAsIdentityLaw(
     label: String = "module: scalar unit acts as identity"
 ): TestingLaw =
     TestingLaw.named(label) {
-        checkAll(arbM) { x ->
+        lawCheckAll(arbM, render = renderWith(prM)) { x ->
             val left = act(x, oneR)
 
-            withClue(
+            lawCheck(eqM(left, x)) {
                 buildString {
                     val sx = prM(x)
                     val s1 = prR(oneR)
@@ -330,8 +317,6 @@ fun <M : Any, R : Any> rightUnitActsAsIdentityLaw(
                     appendLine("LHS: x ${act.symbol} 1 = ${prM(left)}")
                     appendLine("RHS: x = $sx")
                 }
-            ) {
-                check(eqM(left, x))
             }
         }
     }
@@ -352,10 +337,10 @@ fun <R : Any, M : Any, S : Any> bimoduleCompatibilityLaw(
     prM: Printable<M> = Printable.default(),
     prS: Printable<S> = Printable.default()
 ): TestingLaw = TestingLaw.named("bimodule compatibility: (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)") {
-    checkAll(arbR, arbM, arbS) { r, m, s ->
+    lawCheckAll(arbR, arbM, arbS) { r, m, s ->
         val left = rightAct(leftAct(r, m), s)
         val right = leftAct(r, rightAct(m, s))
-        check(eqM(left, right)) {
+        lawCheck(eqM(left, right)) {
             "Compatibility failed:\n" +
                 "(r ⊳ m) ⊲ s = ${prM(left)}\n" +
                 "r ⊳ (m ⊲ s) = ${prM(right)}\n" +

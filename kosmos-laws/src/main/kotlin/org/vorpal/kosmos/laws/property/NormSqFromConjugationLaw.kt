@@ -1,14 +1,15 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Compatibility of squared norm with conjugation:
@@ -32,11 +33,11 @@ class NormSqFromConjugationLaw<A : Any, N : Any>(
     override val name: String = "normSq from conjugation: embed(N(a)) = a*conj(a)"
 
     override suspend fun test() {
-        checkAll(arbA) { a ->
+        lawCheckAll(arbA, render = renderWith(prA)) { a ->
             val left = embed(normSq(a))
             val right = mulA(a, conj(a))
 
-            withClue(
+            lawCheck(eqA(left, right)) {
                 buildString {
                     appendLine("NormSq/conjugation compatibility failed:")
                     appendLine("a           = ${prA(a)}")
@@ -44,8 +45,6 @@ class NormSqFromConjugationLaw<A : Any, N : Any>(
                     appendLine("embed(N(a)) = ${prA(left)}")
                     appendLine("a*conj(a)   = ${prA(right)}")
                 }
-            ) {
-                check(eqA(left, right))
             }
         }
     }

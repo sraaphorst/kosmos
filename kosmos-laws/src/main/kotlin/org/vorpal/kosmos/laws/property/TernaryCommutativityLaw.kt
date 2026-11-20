@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 class TernaryCommutativityLaw<H : Any>(
     val op: TernOp<H>,
@@ -20,13 +21,11 @@ class TernaryCommutativityLaw<H : Any>(
         "[$left, $middle, $right]"
 
     private suspend fun ternaryCommutativityCheck() {
-        checkAll(arbTriple) { (x, y, z) ->
+        lawCheckAll(arbTriple, render = renderWith(pr)) { (x, y, z) ->
             val lhs = op(x, y, z)
             val rhs = op(z, y, x)
 
-            withClue(failureMessage(x, y, z, lhs, rhs)) {
-                check(eq(lhs, rhs))
-            }
+            lawCheck(eq(lhs, rhs), failureMessage(x, y, z, lhs, rhs))
         }
     }
 

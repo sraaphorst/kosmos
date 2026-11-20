@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface AbsorptionCore<A : Any> {
     val absorb: BinOp<A>
@@ -23,12 +24,10 @@ private sealed interface AbsorptionCore<A : Any> {
      * `a ∧ (a ∨ b) = a``
      */
     suspend fun absorbOverCheck() {
-        checkAll(TestingLaw.arbPair(arb)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (a, b) ->
             val aOverB = over(a, b)
             val left   = absorb(a, aOverB)
-            withClue(absorbOverFailure(a, b, aOverB, left)) {
-                check(eq(left, a))
-            }
+            lawCheck(eq(left, a), absorbOverFailure(a, b, aOverB, left))
         }
     }
 
@@ -54,12 +53,10 @@ private sealed interface AbsorptionCore<A : Any> {
      * `a ∨ (a ∧ b) = a`
      */
     suspend fun overAbsorbCheck() {
-        checkAll(TestingLaw.arbPair(arb)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb), render = renderWith(pr)) { (a, b) ->
             val aAbsorbB = absorb(a, b)
             val left     = over(a, aAbsorbB)
-            withClue(overAbsorbFailure(a, b, aAbsorbB, left)) {
-                check(eq(left, a))
-            }
+            lawCheck(eq(left, a), overAbsorbFailure(a, b, aAbsorbB, left))
         }
     }
 

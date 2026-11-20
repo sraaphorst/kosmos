@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface DistributivityCore<A : Any> {
     val mul: BinOp<A>
@@ -20,7 +21,7 @@ private sealed interface DistributivityCore<A : Any> {
     private fun addExpr(left: String, right: String) = "$left ${add.symbol} $right"
 
     suspend fun leftDistributivityCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val bcAdd = add(b, c)
             val left = mul(a, bcAdd)
 
@@ -28,9 +29,7 @@ private sealed interface DistributivityCore<A : Any> {
             val acMul = mul(a, c)
             val right = add(abMul, acMul)
 
-            withClue(leftDistributivityFailure(a, b, c, bcAdd, abMul, acMul, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), leftDistributivityFailure(a, b, c, bcAdd, abMul, acMul, left, right))
         }
     }
 
@@ -70,16 +69,14 @@ private sealed interface DistributivityCore<A : Any> {
     }
 
     suspend fun rightDistributivityCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val abAdd = add(a, b)
             val left = mul(abAdd, c)
 
             val acMul = mul(a, c)
             val bcMul = mul(b, c)
             val right = add(acMul, bcMul)
-            withClue(rightFailureMessage(a, b, c, abAdd, acMul, bcMul, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), rightFailureMessage(a, b, c, abAdd, acMul, bcMul, left, right))
         }
     }
 

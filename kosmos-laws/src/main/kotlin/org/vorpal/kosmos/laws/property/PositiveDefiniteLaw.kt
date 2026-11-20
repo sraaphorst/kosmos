@@ -1,8 +1,6 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
@@ -10,6 +8,8 @@ import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Positive-definiteness of a quadratic form induced by an inner product.
@@ -51,12 +51,10 @@ class PositiveDefiniteLaw<F : Any, V : Any>(
     override val name: String = "positive-definiteness ($SYMBOL)"
 
     private suspend fun nonNegativeCheck() {
-        checkAll(vectorArb) { x ->
+        lawCheckAll(vectorArb) { x ->
             val value = inner(x)
 
-            withClue(nonNegativeFailure(x, value)) {
-                check(isNonNegative(value))
-            }
+            lawCheck(isNonNegative(value), nonNegativeFailure(x, value))
         }
     }
 
@@ -73,15 +71,13 @@ class PositiveDefiniteLaw<F : Any, V : Any>(
     }
 
     private suspend fun nonDegeneracyCheck() {
-        checkAll(vectorArb) { x ->
+        lawCheckAll(vectorArb) { x ->
             val value = inner(x)
 
             val isScalarZero = scalarEq(value, scalarZero)
             val isVectorZero = vectorEq(x, zeroVector)
 
-            withClue(nonDegeneracyFailure(x, value, isScalarZero, isVectorZero)) {
-                check(isScalarZero == isVectorZero)
-            }
+            lawCheck(isScalarZero == isVectorZero, nonDegeneracyFailure(x, value, isScalarZero, isVectorZero))
         }
     }
 

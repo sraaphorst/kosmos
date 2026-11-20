@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Multiplicativity of squared norm:
@@ -27,12 +27,12 @@ class NormSqMultiplicativeLaw<A : Any, N : Any>(
     override val name: String = "normSq multiplicative: N(xy)=N(x)N(y)"
 
     override suspend fun test() {
-        checkAll(arbA, arbA) { x, y ->
+        lawCheckAll(arbA, arbA) { x, y ->
             val xy = mulA(x, y)
             val left = normSq(xy)
             val right = mulN(normSq(x), normSq(y))
 
-            withClue(
+            lawCheck(eqN(left, right)) {
                 buildString {
                     appendLine("NormSq multiplicativity failed:")
                     appendLine("x        = ${prA(x)}")
@@ -41,8 +41,6 @@ class NormSqMultiplicativeLaw<A : Any, N : Any>(
                     appendLine("N(x*y)   = ${prN(left)}")
                     appendLine("N(x)N(y) = ${prN(right)}")
                 }
-            ) {
-                check(eqN(left, right))
             }
         }
     }

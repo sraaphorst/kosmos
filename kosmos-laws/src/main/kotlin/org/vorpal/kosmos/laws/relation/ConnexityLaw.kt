@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.laws.relation
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.filterNot
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /** Connexity (Totality): a ≠ b ⇒ (a R b) ∨ (b R a) */
 class ConnexityLaw<A : Any>(
@@ -22,13 +22,11 @@ class ConnexityLaw<A : Any>(
     override val name: String = "connexity ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbPair(arb).filterNot { (a, b) -> eq(a, b) }) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb).filterNot { (a, b) -> eq(a, b) }) { (a, b) ->
             val ab = rel(a, b)
             val ba = rel(b, a)
 
-            withClue(failureMessage(a, b, ab, ba)) {
-                check(ab || ba)
-            }
+            lawCheck(ab || ba, failureMessage(a, b, ab, ba))
         }
     }
 

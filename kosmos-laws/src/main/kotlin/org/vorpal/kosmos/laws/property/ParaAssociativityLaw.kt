@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Para-associativity law:
@@ -26,7 +27,7 @@ class ParaAssociativityLaw<H : Any>(
         "[$left, $middle, $right]"
 
     private suspend fun paraAssociativityCheck() {
-        checkAll(quintupleArb) { (a, b, c, d, e) ->
+        lawCheckAll(quintupleArb, render = renderWith(pr)) { (a, b, c, d, e) ->
             val abc = op(a, b, c)
             val lhs = op(abc, d, e)
 
@@ -36,12 +37,8 @@ class ParaAssociativityLaw<H : Any>(
             val cde = op(c, d, e)
             val rhs = op(a, b, cde)
 
-            withClue(failureMessage1(a, b, c, d, e, abc, lhs, dcb, mid)) {
-                check(eq(lhs, mid))
-            }
-            withClue(failureMessage2(a, b, c, d, e, dcb, mid, cde, rhs)) {
-                check(eq(mid, rhs))
-            }
+            lawCheck(eq(lhs, mid), failureMessage1(a, b, c, d, e, abc, lhs, dcb, mid))
+            lawCheck(eq(mid, rhs), failureMessage2(a, b, c, d, e, dcb, mid, cde, rhs))
         }
     }
 

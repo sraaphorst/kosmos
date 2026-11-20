@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 /**
  * The Jordan identity:
@@ -27,14 +28,12 @@ class JordanIdentityLaw<A : Any>(
     override val name: String = "jordan identity (${op.symbol})"
 
     suspend fun jordanIdentityCheck() {
-        checkAll(arbPair) { (x, y) ->
+        lawCheckAll(arbPair, render = renderWith(pr)) { (x, y) ->
             val x2 = op(x, x)
             val left = op(x, op(y, x2))
             val right = op(op(x, y), x2)
 
-            withClue(jordanIdentityFail(x, y, x2, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), jordanIdentityFail(x, y, x2, left, right))
         }
     }
 

@@ -1,11 +1,11 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * This is not currently in use, but will pair with structures like:
@@ -26,13 +26,11 @@ class SymmetryLaw<A : Any, B : Any>(
     override val name: String = "symmetry ($symbol)"
 
     override suspend fun test() {
-        checkAll(TestingLaw.arbPair(arb)) { (x, y) ->
+        lawCheckAll(TestingLaw.arbPair(arb)) { (x, y) ->
             val left = op(x, y)
             val right = op(y, x)
 
-            withClue(failureMessage(x, y, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), failureMessage(x, y, left, right))
         }
     }
 

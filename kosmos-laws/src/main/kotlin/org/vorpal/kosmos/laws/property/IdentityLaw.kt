@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface IdentityCore<A : Any> {
     val op: BinOp<A>
@@ -22,11 +23,9 @@ private sealed interface IdentityCore<A : Any> {
      * `ea = a`
      */
     suspend fun leftIdentityCheck() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val value = op(identity, a)
-            withClue(leftIdentityFail(a, value)) {
-                check(eq(a, value))
-            }
+            lawCheck(eq(a, value), leftIdentityFail(a, value))
         }
     }
 
@@ -50,11 +49,9 @@ private sealed interface IdentityCore<A : Any> {
      * `ae = a`
      */
     suspend fun rightIdentityCheck() {
-        checkAll(arb) { a ->
+        lawCheckAll(arb, render = renderWith(pr)) { a ->
             val value = op(a, identity)
-            withClue(rightIdentityFail(a, value)) {
-                check(eq(a, value))
-            }
+            lawCheck(eq(a, value), rightIdentityFail(a, value))
         }
     }
 

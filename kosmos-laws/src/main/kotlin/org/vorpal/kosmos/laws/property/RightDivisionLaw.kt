@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Right division laws for a quasigroup:
@@ -33,21 +34,17 @@ class RightDivisionLaw<A : Any>(
         "right-division (${op.symbol}, ${rightDiv.symbol})"
 
     override suspend fun test() {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair, render = renderWith(pr)) { (a, b) ->
             // y = (a ? b) such that y ⋆ a = b  (per your stated contract)
             val y = rightDiv(a, b)
             val ya = op(y, a)
 
-            withClue(solvesEquationFailure(a, b, y, ya)) {
-                check(eq(ya, b))
-            }
+            lawCheck(eq(ya, b), solvesEquationFailure(a, b, y, ya))
 
             val ba = op(b, a)
             val back = rightDiv(a, ba)
 
-            withClue(undoesRightMulFailure(a, b, ba, back)) {
-                check(eq(back, b))
-            }
+            lawCheck(eq(back, b), undoesRightMulFailure(a, b, ba, back))
         }
     }
 

@@ -4,8 +4,12 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.algebra.structures.RSBiModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.module.bimoduleCompatibilityLaw
 import org.vorpal.kosmos.laws.module.leftRModuleLaws
 import org.vorpal.kosmos.laws.module.rightRModuleLaws
@@ -40,7 +44,7 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
     prR: Printable<R> = Printable.default(),
     prM: Printable<M> = Printable.default(),
     prS: Printable<S> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
     private val leftScalarDescription = "R[${module.leftScalars.add.op.symbol}${module.leftScalars.mul.op.symbol}]"
     private val moduleDescription = "M[${module.add.op.symbol}]"
     private val rightScalarDescription = "S[${module.rightScalars.add.op.symbol}${module.rightScalars.mul.op.symbol}]"
@@ -51,6 +55,8 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
         module.rightAction.symbol,
         rightScalarDescription
     )
+
+    override val binding = LawBinding.of(this, module, leftScalarArb, vectorArb, rightScalarArb, eqR, eqM, eqS, prR, prM, prS)
 
     // We redefine these here since doing full law testing using LeftRModuleLaws and RightRModuleLaws would test
     // the group twice, which is undesirable.
@@ -81,13 +87,11 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
                 )
             )
 
+    override fun children(mode: LawMode): List<LawNode> =
+        when (mode) {
+            LawMode.COMPACT -> structureLaws.asNodes()
+            LawMode.FULL -> listOf(leftRingLaws.node(LawMode.FULL), rightRingLaws.node(LawMode.FULL), groupLaws.node(LawMode.FULL)) +
+                structureLaws.asNodes()
+        }
 
-    override fun laws(): List<TestingLaw> =
-        structureLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        leftRingLaws.fullLaws() +
-            rightRingLaws.fullLaws() +
-            groupLaws.fullLaws() +
-            structureLaws
 }

@@ -8,8 +8,12 @@ import org.vorpal.kosmos.algebra.structures.Lattice
 import org.vorpal.kosmos.algebra.structures.MeetSemilattice
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.AbsorbOverLaw
 import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.property.AssociativityLaw
@@ -25,9 +29,11 @@ class JoinSemilatticeLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName("JoinSemilattice", semilattice.join.symbol)
+
+    override val binding = LawBinding.of(this, semilattice, arb, eq, pr)
 
     private val laws: List<TestingLaw> = listOf(
         AssociativityLaw(semilattice.join, arb, eq, pr),
@@ -35,8 +41,7 @@ class JoinSemilatticeLaws<A : Any>(
         IdempotencyLaw(semilattice.join, arb, eq, pr)
     )
 
-    override fun laws(): List<TestingLaw> = laws
-    override fun fullLaws(): List<TestingLaw> = laws
+    override fun children(mode: LawMode): List<LawNode> = laws.asNodes()
 }
 
 class MeetSemilatticeLaws<A : Any>(
@@ -44,9 +49,11 @@ class MeetSemilatticeLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName("MeetSemilattice", semilattice.meet.symbol)
+
+    override val binding = LawBinding.of(this, semilattice, arb, eq, pr)
 
     private val laws: List<TestingLaw> = listOf(
         AssociativityLaw(semilattice.meet, arb, eq, pr),
@@ -54,8 +61,7 @@ class MeetSemilatticeLaws<A : Any>(
         IdempotencyLaw(semilattice.meet, arb, eq, pr)
     )
 
-    override fun laws(): List<TestingLaw> = laws
-    override fun fullLaws(): List<TestingLaw> = laws
+    override fun children(mode: LawMode): List<LawNode> = laws.asNodes()
 }
 
 class LatticeLaws<A : Any>(
@@ -63,13 +69,15 @@ class LatticeLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "Lattice",
         lattice.join.symbol,
         lattice.meet.symbol
     )
+
+    override val binding = LawBinding.of(this, lattice, arb, eq, pr)
 
     private val joinLaws = JoinSemilatticeLaws(lattice, arb, eq, pr)
     private val meetLaws = MeetSemilatticeLaws(lattice, arb, eq, pr)
@@ -79,15 +87,9 @@ class LatticeLaws<A : Any>(
         OverAbsorbLaw(absorb = lattice.meet, over = lattice.join, arb = arb, eq = eq, pr = pr)
     )
 
-    override fun laws(): List<TestingLaw> =
-        joinLaws.laws() +
-            meetLaws.laws() +
-            structureLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        joinLaws.fullLaws() +
-            meetLaws.fullLaws() +
-            structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(joinLaws.node(mode), meetLaws.node(mode)) +
+            structureLaws.asNodes()
 }
 
 class BoundedLatticeLaws<A : Any>(
@@ -95,7 +97,7 @@ class BoundedLatticeLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "BoundedLattice",
@@ -104,6 +106,8 @@ class BoundedLatticeLaws<A : Any>(
         "⊥",
         "⊤"
     )
+
+    override val binding = LawBinding.of(this, lattice, arb, eq, pr)
 
     private val latticeLaws = LatticeLaws(lattice, arb, eq, pr)
 
@@ -119,11 +123,8 @@ class BoundedLatticeLaws<A : Any>(
         AnnihilationLaw(lattice.join, lattice.top, arb, eq, pr)
     )
 
-    override fun laws(): List<TestingLaw> =
-        latticeLaws.laws() + boundsLaws
-
-    override fun fullLaws(): List<TestingLaw> =
-        latticeLaws.fullLaws() + boundsLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(latticeLaws.node(mode)) + boundsLaws.asNodes()
 }
 
 class DistributiveLatticeLaws<A : Any>(
@@ -131,13 +132,15 @@ class DistributiveLatticeLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "DistributiveLattice",
         lattice.join.symbol,
         lattice.meet.symbol
     )
+
+    override val binding = LawBinding.of(this, lattice, arb, eq, pr)
 
     private val bounded = BoundedLatticeLaws(lattice, arb, eq, pr)
 
@@ -160,9 +163,6 @@ class DistributiveLatticeLaws<A : Any>(
         )
     )
 
-    override fun laws(): List<TestingLaw> =
-        bounded.laws() + distributivity
-
-    override fun fullLaws(): List<TestingLaw> =
-        bounded.fullLaws() + distributivity
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(bounded.node(mode)) + distributivity.asNodes()
 }

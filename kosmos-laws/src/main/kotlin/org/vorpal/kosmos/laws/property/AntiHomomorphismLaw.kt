@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 
 /**
@@ -32,15 +33,13 @@ class AntiHomomorphismLaw<A : Any, B : Any>(
     private fun exprB(left: String, right: String) = "$left ${opB.symbol} $right"
 
     private suspend fun antiHomomorphismCheck() {
-        checkAll(TestingLaw.arbPair(arbA)) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arbA), render = renderWith(prA)) { (a, b) ->
             val ab = opA(a, b)
             val fab = f(ab)
             val fa = f(a)
             val fb = f(b)
             val fbfa = opB(fb, fa)
-            withClue(antiHomomorphismFail(a, b, ab, fab, fa, fb, fbfa)) {
-                check(eqB(fab, fbfa))
-            }
+            lawCheck(eqB(fab, fbfa), antiHomomorphismFail(a, b, ab, fab, fa, fb, fbfa))
         }
     }
 

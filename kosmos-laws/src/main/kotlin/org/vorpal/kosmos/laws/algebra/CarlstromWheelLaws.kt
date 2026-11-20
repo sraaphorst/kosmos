@@ -1,15 +1,20 @@
 package org.vorpal.kosmos.laws.algebra
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.triple
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.CarlstromWheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.StructuredLawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 import org.vorpal.kosmos.laws.property.AnnihilationLaw
 import org.vorpal.kosmos.laws.suiteName
 
@@ -51,11 +56,13 @@ class CarlstromWheelLaws<A : Any>(
     val arb: Arb<A>,
     val eq: Eq<A> = Eq.default(),
     val pr: Printable<A> = Printable.default()
-): LawSuite {
+) : StructuredLawSuite {
 
     override val name = suiteName(
         "CarlstromWheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
     )
+
+    override val binding = LawBinding.of(this, wheel, arb, eq, pr)
 
     private val bottom = pr(wheel.bottom).ifEmpty { Symbols.BOTTOM }
     private val infinity = pr(wheel.inf).ifEmpty { Symbols.INFINITY }
@@ -74,24 +81,16 @@ class CarlstromWheelLaws<A : Any>(
 
         override suspend fun test() {
             val result1 = wheel.inv(wheel.bottom)
-            withClue("inv($bottom) should be $bottom, got: ${pr(result1)}") {
-                check(eq(result1, wheel.bottom))
-            }
+            lawCheck(eq(result1, wheel.bottom), "inv($bottom) should be $bottom, got: ${pr(result1)}")
 
             val result2 = wheel.inv(wheel.zero)
-            withClue("inv($zero) should be $infinity, got: ${pr(result2)}") {
-                check(eq(result2, wheel.inf))
-            }
+            lawCheck(eq(result2, wheel.inf), "inv($zero) should be $infinity, got: ${pr(result2)}")
 
             val result3 = wheel.inv(wheel.inf)
-            withClue("inv($infinity) should be $zero, got: ${pr(result3)}") {
-                check(eq(result3, wheel.zero))
-            }
+            lawCheck(eq(result3, wheel.zero), "inv($infinity) should be $zero, got: ${pr(result3)}")
 
             val result4 = wheel.inv(wheel.one)
-            withClue("inv($one) should be $one, got: ${pr(result4)}") {
-                check(eq(result4, wheel.one))
-            }
+            lawCheck(eq(result4, wheel.one), "inv($one) should be $one, got: ${pr(result4)}")
         }
     }
 
@@ -102,24 +101,16 @@ class CarlstromWheelLaws<A : Any>(
 
         override suspend fun test() {
             val result1 = wheel.add(wheel.inf, wheel.inf)
-            withClue("$infinity $addSym $infinity should be $bottom, got: ${pr(result1)}") {
-                check(eq(result1, wheel.bottom))
-            }
+            lawCheck(eq(result1, wheel.bottom), "$infinity $addSym $infinity should be $bottom, got: ${pr(result1)}")
 
             val result2 = wheel.mul(wheel.inf, wheel.inv(wheel.inf))
-            withClue("$infinity $mulSym inv($infinity) should be $bottom, got: ${pr(result2)}") {
-                check(eq(result2, wheel.bottom))
-            }
+            lawCheck(eq(result2, wheel.bottom), "$infinity $mulSym inv($infinity) should be $bottom, got: ${pr(result2)}")
 
             val result3 = wheel.mul(wheel.zero, wheel.inf)
-            withClue("$zero $mulSym $infinity should be $bottom, got: ${pr(result3)}") {
-                check(eq(result3, wheel.bottom))
-            }
+            lawCheck(eq(result3, wheel.bottom), "$zero $mulSym $infinity should be $bottom, got: ${pr(result3)}")
 
             val result4 = wheel.mul(wheel.inf, wheel.inf)
-            withClue("$infinity $mulSym $infinity should be $infinity, got: ${pr(result4)}") {
-                check(eq(result4, wheel.inf))
-            }
+            lawCheck(eq(result4, wheel.inf), "$infinity $mulSym $infinity should be $infinity, got: ${pr(result4)}")
         }
     }
 
@@ -131,7 +122,7 @@ class CarlstromWheelLaws<A : Any>(
 
         override suspend fun test() {
             val tripleArb = Arb.triple(arb, arb, arb)
-            checkAll(tripleArb) { (x, y, z) ->
+            lawCheckAll(tripleArb, render = renderWith(pr)) { (x, y, z) ->
                 val lhs = wheel.add(
                     wheel.mul(x, wheel.add(y, z)),
                     wheel.mul(wheel.zero, x)
@@ -140,11 +131,7 @@ class CarlstromWheelLaws<A : Any>(
                     wheel.mul(x, y),
                     wheel.mul(x, z)
                 )
-                withClue(
-                    "Left weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}"
-                ) {
-                    check(eq(lhs, rhs))
-                }
+                lawCheck(eq(lhs, rhs), "Left weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}")
             }
         }
     }
@@ -157,7 +144,7 @@ class CarlstromWheelLaws<A : Any>(
 
         override suspend fun test() {
             val tripleArb = Arb.triple(arb, arb, arb)
-            checkAll(tripleArb) { (x, y, z) ->
+            lawCheckAll(tripleArb, render = renderWith(pr)) { (x, y, z) ->
                 val lhs = wheel.add(
                     wheel.mul(x, wheel.add(y, z)),
                     wheel.mul(x, wheel.zero)
@@ -166,11 +153,7 @@ class CarlstromWheelLaws<A : Any>(
                     wheel.mul(x, y),
                     wheel.mul(x, z)
                 )
-                withClue(
-                    "Right weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}"
-                ) {
-                    check(eq(lhs, rhs))
-                }
+                lawCheck(eq(lhs, rhs), "Right weak distributivity failed for x=${pr(x)}, y=${pr(y)}, z=${pr(z)}, lhs: ${pr(lhs)}, rhs: ${pr(rhs)}")
             }
         }
     }
@@ -184,9 +167,8 @@ class CarlstromWheelLaws<A : Any>(
         rightWeakDistributivityLaw
     )
 
-    override fun laws(): List<TestingLaw> =
-        wheelLaws.laws() + structureLaws
+    override fun children(mode: LawMode): List<LawNode> =
+        listOf(wheelLaws.node(mode)) +
+            structureLaws.asNodes()
 
-    override fun fullLaws(): List<TestingLaw> =
-        wheelLaws.fullLaws() + structureLaws
 }

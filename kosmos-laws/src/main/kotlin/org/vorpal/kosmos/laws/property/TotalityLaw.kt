@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import kotlinx.coroutines.CancellationException
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawViolation
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /**
  * Totality / definedness law: `op(a, b)` should not throw for generated inputs.
@@ -25,15 +26,14 @@ class TotalityLaw<A : Any>(
     override val name: String = "totality (${op.symbol})"
 
     override suspend fun test() {
-        checkAll(arbPair) { (a, b) ->
+        lawCheckAll(arbPair, render = renderWith(pr)) { (a, b) ->
             try {
                 op(a, b)
             } catch (t: CancellationException) {
                 throw t
             } catch (t: Throwable) {
-                withClue(failureMessage(a, b, t)) {
-                    throw AssertionError("Totality failed.", t)
-                }
+                // The operation throwing is exactly what makes this law false.
+                throw LawViolation(failureMessage(a, b, t)(), t)
             }
         }
     }

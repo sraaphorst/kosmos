@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 private sealed interface BolIdentityCore<A : Any> {
     val op: BinOp<A>
@@ -19,7 +20,7 @@ private sealed interface BolIdentityCore<A : Any> {
 
     // a(b(ac)) = (a(ba))c
     suspend fun leftBolIdentityCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val ac = op(a, c)
             val bAc = op(b, ac)
             val left = op(a, bAc)
@@ -28,9 +29,7 @@ private sealed interface BolIdentityCore<A : Any> {
             val aBA = op(a, ba)
             val right = op(aBA, c)
 
-            withClue(leftBolIdentityFailure(a, b, c, ac, bAc, left, ba, aBA, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), leftBolIdentityFailure(a, b, c, ac, bAc, left, ba, aBA, right))
         }
     }
 
@@ -74,7 +73,7 @@ private sealed interface BolIdentityCore<A : Any> {
 
     // ((ca)b)a = c((ab)a)
     suspend fun rightBolIdentityCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val ca = op(c, a)
             val caB = op(ca, b)
             val left = op(caB, a)
@@ -83,9 +82,7 @@ private sealed interface BolIdentityCore<A : Any> {
             val abA = op(ab, a)
             val right = op(c, abA)
 
-            withClue(rightBolIdentityFailure(a, b, c, ca, caB, left, ab, abA, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), rightBolIdentityFailure(a, b, c, ca, caB, left, ab, abA, right))
         }
     }
 

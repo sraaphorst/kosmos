@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
 
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
 
 /**
  * Associativity Law
@@ -27,16 +27,14 @@ class AssociativityLaw<A : Any>(
     private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
 
     private suspend fun associativityCheck() {
-        checkAll(tripleArb) { (a, b, c) ->
+        lawCheckAll(tripleArb, render = { (a, b, c) -> "a = ${pr(a)}, b = ${pr(b)}, c = ${pr(c)}" }) { (a, b, c) ->
             val bc = op(b, c)
             val left  = op(a, bc)
 
             val ab = op(a, b)
             val right = op(ab, c)
 
-            withClue(failureMessage(a, b, c, ab, bc, left, right)) {
-                check(eq(left, right))
-            }
+            lawCheck(eq(left, right), failureMessage(a, b, c, ab, bc, left, right))
         }
     }
 

@@ -1,13 +1,14 @@
 package org.vorpal.kosmos.laws.property
 
-import io.kotest.assertions.withClue
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
-
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
+
 
 private sealed interface CancellativityCore<A : Any> {
     val op: BinOp<A>
@@ -18,13 +19,11 @@ private sealed interface CancellativityCore<A : Any> {
     private fun expr(left: String, right: String) = "$left ${op.symbol} $right"
 
     suspend fun rightCancelCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val ac = op(a, c)
             val bc = op(b, c)
             if (eq(ac, bc)) {
-                withClue(rightCancelFailure(a, b, c, ac, bc)) {
-                    check(eq(a, b))
-                }
+                lawCheck(eq(a, b), rightCancelFailure(a, b, c, ac, bc))
             }
         }
     }
@@ -55,13 +54,11 @@ private sealed interface CancellativityCore<A : Any> {
     }
 
     suspend fun leftCancelCheck() {
-        checkAll(TestingLaw.arbTriple(arb)) { (a, b, c) ->
+        lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
             val ca = op(c, a)
             val cb = op(c, b)
             if (eq(ca, cb)) {
-                withClue(leftCancelFailure(a, b, c, ca, cb)) {
-                    check(eq(a, b))
-                }
+                lawCheck(eq(a, b), leftCancelFailure(a, b, c, ca, cb))
             }
         }
     }
