@@ -15,6 +15,7 @@ import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for the Gravesian octonions `CD⟨ℤ⟨i, j, k⟩⟩ ≅ ℤ⁸`.
@@ -31,12 +32,12 @@ class GravesianOctonionSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "Gravesian octonion multiplication is exactly alternative and Moufang" {
-        AlternativityLaw(ring.mul.op, arb, eq, pr).test()
-        MoufangLaw(ring.mul.op, arb, eq, pr).test()
+        AlternativityLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
+        MoufangLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "normSq is multiplicative in ℤ: N(xy) = N(x)N(y)" {
@@ -60,7 +61,7 @@ class GravesianOctonionSpec : StringSpec({
             eqM = eq,
             prR = IntegerAlgebras.printableInteger,
             prM = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the Cayley-Dickson basis is the standard ℤ-basis of ℤ⁸ and its imaginary units square to -1" {
@@ -111,7 +112,7 @@ class GravesianOctonionSpec : StringSpec({
             eqB = eq,
             prA = LipschitzQuaternionAlgebras.printableLipschitzQuaternion,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,
@@ -133,7 +134,7 @@ class GravesianOctonionSpec : StringSpec({
             eqB = RationalOctonionAlgebras.eqRationalOctonion,
             prA = pr,
             prB = RationalOctonionAlgebras.printableRationalOctonion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,

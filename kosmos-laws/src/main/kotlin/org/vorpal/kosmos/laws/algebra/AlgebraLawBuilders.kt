@@ -7,6 +7,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -29,7 +30,7 @@ fun <R : Any, A : Any> leftScalarHomogeneityOfMulLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "algebra: (r ⊳ a) * b = r ⊳ (a * b)"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("leftScalarHomogeneityOfMulLaw", act, mulA, arbR, arbA, eqA)) {
     lawCheckAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
         val left = mulA(act(r, a), b)
         val right = act(r, mulA(a, b))
@@ -61,7 +62,7 @@ fun <R : Any, A : Any> rightScalarHomogeneityOfMulLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "algebra: a * (r ⊳ b) = r ⊳ (a * b)"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("rightScalarHomogeneityOfMulLaw", act, mulA, arbR, arbA, eqA)) {
     lawCheckAll(Arb.triple(arbR, arbA, arbA)) { (r, a, b) ->
         val left = mulA(a, act(r, b))
         val right = act(r, mulA(a, b))
@@ -98,7 +99,6 @@ fun <R : Any, A : Any> algebraMulBilinearityLaws(
     rightScalarHomogeneityOfMulLaw(act, mulA, arbR, arbA, eqA, prR, prA),
 )
 
-
 // ---------------------------------------------------------------------------------------------
 // Derived / diagnostic (unital; redundant but useful for debugging)
 // ---------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ fun <R : Any, A : Any> scalarActsAsLeftMultiplicationLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * a = r ⊳ a"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("scalarActsAsLeftMultiplicationLaw", act, mulA, oneA, arbR, arbA, eqA)) {
     lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(iota, a)
@@ -148,7 +148,7 @@ fun <R : Any, A : Any> scalarActsAsRightMultiplicationLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "derived: a * (r ⊳ 1) = r ⊳ a"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("scalarActsAsRightMultiplicationLaw", act, mulA, oneA, arbR, arbA, eqA)) {
     lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(a, iota)
@@ -183,7 +183,7 @@ fun <R : Any, A : Any> scalarElementCommutesWithAllLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * a = a * (r ⊳ 1)"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("scalarElementCommutesWithAllLaw", act, mulA, oneA, arbR, arbA, eqA)) {
     lawCheckAll(Arb.pair(arbR, arbA)) { (r, a) ->
         val iota = act(r, oneA)
         val left = mulA(iota, a)
@@ -215,7 +215,7 @@ fun <R : Any, A : Any> scalarEmbeddingMultiplicativeDerivedLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "derived: (r ⊳ 1) * (s ⊳ 1) = (r*s) ⊳ 1"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("scalarEmbeddingMultiplicativeDerivedLaw", act, mulR, mulA, oneA, arbR, eqA)) {
     lawCheckAll(Arb.pair(arbR, arbR)) { (r, s) ->
         val iR = act(r, oneA)
         val iS = act(s, oneA)

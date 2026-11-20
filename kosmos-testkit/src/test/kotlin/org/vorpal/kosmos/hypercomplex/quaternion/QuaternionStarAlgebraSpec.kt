@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for [QuaternionAlgebras.QuaternionStarAlgebra] as an (associative)
@@ -25,6 +26,6 @@ class QuaternionStarAlgebraSpec : StringSpec({
             eqA = QuaternionAlgebras.eqQuaternion,
             prR = RealAlgebras.printableRealPretty,
             prA = QuaternionAlgebras.printableQuaternionPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

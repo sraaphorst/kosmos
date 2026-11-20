@@ -11,6 +11,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.arbMat2
@@ -52,7 +53,7 @@ class SplitQuaternionMatrixSpec : StringSpec({
             domain = ring,
             codomain = matrices,
             arb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "SplitQuaternion<ℚ> ↪ M₂(ℚ) is injective" {
@@ -80,7 +81,7 @@ class SplitQuaternionMatrixSpec : StringSpec({
             domain = matrices,
             codomain = ring,
             arb = arbMatrix
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the matrix units correspond to (1 ± k)/2 and (j ∓ i)/2" {

@@ -16,6 +16,7 @@ import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.algebra.MeadowLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -31,7 +32,7 @@ class MeadowProductSpec : StringSpec({
 
     "ℚ₀ × 𝔽_5 satisfies MeadowLaws" {
         val meadow = Meadows.product(MeadowAlgebras.RationalMeadow, f5)
-        MeadowLaws(meadow, Arb.pair(rationalArb, residues(5))).fullTest().throwIfFailed()
+        MeadowLaws(meadow, Arb.pair(rationalArb, residues(5))).verify().throwIfFailed()
     }
 
     "ℚ₀ × 𝔽_5: (1, 0) * inv((1, 0)) = (1, 0), not 1" {
@@ -46,15 +47,15 @@ class MeadowProductSpec : StringSpec({
 
         val double = Meadows.double(z6)
         val arb2 = TestingLaw.arbPair(arb1)
-        MeadowLaws(double, arb2).fullTest().throwIfFailed()
+        MeadowLaws(double, arb2).verify().throwIfFailed()
 
         val quad = Meadows.double(double)
         val arb4 = TestingLaw.arbPair(arb2)
-        MeadowLaws(quad, arb4).fullTest().throwIfFailed()
+        MeadowLaws(quad, arb4).verify().throwIfFailed()
 
         val oct = Meadows.double(quad)
         val arb8 = TestingLaw.arbPair(arb4)
-        MeadowLaws(oct, arb8).fullTest().throwIfFailed()
+        MeadowLaws(oct, arb8).verify().throwIfFailed()
     }
 
     "CRT: ℤ/30ℤ → 𝔽₂ × (𝔽₃ × 𝔽₅) is a meadow isomorphism" {

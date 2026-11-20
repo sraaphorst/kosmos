@@ -38,6 +38,7 @@ import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -69,7 +70,7 @@ class GenericQuaternionOctonionSpec : StringSpec({
     // ── Quaternions over a finite field ──────────────────────────────────────
 
     "Quaternion<𝔽₇> satisfies InvolutiveRingLaws" {
-        InvolutiveRingLaws(QuaternionAlgebras.quaternionRing(f7), arbQuaternionF7).fullTest().throwIfFailed()
+        InvolutiveRingLaws(QuaternionAlgebras.quaternionRing(f7), arbQuaternionF7).verify().throwIfFailed()
     }
 
     "Quaternion<𝔽₇>: i² = j² = k² = ijk = -1" {
@@ -118,9 +119,9 @@ class GenericQuaternionOctonionSpec : StringSpec({
 
     "Octonion<𝔽₇> satisfies NonAssociativeInvolutiveRingLaws and is alternative and Moufang" {
         val ring = OctonionAlgebras.octonionRing(f7)
-        NonAssociativeInvolutiveRingLaws(ring, arbOctonionF7).fullTest().throwIfFailed()
-        AlternativityLaw(ring.mul.op, arbOctonionF7).test()
-        MoufangLaw(ring.mul.op, arbOctonionF7).test()
+        NonAssociativeInvolutiveRingLaws(ring, arbOctonionF7).verify().throwIfFailed()
+        AlternativityLaw(ring.mul.op, arbOctonionF7).verify().throwIfFailed()
+        MoufangLaw(ring.mul.op, arbOctonionF7).verify().throwIfFailed()
     }
 
     "Octonion<𝔽₇> is not associative, and its norm is multiplicative" {
@@ -193,16 +194,16 @@ class GenericQuaternionOctonionSpec : StringSpec({
 
     "Quaternion<ℚ> is a free module and a star algebra over ℚ" {
         val arb = ArbRationalQuaternion.smallRationalQuaternion
-        RModuleLaws(QuaternionAlgebras.quaternionModule(q), smallRational, arb).fullTest().throwIfFailed()
-        StarAlgebraLaws(QuaternionAlgebras.quaternionStarAlgebra(q), smallRational, arb).fullTest().throwIfFailed()
+        RModuleLaws(QuaternionAlgebras.quaternionModule(q), smallRational, arb).verify().throwIfFailed()
+        StarAlgebraLaws(QuaternionAlgebras.quaternionStarAlgebra(q), smallRational, arb).verify().throwIfFailed()
         QuaternionAlgebras.quaternionAlgebra(q).scalars shouldBe q
     }
 
     "Octonion<ℚ> is a free module and a nonassociative star algebra over ℚ" {
         val arb = ArbRationalOctonion.smallRationalOctonion
-        RModuleLaws(OctonionAlgebras.octonionModule(q), smallRational, arb).fullTest().throwIfFailed()
+        RModuleLaws(OctonionAlgebras.octonionModule(q), smallRational, arb).verify().throwIfFailed()
         NonAssociativeStarAlgebraLaws(OctonionAlgebras.octonionStarAlgebra(q), smallRational, arb)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         OctonionAlgebras.octonionAlgebra(q).scalars shouldBe q
     }
 
@@ -213,7 +214,7 @@ class GenericQuaternionOctonionSpec : StringSpec({
             domain = q,
             codomain = QuaternionAlgebras.quaternionRing(q),
             arb = smallRational
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = toQuaternion::invoke, arbA = smallRational).test()
 
         val toOctonion = OctonionAlgebras.scalarEmbedding(q)
@@ -222,7 +223,7 @@ class GenericQuaternionOctonionSpec : StringSpec({
             domain = q,
             codomain = OctonionAlgebras.octonionRing(q),
             arb = smallRational
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = toOctonion::invoke, arbA = smallRational).test()
     }
 
@@ -233,7 +234,7 @@ class GenericQuaternionOctonionSpec : StringSpec({
             domain = QuaternionAlgebras.quaternionRing(q),
             codomain = OctonionAlgebras.octonionRing(q),
             arb = ArbRationalQuaternion.smallRationalQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = overQ::invoke, arbA = ArbRationalQuaternion.smallRationalQuaternion).test()
         checkAll(ArbRationalQuaternion.smallRationalQuaternion) { x ->
             overQ(x) shouldBe RationalOctonionAlgebras.RationalQuaternionToRationalOctonionMonomorphism(x)
@@ -245,7 +246,7 @@ class GenericQuaternionOctonionSpec : StringSpec({
             domain = QuaternionAlgebras.quaternionRing(f7),
             codomain = OctonionAlgebras.octonionRing(f7),
             arb = arbQuaternionF7
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         QuaternionAlgebras.basis(f7).map(overF7::invoke) shouldBe OctonionAlgebras.basis(f7).take(4)
     }
 

@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 
 /**
@@ -33,7 +34,7 @@ class BicomplexMatrixMonomorphismSpec : StringSpec({
             eqB = eqM,
             prA = prB,
             prB = prM
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "BicomplexToComplexMatrixMonomorphism (canonical basis) is injective" {
@@ -56,7 +57,7 @@ class BicomplexMatrixMonomorphismSpec : StringSpec({
             eqB = eqM,
             prA = prB,
             prB = prM
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "BicomplexToDiagonalMatrixMonomorphism (idempotent basis) is injective" {

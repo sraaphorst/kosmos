@@ -4,9 +4,10 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
-import org.vorpal.kosmos.linear.instance.arbConstMat
 import org.vorpal.kosmos.core.rational.ArbRational
+import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.linear.instance.arbConstMat
 
 class ConstantMatrixIsomorphismSpec : StringSpec({
 
@@ -24,7 +25,7 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
             eqB = DenseMatAlgebras.liftEq(RationalAlgebras.eqRational),
             prA = RationalAlgebras.printableRationalPretty,
             prB = DenseMatAlgebras.liftPrintablePretty(RationalAlgebras.printableRationalPretty)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "Ring isomorphism from ConstantMatrixField and RationalField holds" {
@@ -36,7 +37,7 @@ class ConstantMatrixIsomorphismSpec : StringSpec({
             eqB = RationalAlgebras.eqRational,
             prA = DenseMatAlgebras.liftPrintablePretty(RationalAlgebras.printableRationalPretty),
             prB = RationalAlgebras.printableRationalPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "backward(forward(x)) = x over RationalField" {

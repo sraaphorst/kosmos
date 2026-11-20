@@ -10,6 +10,7 @@ import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.FixedVecAlgebras
 import org.vorpal.kosmos.linear.values.Vec3
 import org.vorpal.kosmos.linear.values.arbVec3
@@ -69,6 +70,6 @@ class FixedVecOpsSpec : StringSpec({
     }
 
     "vec3Module over ℤ satisfies RModuleLaws" {
-        RModuleLaws(module = z3, scalarArb = arbInt, vectorArb = arbZ3).fullTest().throwIfFailed()
+        RModuleLaws(module = z3, scalarArb = arbInt, vectorArb = arbZ3).verify().throwIfFailed()
     }
 })

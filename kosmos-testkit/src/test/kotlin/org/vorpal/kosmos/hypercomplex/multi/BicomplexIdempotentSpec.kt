@@ -20,6 +20,7 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -65,7 +66,7 @@ class BicomplexIdempotentSpec : StringSpec({
             domain = bicomplex,
             codomain = product,
             arb = arbBicomplex
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "Φ(zw) = Φ(z)Φ(w) componentwise: an independent way to multiply bicomplex numbers" {
@@ -97,7 +98,7 @@ class BicomplexIdempotentSpec : StringSpec({
             domain = product,
             codomain = bicomplex,
             arb = arbPair
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the orthogonal idempotents are e₁ = (1 - ij)/2 ↦ (1, 0) and e₂ = (1 + ij)/2 ↦ (0, 1)" {

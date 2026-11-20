@@ -124,7 +124,7 @@ object LawRunner {
         val done = HashMap<Any, NodeReport>()
 
         suspend fun visit(node: LawNode, path: LawPath): NodeReport {
-            val cacheKey: Any = node.key ?: node
+            val cacheKey: Any = node.cacheKey()
             done[cacheKey]?.let { return it.sharedAt(path) }
             return fresh(node, path).also { done[cacheKey] = it }
         }
@@ -158,16 +158,23 @@ object LawRunner {
 suspend fun LawNode.verify(config: LawRunConfig = LawRunConfig()): LawReport =
     LawRunner.run(this, config)
 
-/** Run this suite's graph in the given view with [LawRunner]. */
-suspend fun LawSuite.verify(mode: LawMode = LawMode.COMPACT, config: LawRunConfig = LawRunConfig()): LawReport =
-    LawRunner.run(node(mode), config)
+/** Run this law's or suite's graph with [LawRunner]. */
+suspend fun LawComponent.verify(config: LawRunConfig = LawRunConfig()): LawReport =
+    LawRunner.run(node(), config)
+
+/**
+ * What a run caches this node's result under: its [LawNode.key] when it has one, otherwise the node instance.
+ * A skipped leaf is never shared, so an explicit skip in one place cannot hide the same check elsewhere.
+ */
+internal fun LawNode.cacheKey(): Any =
+    if (this is LawNode.Leaf && skip != null) this else key ?: this
 
 /**
  * Build an ad hoc law graph mixing suites, standalone laws and other nodes.
  *
  * ```
  * lawGraph("IntegerCommutativeRing") {
- *     suite(CommutativeRingLaws(ring, arb, eq, pr), LawMode.FULL)
+ *     suite(CommutativeRingLaws(ring, arb, eq, pr))
  *     law(NormSqMultiplicativeLaw(...))
  *     branch("norm") { law(...); law(...) }
  * }.verify().throwIfFailed()
@@ -182,7 +189,7 @@ class LawGraphBuilder {
     fun law(law: TestingLaw) { children += LawNode.Leaf(law) }
     fun law(label: String, law: TestingLaw) { children += LawNode.Leaf(law, label) }
     fun skipped(law: TestingLaw, reason: String) { children += LawNode.Leaf(law, skip = reason) }
-    fun suite(suite: LawSuite, mode: LawMode = LawMode.COMPACT) { children += suite.node(mode) }
+    fun suite(suite: LawSuite) { children += suite.node() }
     fun node(node: LawNode) { children += node }
     fun branch(label: String, build: LawGraphBuilder.() -> Unit) { children += lawGraph(label, build) }
 

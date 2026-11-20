@@ -5,11 +5,11 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 /**
  * Anti-Homomorphism Law:
@@ -27,6 +27,8 @@ class AntiHomomorphismLaw<A : Any, B : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prB: Printable<B> = Printable.default()
 ): TestingLaw {
+    override val binding = LawBinding.of(this, f, opA, opB, arbA, eqB)
+
     override val name = "anti-homomorphism (${f.symbol}, ${opA.symbol}, ${opB.symbol})"
     private fun exprF(param: String) = "${f.symbol}($param)"
     private fun exprA(left: String, right: String) = "$left ${opA.symbol} $right"

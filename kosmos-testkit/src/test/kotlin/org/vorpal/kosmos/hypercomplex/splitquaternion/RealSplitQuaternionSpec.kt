@@ -14,6 +14,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * The real split-quaternions `ℍ'`, and the embeddings into the split-quaternions.
@@ -36,7 +37,7 @@ class RealSplitQuaternionSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "SplitQuaternionRealVectorSpace satisfies VectorSpaceLaws and has dimension 4" {
@@ -49,7 +50,7 @@ class RealSplitQuaternionSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the real units satisfy i² = -1, j² = k² = +1, ij = k" {
@@ -79,7 +80,7 @@ class RealSplitQuaternionSpec : StringSpec({
             eqB = eq,
             prA = ComplexAlgebras.printableComplexPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,
@@ -107,7 +108,7 @@ class RealSplitQuaternionSpec : StringSpec({
                 domain = SplitComplexAlgebras.splitComplexRing(q),
                 codomain = SplitQuaternionAlgebras.splitQuaternionRing(q),
                 arb = arbSplitComplex
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
 
             injectivityLaw(hom = mono::invoke, arbA = arbSplitComplex).test()
         }
@@ -121,7 +122,7 @@ class RealSplitQuaternionSpec : StringSpec({
             domain = q,
             codomain = SplitQuaternionAlgebras.splitQuaternionRing(q),
             arb = ArbSplitQuaternion.smallRational
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(hom = embed::invoke, arbA = ArbSplitQuaternion.smallRational).test()
     }

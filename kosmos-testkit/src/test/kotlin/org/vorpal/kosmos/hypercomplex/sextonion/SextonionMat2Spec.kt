@@ -18,6 +18,7 @@ import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitquaternion.splitQuaternion
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
@@ -65,7 +66,7 @@ class SextonionMat2Spec : StringSpec({
 
     "ι : M₂(ℚ) → S(ℚ) is an injective unital ring homomorphism" {
         NonAssociativeRingHomomorphismLaws(hom = iota::invoke, domain = matrices, codomain = sextonions, arb = arbM)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = iota::invoke, arbA = arbM).test()
     }
 
@@ -75,14 +76,14 @@ class SextonionMat2Spec : StringSpec({
             domain = FixedMatAlgebras.mat2Ring(z),
             codomain = SextonionAlgebras.sextonionRing(z),
             arb = arbMat2(Arb.int(-20..20).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         NonAssociativeRingHomomorphismLaws(
             hom = SextonionAlgebras.mat2ToSextonionMonomorphism(f2)::invoke,
             domain = FixedMatAlgebras.mat2Ring(f2),
             codomain = SextonionAlgebras.sextonionRing(f2),
             arb = arbMat2(arbF2)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ι(A) = (A, 0)" {
@@ -95,7 +96,7 @@ class SextonionMat2Spec : StringSpec({
 
     "ρ : S(ℚ) → M₂(ℚ) is a unital ring homomorphism: the matrix part of a product is the product of the matrix parts" {
         NonAssociativeRingHomomorphismLaws(hom = rho::invoke, domain = sextonions, codomain = matrices, arb = arbS)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "ρ is a homomorphism over ℤ and over 𝔽₂ as well" {
@@ -104,14 +105,14 @@ class SextonionMat2Spec : StringSpec({
             domain = SextonionAlgebras.sextonionRing(z),
             codomain = FixedMatAlgebras.mat2Ring(z),
             arb = ArbSextonion.integerSextonion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         NonAssociativeRingHomomorphismLaws(
             hom = SextonionAlgebras.sextonionMat2Retraction(f2)::invoke,
             domain = SextonionAlgebras.sextonionRing(f2),
             codomain = FixedMatAlgebras.mat2Ring(f2),
             arb = ArbSextonion.sextonionOf(arbF2)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ρ is a retraction: ρ ∘ ι = id" {
@@ -186,7 +187,7 @@ class SextonionMat2Spec : StringSpec({
             domain = SplitQuaternionAlgebras.splitQuaternionRing(q),
             codomain = sextonions,
             arb = ArbSplitQuaternion.rationalSplitQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = sigma::invoke, arbA = ArbSplitQuaternion.rationalSplitQuaternion).test()
     }
 
@@ -205,7 +206,7 @@ class SextonionMat2Spec : StringSpec({
             domain = SplitQuaternionAlgebras.splitQuaternionRing(z),
             codomain = SextonionAlgebras.sextonionRing(z),
             arb = ArbSplitQuaternion.integerSplitQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         val two = BigInteger.TWO
         checkAll(ArbSplitQuaternion.integerSplitQuaternion) { h ->
@@ -226,7 +227,7 @@ class SextonionMat2Spec : StringSpec({
             domain = sextonions,
             codomain = splitQuaternions,
             arb = arbS
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         checkAll(ArbSplitQuaternion.rationalSplitQuaternion) { h ->
             pi(sigma(h)) shouldBe h
@@ -258,7 +259,7 @@ class SextonionMat2Spec : StringSpec({
             domain = SextonionAlgebras.sextonionRing(f3),
             codomain = SplitQuaternionAlgebras.splitQuaternionRing(f3),
             arb = ArbSextonion.sextonionOf(arbF3)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         checkAll(ArbSplitQuaternion.splitQuaternionOf(arbF3)) { h ->
             pi3(sigma3(h)) shouldBe h
@@ -272,7 +273,7 @@ class SextonionMat2Spec : StringSpec({
             domain = SplitQuaternionAlgebras.splitQuaternionRing(f2),
             codomain = SextonionAlgebras.sextonionRing(f2),
             arb = ArbSplitQuaternion.splitQuaternionOf(arbF2)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         val basis = SplitQuaternionAlgebras.basis(f2)
         val (unit, k) = basis[0] to basis[3]

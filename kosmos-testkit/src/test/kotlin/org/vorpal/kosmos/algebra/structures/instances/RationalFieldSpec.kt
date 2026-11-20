@@ -7,7 +7,6 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.rational.toRational
-import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.testing.laws.lawTests
 
@@ -21,8 +20,7 @@ class RationalFieldSpec : FunSpec({
             arb = ArbRational.small,
             eq = RationalAlgebras.eqRational,
             pr = RationalAlgebras.printableRationalPretty
-        ),
-        LawMode.FULL
+        )
     )
 
     test("zero is Rational.ZERO") {

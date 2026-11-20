@@ -18,6 +18,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeInvolutiveRingLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.AssociativityLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Direct tests of the Cayley-Dickson kernel, independent of the named hypercomplex algebras.
@@ -61,8 +62,8 @@ class CayleyDicksonSpec : StringSpec({
         val eq = CD.eq(eqQ)
 
         "commutative(ℚ, σ = $sigma) satisfies CommutativeRingLaws and InvolutiveRingLaws" {
-            CommutativeRingLaws(ring, arb, eq, prAny).fullTest().throwIfFailed()
-            InvolutiveRingLaws(ring, arb, eq, prAny).fullTest().throwIfFailed()
+            CommutativeRingLaws(ring, arb, eq, prAny).verify().throwIfFailed()
+            InvolutiveRingLaws(ring, arb, eq, prAny).verify().throwIfFailed()
         }
 
         "commutative(ℚ, σ = $sigma): x = (0, 1) satisfies x² = -σ" {
@@ -89,10 +90,10 @@ class CayleyDicksonSpec : StringSpec({
     val eq4 = CD.eq(eq3)
 
     "every level of the tower is a NonAssociativeInvolutiveRing (conjugation is an involutive anti-automorphism)" {
-        NonAssociativeInvolutiveRingLaws(a1, arb1, eq1, prAny).fullTest().throwIfFailed()
-        NonAssociativeInvolutiveRingLaws(a2, arb2, eq2, prAny).fullTest().throwIfFailed()
-        NonAssociativeInvolutiveRingLaws(a3, arb3, eq3, prAny).fullTest().throwIfFailed()
-        NonAssociativeInvolutiveRingLaws(a4, arb4, eq4, prAny).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(a1, arb1, eq1, prAny).verify().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(a2, arb2, eq2, prAny).verify().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(a3, arb3, eq3, prAny).verify().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(a4, arb4, eq4, prAny).verify().throwIfFailed()
     }
 
     "CayleyDickson.associative doubles a commutative base to an associative ring (the quaternion step)" {
@@ -102,7 +103,7 @@ class CayleyDicksonSpec : StringSpec({
                 conj = a1.conj
             )
         )
-        InvolutiveRingLaws(assoc, arb2, eq2, prAny).fullTest().throwIfFailed()
+        InvolutiveRingLaws(assoc, arb2, eq2, prAny).verify().throwIfFailed()
 
         // ... and it is not commutative: ij = -ji.
         val i = CD(CD(Rational.ZERO, Rational.ONE), CD(Rational.ZERO, Rational.ZERO))
@@ -122,7 +123,7 @@ class CayleyDicksonSpec : StringSpec({
     }
 
     "the third level (octonion-like) is alternative but not associative" {
-        AlternativityLaw(a3.mul.op, arb3, eq3, prAny).test()
+        AlternativityLaw(a3.mul.op, arb3, eq3, prAny).verify().throwIfFailed()
 
         val basis = CayleyDickson.doubledBasis(a2.zero, CayleyDickson.doubledBasis(a1.zero, CayleyDickson.doubledBasis(Rational.ZERO, listOf(Rational.ONE))))
         val (e1, e2, e4) = listOf(1, 2, 4).map(basis::get)
@@ -182,7 +183,7 @@ class CayleyDicksonSpec : StringSpec({
 
     "CayleyDickson.associativeSplit doubles a commutative base to an associative ring with j² = k² = +1" {
         val splitQuaternionLike = CayleyDickson.associativeSplit(complexLike)
-        InvolutiveRingLaws(splitQuaternionLike, arb2, eq2, prAny).fullTest().throwIfFailed()
+        InvolutiveRingLaws(splitQuaternionLike, arb2, eq2, prAny).verify().throwIfFailed()
 
         val i = CD(CD(Rational.ZERO, Rational.ONE), CD(Rational.ZERO, Rational.ZERO))
         val j = CD(CD(Rational.ZERO, Rational.ZERO), CD(Rational.ONE, Rational.ZERO))
@@ -201,8 +202,8 @@ class CayleyDicksonSpec : StringSpec({
 
     "the split doubling of the quaternion level is alternative, not associative, and has zero divisors" {
         val splitOctonionLike = CayleyDickson.split(CayleyDickson.associative(complexLike))
-        NonAssociativeInvolutiveRingLaws(splitOctonionLike, arb3, eq3, prAny).fullTest().throwIfFailed()
-        AlternativityLaw(splitOctonionLike.mul.op, arb3, eq3, prAny).test()
+        NonAssociativeInvolutiveRingLaws(splitOctonionLike, arb3, eq3, prAny).verify().throwIfFailed()
+        AlternativityLaw(splitOctonionLike.mul.op, arb3, eq3, prAny).verify().throwIfFailed()
 
         val basis = CayleyDickson.doubledBasis(a2.zero, CayleyDickson.doubledBasis(a1.zero, CayleyDickson.doubledBasis(Rational.ZERO, listOf(Rational.ONE))))
         val (e1, e2, e4) = listOf(1, 2, 4).map(basis::get)
@@ -245,7 +246,7 @@ class CayleyDicksonSpec : StringSpec({
         check(eq(second.mul(i, j), second.add.inverse(second.mul(j, i))))
 
         AssociativityLaw(second.mul.op, arb2, eq, prAny).test()
-        NonAssociativeInvolutiveRingLaws(second, arb2, eq, prAny).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(second, arb2, eq, prAny).verify().throwIfFailed()
     }
 
     // ── Bases and the canonical embedding ────────────────────────────────────
@@ -269,6 +270,6 @@ class CayleyDicksonSpec : StringSpec({
             eqB = eq3,
             prA = prAny,
             prB = prAny
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.AlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for `SplitComplexAlgebras.splitComplexAlgebra(RealField)`,
@@ -23,6 +24,6 @@ class SplitComplexRealAlgebraSpec : StringSpec({
             eqA = SplitComplexAlgebras.eqSplitComplex,
             prR = RealAlgebras.printableRealPretty,
             prA = SplitComplexAlgebras.printableSplitComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

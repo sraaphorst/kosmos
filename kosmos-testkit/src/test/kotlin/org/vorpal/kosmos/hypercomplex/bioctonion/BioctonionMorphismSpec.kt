@@ -15,6 +15,7 @@ import org.vorpal.kosmos.hypercomplex.splitoctonion.ArbSplitOctonion
 import org.vorpal.kosmos.hypercomplex.splitoctonion.SplitOctonionAlgebras
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * The maps into the bioctonions: the scalars ℂ, the two real forms 𝕆 and 𝕆', and the biquaternions.
@@ -37,7 +38,7 @@ class BioctonionMorphismSpec : StringSpec({
             eqB = eq,
             prA = prC,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(mono::invoke, ArbBiquaternion.smallComplex, eqC, eq, prC, pr).test()
         check(eq(mono(ComplexAlgebras.i), ring.h))
@@ -54,7 +55,7 @@ class BioctonionMorphismSpec : StringSpec({
             eqB = eq,
             prA = OctonionAlgebras.printableOctonionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbOctonion.octonion, OctonionAlgebras.eqOctonion, eq,
@@ -81,7 +82,7 @@ class BioctonionMorphismSpec : StringSpec({
             eqB = eq,
             prA = SplitOctonionAlgebras.printableSplitOctonionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbSplitOctonion.smallSplitOctonion, SplitOctonionAlgebras.eqSplitOctonion, eq,
@@ -107,7 +108,7 @@ class BioctonionMorphismSpec : StringSpec({
             eqB = eq,
             prA = BiquaternionAlgebras.printableBiquaternionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbBiquaternion.biquaternion, BiquaternionAlgebras.eqBiquaternion, eq,

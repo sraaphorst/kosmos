@@ -11,6 +11,7 @@ import io.kotest.property.arbitrary.list
 import io.kotest.property.arbitrary.long
 import io.kotest.property.arbitrary.map
 import io.kotest.property.checkAll
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 import kotlin.math.absoluteValue
 

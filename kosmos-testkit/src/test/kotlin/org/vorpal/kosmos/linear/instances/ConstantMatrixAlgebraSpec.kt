@@ -2,9 +2,10 @@ package org.vorpal.kosmos.linear.instances
 
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
-import org.vorpal.kosmos.laws.algebra.AlgebraLaws
-import org.vorpal.kosmos.linear.instance.arbConstMat
 import org.vorpal.kosmos.core.rational.ArbRational
+import org.vorpal.kosmos.laws.algebra.AlgebraLaws
+import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.linear.instance.arbConstMat
 
 class ConstantMatrixAlgebraSpec : StringSpec({
     "ConstantMatrixAlgebra satisfies AlgebraLaws over Rationals" {
@@ -24,6 +25,6 @@ class ConstantMatrixAlgebraSpec : StringSpec({
             prA = DenseMatAlgebras.liftPrintablePretty(RationalAlgebras.printableRationalPretty)
         )
 
-        algebraLaws.fullTest().throwIfFailed()
+        algebraLaws.verify().throwIfFailed()
     }
 })

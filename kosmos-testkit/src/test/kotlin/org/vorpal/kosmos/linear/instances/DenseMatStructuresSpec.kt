@@ -8,6 +8,7 @@ import org.vorpal.kosmos.laws.algebra.AlgebraLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.RingLaws
 import org.vorpal.kosmos.laws.algebra.SemiringLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instance.arbDenseMat
 import org.vorpal.kosmos.linear.instance.arbSquareDenseMat
 
@@ -34,7 +35,7 @@ class DenseMatStructuresSpec : StringSpec({
             arb = arbSquareDenseMat(ArbRational.small, n),
             eq = eqMat,
             pr = prMat
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseMatSemiring satisfies SemiringLaws over the rationals" {
@@ -43,7 +44,7 @@ class DenseMatStructuresSpec : StringSpec({
             arb = arbSquareDenseMat(ArbRational.small, n),
             eq = eqMat,
             pr = prMat
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseMatAlgebra satisfies AlgebraLaws over the rationals" {
@@ -55,7 +56,7 @@ class DenseMatStructuresSpec : StringSpec({
             eqA = eqMat,
             prR = prQ,
             prA = prMat
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseMatHadamardCommutativeRing satisfies CommutativeRingLaws over the rationals" {
@@ -64,7 +65,7 @@ class DenseMatStructuresSpec : StringSpec({
             arb = arbDenseMat(ArbRational.small, n, n),
             eq = eqMat,
             pr = prMat
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseMatHadamardUnitGroup satisfies AbelianGroupLaws over the rationals" {
@@ -73,6 +74,6 @@ class DenseMatStructuresSpec : StringSpec({
             arb = arbDenseMat(ArbRational.nonZero, n, n),
             eq = eqMat,
             pr = prMat
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

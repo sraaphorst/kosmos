@@ -5,6 +5,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -18,7 +19,7 @@ fun <A : Any> complementJoinTopLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "boolean complement: x ∨ ¬x = ⊤",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("complementJoinTopLaw", join, not, top, arb, eq)) {
     lawCheckAll(arb, render = renderWith(pr)) { x ->
         val left = join(x, not(x))
 
@@ -41,7 +42,7 @@ fun <A : Any> complementMeetBottomLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "boolean complement: x ∧ ¬x = ⊥",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("complementMeetBottomLaw", meet, not, bottom, arb, eq)) {
     lawCheckAll(arb, render = renderWith(pr)) { x ->
         val left = meet(x, not(x))
 
@@ -63,7 +64,7 @@ fun <A : Any> notBottomIsTopLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "boolean: ¬⊥ = ⊤",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("notBottomIsTopLaw", not, bottom, top, eq)) {
     val value = not(bottom)
 
     lawCheck(eq(value, top)) {
@@ -83,7 +84,7 @@ fun <A : Any> notTopIsBottomLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "boolean: ¬⊤ = ⊥",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("notTopIsBottomLaw", not, bottom, top, eq)) {
     val value = not(top)
 
     lawCheck(eq(value, bottom)) {
@@ -104,7 +105,7 @@ fun <A : Any> deMorganJoinLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "de Morgan: ¬(x ∨ y) = ¬x ∧ ¬y",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("deMorganJoinLaw", join, meet, not, arb, eq)) {
     lawCheckAll(arb, arb) { x, y ->
         val left = not(join(x, y))
         val right = meet(not(x), not(y))
@@ -129,7 +130,7 @@ fun <A : Any> deMorganMeetLaw(
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default(),
     label: String = "de Morgan: ¬(x ∧ y) = ¬x ∨ ¬y",
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("deMorganMeetLaw", join, meet, not, arb, eq)) {
     lawCheckAll(arb, arb) { x, y ->
         val left = not(meet(x, y))
         val right = join(not(x), not(y))

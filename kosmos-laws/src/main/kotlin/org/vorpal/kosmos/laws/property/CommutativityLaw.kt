@@ -4,11 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 /**
  * Commutativity Law: `ab = ba`.
@@ -19,6 +19,8 @@ class CommutativityLaw<A: Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     private val arbPair = TestingLaw.arbPair(arb)
     override val name = "commutativity (${op.symbol})"
 

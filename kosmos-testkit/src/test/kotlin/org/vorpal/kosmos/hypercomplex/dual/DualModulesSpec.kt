@@ -15,6 +15,7 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -46,7 +47,7 @@ class DualModulesSpec : StringSpec({
     fun scale(r: Rational, p: Pair<Rational, Rational>) = plane.leftAction(r, p)
 
     "the scalar extension of ℚ² satisfies RModuleLaws over Dual<ℚ>" {
-        RModuleLaws(module, arbScalar, arbVector).fullTest().throwIfFailed()
+        RModuleLaws(module, arbScalar, arbVector).verify().throwIfFailed()
     }
 
     "its scalars are the dual ring over the scalars of the base module" {
@@ -126,7 +127,7 @@ class DualModulesSpec : StringSpec({
             module = DualModules.scalarExtension(zModule),
             scalarArb = ArbDual.integerDual,
             vectorArb = ArbDual.dualVectorOf(arbZ)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DualVector is a plain pair with Eq and Printable helpers" {

@@ -14,6 +14,7 @@ import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Vec0
 import org.vorpal.kosmos.linear.values.Vec1
 import org.vorpal.kosmos.linear.values.Vec2
@@ -44,14 +45,14 @@ class FixedVecAlgebrasSpec : StringSpec({
         AbelianGroupLaws(
             group = FixedVecAlgebras.dim0Group<Rational>(),
             arb = Arb.constant(Vec0<Rational>())
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "dim2Group satisfies AbelianGroupLaws over the rationals" {
         AbelianGroupLaws(
             group = FixedVecAlgebras.dim2Group(q.add),
             arb = arbVec2
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "vec2Space satisfies VectorSpaceLaws over the rationals" {
@@ -61,7 +62,7 @@ class FixedVecAlgebrasSpec : StringSpec({
             vectorArb = arbVec2,
             eqF = eqQ,
             prF = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "vec3Space satisfies VectorSpaceLaws over the rationals" {
@@ -71,7 +72,7 @@ class FixedVecAlgebrasSpec : StringSpec({
             vectorArb = arbVec3,
             eqF = eqQ,
             prF = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "vec4Space satisfies VectorSpaceLaws over the rationals" {
@@ -81,7 +82,7 @@ class FixedVecAlgebrasSpec : StringSpec({
             vectorArb = arbVec4,
             eqF = eqQ,
             prF = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "vec0Space and vec1Space satisfy VectorSpaceLaws over the rationals" {
@@ -91,31 +92,31 @@ class FixedVecAlgebrasSpec : StringSpec({
             vectorArb = Arb.constant(Vec0<Rational>()),
             eqF = eqQ,
             prF = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         VectorSpaceLaws(
             space = FixedVecAlgebras.vec1Space(q),
             scalarArb = ArbRational.small,
             vectorArb = arbVec1(ArbRational.small),
             eqF = eqQ,
             prF = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "dim1Group, dim3Group and dim4Group satisfy AbelianGroupLaws over the rationals" {
         AbelianGroupLaws(group = FixedVecAlgebras.dim1Group(q.add), arb = arbVec1(ArbRational.small))
-            .fullTest().throwIfFailed()
-        AbelianGroupLaws(group = FixedVecAlgebras.dim3Group(q.add), arb = arbVec3).fullTest().throwIfFailed()
-        AbelianGroupLaws(group = FixedVecAlgebras.dim4Group(q.add), arb = arbVec4).fullTest().throwIfFailed()
+            .verify().throwIfFailed()
+        AbelianGroupLaws(group = FixedVecAlgebras.dim3Group(q.add), arb = arbVec3).verify().throwIfFailed()
+        AbelianGroupLaws(group = FixedVecAlgebras.dim4Group(q.add), arb = arbVec4).verify().throwIfFailed()
     }
 
     "vec0Module through vec4Module satisfy RModuleLaws over the integers" {
         val z = IntegerAlgebras.IntegerCommutativeRing
         val arbZ = Arb.int(-20..20).map(Int::toBigInteger)
-        RModuleLaws(FixedVecAlgebras.vec0Module(z), arbZ, Arb.constant(Vec0())).fullTest().throwIfFailed()
-        RModuleLaws(FixedVecAlgebras.vec1Module(z), arbZ, arbVec1(arbZ)).fullTest().throwIfFailed()
-        RModuleLaws(FixedVecAlgebras.vec2Module(z), arbZ, arbVec2(arbZ)).fullTest().throwIfFailed()
-        RModuleLaws(FixedVecAlgebras.vec3Module(z), arbZ, arbVec3(arbZ)).fullTest().throwIfFailed()
-        RModuleLaws(FixedVecAlgebras.vec4Module(z), arbZ, arbVec4(arbZ)).fullTest().throwIfFailed()
+        RModuleLaws(FixedVecAlgebras.vec0Module(z), arbZ, Arb.constant(Vec0())).verify().throwIfFailed()
+        RModuleLaws(FixedVecAlgebras.vec1Module(z), arbZ, arbVec1(arbZ)).verify().throwIfFailed()
+        RModuleLaws(FixedVecAlgebras.vec2Module(z), arbZ, arbVec2(arbZ)).verify().throwIfFailed()
+        RModuleLaws(FixedVecAlgebras.vec3Module(z), arbZ, arbVec3(arbZ)).verify().throwIfFailed()
+        RModuleLaws(FixedVecAlgebras.vec4Module(z), arbZ, arbVec4(arbZ)).verify().throwIfFailed()
     }
 
     "eqVec1 through eqVec4 compare componentwise with the given entry equality" {

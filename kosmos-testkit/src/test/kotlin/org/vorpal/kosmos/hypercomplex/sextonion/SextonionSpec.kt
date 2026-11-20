@@ -17,6 +17,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.ops.FixedMatOps
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
@@ -55,19 +56,19 @@ class SextonionSpec : StringSpec({
     // ---------- The laws ----------
 
     "the sextonions over ℚ satisfy NonAssociativeInvolutiveRingLaws" {
-        NonAssociativeInvolutiveRingLaws(ring, arb).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(ring, arb).verify().throwIfFailed()
     }
 
     "the sextonions over ℤ and 𝔽₅ satisfy NonAssociativeInvolutiveRingLaws" {
         NonAssociativeInvolutiveRingLaws(
             SextonionAlgebras.sextonionRing(IntegerAlgebras.IntegerCommutativeRing),
             ArbSextonion.integerSextonion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         val f5 = PrimeField(BigInteger.valueOf(5))
         NonAssociativeInvolutiveRingLaws(
             SextonionAlgebras.sextonionRing(f5),
             ArbSextonion.sextonionOf(Arb.int(0..4).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the identity is (I, 0), on both sides" {
@@ -89,14 +90,14 @@ class SextonionSpec : StringSpec({
     }
 
     "sextonion multiplication is exactly alternative over ℚ and ℤ" {
-        AlternativityLaw(ring.mul.op, arb).test()
+        AlternativityLaw(ring.mul.op, arb).verify().throwIfFailed()
         val z = SextonionAlgebras.sextonionRing(IntegerAlgebras.IntegerCommutativeRing)
-        AlternativityLaw(z.mul.op, ArbSextonion.integerSextonion).test()
+        AlternativityLaw(z.mul.op, ArbSextonion.integerSextonion).verify().throwIfFailed()
     }
 
     "sextonion multiplication is exactly flexible and Moufang" {
         FlexibilityLaw(ring.mul.op, arb).test()
-        MoufangLaw(ring.mul.op, arb).test()
+        MoufangLaw(ring.mul.op, arb).verify().throwIfFailed()
     }
 
     // ---------- Not associative, not commutative ----------

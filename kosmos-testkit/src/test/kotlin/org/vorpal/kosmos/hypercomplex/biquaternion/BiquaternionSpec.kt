@@ -12,6 +12,7 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Tests of the biquaternions `ℍ ⊗ ℂ`.
@@ -34,7 +35,7 @@ class BiquaternionSpec : StringSpec({
     fun neg(x: RealBiquaternion) = ring.add.inverse(x)
 
     "BiquaternionRing satisfies InvolutiveRingLaws (associative, with the quaternion conjugate)" {
-        InvolutiveRingLaws(ring, arb, eq, pr).fullTest().throwIfFailed()
+        InvolutiveRingLaws(ring, arb, eq, pr).verify().throwIfFailed()
     }
 
     "i² = j² = k² = ijk = -1 and ij = k = -ji" {
@@ -131,7 +132,7 @@ class BiquaternionSpec : StringSpec({
             eqA = eq,
             prR = prC,
             prA = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "BiquaternionHermitianStarAlgebra satisfies StarAlgebraLaws over ℝ" {
@@ -143,7 +144,7 @@ class BiquaternionSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the Hermitian conjugate is ℂ-antilinear: (c ⊳ q)† = conj(c) ⊳ q†" {
@@ -166,7 +167,7 @@ class BiquaternionSpec : StringSpec({
             eqV = eq,
             prF = prC,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
 
         VectorSpaceLaws(
             space = BiquaternionAlgebras.BiquaternionRealVectorSpace,
@@ -176,7 +177,7 @@ class BiquaternionSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "printable shows complex coefficients against the 1, I, J, K basis, and 0 for zero" {

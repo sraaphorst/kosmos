@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.RSBiModule
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.module.bimoduleCompatibilityLaw
 import org.vorpal.kosmos.laws.module.leftRModuleLaws
@@ -44,7 +43,7 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
     prR: Printable<R> = Printable.default(),
     prM: Printable<M> = Printable.default(),
     prS: Printable<S> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
     private val leftScalarDescription = "R[${module.leftScalars.add.op.symbol}${module.leftScalars.mul.op.symbol}]"
     private val moduleDescription = "M[${module.add.op.symbol}]"
     private val rightScalarDescription = "S[${module.rightScalars.add.op.symbol}${module.rightScalars.mul.op.symbol}]"
@@ -70,7 +69,7 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
         AbelianGroupLaws(module.add, vectorArb, eqM, prM)
     }
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         leftRModuleLaws(module, leftScalarArb, vectorArb, eqM, prR, prM) +
             rightRModuleLaws(module, vectorArb, rightScalarArb, eqM, prM, prS) +
             listOf(
@@ -87,11 +86,8 @@ class RSBiModuleLaws<R : Any, M : Any, S : Any>(
                 )
             )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> structureLaws.asNodes()
-            LawMode.FULL -> listOf(leftRingLaws.node(LawMode.FULL), rightRingLaws.node(LawMode.FULL), groupLaws.node(LawMode.FULL)) +
-                structureLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(leftRingLaws.node(), rightRingLaws.node(), groupLaws.node()) +
+            structureLaws.asNodes()
 
 }

@@ -206,9 +206,8 @@ class PropertyDiagnosticsSpec : FunSpec({
     }
 
     context("legacy entry points are unchanged") {
-        test("a migrated law still fails as an AssertionError through runLaws and test()") {
+        test("a migrated law still fails as an AssertionError through runLaws") {
             shouldThrow<AssertionError> { runLaws(AssociativityLaw(subtraction, ints, eqInt, prInt)) }
-            runLawSuite("Legacy", listOf(AssociativityLaw(subtraction, ints, eqInt, prInt))).failedCount shouldBe 1
         }
     }
 })

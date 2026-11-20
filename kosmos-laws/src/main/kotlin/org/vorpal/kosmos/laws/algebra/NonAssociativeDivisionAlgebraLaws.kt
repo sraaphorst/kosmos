@@ -1,16 +1,13 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.filterNot
 import org.vorpal.kosmos.algebra.structures.NonAssociativeDivisionAlgebra
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.InvertibilityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -25,7 +22,7 @@ class NonAssociativeDivisionAlgebraLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     override val name = suiteName(
         "NonAssociativeDivisionAlgebra",
@@ -41,26 +38,21 @@ class NonAssociativeDivisionAlgebraLaws<A : Any>(
         NonAssociativeInvolutiveRingLaws(algebra, arb, eq, pr)
     }
 
-    private val reciprocalOrNull: UnaryOp<A, A?> =
-        UnaryOp(algebra.reciprocal.symbol) { a ->
-        if (eq(a, algebra.zero)) null
-        else algebra.reciprocal(a)
-    }
-
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         listOf(
             InvertibilityLaw(
                 op = algebra.mul.op,
                 identity = algebra.mul.identity,
-                arb = arb.filterNot { eq(it, algebra.zero) },
-                inverseOrNull = reciprocalOrNull,
+                arb = arb,
+                inverse = algebra.reciprocal,
                 eq = eq,
-                pr = pr
+                pr = pr,
+                exclude = algebra.zero
             )
         )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(nonAssociativeInvolutiveRingLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(nonAssociativeInvolutiveRingLaws.node()) +
             structureLaws.asNodes()
 
 }

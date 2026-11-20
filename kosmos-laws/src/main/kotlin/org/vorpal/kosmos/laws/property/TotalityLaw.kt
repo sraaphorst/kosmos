@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import kotlinx.coroutines.CancellationException
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.LawViolation
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -20,6 +21,7 @@ class TotalityLaw<A : Any>(
     arb: Arb<A>,
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, arb)
 
     private val arbPair = TestingLaw.arbPair(arb)
 

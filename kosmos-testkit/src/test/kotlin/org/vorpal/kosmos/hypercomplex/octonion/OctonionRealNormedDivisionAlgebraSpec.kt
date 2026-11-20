@@ -3,6 +3,7 @@ package org.vorpal.kosmos.hypercomplex.octonion
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for [OctonionAlgebras.OctonionDivisionAlgebra] as a
@@ -26,6 +27,6 @@ class OctonionRealNormedDivisionAlgebraSpec : StringSpec({
             eqReal = RealAlgebras.eqRealApprox,
             prA = OctonionAlgebras.printableOctonionPretty,
             prReal = RealAlgebras.printableRealPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

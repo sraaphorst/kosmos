@@ -6,9 +6,9 @@ import org.vorpal.kosmos.algebra.structures.Meadow
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
@@ -27,7 +27,7 @@ import org.vorpal.kosmos.laws.suiteName
  * - [InvolutionLaw] on inv (reflection: `inv(inv(x)) = x`)
  * - [RestrictedInverseLaw] on mul and inv (`x * (x * inv(x)) = x`)
  *
- * [fullLaws] additionally checks identities derivable from the axioms. They should never fail on their own,
+ * It also checks identities derivable from the axioms. They should never fail on their own,
  * so a failure there that is not mirrored by an axiom failure points to a bug in the laws or the arbitrary:
  * - `inv(0) = 0` and `inv(1) = 1`
  * - multiplicativity: `inv(x * y) = inv(x) * inv(y)` (via [AntiHomomorphismLaw], as mul is commutative)
@@ -39,7 +39,7 @@ class MeadowLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
     override val name = suiteName("Meadow",
         meadow.add.op.symbol, meadow.mul.op.symbol, meadow.inv.symbol
     )
@@ -48,13 +48,13 @@ class MeadowLaws<A : Any>(
 
     private val commutativeRingLaws = CommutativeRingLaws(meadow, arb, eq, pr)
 
-    private val structureLaws: List<TestingLaw> = listOf(
+    private val structureLaws: List<LawComponent> = listOf(
         InvolutionLaw(meadow.inv, arb, eq, pr),
         RestrictedInverseLaw(meadow.mul.op, meadow.inv, arb, eq, pr)
     )
 
     private fun fixedPointLaw(label: String, x: A): TestingLaw =
-        TestingLaw.named("inv fixes $label") {
+        TestingLaw.named("inv fixes $label", LawBinding.named("meadow inverse fixes", meadow.inv, x, eq)) {
             val invX = meadow.inv(x)
             lawCheck(eq(invX, x), "Expected inv(${pr(x)}) = ${pr(x)}, but got ${pr(invX)}")
         }
@@ -65,7 +65,7 @@ class MeadowLaws<A : Any>(
     private val idempotentLaw: TestingLaw =
         IdempotencyLaw(meadow.mul.op, arb.map { x -> meadow.mul(x, meadow.inv(x)) }, eq, pr)
 
-    private val derivedLaws: List<TestingLaw> = listOf(
+    private val derivedLaws: List<LawComponent> = listOf(
         fixedPointLaw("zero", meadow.zero),
         fixedPointLaw("one", meadow.one),
         AntiHomomorphismLaw(meadow.inv, meadow.mul.op, meadow.mul.op, arb, eq, pr, pr),
@@ -73,13 +73,9 @@ class MeadowLaws<A : Any>(
         idempotentLaw
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> listOf(commutativeRingLaws.node(LawMode.COMPACT)) +
-                structureLaws.asNodes()
-            LawMode.FULL -> listOf(commutativeRingLaws.node(LawMode.FULL)) +
-                structureLaws.asNodes() +
-                derivedLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(commutativeRingLaws.node()) +
+            structureLaws.asNodes() +
+            derivedLaws.asNodes()
 
 }

@@ -12,8 +12,10 @@ fun interface Printable<in A> {
     operator fun invoke(a: A): String = render(a)
 
     companion object {
-        /** Default printable: uses toString(). */
-        fun <A> default(): Printable<A> = Printable { it.toString() }
+        private val DEFAULT: Printable<Any?> = Printable { it.toString() }
+
+        /** Default printable: uses toString(). Always the same instance. */
+        fun <A> default(): Printable<A> = DEFAULT
     }
 }
 
@@ -29,7 +31,6 @@ fun <A, B> pairPrintable(printA: Printable<A>, printB: Printable<B>): Printable<
  */
 fun <A> pr(a: A, printable: Printable<A> = Printable.default()): String =
     printable(a)
-
 
 object Printables {
     val char: Printable<Char> = Printable.default()

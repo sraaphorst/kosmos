@@ -36,7 +36,7 @@ class LawSession(val root: LawNode, val config: LawRunConfig = LawRunConfig()) {
         LawGraphs.requireAcyclic(root)
         val firstAt = HashMap<Any, List<Int>>()
         fun walk(node: LawNode, indices: List<Int>) {
-            val key: Any = node.key ?: node
+            val key: Any = node.cacheKey()
             val first = firstAt[key]
             if (first != null) {
                 // A repeat: every leaf below maps to the leaf at the same relative position in the first occurrence.

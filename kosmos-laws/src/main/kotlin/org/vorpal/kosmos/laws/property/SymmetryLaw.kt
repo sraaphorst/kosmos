@@ -3,6 +3,7 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -22,6 +23,7 @@ class SymmetryLaw<A : Any, B : Any>(
     private val prB: Printable<B> = Printable.default(),
     private val symbol: String = "⟨·,·⟩"
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, arb, eq, symbol)
 
     override val name: String = "symmetry ($symbol)"
 

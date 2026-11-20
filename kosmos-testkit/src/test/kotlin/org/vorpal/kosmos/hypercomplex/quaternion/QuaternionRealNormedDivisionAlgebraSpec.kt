@@ -3,6 +3,7 @@ package org.vorpal.kosmos.hypercomplex.quaternion
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for [QuaternionAlgebras.QuaternionDivisionRing] as a
@@ -26,6 +27,6 @@ class QuaternionRealNormedDivisionAlgebraSpec : StringSpec({
             eqReal = RealAlgebras.eqRealApprox,
             prA = QuaternionAlgebras.printableQuaternionPretty,
             prReal = RealAlgebras.printableRealPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

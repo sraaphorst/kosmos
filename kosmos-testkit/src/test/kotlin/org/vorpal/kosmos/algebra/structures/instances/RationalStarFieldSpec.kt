@@ -1,8 +1,9 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
 import io.kotest.core.spec.style.StringSpec
-import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.core.rational.ArbRational
+import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 class RationalStarFieldSpec : StringSpec({
     "RationalStarField satisfies StarAlgebraLaws" {
@@ -15,6 +16,6 @@ class RationalStarFieldSpec : StringSpec({
             prR = RationalAlgebras.printableRationalPretty,
             prA = RationalAlgebras.printableRationalPretty
         )
-        laws.fullTest().throwIfFailed()
+        laws.verify().throwIfFailed()
     }
 })

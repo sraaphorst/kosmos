@@ -11,6 +11,7 @@ import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 
 /**
@@ -27,7 +28,7 @@ class RealDualSpec : StringSpec({
     val arb = ArbDual.smallDual
 
     "RealDualRing satisfies CommutativeRingLaws" {
-        CommutativeRingLaws(ring, arb, eq, pr).fullTest().throwIfFailed()
+        CommutativeRingLaws(ring, arb, eq, pr).verify().throwIfFailed()
     }
 
     "RealDualStarAlgebra satisfies StarAlgebraLaws" {
@@ -39,7 +40,7 @@ class RealDualSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DualRealVectorSpace satisfies VectorSpaceLaws and has dimension 2" {
@@ -52,7 +53,7 @@ class RealDualSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ε over the reals is 0 + 1ε and squares to zero" {
@@ -95,7 +96,7 @@ class RealDualSpec : StringSpec({
             eqB = DenseMatAlgebras.liftEq(eqR),
             prA = pr,
             prB = DenseMatAlgebras.liftPrintablePretty(RealAlgebras.printableRealPretty)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "strict equality distinguishes what approximate equality identifies" {

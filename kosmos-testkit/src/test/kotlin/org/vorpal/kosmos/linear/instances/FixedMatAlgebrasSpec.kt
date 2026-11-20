@@ -32,6 +32,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.ops.FixedMatOps
 import org.vorpal.kosmos.linear.values.DenseMat
 import org.vorpal.kosmos.linear.values.Mat2
@@ -67,35 +68,35 @@ class FixedMatAlgebrasSpec : StringSpec({
     "M₂(ℕ) satisfies SemiringLaws" {
         val n = NaturalAlgebras.NaturalCommutativeSemiring
         val arbN = Arb.int(0..20).map { Natural(it.toBigInteger()) }
-        SemiringLaws(FixedMatAlgebras.mat2Semiring(n), arbMat2(arbN)).fullTest().throwIfFailed()
+        SemiringLaws(FixedMatAlgebras.mat2Semiring(n), arbMat2(arbN)).verify().throwIfFailed()
     }
 
     "M₂(ℤ) and M₂(𝔽₅) satisfy RingLaws" {
-        RingLaws(FixedMatAlgebras.mat2Ring(z), arbMZ).fullTest().throwIfFailed()
-        RingLaws(FixedMatAlgebras.mat2Ring(f5), arbMat2(arbF5)).fullTest().throwIfFailed()
+        RingLaws(FixedMatAlgebras.mat2Ring(z), arbMZ).verify().throwIfFailed()
+        RingLaws(FixedMatAlgebras.mat2Ring(f5), arbMat2(arbF5)).verify().throwIfFailed()
     }
 
     "M₂ over the rational quaternions, whose entries do not commute, satisfies RingLaws" {
         val h = QuaternionAlgebras.quaternionRing(q)
         RingLaws(FixedMatAlgebras.mat2Ring(h), arbMat2(ArbRationalQuaternion.smallRationalQuaternion))
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "M₂(ℤ) satisfies RModuleLaws and M₂(ℚ) satisfies VectorSpaceLaws" {
-        RModuleLaws(FixedMatAlgebras.mat2Module(z), arbZ, arbMZ).fullTest().throwIfFailed()
-        VectorSpaceLaws(FixedMatAlgebras.mat2Space(q), arbQ, arbMQ, eqF = eqQ).fullTest().throwIfFailed()
+        RModuleLaws(FixedMatAlgebras.mat2Module(z), arbZ, arbMZ).verify().throwIfFailed()
+        VectorSpaceLaws(FixedMatAlgebras.mat2Space(q), arbQ, arbMQ, eqF = eqQ).verify().throwIfFailed()
         FixedMatAlgebras.mat2Space(q).dimension shouldBe 4
     }
 
     "M₂(ℤ) and M₂(ℚ) satisfy AlgebraLaws" {
-        AlgebraLaws(FixedMatAlgebras.mat2Algebra(z), arbZ, arbMZ).fullTest().throwIfFailed()
-        AlgebraLaws(FixedMatAlgebras.mat2Algebra(q), arbQ, arbMQ, eqR = eqQ).fullTest().throwIfFailed()
+        AlgebraLaws(FixedMatAlgebras.mat2Algebra(z), arbZ, arbMZ).verify().throwIfFailed()
+        AlgebraLaws(FixedMatAlgebras.mat2Algebra(q), arbQ, arbMQ, eqR = eqQ).verify().throwIfFailed()
     }
 
     "under the adjugate, M₂(ℤ), M₂(ℚ) and M₂(𝔽₅) satisfy StarAlgebraLaws" {
-        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(z), arbZ, arbMZ).fullTest().throwIfFailed()
-        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(q), arbQ, arbMQ, eqR = eqQ).fullTest().throwIfFailed()
-        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(f5), arbF5, arbMat2(arbF5)).fullTest().throwIfFailed()
+        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(z), arbZ, arbMZ).verify().throwIfFailed()
+        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(q), arbQ, arbMQ, eqR = eqQ).verify().throwIfFailed()
+        StarAlgebraLaws(FixedMatAlgebras.mat2StarAlgebra(f5), arbF5, arbMat2(arbF5)).verify().throwIfFailed()
     }
 
     "the norm is the determinant: M · conj(M) = conj(M) · M = N(M)·1, and N is multiplicative" {
@@ -159,23 +160,23 @@ class FixedMatAlgebrasSpec : StringSpec({
     // ---------- Vec2 over Mat2 ----------
 
     "column vectors over ℤ and over the rational quaternions form a left M₂-module" {
-        LeftRModuleLaws(FixedMatAlgebras.vec2LeftMat2Module(z), arbMZ, arbVec2(arbZ)).fullTest().throwIfFailed()
+        LeftRModuleLaws(FixedMatAlgebras.vec2LeftMat2Module(z), arbMZ, arbVec2(arbZ)).verify().throwIfFailed()
         val h = QuaternionAlgebras.quaternionRing(q)
         val arbH = ArbRationalQuaternion.smallRationalQuaternion
         LeftRModuleLaws(FixedMatAlgebras.vec2LeftMat2Module(h), arbMat2(arbH), arbVec2(arbH))
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "row vectors over ℤ and over the rational quaternions form a right M₂-module" {
-        RightRModuleLaws(FixedMatAlgebras.vec2RightMat2Module(z), arbVec2(arbZ), arbMZ).fullTest().throwIfFailed()
+        RightRModuleLaws(FixedMatAlgebras.vec2RightMat2Module(z), arbVec2(arbZ), arbMZ).verify().throwIfFailed()
         val h = QuaternionAlgebras.quaternionRing(q)
         val arbH = ArbRationalQuaternion.smallRationalQuaternion
         RightRModuleLaws(FixedMatAlgebras.vec2RightMat2Module(h), arbVec2(arbH), arbMat2(arbH))
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "row vectors over ℤ form a (ℤ, M₂(ℤ))-bimodule" {
-        RSBiModuleLaws(FixedMatAlgebras.vec2Mat2BiModule(z), arbZ, arbVec2(arbZ), arbMZ).fullTest().throwIfFailed()
+        RSBiModuleLaws(FixedMatAlgebras.vec2Mat2BiModule(z), arbZ, arbVec2(arbZ), arbMZ).verify().throwIfFailed()
     }
 
     // ---------- Morphisms ----------
@@ -184,7 +185,7 @@ class FixedMatAlgebrasSpec : StringSpec({
         val embed = FixedMatAlgebras.scalarEmbedding(z)
         val ring = FixedMatAlgebras.mat2Ring(z)
         RingHomomorphismLaws(hom = embed::invoke, domain = z, codomain = ring, arb = arbZ)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = arbZ).test()
         checkAll(arbZ, arbMZ) { r, m ->
             ring.mul(embed(r), m) shouldBe ring.mul(m, embed(r))
@@ -195,13 +196,13 @@ class FixedMatAlgebrasSpec : StringSpec({
         val iso = FixedMatAlgebras.denseMatIsomorphism(z)
         val arbDense = arbMZ.map { m -> iso(m) }
         RingHomomorphismLaws(hom = iso::invoke, domain = iso.domain, codomain = iso.codomain, arb = arbMZ)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         RingHomomorphismLaws(
             hom = iso.backward::invoke,
             domain = iso.codomain,
             codomain = iso.domain,
             arb = arbDense
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         checkAll(arbMZ) { m -> iso.backward(iso(m)) shouldBe m }
         checkAll(arbDense) { d -> iso(iso.backward(d)) shouldBe d }
         shouldThrow<IllegalArgumentException> {
@@ -217,12 +218,12 @@ class FixedMatAlgebrasSpec : StringSpec({
         val arb = ArbSplitQuaternion.rationalSplitQuaternion
 
         RingHomomorphismLaws(hom = phi::invoke, domain = splitQuaternions, codomain = star, arb = arb)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         checkAll(arb) { x ->
             phi(splitQuaternions.conj(x)) shouldBe star.conj(phi(x))
             FixedMatAlgebras.normSq(q)(phi(x)) shouldBe normSq(x)
         }
-        InvolutiveRingLaws(star, arbMQ).fullTest().throwIfFailed()
+        InvolutiveRingLaws(star, arbMQ).verify().throwIfFailed()
     }
 
     // ---------- Equality and printing ----------

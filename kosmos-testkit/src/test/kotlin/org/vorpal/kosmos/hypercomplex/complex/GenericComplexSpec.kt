@@ -24,6 +24,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import java.math.BigInteger
@@ -53,8 +54,8 @@ class GenericComplexSpec : StringSpec({
     "Complex<𝔽₇> and Complex<𝔽₅> are commutative involutive rings" {
         listOf(f7 to 7, f5 to 5).forEach { (field, p) ->
             val ring = ComplexAlgebras.complexRing(field)
-            CommutativeRingLaws(ring, arbOver(p)).fullTest().throwIfFailed()
-            InvolutiveRingLaws(ring, arbOver(p)).fullTest().throwIfFailed()
+            CommutativeRingLaws(ring, arbOver(p)).verify().throwIfFailed()
+            InvolutiveRingLaws(ring, arbOver(p)).verify().throwIfFailed()
         }
     }
 
@@ -99,9 +100,9 @@ class GenericComplexSpec : StringSpec({
     }
 
     "Complex<ℚ> is a free module and a star algebra over ℚ" {
-        RModuleLaws(ComplexAlgebras.complexModule(q), smallRational, ArbGaussianRat.small).fullTest().throwIfFailed()
+        RModuleLaws(ComplexAlgebras.complexModule(q), smallRational, ArbGaussianRat.small).verify().throwIfFailed()
         StarAlgebraLaws(ComplexAlgebras.complexStarAlgebra(q), smallRational, ArbGaussianRat.small)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "the scalar embedding ℚ ↪ Complex<ℚ> is an injective unital ring homomorphism" {
@@ -111,7 +112,7 @@ class GenericComplexSpec : StringSpec({
             domain = q,
             codomain = ComplexAlgebras.complexRing(q),
             arb = smallRational
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = smallRational).test()
     }
 

@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
+import org.vorpal.kosmos.laws.verify
 
 class ComplexRealVectorSpaceSpec : StringSpec({
     "ComplexRealVectorSpace satisfies VectorSpaceLaws" {
@@ -15,6 +16,6 @@ class ComplexRealVectorSpaceSpec : StringSpec({
             eqV = ComplexAlgebras.eqComplex,
             prF = RealAlgebras.printableRealPretty,
             prV = ComplexAlgebras.printableComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

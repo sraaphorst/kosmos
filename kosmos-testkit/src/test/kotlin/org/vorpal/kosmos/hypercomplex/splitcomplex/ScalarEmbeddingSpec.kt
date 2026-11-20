@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Tests that `scalarEmbedding(RealField): RingMonomorphism<Real, SplitComplex<Real>>`
@@ -21,6 +22,6 @@ class ScalarEmbeddingSpec : StringSpec({
             eqB = SplitComplexAlgebras.eqSplitComplex,
             prA = RealAlgebras.printableRealPretty,
             prB = SplitComplexAlgebras.printableSplitComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

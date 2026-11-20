@@ -1,7 +1,6 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import kotlin.math.max
 import org.vorpal.kosmos.algebra.structures.RealNormedDivisionAlgebra
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.Eq
@@ -11,15 +10,16 @@ import org.vorpal.kosmos.core.math.RealTolerances
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.property.realPositiveDefiniteLaw
 import org.vorpal.kosmos.laws.suiteName
+import kotlin.math.max
 
 /**
  * Laws for [RealNormedDivisionAlgebra]:
@@ -35,7 +35,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
     private val eqReal: Eq<Real> = Eqs.realApprox(absTol = tolerance, relTol = tolerance),
     private val prA: Printable<A> = Printable.default(),
     private val prReal: Printable<Real> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     private val normDesc = "N[${algebra.normSq.symbol}]"
 
@@ -67,7 +67,7 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
             zeroN = Option.None
         )
 
-    private val realOnly: List<TestingLaw> = listOf(
+    private val realOnly: List<LawComponent> = listOf(
         realPositiveDefiniteLaw(
             inner = algebra.normSq,
             zeroVector = algebra.zero,
@@ -77,7 +77,10 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
             tolerance = tolerance
         ),
 
-        TestingLaw.named("norm consistency: ||a||^2 = max(0, N(a))") {
+        TestingLaw.named(
+            "norm consistency: ||a||^2 = max(0, N(a))",
+            LawBinding.named("real norm consistency", algebra, arb, eqReal)
+        ) {
             lawCheckAll(arb) { a ->
                 val nSq = algebra.normSq(a)
                 val n = algebra.norm(a)
@@ -93,8 +96,8 @@ class RealNormedDivisionAlgebraLaws<A : Any>(
         }
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(base.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(base.node()) +
             realOnly.asNodes()
 
 }

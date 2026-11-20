@@ -14,6 +14,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
 import java.math.BigInteger
@@ -36,9 +37,9 @@ class SextonionStructuresSpec : StringSpec({
         )
 
     "the sextonions over ℚ and ℤ are free modules satisfying RModuleLaws" {
-        RModuleLaws(SextonionAlgebras.sextonionModule(q), scalarArb, arb).fullTest().throwIfFailed()
+        RModuleLaws(SextonionAlgebras.sextonionModule(q), scalarArb, arb).verify().throwIfFailed()
         RModuleLaws(SextonionAlgebras.sextonionModule(z), arbInt, ArbSextonion.integerSextonion)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         SextonionAlgebras.basis(q).size shouldBe 6
     }
 
@@ -47,12 +48,12 @@ class SextonionStructuresSpec : StringSpec({
             algebra = SextonionAlgebras.sextonionStarAlgebra(q),
             scalarArb = scalarArb,
             algebraArb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         NonAssociativeStarAlgebraLaws(
             algebra = SextonionAlgebras.sextonionStarAlgebra(z),
             scalarArb = arbInt,
             algebraArb = ArbSextonion.integerSextonion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the algebra and the star algebra share the ring and the scalar action" {
@@ -75,7 +76,7 @@ class SextonionStructuresSpec : StringSpec({
     "the scalar embeddings ℚ ↪ Sextonion<ℚ> and ℤ ↪ Sextonion<ℤ> are injective unital homomorphisms" {
         val embed = SextonionAlgebras.scalarEmbedding(q)
         NonAssociativeRingHomomorphismLaws(hom = embed::invoke, domain = q, codomain = ring, arb = scalarArb)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = scalarArb).test()
         embed(Rational.ONE) shouldBe ring.one
 
@@ -85,7 +86,7 @@ class SextonionStructuresSpec : StringSpec({
             domain = z,
             codomain = SextonionAlgebras.sextonionRing(z),
             arb = arbInt
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = embedZ::invoke, arbA = arbInt).test()
     }
 

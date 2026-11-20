@@ -8,6 +8,7 @@ import org.vorpal.kosmos.algebra.structures.toAbelianHeap
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.AbelianHeapLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 private val IntegerAdditive = IntegerAlgebras.IntegerCommutativeRing.add
@@ -19,7 +20,7 @@ class IntegerAbelianHeapSpec : StringSpec({
             arb = ArbInteger.small,
             eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "IntegerAdditive.toAbelianHeap() agrees with IntegerAbelianHeap" {
@@ -30,7 +31,7 @@ class IntegerAbelianHeapSpec : StringSpec({
             arb = ArbInteger.small,
             eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "IntegerAbelianHeap.toAbelianGroup(0) recovers IntegerAdditive on operations" {
@@ -40,7 +41,7 @@ class IntegerAbelianHeapSpec : StringSpec({
             arb = ArbInteger.small,
             eq = IntegerAlgebras.eqInteger,
             pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "negative test: non-heap is rejected by AbelianHeapLaws" {
@@ -51,7 +52,7 @@ class IntegerAbelianHeapSpec : StringSpec({
                 arb = ArbInteger.small,
                 eq = IntegerAlgebras.eqInteger,
                 pr = IntegerAlgebras.printableInteger
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 })

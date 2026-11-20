@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 class ComplexStarAlgebraSpec : StringSpec({
     "ComplexStarAlgebra satisfies StarAlgebraLaws" {
@@ -16,7 +17,7 @@ class ComplexStarAlgebraSpec : StringSpec({
             eqA = ComplexAlgebras.eqComplex,
             prR = RealAlgebras.printableRealPretty,
             prA = ComplexAlgebras.printableComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ComplexStarAlgebra satisfies RealNormedDivisionAlgebraLaws" {
@@ -27,6 +28,6 @@ class ComplexStarAlgebraSpec : StringSpec({
             eqReal = RealAlgebras.eqRealApprox,
             prA = ComplexAlgebras.printableComplexPretty,
             prReal = RealAlgebras.printableRealPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

@@ -12,6 +12,7 @@ import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Vec3
 
 /**
@@ -34,7 +35,7 @@ class RealZornSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ZornRealVectorSpace satisfies VectorSpaceLaws and has dimension 8" {
@@ -47,11 +48,11 @@ class RealZornSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "real Zorn multiplication is alternative" {
-        AlternativityLaw(ring.mul.op, arb, eq, pr).test()
+        AlternativityLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "the real Zorn norm is multiplicative" {
@@ -102,7 +103,7 @@ class RealZornSpec : StringSpec({
             eqB = eq,
             prA = prO,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         NonAssociativeRingHomomorphismLaws(
             hom = iso.backward::invoke,
@@ -112,7 +113,7 @@ class RealZornSpec : StringSpec({
             eqB = eqO,
             prA = pr,
             prB = prO
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         checkAll(ArbSplitOctonion.smallSplitOctonion) { o ->
             check(eqO(iso.backward(iso(o)), o))

@@ -5,6 +5,7 @@ import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instance.arbDenseVec
 
 /**
@@ -26,7 +27,7 @@ class DenseVecStructuresSpec : StringSpec({
             arb = arbDenseVec(ArbRational.small, n),
             eq = eqVec,
             pr = prVec
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseVectorSpace satisfies VectorSpaceLaws over the rationals" {
@@ -38,7 +39,7 @@ class DenseVecStructuresSpec : StringSpec({
             eqV = eqVec,
             prF = prQ,
             prV = prVec
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "DenseVecHadamardUnitGroup satisfies AbelianGroupLaws over the rationals" {
@@ -47,6 +48,6 @@ class DenseVecStructuresSpec : StringSpec({
             arb = arbDenseVec(ArbRational.nonZero, n),
             eq = eqVec,
             pr = prVec
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

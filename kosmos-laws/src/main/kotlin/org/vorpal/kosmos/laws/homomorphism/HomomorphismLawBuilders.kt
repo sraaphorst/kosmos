@@ -5,6 +5,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -29,7 +30,7 @@ fun <A : Any, B : Any> preservesBinaryOpLaw(
     val arbPair = TestingLaw.arbPair(arbA)
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
-    return TestingLaw.named("$label ($arrow)") {
+    return TestingLaw.named("$label ($arrow)", LawBinding.named("preservesBinaryOpLaw", domainOp, codomainOp, hom, arbA, eqB)) {
         lawCheckAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(a), hom(b))
@@ -79,7 +80,7 @@ fun <A : Any, B : Any> antiPreservesBinaryOpLaw(
     val arbPair = TestingLaw.arbPair(arbA)
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
-    return TestingLaw.named("$label ($arrow)") {
+    return TestingLaw.named("$label ($arrow)", LawBinding.named("antiPreservesBinaryOpLaw", domainOp, codomainOp, hom, arbA, eqB)) {
         lawCheckAll(arbPair) { (a, b) ->
             val left = hom(domainOp(a, b))
             val right = codomainOp(hom(b), hom(a))
@@ -123,7 +124,7 @@ fun <A : Any, B : Any> preservesIdentityLaw(
     prB: Printable<B> = Printable.default(),
     label: String = "homomorphism: preserves identity"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("preservesIdentityLaw", domainIdentity, codomainIdentity, hom, eqB)) {
         val left = hom(domainIdentity)
 
         lawCheck(eqB(left, codomainIdentity)) {
@@ -164,7 +165,7 @@ fun <A : Any, B : Any> injectivityLaw(
 ): TestingLaw {
     val arbPair = TestingLaw.arbPair(arbA)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("injectivityLaw", hom, arbA, eqA, eqB)) {
         lawCheckAll(arbPair) { (a, b) ->
             val fa = hom(a)
             val fb = hom(b)
@@ -216,7 +217,7 @@ fun <A : Any, B : Any> preservesTernaryOpLaw(
     val arbTriple = TestingLaw.arbTriple(arbA)
     val arrow = "${domainOp.symbol} → ${codomainOp.symbol}"
 
-    return TestingLaw.named("$label ($arrow)") {
+    return TestingLaw.named("$label ($arrow)", LawBinding.named("preservesTernaryOpLaw", domainOp, codomainOp, hom, arbA, eqB)) {
         lawCheckAll(arbTriple) { (x, y, z) ->
             val left = hom(domainOp(x, y, z))
             val right = codomainOp(hom(x), hom(y), hom(z))

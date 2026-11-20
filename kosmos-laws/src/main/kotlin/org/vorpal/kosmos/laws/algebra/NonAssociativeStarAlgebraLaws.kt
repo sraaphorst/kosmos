@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeStarAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.suiteName
 
@@ -26,7 +25,7 @@ class NonAssociativeStarAlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     override val name = suiteName(
         "NonAssociativeStarAlgebra",
@@ -53,7 +52,7 @@ class NonAssociativeStarAlgebraLaws<R : Any, A : Any>(
         )
     }
 
-    private val structureLaws: List<TestingLaw> = listOf(
+    private val structureLaws: List<LawComponent> = listOf(
         starCommutesWithScalarActionLaw(
             act = algebra.leftAction,
             star = algebra.conj,
@@ -65,8 +64,8 @@ class NonAssociativeStarAlgebraLaws<R : Any, A : Any>(
         )
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(algebraLaws.node(mode), conjugationLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(algebraLaws.node(), conjugationLaws.node()) +
             structureLaws.asNodes()
 
 }

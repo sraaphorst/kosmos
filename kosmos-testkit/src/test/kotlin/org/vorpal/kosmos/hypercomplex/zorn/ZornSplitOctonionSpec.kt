@@ -18,6 +18,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeInvolutiveRingLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Vec3
 import java.math.BigInteger
 
@@ -43,7 +44,7 @@ class ZornSplitOctonionSpec : StringSpec({
             domain = splitOctonions,
             codomain = zorns,
             arb = arbO
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "φ(pq) = φ(p)φ(q) and φ(1) = 1" {
@@ -86,7 +87,7 @@ class ZornSplitOctonionSpec : StringSpec({
             domain = zorns,
             codomain = splitOctonions,
             arb = arbZ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the diagonal idempotents correspond to (1 ± e₄)/2" {
@@ -112,7 +113,7 @@ class ZornSplitOctonionSpec : StringSpec({
             domain = SplitOctonionAlgebras.splitOctonionRing(z),
             codomain = ZornAlgebras.zornRing(z),
             arb = arbIntO
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = integerMono::invoke, arbA = arbIntO).test()
 
         checkAll(arbIntO) { o ->
@@ -130,8 +131,8 @@ class ZornSplitOctonionSpec : StringSpec({
     "the Zorn ring over ℤ satisfies NonAssociativeInvolutiveRingLaws and is alternative" {
         val z = IntegerAlgebras.IntegerCommutativeRing
         val ring = ZornAlgebras.zornRing(z)
-        NonAssociativeInvolutiveRingLaws(ring, ArbZorn.integerZorn).fullTest().throwIfFailed()
-        AlternativityLaw(ring.mul.op, ArbZorn.integerZorn).test()
+        NonAssociativeInvolutiveRingLaws(ring, ArbZorn.integerZorn).verify().throwIfFailed()
+        AlternativityLaw(ring.mul.op, ArbZorn.integerZorn).verify().throwIfFailed()
     }
 
     "over 𝔽₃, the Zorn ring satisfies the laws and φ is an isomorphism" {
@@ -142,14 +143,14 @@ class ZornSplitOctonionSpec : StringSpec({
         val arbF3O = ArbSplitOctonion.splitOctonionOf(arbF3)
         val arbF3Z = ArbZorn.zornOf(arbF3)
 
-        NonAssociativeInvolutiveRingLaws(ring, arbF3Z).fullTest().throwIfFailed()
-        AlternativityLaw(ring.mul.op, arbF3Z).test()
+        NonAssociativeInvolutiveRingLaws(ring, arbF3Z).verify().throwIfFailed()
+        AlternativityLaw(ring.mul.op, arbF3Z).verify().throwIfFailed()
         NonAssociativeRingHomomorphismLaws(
             hom = f3Iso::invoke,
             domain = SplitOctonionAlgebras.splitOctonionRing(f3),
             codomain = ring,
             arb = arbF3O
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         checkAll(arbF3O) { o -> f3Iso.backward(f3Iso(o)) shouldBe o }
         checkAll(arbF3Z) { x -> f3Iso(f3Iso.backward(x)) shouldBe x }
     }

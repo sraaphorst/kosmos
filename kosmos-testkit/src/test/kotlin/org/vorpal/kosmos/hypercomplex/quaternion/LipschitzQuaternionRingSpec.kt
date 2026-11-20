@@ -11,6 +11,7 @@ import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -29,7 +30,7 @@ class LipschitzQuaternionRingSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "normSq is multiplicative: N(xy) = N(x)N(y) in ℤ" {
@@ -59,7 +60,7 @@ class LipschitzQuaternionRingSpec : StringSpec({
             eqM = eq,
             prR = IntegerAlgebras.printableInteger,
             prM = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the lattice basis is the Cayley-Dickson basis 1, i, j, k and its Gram matrix is the identity" {
@@ -115,7 +116,7 @@ class LipschitzQuaternionRingSpec : StringSpec({
             eqB = HurwitzQuaternionAlgebras.eqHurwitzQuaternion,
             prA = pr,
             prB = HurwitzQuaternionAlgebras.printableHurwitzQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,
@@ -137,7 +138,7 @@ class LipschitzQuaternionRingSpec : StringSpec({
             eqB = RationalQuaternionAlgebras.eqRationalQuaternion,
             prA = pr,
             prB = RationalQuaternionAlgebras.printableRationalQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,

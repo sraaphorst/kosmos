@@ -1,12 +1,13 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import org.vorpal.kosmos.algebra.structures.CD
 import io.kotest.core.spec.style.StringSpec
+import org.vorpal.kosmos.algebra.structures.CD
 import org.vorpal.kosmos.hypercomplex.complex.ArbComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * The quaternion multiplication table and the six unital embeddings `ℂ ↪ ℍ`.
@@ -63,7 +64,7 @@ class QuaternionBasisSpec : StringSpec({
                 eqB = QuaternionAlgebras.eqQuaternion,
                 prA = ComplexAlgebras.printableComplexPretty,
                 prB = pr
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
 
             injectivityLaw(
                 hom = phi::invoke,
@@ -84,7 +85,7 @@ class QuaternionBasisSpec : StringSpec({
                 eqV = QuaternionAlgebras.eqQuaternion,
                 prF = ComplexAlgebras.printableComplexPretty,
                 prV = pr
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 })

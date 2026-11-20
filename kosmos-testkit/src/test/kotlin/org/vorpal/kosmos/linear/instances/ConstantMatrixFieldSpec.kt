@@ -8,11 +8,12 @@ import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.core.rational.Rational
-import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 import org.vorpal.kosmos.laws.algebra.FieldLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instance.arbConstMat
 import org.vorpal.kosmos.linear.values.DenseMat
+import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
 
 class ConstantMatrixFieldSpec : StringSpec({
 
@@ -32,7 +33,7 @@ class ConstantMatrixFieldSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ConstantMatrixField satisfies FieldLaws for matrices over GaussianRat" {
@@ -51,7 +52,7 @@ class ConstantMatrixFieldSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ConstantMatrixField satisfies fromBigInt for matrices over Rational" {

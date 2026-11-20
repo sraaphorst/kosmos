@@ -5,8 +5,8 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
 import io.kotest.property.checkAll
-import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.multi.ArbBicomplex
 import org.vorpal.kosmos.hypercomplex.multi.BicomplexAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.ArbQuaternion
@@ -15,6 +15,7 @@ import org.vorpal.kosmos.hypercomplex.splitquaternion.ArbSplitQuaternion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 
@@ -66,7 +67,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eq,
             prA = prC,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(mono::invoke, ArbBiquaternion.smallComplex, eqC, eq, prC, pr).test()
 
@@ -86,7 +87,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eq,
             prA = QuaternionAlgebras.printableQuaternionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbQuaternion.quaternion, QuaternionAlgebras.eqQuaternion, eq,
@@ -114,7 +115,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eq,
             prA = SplitQuaternionAlgebras.printableSplitQuaternionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbSplitQuaternion.smallSplitQuaternion, SplitQuaternionAlgebras.eqSplitQuaternion, eq,
@@ -141,7 +142,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eq,
             prA = BicomplexAlgebras.printableBicomplexPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             mono::invoke, ArbBicomplex.bicomplex, BicomplexAlgebras.eqBicomplex, eq,
@@ -166,7 +167,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eqM,
             prA = pr,
             prB = prM
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "M₂(ℂ) → ℍ ⊗ ℂ is a unital ring homomorphism" {
@@ -178,7 +179,7 @@ class BiquaternionMorphismSpec : StringSpec({
             eqB = eq,
             prA = prM,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the isomorphism ℍ ⊗ ℂ ≅ M₂(ℂ) and its inverse are mutually inverse" {

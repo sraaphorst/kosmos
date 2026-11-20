@@ -17,6 +17,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Exact tests of the split-octonions over ℚ.
@@ -39,11 +40,11 @@ class SplitOctonionSpec : StringSpec({
     fun neg(x: SplitOctonion<Rational>) = ring.add.inverse(x)
 
     "the split-octonions over ℚ satisfy NonAssociativeInvolutiveRingLaws" {
-        NonAssociativeInvolutiveRingLaws(ring, arb, pr = pr).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(ring, arb, pr = pr).verify().throwIfFailed()
     }
 
     "split-octonion multiplication is exactly alternative" {
-        AlternativityLaw(ring.mul.op, arb, pr = pr).test()
+        AlternativityLaw(ring.mul.op, arb, pr = pr).verify().throwIfFailed()
     }
 
     "split-octonion multiplication is exactly flexible" {
@@ -51,7 +52,7 @@ class SplitOctonionSpec : StringSpec({
     }
 
     "split-octonion multiplication exactly satisfies the Moufang identities" {
-        MoufangLaw(ring.mul.op, arb, pr = pr).test()
+        MoufangLaw(ring.mul.op, arb, pr = pr).verify().throwIfFailed()
     }
 
     "split-octonion multiplication is not associative: (e₁e₂)e₄ = -e₁(e₂e₄)" {
@@ -154,7 +155,7 @@ class SplitOctonionSpec : StringSpec({
             scalarArb = ArbSplitQuaternion.smallRational,
             vectorArb = arb,
             prM = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the split-octonions over ℚ satisfy NonAssociativeStarAlgebraLaws" {
@@ -163,7 +164,7 @@ class SplitOctonionSpec : StringSpec({
             scalarArb = ArbSplitQuaternion.smallRational,
             algebraArb = arb,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the scalar embedding ℚ ↪ SplitOctonion<ℚ> is an injective unital homomorphism" {
@@ -173,7 +174,7 @@ class SplitOctonionSpec : StringSpec({
             domain = q,
             codomain = ring,
             arb = ArbSplitQuaternion.smallRational
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(hom = embed::invoke, arbA = ArbSplitQuaternion.smallRational).test()
     }
@@ -185,7 +186,7 @@ class SplitOctonionSpec : StringSpec({
             domain = SplitQuaternionAlgebras.splitQuaternionRing(q),
             codomain = ring,
             arb = ArbSplitQuaternion.rationalSplitQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(hom = mono::invoke, arbA = ArbSplitQuaternion.rationalSplitQuaternion).test()
 

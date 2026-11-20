@@ -11,6 +11,7 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -80,7 +81,7 @@ class HurwitzQuaternionRingSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "normSq lands in ℤ and agrees with the norm of ℍ_ℚ" {
@@ -98,7 +99,7 @@ class HurwitzQuaternionRingSpec : StringSpec({
             eqM = eq,
             prR = IntegerAlgebras.printableInteger,
             prM = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the lattice basis 1, i, j, ω generates both cosets" {
@@ -167,7 +168,7 @@ class HurwitzQuaternionRingSpec : StringSpec({
             eqB = eqQ,
             prA = pr,
             prB = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = inclusion::invoke,

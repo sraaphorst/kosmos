@@ -1,7 +1,5 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
-import org.vorpal.kosmos.numberfields.quadratic.GaussianInts
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -18,10 +16,13 @@ import org.vorpal.kosmos.hypercomplex.quaternion.AxisSignEmbeddings.Sign
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianRat
 import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianInts
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
 
 /**
  * The ×6 families of embeddings of a complex-like ring into a quaternion-like ring, one per
@@ -51,7 +52,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
                 codomain = codomain,
                 arb = arb,
                 eqB = eqQ
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
             injectivityLaw(hom = phi::invoke, arbA = arb, eqA = eqA, eqB = eqQ).test()
 
             val u = phi(imaginaryUnit)
@@ -162,7 +163,7 @@ class ComplexLikeEmbeddingSpec : StringSpec({
                 eqV = QuaternionAlgebras.eqQuaternion,
                 prF = ComplexAlgebras.printableComplexPretty,
                 prV = QuaternionAlgebras.printableQuaternionPretty
-            ).test().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 

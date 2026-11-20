@@ -18,7 +18,9 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.laws.LawStatus
 import org.vorpal.kosmos.laws.algebra.MeadowLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -40,7 +42,7 @@ class MeadowSpec : StringSpec({
             arb = rationalArb,
             eq = RationalAlgebras.eqRational,
             pr = RationalAlgebras.printableRationalPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ℚ₀: inv(0) = 0, and inv agrees with the field reciprocal away from 0" {
@@ -60,7 +62,7 @@ class MeadowSpec : StringSpec({
 
     "BoolMeadow satisfies MeadowLaws, with inv the identity" {
         val meadow = MeadowAlgebras.BoolMeadow
-        MeadowLaws(meadow, Arb.boolean()).fullTest().throwIfFailed()
+        MeadowLaws(meadow, Arb.boolean()).verify().throwIfFailed()
         listOf(false, true).forEach { b -> meadow.inv(b) shouldBe b }
     }
 
@@ -70,7 +72,7 @@ class MeadowSpec : StringSpec({
         val meadow = MeadowAlgebras.primeFieldMeadow(p.toBigInteger())
 
         "𝔽_$p meadow satisfies MeadowLaws" {
-            MeadowLaws(meadow, residues(p)).fullTest().throwIfFailed()
+            MeadowLaws(meadow, residues(p)).verify().throwIfFailed()
         }
 
         "𝔽_$p meadow: every multiple of $p, not just the literal 0, is sent to 0" {
@@ -92,7 +94,7 @@ class MeadowSpec : StringSpec({
         val meadow = ZModMeadow(n.toBigInteger())
 
         "ℤ/${n}ℤ satisfies MeadowLaws" {
-            MeadowLaws(meadow, residues(n)).fullTest().throwIfFailed()
+            MeadowLaws(meadow, residues(n)).verify().throwIfFailed()
         }
     }
 
@@ -160,15 +162,15 @@ class MeadowSpec : StringSpec({
     "MeadowLaws rejects ℤ/30ℤ with inv the identity, since 2 * (2 * 2) = 8 ≠ 2" {
         val zmod = ZModMeadow(BigInteger.valueOf(30))
         val broken = Meadow.of(zmod.add, zmod.mul, Endo(Symbols.INVERSE) { it })
-        val report = MeadowLaws(broken, residues(30)).test()
-        report.failures.map { it.name } shouldContain "restricted inverse law (RIL)"
+        val report = MeadowLaws(broken, residues(30)).verify()
+        report.problems.map { it.label } shouldContain "restricted inverse law (RIL)"
     }
 
     "MeadowLaws rejects ℚ with inv(0) = 1 patched in, since the reflection law fails" {
         val broken = Meadow.of(rationalMeadow.add, rationalMeadow.mul, Endo(Symbols.INVERSE) { x ->
             if (x == Rational.ZERO) Rational.ONE else rationalMeadow.inv(x)
         })
-        MeadowLaws(broken, rationalArb).test().success shouldBe false
+        MeadowLaws(broken, rationalArb).verify().status shouldBe LawStatus.FAILED
     }
 
     // ===== Meadow.of =====
@@ -176,6 +178,6 @@ class MeadowSpec : StringSpec({
     "Meadow.of builds a meadow from its parts" {
         val zmod = ZModMeadow(BigInteger.valueOf(15))
         val meadow = Meadow.of(zmod.add, zmod.mul, zmod.inv)
-        MeadowLaws(meadow, residues(15)).fullTest().throwIfFailed()
+        MeadowLaws(meadow, residues(15)).verify().throwIfFailed()
     }
 })

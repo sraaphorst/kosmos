@@ -13,6 +13,7 @@ import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * The real split-octonions `𝕆'`, checked up to approximate equality.
@@ -34,7 +35,7 @@ class RealSplitOctonionSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "SplitOctonionRealVectorSpace satisfies VectorSpaceLaws and has dimension 8" {
@@ -47,11 +48,11 @@ class RealSplitOctonionSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "real split-octonion multiplication is alternative" {
-        AlternativityLaw(ring.mul.op, arb, eq, pr).test()
+        AlternativityLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "the real split norm is multiplicative" {
@@ -90,7 +91,7 @@ class RealSplitOctonionSpec : StringSpec({
             eqB = eq,
             prA = QuaternionAlgebras.printableQuaternionPretty,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,

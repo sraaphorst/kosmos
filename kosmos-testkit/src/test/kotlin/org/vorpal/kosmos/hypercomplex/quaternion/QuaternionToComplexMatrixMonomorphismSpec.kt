@@ -1,15 +1,16 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import org.vorpal.kosmos.hypercomplex.complex.Complex
 import io.kotest.assertions.withClue
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.Symbols
-import org.vorpal.kosmos.hypercomplex.complex.RealComplex
+import org.vorpal.kosmos.hypercomplex.complex.Complex
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
+import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 
@@ -34,7 +35,7 @@ class QuaternionToComplexMatrixMonomorphismSpec : StringSpec({
             prB = prM
         )
 
-        laws.fullTest().throwIfFailed()
+        laws.verify().throwIfFailed()
     }
 
     "QuaternionToComplexMatrixMonomorphism respects conjugation as conjugate-transpose" {

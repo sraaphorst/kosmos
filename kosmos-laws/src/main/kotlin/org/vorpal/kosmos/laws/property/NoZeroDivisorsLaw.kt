@@ -5,6 +5,7 @@ import io.kotest.property.arbitrary.filter
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -18,6 +19,8 @@ class NoZeroDivisorsLaw<A: Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
     private val pairArb = TestingLaw.arbPair(arb).nonZeroBoth(eq, zero)
     override val name = "no zero divisors (${op.symbol})"
 
@@ -42,6 +45,8 @@ class LeftNoZeroDivisorsLaw<A: Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
     private val pairArb = TestingLaw.arbPair(arb).nonZeroLeft(eq, zero)
     override val name = "no left zero divisors (${op.symbol})"
 
@@ -68,6 +73,8 @@ class RightNoZeroDivisorsLaw<A: Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
     private val pairArb = TestingLaw.arbPair(arb).nonZeroRight(eq, zero)
     override val name = "no right zero divisors (${op.symbol})"
 

@@ -10,6 +10,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.algebra.structures.instances.FiniteFieldAlgebras
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.laws.algebra.FieldLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -22,7 +23,7 @@ class PrimeFieldSpec : StringSpec({
         val arb: Arb<BigInteger> = Arb.int(0 until p).map(Int::toBigInteger)
 
         "𝔽_$p satisfies FieldLaws" {
-            FieldLaws(field, arb).fullTest().throwIfFailed()
+            FieldLaws(field, arb).verify().throwIfFailed()
         }
 
         "𝔽_$p: every nonzero residue has a reciprocal, and a·a⁻¹ = 1" {

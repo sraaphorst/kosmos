@@ -2,7 +2,6 @@ package org.vorpal.kosmos.core
 
 import org.vorpal.kosmos.core.finiteset.FiniteSet
 import org.vorpal.kosmos.core.math.Real
-import org.vorpal.kosmos.core.rational.Rational
 import java.math.BigDecimal
 import java.math.BigInteger
 import java.time.*
@@ -18,7 +17,11 @@ fun interface Eq<A> {
     fun neqv(a: A, b: A): Boolean = !eqv(a, b)
 
     companion object {
-        fun <A: Any> default(): Eq<A> = Eq { a, b -> a == b }
+        private val DEFAULT: Eq<Any> = Eq { a, b -> a == b }
+
+        /** Structural equality (`==`). Always the same instance, so laws built with it can be shared. */
+        @Suppress("UNCHECKED_CAST")
+        fun <A: Any> default(): Eq<A> = DEFAULT as Eq<A>
     }
 }
 

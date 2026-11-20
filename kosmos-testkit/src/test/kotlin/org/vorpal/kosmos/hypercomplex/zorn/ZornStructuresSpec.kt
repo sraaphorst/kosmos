@@ -14,6 +14,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Vec3
 import java.math.BigInteger
 
@@ -38,7 +39,7 @@ class ZornStructuresSpec : StringSpec({
             module = ZornAlgebras.zornModule(q),
             scalarArb = scalarArb,
             vectorArb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the Zorn matrices over ℤ are a free ℤ-module satisfying RModuleLaws" {
@@ -46,7 +47,7 @@ class ZornStructuresSpec : StringSpec({
             module = ZornAlgebras.zornModule(z),
             scalarArb = arbInt,
             vectorArb = ArbZorn.integerZorn
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the Zorn matrices over ℚ satisfy NonAssociativeStarAlgebraLaws" {
@@ -54,7 +55,7 @@ class ZornStructuresSpec : StringSpec({
             algebra = ZornAlgebras.zornStarAlgebra(q),
             scalarArb = scalarArb,
             algebraArb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the Zorn matrices over ℤ satisfy NonAssociativeStarAlgebraLaws" {
@@ -62,7 +63,7 @@ class ZornStructuresSpec : StringSpec({
             algebra = ZornAlgebras.zornStarAlgebra(z),
             scalarArb = arbInt,
             algebraArb = ArbZorn.integerZorn
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the scalar action is multiplication by the embedded scalar (r, 0, 0, r), on either side" {
@@ -81,7 +82,7 @@ class ZornStructuresSpec : StringSpec({
             domain = q,
             codomain = ring,
             arb = scalarArb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = scalarArb).test()
         embed(Rational.ONE) shouldBe ring.one
     }
@@ -93,7 +94,7 @@ class ZornStructuresSpec : StringSpec({
             domain = z,
             codomain = ZornAlgebras.zornRing(z),
             arb = arbInt
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = arbInt).test()
     }
 

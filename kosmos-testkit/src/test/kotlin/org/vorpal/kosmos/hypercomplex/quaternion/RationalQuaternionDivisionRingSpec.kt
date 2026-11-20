@@ -11,6 +11,7 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.NormedDivisionAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for the rational quaternions `ℍ_ℚ = CD⟨ℚ(i)⟩`.
@@ -29,7 +30,7 @@ class RationalQuaternionDivisionRingSpec : StringSpec({
             arb = ArbRationalQuaternion.nonZeroRationalQuaternion,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "RationalQuaternionDivisionRing satisfies InvolutiveRingLaws" {
@@ -38,7 +39,7 @@ class RationalQuaternionDivisionRingSpec : StringSpec({
             arb = ArbRationalQuaternion.rationalQuaternion,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "RationalQuaternionDivisionRing satisfies NormedDivisionAlgebraLaws exactly" {
@@ -51,7 +52,7 @@ class RationalQuaternionDivisionRingSpec : StringSpec({
             prA = pr,
             prN = RationalAlgebras.printableRational,
             zeroN = Option.Some(Rational.ZERO)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "RationalQuaternionVectorSpace satisfies VectorSpaceLaws" {
@@ -63,7 +64,7 @@ class RationalQuaternionDivisionRingSpec : StringSpec({
             eqV = eq,
             prF = RationalAlgebras.printableRational,
             prV = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the basis 1, i, j, k satisfies Hamilton's relations i² = j² = k² = ijk = -1" {
@@ -95,6 +96,6 @@ class RationalQuaternionDivisionRingSpec : StringSpec({
             eqB = QuaternionAlgebras.eqQuaternion,
             prA = pr,
             prB = QuaternionAlgebras.printableQuaternionPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

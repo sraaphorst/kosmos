@@ -2,13 +2,12 @@ package org.vorpal.kosmos.testing.laws
 
 import io.kotest.core.spec.style.scopes.FunSpecContainerScope
 import io.kotest.core.spec.style.scopes.FunSpecRootScope
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.LawReportText
 import org.vorpal.kosmos.laws.LawRunConfig
 import org.vorpal.kosmos.laws.LawSession
 import org.vorpal.kosmos.laws.LawStatus
-import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.LeafOutcome
 
 /**
@@ -17,7 +16,7 @@ import org.vorpal.kosmos.laws.LeafOutcome
  *
  * ```
  * class RationalFieldSpec : FunSpec({
- *     lawTests(FieldLaws(RationalField, ArbRational.small, eqRational, printableRationalPretty), LawMode.FULL)
+ *     lawTests(FieldLaws(RationalField, ArbRational.small, eqRational, printableRationalPretty))
  *     test("zero is Rational.ZERO") { ... }
  * })
  * ```
@@ -29,8 +28,8 @@ import org.vorpal.kosmos.laws.LeafOutcome
  * - Sibling labels that repeat get a ` [2]`, ` [3]`, ... suffix, since Kotest names must be unique among siblings.
  * - A leaf with an explicit skip reason is registered as disabled, with the reason in its name.
  *
- * The aggregated style (`suite.fullTest().throwIfFailed()` in one test, or `suite.verify(...).throwIfFailed()`)
- * keeps working; use whichever reads better for the spec.
+ * The aggregated style (`suite.verify().throwIfFailed()` in one test) keeps working; use whichever reads better
+ * for the spec.
  */
 fun FunSpecRootScope.lawTests(root: LawNode, config: LawRunConfig = LawRunConfig()) {
     val node = root as? LawNode.Branch ?: LawNode.Branch(root.label, listOf(root))
@@ -39,9 +38,9 @@ fun FunSpecRootScope.lawTests(root: LawNode, config: LawRunConfig = LawRunConfig
     }
 }
 
-/** Register a suite's graph in the given view (see the root-scope [lawTests]). */
-fun FunSpecRootScope.lawTests(suite: LawSuite, mode: LawMode = LawMode.FULL, config: LawRunConfig = LawRunConfig()) =
-    lawTests(suite.node(mode), config)
+/** Register a suite's or law's graph (see the root-scope [lawTests]). */
+fun FunSpecRootScope.lawTests(component: LawComponent, config: LawRunConfig = LawRunConfig()) =
+    lawTests(component.node(), config)
 
 /** Register a law graph inside an existing container. */
 suspend fun FunSpecContainerScope.lawTests(root: LawNode, config: LawRunConfig = LawRunConfig()) {
@@ -51,9 +50,9 @@ suspend fun FunSpecContainerScope.lawTests(root: LawNode, config: LawRunConfig =
     }
 }
 
-/** Register a suite's graph inside an existing container. */
-suspend fun FunSpecContainerScope.lawTests(suite: LawSuite, mode: LawMode = LawMode.FULL, config: LawRunConfig = LawRunConfig()) =
-    lawTests(suite.node(mode), config)
+/** Register a suite's or law's graph inside an existing container. */
+suspend fun FunSpecContainerScope.lawTests(component: LawComponent, config: LawRunConfig = LawRunConfig()) =
+    lawTests(component.node(), config)
 
 /**
  * Kotest display names for siblings: each label, with ` [k]` added to a repeat, and every final name unique.

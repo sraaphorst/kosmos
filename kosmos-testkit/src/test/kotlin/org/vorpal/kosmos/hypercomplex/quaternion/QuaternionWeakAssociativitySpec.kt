@@ -5,6 +5,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.BolIdentityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * The quaternions are associative, so they satisfy every "weak associativity" identity in the loop
@@ -26,15 +27,15 @@ class QuaternionWeakAssociativitySpec : StringSpec({
     val pr = QuaternionAlgebras.printableQuaternionPretty
 
     "quaternion multiplication is alternative" {
-        AlternativityLaw(op, arb, eq, pr).test()
+        AlternativityLaw(op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "quaternion multiplication satisfies the Moufang identities" {
-        MoufangLaw(op, arb, eq, pr).test()
+        MoufangLaw(op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "quaternion multiplication satisfies both Bol identities" {
-        BolIdentityLaw(op, arb, eq, pr).test()
+        BolIdentityLaw(op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "quaternion multiplication is flexible" {

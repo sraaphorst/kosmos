@@ -5,6 +5,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras.diagPlusMinus
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for the split-complex ring over the Reals,
@@ -21,7 +22,7 @@ class RealSplitComplexRingSpec : StringSpec({
             arb = ArbSplitComplex.boundedSplitComplex,
             eq = SplitComplexAlgebras.eqSplitComplex,
             pr = SplitComplexAlgebras.printableSplitComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "RealSplitComplexRing satisfies InvolutiveRingLaws" {
@@ -30,7 +31,7 @@ class RealSplitComplexRingSpec : StringSpec({
             arb = ArbSplitComplex.boundedSplitComplex,
             eq = SplitComplexAlgebras.eqSplitComplex,
             pr = SplitComplexAlgebras.printableSplitComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "Diagonal basis converts in both directions" {

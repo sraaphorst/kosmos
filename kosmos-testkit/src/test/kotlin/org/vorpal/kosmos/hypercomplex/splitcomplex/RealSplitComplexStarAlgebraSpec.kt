@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Mirrors `ComplexStarAlgebraSpec`.
@@ -23,6 +24,6 @@ class RealSplitComplexStarAlgebraSpec : StringSpec({
             eqA = SplitComplexAlgebras.eqSplitComplex,
             prR = RealAlgebras.printableRealPretty,
             prA = SplitComplexAlgebras.printableSplitComplexPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 })

@@ -3,6 +3,7 @@ package org.vorpal.kosmos.hypercomplex.octonion
 import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Confirms the *weak* associativity that [OctonionAlgebras.OctonionDivisionAlgebra] DOES satisfy,
@@ -27,10 +28,10 @@ class OctonionAlternativitySpec : StringSpec({
     val pr = OctonionAlgebras.printableOctonionPretty
 
     "octonion multiplication is alternative: x(xy) = (xx)y and (yx)x = y(xx)" {
-        AlternativityLaw(op, arb, eq, pr).test()
+        AlternativityLaw(op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "octonion multiplication satisfies the Moufang identities" {
-        MoufangLaw(op, arb, eq, pr).test()
+        MoufangLaw(op, arb, eq, pr).verify().throwIfFailed()
     }
 })

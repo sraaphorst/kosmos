@@ -28,6 +28,7 @@ import org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.linear.values.Vec3
@@ -68,7 +69,7 @@ class SextonionZornSpec : StringSpec({
 
     "φ : Sextonion<ℚ> → Zorn<ℚ> is a unital ring homomorphism, and injective" {
         NonAssociativeRingHomomorphismLaws(hom = phi::invoke, domain = sextonions, codomain = zorns, arb = arb)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = phi::invoke, arbA = arb).test()
     }
 
@@ -79,7 +80,7 @@ class SextonionZornSpec : StringSpec({
             domain = SextonionAlgebras.sextonionRing(z),
             codomain = ZornAlgebras.zornRing(z),
             arb = ArbSextonion.integerSextonion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = phiZ::invoke, arbA = ArbSextonion.integerSextonion).test()
 
         val f2 = FiniteFieldAlgebras.F2
@@ -89,7 +90,7 @@ class SextonionZornSpec : StringSpec({
             domain = SextonionAlgebras.sextonionRing(f2),
             codomain = ZornAlgebras.zornRing(f2),
             arb = ArbSextonion.sextonionOf(Arb.int(0..1).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "φ([[a, b], [c, d]], (e, f)) = [[a, (b, e, 0)], [(c, 0, −f), d]]" {
@@ -140,7 +141,7 @@ class SextonionZornSpec : StringSpec({
             domain = sextonions,
             codomain = splitOctonions,
             arb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = mono::invoke, arbA = arb).test()
         val sNorm = SextonionAlgebras.normSq(q)
         val oNorm = SplitOctonionAlgebras.normSq(q)
@@ -197,7 +198,7 @@ class SextonionZornSpec : StringSpec({
             domain = SextonionAlgebras.sextonionRing(f3),
             codomain = SplitOctonionAlgebras.splitOctonionRing(f3),
             arb = ArbSextonion.sextonionOf(Arb.int(0..2).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     // ---------- H′ → S → 𝕆′ against the direct H′ → 𝕆′ ----------
@@ -219,7 +220,7 @@ class SextonionZornSpec : StringSpec({
             domain = splitQuaternions,
             codomain = splitQuaternions,
             arb = arbH
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         checkAll(arbH) { x -> alpha(q, alpha(q, x)) shouldBe x }
     }
 

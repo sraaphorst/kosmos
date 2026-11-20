@@ -4,7 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
@@ -125,7 +129,6 @@ private sealed interface BolIdentityCore<A : Any> {
     }
 }
 
-
 /**
  * A loop `L` is said to be a Bol loop if it satisfies the identities:
  * - `a(b(ac)) = (a(ba))c`
@@ -143,17 +146,19 @@ private sealed interface BolIdentityCore<A : Any> {
  * the flexibility law.
  */
 class BolIdentityLaw<A : Any>(
-    override val op: BinOp<A>,
-    override val arb: Arb<A>,
-    override val eq: Eq<A> = Eq.default(),
-    override val pr: Printable<A> = Printable.default()
-) : TestingLaw, BolIdentityCore<A> {
+    private val op: BinOp<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = "bol identity (${op.symbol})"
 
-    override suspend fun test() {
-        leftBolIdentityCheck()
-        rightBolIdentityCheck()
-    }
+    override val binding = LawBinding.of(this, op, arb, eq)
+
+    override fun children(): List<LawNode> = listOf(
+        LeftBolIdentityLaw(op, arb, eq, pr),
+        RightBolIdentityLaw(op, arb, eq, pr)
+    ).asNodes()
 }
 
 /**
@@ -175,6 +180,8 @@ class LeftBolIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name = "left bol identity (${op.symbol})"
 
     override suspend fun test() =
@@ -200,6 +207,8 @@ class RightBolIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, BolIdentityCore<A> {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name = "right bol identity (${op.symbol})"
 
     override suspend fun test() =

@@ -11,6 +11,7 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Exact tests of the split-quaternions `(-1, +1)_R` over ℚ and ℤ.
@@ -33,14 +34,14 @@ class SplitQuaternionRingSpec : StringSpec({
     fun neg(x: SplitQuaternion<Rational>) = ring.add.inverse(x)
 
     "the split-quaternions over ℚ satisfy InvolutiveRingLaws (associative, with an involution)" {
-        InvolutiveRingLaws(ring, arb, pr = pr).fullTest().throwIfFailed()
+        InvolutiveRingLaws(ring, arb, pr = pr).verify().throwIfFailed()
     }
 
     "the split-quaternions over ℤ satisfy InvolutiveRingLaws" {
         InvolutiveRingLaws(
             SplitQuaternionAlgebras.splitQuaternionRing(IntegerAlgebras.IntegerCommutativeRing),
             ArbSplitQuaternion.integerSplitQuaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the basis is 1, i, j, k and 1 is the identity" {
@@ -146,7 +147,7 @@ class SplitQuaternionRingSpec : StringSpec({
             scalarArb = ArbSplitQuaternion.smallRational,
             vectorArb = arb,
             prM = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the split-quaternions over ℚ satisfy StarAlgebraLaws" {
@@ -155,7 +156,7 @@ class SplitQuaternionRingSpec : StringSpec({
             scalarArb = ArbSplitQuaternion.smallRational,
             algebraArb = arb,
             prA = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the scalar action is multiplication by the embedded scalar, on either side" {

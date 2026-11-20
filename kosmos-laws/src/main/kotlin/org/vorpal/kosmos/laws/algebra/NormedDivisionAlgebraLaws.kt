@@ -8,10 +8,9 @@ import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.functional.datastructures.exists
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.NormSqDefiniteLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
@@ -45,7 +44,7 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prN: Printable<N> = Printable.default(),
     private val zeroN: Option<N> = Option.None
-) : StructuredLawSuite {
+) : LawSuite {
 
     private val normDesc = "N[${algebra.normSq.symbol}]"
 
@@ -63,7 +62,7 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
     private val divAlgLaws =
         NonAssociativeDivisionAlgebraLaws(algebra, arbA, eqA, prA)
 
-    private val structureLaws: List<TestingLaw> = buildList {
+    private val structureLaws: List<LawComponent> = buildList {
         add(
             NormSqMultiplicativeLaw(
                 mulA = algebra.mul.op,
@@ -92,8 +91,8 @@ class NormedDivisionAlgebraLaws<N : Any, A : Any>(
         }
     }
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(divAlgLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(divAlgLaws.node()) +
             structureLaws.asNodes()
 
 }

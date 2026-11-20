@@ -14,6 +14,7 @@ import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeInvolutiveRingLaws
 import org.vorpal.kosmos.laws.property.AlternativityLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -50,20 +51,20 @@ class CarrierTransportSpec : StringSpec({
     "a transported CommutativeInvolutiveRing satisfies the commutative and involutive ring laws" {
         val ring = transport<CD<Rational>>().commutativeInvolutiveRing(level1)
         val arb = arb1.map { Wrapped(it) }
-        CommutativeRingLaws(ring, arb).fullTest().throwIfFailed()
-        InvolutiveRingLaws(ring, arb).fullTest().throwIfFailed()
+        CommutativeRingLaws(ring, arb).verify().throwIfFailed()
+        InvolutiveRingLaws(ring, arb).verify().throwIfFailed()
     }
 
     "a transported InvolutiveRing satisfies the involutive ring laws" {
         val ring = transport<CD<CD<Rational>>>().involutiveRing(level2)
-        InvolutiveRingLaws(ring, arb2.map { Wrapped(it) }).fullTest().throwIfFailed()
+        InvolutiveRingLaws(ring, arb2.map { Wrapped(it) }).verify().throwIfFailed()
     }
 
     "a transported NonAssociativeInvolutiveRing satisfies its laws and stays alternative" {
         val ring = transport<CD<CD<CD<Rational>>>>().nonAssociativeInvolutiveRing(level3)
         val arb = arb3.map { Wrapped(it) }
-        NonAssociativeInvolutiveRingLaws(ring, arb).fullTest().throwIfFailed()
-        AlternativityLaw(ring.mul.op, arb).test()
+        NonAssociativeInvolutiveRingLaws(ring, arb).verify().throwIfFailed()
+        AlternativityLaw(ring.mul.op, arb).verify().throwIfFailed()
     }
 
     "transported operations agree with the originals under unwrap" {

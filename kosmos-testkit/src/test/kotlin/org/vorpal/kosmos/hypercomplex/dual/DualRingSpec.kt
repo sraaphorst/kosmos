@@ -23,6 +23,7 @@ import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
 import java.math.BigInteger
@@ -52,14 +53,14 @@ class DualRingSpec : StringSpec({
     // ── Ring structure ───────────────────────────────────────────────────────
 
     "the dual numbers over ℚ satisfy CommutativeRingLaws and InvolutiveRingLaws" {
-        CommutativeRingLaws(ring, arb, pr = pr).fullTest().throwIfFailed()
-        InvolutiveRingLaws(ring, arb, pr = pr).fullTest().throwIfFailed()
+        CommutativeRingLaws(ring, arb, pr = pr).verify().throwIfFailed()
+        InvolutiveRingLaws(ring, arb, pr = pr).verify().throwIfFailed()
     }
 
     "the dual numbers over ℤ satisfy CommutativeRingLaws and InvolutiveRingLaws" {
         val overZ = DualAlgebras.dualRing(IntegerAlgebras.IntegerCommutativeRing)
-        CommutativeRingLaws(overZ, ArbDual.integerDual).fullTest().throwIfFailed()
-        InvolutiveRingLaws(overZ, ArbDual.integerDual).fullTest().throwIfFailed()
+        CommutativeRingLaws(overZ, ArbDual.integerDual).verify().throwIfFailed()
+        InvolutiveRingLaws(overZ, ArbDual.integerDual).verify().throwIfFailed()
     }
 
     "ε = 0 + 1ε is nonzero and squares to zero" {
@@ -167,12 +168,12 @@ class DualRingSpec : StringSpec({
     // ── Module, algebra and star algebra ─────────────────────────────────────
 
     "the dual numbers over ℚ are a free ℚ-module satisfying RModuleLaws" {
-        RModuleLaws(DualAlgebras.dualModule(q), arbQ, arb, prM = pr).fullTest().throwIfFailed()
+        RModuleLaws(DualAlgebras.dualModule(q), arbQ, arb, prM = pr).verify().throwIfFailed()
     }
 
     "the dual numbers over ℚ satisfy AlgebraLaws and StarAlgebraLaws" {
-        AlgebraLaws(DualAlgebras.dualAlgebra(q), arbQ, arb, prA = pr).fullTest().throwIfFailed()
-        StarAlgebraLaws(DualAlgebras.dualStarAlgebra(q), arbQ, arb, prA = pr).fullTest().throwIfFailed()
+        AlgebraLaws(DualAlgebras.dualAlgebra(q), arbQ, arb, prA = pr).verify().throwIfFailed()
+        StarAlgebraLaws(DualAlgebras.dualStarAlgebra(q), arbQ, arb, prA = pr).verify().throwIfFailed()
     }
 
     "the scalar action is componentwise, and is multiplication by the embedded scalar" {
@@ -186,7 +187,7 @@ class DualRingSpec : StringSpec({
     // ── Morphisms ────────────────────────────────────────────────────────────
 
     "the scalar embedding ℚ ↪ Dual<ℚ>, r ↦ r + 0ε, is an injective unital ring homomorphism" {
-        RingHomomorphismLaws(embed::invoke, q, ring, arbQ).fullTest().throwIfFailed()
+        RingHomomorphismLaws(embed::invoke, q, ring, arbQ).verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = arbQ).test()
         checkAll(arbQ) { r ->
             embed(r) shouldBe dual(r, Rational.ZERO)
@@ -196,7 +197,7 @@ class DualRingSpec : StringSpec({
 
     "the primal projection a + bε ↦ a is a unital ring homomorphism with kernel εℚ" {
         val projection = DualAlgebras.primalProjection(q)
-        RingHomomorphismLaws(projection::invoke, ring, q, arb).fullTest().throwIfFailed()
+        RingHomomorphismLaws(projection::invoke, ring, q, arb).verify().throwIfFailed()
         checkAll(arbQ, arb) { r, x ->
             projection(embed(r)) shouldBe r
             (projection(x) == Rational.ZERO) shouldBe (ring.mul(x, x) == ring.zero)
@@ -218,7 +219,7 @@ class DualRingSpec : StringSpec({
             domain = ring,
             codomain = DenseMatAlgebras.DenseMatRing(q, 2),
             arb = arb
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = mono::invoke, arbA = arb).test()
 
         checkAll(arb) { x ->
@@ -246,7 +247,7 @@ class DualRingSpec : StringSpec({
         val all = residues.flatMap { a -> residues.map { b -> dual(a, b) } }
         all.toSet().size shouldBe 25
 
-        CommutativeRingLaws(duals, ArbDual.dualOf(Arb.element(residues))).fullTest().throwIfFailed()
+        CommutativeRingLaws(duals, ArbDual.dualOf(Arb.element(residues))).verify().throwIfFailed()
 
         val units = all.filter { x -> duals.hasReciprocal(x) }
         units.size shouldBe 20

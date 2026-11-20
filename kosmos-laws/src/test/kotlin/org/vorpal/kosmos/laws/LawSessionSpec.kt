@@ -60,8 +60,8 @@ class LawSessionSpec : FunSpec({
 
     test("equal suite keys are shared, as in LawRunner") {
         val a = Counting("a")
-        val node1 = LawNode.Branch("S", listOf(a.asNode()), key = LawNodeKey(LawBinding.of(this, a), LawMode.FULL))
-        val node2 = LawNode.Branch("S", listOf(a.asNode()), key = LawNodeKey(LawBinding.of(this, a), LawMode.FULL))
+        val node1 = LawNode.Branch("S", listOf(a.asNode()), key = LawBinding.of(this, a))
+        val node2 = LawNode.Branch("S", listOf(a.asNode()), key = LawBinding.of(this, a))
         val session = LawSession(LawNode.branch("Root", node1, node2))
         session.leafIndices.forEach { session.leaf(it) }
         a.runs shouldBe 1

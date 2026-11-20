@@ -6,6 +6,7 @@ import io.kotest.property.checkAll
 import org.vorpal.kosmos.core.rational.toRational
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 
 class ZToQMonomorphismSpec: StringSpec({
     val mono = IntegerAlgebras.ZToQMonomorphism
@@ -24,7 +25,7 @@ class ZToQMonomorphismSpec: StringSpec({
             eqB = eqQ,
             prA = prZ,
             prB = prQ
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "ZToQMonomorphism agrees with canonical rational embedding" {

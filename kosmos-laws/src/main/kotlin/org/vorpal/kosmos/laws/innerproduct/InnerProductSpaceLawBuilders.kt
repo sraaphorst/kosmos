@@ -8,14 +8,15 @@ import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
-import org.vorpal.kosmos.laws.renderWith
 import org.vorpal.kosmos.laws.property.bilinearAddLeftLaw
 import org.vorpal.kosmos.laws.property.bilinearAddRightLaw
 import org.vorpal.kosmos.laws.property.bilinearScalarLeftLaw
 import org.vorpal.kosmos.laws.property.bilinearScalarRightLaw
+import org.vorpal.kosmos.laws.renderWith
 
 fun <V : Any> realInnerBilinearityLaws(
     inner: BilinearForm<V, Real>,
@@ -80,7 +81,7 @@ fun <V : Any> realInnerSymmetryLaw(
     prV: Printable<V> = Printable.default(),
     prR: Printable<Real> = Printable.default(),
     label: String = "inner: symmetry ⟨v,w⟩ = ⟨w,v⟩"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("realInnerSymmetryLaw", inner, vectorArb, eqR)) {
     lawCheckAll(Arb.pair(vectorArb, vectorArb)) { (v, w) ->
         val left = inner(v, w)
         val right = inner(w, v)
@@ -106,7 +107,7 @@ fun <V : Any> realNormConsistencyLaw(
     prV: Printable<V> = Printable.default(),
     prR: Printable<Real> = Printable.default(),
     label: String = "norm: ‖v‖² = ⟨v,v⟩ and ‖v‖ ≥ 0"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("realNormConsistencyLaw", inner, norm, vectorArb, eqR, tolerance)) {
     lawCheckAll(vectorArb, render = renderWith(prV)) { v ->
         val n = norm(v)
         val n2 = n * n

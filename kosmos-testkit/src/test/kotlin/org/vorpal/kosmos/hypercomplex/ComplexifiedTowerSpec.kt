@@ -1,6 +1,5 @@
 package org.vorpal.kosmos.hypercomplex
 
-import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
@@ -15,8 +14,10 @@ import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeInvolutiveRingLaws
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRat
 import org.vorpal.kosmos.numberfields.quadratic.GaussianRatAlgebras
+import org.vorpal.kosmos.numberfields.quadratic.GaussianRats
 
 /**
  * The biquaternion and bioctonion constructions, checked *exactly*.
@@ -66,7 +67,7 @@ class ComplexifiedTowerSpec : StringSpec({
     val j = CD(CD(GaussianRats.ZERO, GaussianRats.ZERO), CD(GaussianRats.ONE, GaussianRats.ZERO))
 
     "ℍ ⊗ ℚ(i) is exactly an associative involutive ring" {
-        InvolutiveRingLaws(biquaternions, arbQ).fullTest().throwIfFailed()
+        InvolutiveRingLaws(biquaternions, arbQ).verify().throwIfFailed()
     }
 
     "ℍ ⊗ ℚ(i) is noncommutative with a central scalar h, h² = -1" {
@@ -94,12 +95,12 @@ class ComplexifiedTowerSpec : StringSpec({
     }
 
     "𝕆 ⊗ ℚ(i) is exactly a nonassociative involutive ring" {
-        NonAssociativeInvolutiveRingLaws(bioctonions, arbO).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(bioctonions, arbO).verify().throwIfFailed()
     }
 
     "𝕆 ⊗ ℚ(i) is exactly alternative and satisfies the Moufang identities" {
-        AlternativityLaw(bioctonions.mul.op, arbO).test()
-        MoufangLaw(bioctonions.mul.op, arbO).test()
+        AlternativityLaw(bioctonions.mul.op, arbO).verify().throwIfFailed()
+        MoufangLaw(bioctonions.mul.op, arbO).verify().throwIfFailed()
     }
 
     "𝕆 ⊗ ℚ(i) is not associative" {

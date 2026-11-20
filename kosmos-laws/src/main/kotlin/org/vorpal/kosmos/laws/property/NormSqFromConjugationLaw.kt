@@ -6,6 +6,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -29,6 +30,7 @@ class NormSqFromConjugationLaw<A : Any, N : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prN: Printable<N> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, normSq, embed, mulA, conj, arbA, eqA)
 
     override val name: String = "normSq from conjugation: embed(N(a)) = a*conj(a)"
 

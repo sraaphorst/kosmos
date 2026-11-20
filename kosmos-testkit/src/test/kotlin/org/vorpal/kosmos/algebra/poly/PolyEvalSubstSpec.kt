@@ -15,6 +15,7 @@ import org.vorpal.kosmos.hypercomplex.quaternion.ArbRationalQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.quaternion
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -83,7 +84,7 @@ class PolyEvalSubstSpec : FunSpec({
                 domain = zz.polyCommutativeRing(eqZ),
                 codomain = zz,
                 arb = polys,
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 

@@ -47,6 +47,7 @@ import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -80,8 +81,8 @@ class GenericComplexifiedSpec : StringSpec({
     val bicomplex = BicomplexAlgebras.bicomplexRing(q)
 
     "Bicomplex<ℚ> is exactly a commutative involutive ring" {
-        CommutativeRingLaws(bicomplex, arbBicomplex).fullTest().throwIfFailed()
-        InvolutiveRingLaws(bicomplex, arbBicomplex).fullTest().throwIfFailed()
+        CommutativeRingLaws(bicomplex, arbBicomplex).verify().throwIfFailed()
+        InvolutiveRingLaws(bicomplex, arbBicomplex).verify().throwIfFailed()
     }
 
     "Bicomplex<ℚ>: i² = j² = -1, k = ij, k² = +1, and (1 + k)(1 - k) = 0" {
@@ -125,7 +126,7 @@ class GenericComplexifiedSpec : StringSpec({
                 domain = bicomplex,
                 codomain = complexQ,
                 arb = arbBicomplex
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
         injectivityLaw(hom = { z: Bicomplex<Rational> -> alpha(z) to beta(z) }, arbA = arbBicomplex).test()
         // The norm is the product of the two idempotent coordinates.
@@ -135,12 +136,12 @@ class GenericComplexifiedSpec : StringSpec({
     }
 
     "Bicomplex<ℚ>: module and star-algebra laws, and Complex<ℚ> ↪ Bicomplex<ℚ>" {
-        RModuleLaws(BicomplexAlgebras.bicomplexModule(q), smallRational, arbBicomplex).fullTest().throwIfFailed()
+        RModuleLaws(BicomplexAlgebras.bicomplexModule(q), smallRational, arbBicomplex).verify().throwIfFailed()
         StarAlgebraLaws(BicomplexAlgebras.bicomplexStarAlgebra(q), smallRational, arbBicomplex)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
 
         val embed = BicomplexAlgebras.complexToBicomplexMonomorphism(q)
-        RingHomomorphismLaws(embed::invoke, complexQ, bicomplex, arbComplex).fullTest().throwIfFailed()
+        RingHomomorphismLaws(embed::invoke, complexQ, bicomplex, arbComplex).verify().throwIfFailed()
         injectivityLaw(hom = embed::invoke, arbA = arbComplex).test()
 
         val action = BicomplexAlgebras.complexLeftAction(q)
@@ -154,7 +155,7 @@ class GenericComplexifiedSpec : StringSpec({
     val biquaternions = BiquaternionAlgebras.biquaternionRingWithReciprocal(q)
 
     "Biquaternion<ℚ> is exactly an associative involutive ring" {
-        InvolutiveRingLaws(BiquaternionAlgebras.biquaternionRing(q), arbBiquaternion).fullTest().throwIfFailed()
+        InvolutiveRingLaws(BiquaternionAlgebras.biquaternionRing(q), arbBiquaternion).verify().throwIfFailed()
     }
 
     "Biquaternion<ℚ>: i² = j² = k² = ijk = -1, and h is central with h² = -1" {
@@ -215,24 +216,24 @@ class GenericComplexifiedSpec : StringSpec({
 
     "Biquaternion<ℚ>: module over ℚ, star algebra over Complex<ℚ>, Hermitian star algebra over ℚ" {
         RModuleLaws(BiquaternionAlgebras.biquaternionModule(q), smallRational, arbBiquaternion)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         StarAlgebraLaws(BiquaternionAlgebras.biquaternionStarAlgebra(q), arbComplex, arbBiquaternion)
-            .test().throwIfFailed()
+            .verify().throwIfFailed()
         StarAlgebraLaws(BiquaternionAlgebras.biquaternionHermitianStarAlgebra(q), smallRational, arbBiquaternion)
-            .test().throwIfFailed()
+            .verify().throwIfFailed()
     }
 
     "the four embeddings into Biquaternion<ℚ> are injective unital ring homomorphisms" {
         val target = BiquaternionAlgebras.biquaternionRing(q)
 
         val fromComplex = BiquaternionAlgebras.complexToBiquaternionMonomorphism(q)
-        RingHomomorphismLaws(fromComplex::invoke, complexQ, target, arbComplex).fullTest().throwIfFailed()
+        RingHomomorphismLaws(fromComplex::invoke, complexQ, target, arbComplex).verify().throwIfFailed()
         injectivityLaw(hom = fromComplex::invoke, arbA = arbComplex).test()
 
         val fromQuaternion = BiquaternionAlgebras.quaternionToBiquaternionMonomorphism(q)
         val arbQuaternion = ArbRationalQuaternion.smallRationalQuaternion
         RingHomomorphismLaws(fromQuaternion::invoke, QuaternionAlgebras.quaternionRing(q), target, arbQuaternion)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = fromQuaternion::invoke, arbA = arbQuaternion).test()
         // The quaternions are the fixed ring of the complex conjugate.
         checkAll(arbQuaternion) { x ->
@@ -242,11 +243,11 @@ class GenericComplexifiedSpec : StringSpec({
         val fromSplit = BiquaternionAlgebras.splitQuaternionToBiquaternionMonomorphism(q)
         val arbSplit = ArbSplitQuaternion.rationalSplitQuaternion
         RingHomomorphismLaws(fromSplit::invoke, SplitQuaternionAlgebras.splitQuaternionRing(q), target, arbSplit)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = fromSplit::invoke, arbA = arbSplit).test()
 
         val fromBicomplex = BiquaternionAlgebras.bicomplexToBiquaternionMonomorphism(q)
-        RingHomomorphismLaws(fromBicomplex::invoke, bicomplex, target, arbBicomplex).fullTest().throwIfFailed()
+        RingHomomorphismLaws(fromBicomplex::invoke, bicomplex, target, arbBicomplex).verify().throwIfFailed()
         injectivityLaw(hom = fromBicomplex::invoke, arbA = arbBicomplex).test()
     }
 
@@ -256,9 +257,9 @@ class GenericComplexifiedSpec : StringSpec({
 
     "Bioctonion<ℚ> is exactly a nonassociative involutive ring, alternative and Moufang" {
         val ring = BioctonionAlgebras.bioctonionRing(q)
-        NonAssociativeInvolutiveRingLaws(ring, arbBioctonion).fullTest().throwIfFailed()
-        AlternativityLaw(ring.mul.op, arbBioctonion).test()
-        MoufangLaw(ring.mul.op, arbBioctonion).test()
+        NonAssociativeInvolutiveRingLaws(ring, arbBioctonion).verify().throwIfFailed()
+        AlternativityLaw(ring.mul.op, arbBioctonion).verify().throwIfFailed()
+        MoufangLaw(ring.mul.op, arbBioctonion).verify().throwIfFailed()
     }
 
     "Bioctonion<ℚ>: units square to -1, h is central, and the algebra is not associative" {
@@ -305,12 +306,12 @@ class GenericComplexifiedSpec : StringSpec({
             complexConj(complexConj(x)) shouldBe x
             complexConj(bioctonions.mul(x, y)) shouldBe bioctonions.mul(complexConj(x), complexConj(y))
         }
-        RModuleLaws(BioctonionAlgebras.bioctonionModule(q), smallRational, arbBioctonion).fullTest().throwIfFailed()
+        RModuleLaws(BioctonionAlgebras.bioctonionModule(q), smallRational, arbBioctonion).verify().throwIfFailed()
         NonAssociativeStarAlgebraLaws(BioctonionAlgebras.bioctonionStarAlgebra(q), arbComplex, arbBioctonion)
-            .test().throwIfFailed()
+            .verify().throwIfFailed()
         NonAssociativeStarAlgebraLaws(
             BioctonionAlgebras.bioctonionHermitianStarAlgebra(q), smallRational, arbBioctonion
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the four embeddings into Bioctonion<ℚ> are injective unital homomorphisms" {
@@ -318,26 +319,26 @@ class GenericComplexifiedSpec : StringSpec({
 
         val fromComplex = BioctonionAlgebras.complexToBioctonionMonomorphism(q)
         NonAssociativeRingHomomorphismLaws(fromComplex::invoke, complexQ, target, arbComplex)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = fromComplex::invoke, arbA = arbComplex).test()
 
         val fromOctonion = BioctonionAlgebras.octonionToBioctonionMonomorphism(q)
         val arbOctonion = ArbRationalOctonion.smallRationalOctonion
         NonAssociativeRingHomomorphismLaws(fromOctonion::invoke, OctonionAlgebras.octonionRing(q), target, arbOctonion)
-            .fullTest().throwIfFailed()
+            .verify().throwIfFailed()
         injectivityLaw(hom = fromOctonion::invoke, arbA = arbOctonion).test()
 
         val fromSplit = BioctonionAlgebras.splitOctonionToBioctonionMonomorphism(q)
         val arbSplit = ArbSplitOctonion.rationalSplitOctonion
         NonAssociativeRingHomomorphismLaws(
             fromSplit::invoke, SplitOctonionAlgebras.splitOctonionRing(q), target, arbSplit
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = fromSplit::invoke, arbA = arbSplit).test()
 
         val fromBiquaternion = BioctonionAlgebras.biquaternionToBioctonionMonomorphism(q)
         NonAssociativeRingHomomorphismLaws(
             fromBiquaternion::invoke, BiquaternionAlgebras.biquaternionRing(q), target, arbBiquaternion
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = fromBiquaternion::invoke, arbA = arbBiquaternion).test()
         BiquaternionAlgebras.basis(q).map(fromBiquaternion::invoke) shouldBe BioctonionAlgebras.basis(q).take(4)
     }
@@ -352,10 +353,10 @@ class GenericComplexifiedSpec : StringSpec({
         val arbH = Arb.bind(arbC, arbC, arbC, arbC) { w, x, y, z -> biquaternion(w, x, y, z) }
         val arbO = Arb.list(arbC, 8..8).map { cs -> bioctonion(cs) }
 
-        CommutativeRingLaws(BicomplexAlgebras.bicomplexRing(f3), arbB).fullTest().throwIfFailed()
-        InvolutiveRingLaws(BiquaternionAlgebras.biquaternionRing(f3), arbH).fullTest().throwIfFailed()
-        NonAssociativeInvolutiveRingLaws(BioctonionAlgebras.bioctonionRing(f3), arbO).fullTest().throwIfFailed()
-        AlternativityLaw(BioctonionAlgebras.bioctonionRing(f3).mul.op, arbO).test()
+        CommutativeRingLaws(BicomplexAlgebras.bicomplexRing(f3), arbB).verify().throwIfFailed()
+        InvolutiveRingLaws(BiquaternionAlgebras.biquaternionRing(f3), arbH).verify().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(BioctonionAlgebras.bioctonionRing(f3), arbO).verify().throwIfFailed()
+        AlternativityLaw(BioctonionAlgebras.bioctonionRing(f3).mul.op, arbO).verify().throwIfFailed()
 
         val ring = BiquaternionAlgebras.biquaternionRingWithReciprocal(f3)
         checkAll(arbH) { x ->

@@ -10,6 +10,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.values.Vec3
 
 /**
@@ -34,7 +35,7 @@ class ZornSpec : StringSpec({
     fun lower(i: Int) = Zorn(zero, zeroVec, units[i], zero)
 
     "the Zorn matrices over ℚ satisfy NonAssociativeInvolutiveRingLaws" {
-        NonAssociativeInvolutiveRingLaws(ring, arb).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(ring, arb).verify().throwIfFailed()
     }
 
     "the identity is (1, 0, 0, 1), on both sides" {
@@ -46,7 +47,7 @@ class ZornSpec : StringSpec({
     }
 
     "Zorn multiplication is exactly alternative: (xx)y = x(xy) and (yx)x = y(xx)" {
-        AlternativityLaw(ring.mul.op, arb).test()
+        AlternativityLaw(ring.mul.op, arb).verify().throwIfFailed()
         checkAll(arb, arb) { x, y ->
             ring.mul(ring.mul(x, x), y) shouldBe ring.mul(x, ring.mul(x, y))
             ring.mul(ring.mul(y, x), x) shouldBe ring.mul(y, ring.mul(x, x))
@@ -58,7 +59,7 @@ class ZornSpec : StringSpec({
     }
 
     "Zorn multiplication exactly satisfies the Moufang identities" {
-        MoufangLaw(ring.mul.op, arb).test()
+        MoufangLaw(ring.mul.op, arb).verify().throwIfFailed()
     }
 
     "Zorn multiplication is not associative: (u₁u₂)u₃ ≠ u₁(u₂u₃) for the upper units" {

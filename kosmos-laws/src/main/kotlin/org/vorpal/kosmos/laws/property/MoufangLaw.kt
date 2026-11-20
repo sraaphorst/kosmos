@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 private sealed interface MoufangCore<A : Any> {
     val op: BinOp<A>
@@ -43,6 +46,8 @@ class LeftMoufangLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, MoufangCore<A> {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name = "moufang (left: ${op.symbol})"
 
     override suspend fun test() {
@@ -68,6 +73,8 @@ class RightMoufangLaw<A: Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, MoufangCore<A> {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name = "moufang (right: ${op.symbol})"
 
     override suspend fun test() {
@@ -93,6 +100,8 @@ class MiddleMoufangLaw<A: Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, MoufangCore<A> {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name = "Moufang (middle: ${op.symbol})"
 
     override suspend fun test() {
@@ -116,18 +125,18 @@ class MiddleMoufangLaw<A: Any>(
  * Note that Moufang loops have an associated algebra, the Malcev algebra.
  */
 class MoufangLaw<A: Any>(
-    op: BinOp<A>,
-    arb: Arb<A>,
-    eq: Eq<A> = Eq.default(),
-    pr: Printable<A> = Printable.default(),
-) : TestingLaw {
-    private val left   = LeftMoufangLaw(op, arb, eq, pr)
-    private val right  = RightMoufangLaw(op, arb, eq, pr)
-    private val middle = MiddleMoufangLaw(op, arb, eq, pr)
-    override val name = "moufang (all: ${op.symbol})"
-    override suspend fun test() {
-        left.test()
-        right.test()
-        middle.test()
-    }
+    private val op: BinOp<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default(),
+) : LawSuite {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
+    override val name = "moufang (${op.symbol})"
+
+    override fun children(): List<LawNode> = listOf(
+        LeftMoufangLaw(op, arb, eq, pr),
+        RightMoufangLaw(op, arb, eq, pr),
+        MiddleMoufangLaw(op, arb, eq, pr)
+    ).asNodes()
 }

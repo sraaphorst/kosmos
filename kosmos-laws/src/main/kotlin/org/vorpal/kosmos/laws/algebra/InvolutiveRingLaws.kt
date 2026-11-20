@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.InvolutiveRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -23,7 +22,7 @@ class InvolutiveRingLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     override val name = suiteName(
         "InvolutiveRing",
@@ -38,12 +37,12 @@ class InvolutiveRingLaws<A : Any>(
         ring, arb, eq, pr
     )
 
-    private val structureLaws: List<TestingLaw> = listOf(
+    private val structureLaws: List<LawComponent> = listOf(
         AssociativityLaw(ring.mul.op, arb, eq, pr)
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(nonAssociativeInvolutiveRingLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(nonAssociativeInvolutiveRingLaws.node()) +
             structureLaws.asNodes()
 
 }

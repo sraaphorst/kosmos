@@ -15,6 +15,7 @@ import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Tests of the bioctonions `𝕆 ⊗ ℂ`.
@@ -36,11 +37,11 @@ class BioctonionSpec : StringSpec({
     fun neg(x: RealBioctonion) = ring.add.inverse(x)
 
     "BioctonionAlgebra satisfies NonAssociativeInvolutiveRingLaws" {
-        NonAssociativeInvolutiveRingLaws(ring, arb, eq, pr).fullTest().throwIfFailed()
+        NonAssociativeInvolutiveRingLaws(ring, arb, eq, pr).verify().throwIfFailed()
     }
 
     "bioctonion multiplication is alternative" {
-        AlternativityLaw(ring.mul.op, arb, eq, pr).test()
+        AlternativityLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "bioctonion multiplication is flexible" {
@@ -48,7 +49,7 @@ class BioctonionSpec : StringSpec({
     }
 
     "bioctonion multiplication satisfies the Moufang identities" {
-        MoufangLaw(ring.mul.op, arb, eq, pr).test()
+        MoufangLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "bioctonion multiplication is not associative: (e₁e₂)e₄ = -e₁(e₂e₄)" {
@@ -157,7 +158,7 @@ class BioctonionSpec : StringSpec({
             eqA = eq,
             prR = prC,
             prA = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "BioctonionHermitianStarAlgebra satisfies NonAssociativeStarAlgebraLaws over ℝ" {
@@ -169,7 +170,7 @@ class BioctonionSpec : StringSpec({
             eqA = eq,
             prR = RealAlgebras.printableRealPretty,
             prA = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the bioctonions are a vector space of dimension 8 over ℂ and 16 over ℝ" {
@@ -184,7 +185,7 @@ class BioctonionSpec : StringSpec({
             eqV = eq,
             prF = prC,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
 
         VectorSpaceLaws(
             space = BioctonionAlgebras.BioctonionRealVectorSpace,
@@ -194,7 +195,7 @@ class BioctonionSpec : StringSpec({
             eqV = eq,
             prF = RealAlgebras.printableRealPretty,
             prV = pr
-        ).test().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "printable shows 0 for zero and one parenthesized coefficient per nonzero term" {

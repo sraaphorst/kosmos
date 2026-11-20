@@ -1,10 +1,11 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
-import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import io.kotest.core.spec.style.StringSpec
+import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
+import org.vorpal.kosmos.laws.verify
 
 class BicomplexCommutativeRingSpec : StringSpec({
     val ring = BicomplexAlgebras.BicomplexCommutativeRing
@@ -17,7 +18,7 @@ class BicomplexCommutativeRingSpec : StringSpec({
             arb = ArbBicomplex.bicomplex,
             eq = eqB,
             pr = prB
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "reciprocal exists for an invertible bicomplex number" {

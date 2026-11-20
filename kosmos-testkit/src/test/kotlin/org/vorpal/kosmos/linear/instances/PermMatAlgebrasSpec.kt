@@ -5,6 +5,7 @@ import io.kotest.matchers.shouldBe
 import io.kotest.property.arbitrary.filter
 import io.kotest.property.checkAll
 import org.vorpal.kosmos.laws.algebra.GroupLaws
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instance.arbPermMat
 import org.vorpal.kosmos.linear.instance.eqPermMat
 import org.vorpal.kosmos.linear.instance.prPermMat
@@ -26,7 +27,7 @@ class PermMatAlgebrasSpec : FunSpec({
                 arb = arbPermMat(4),
                 eq = eqPermMat,
                 pr = prPermMat
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
 
         test("a permutation composed with its inverse is the identity") {

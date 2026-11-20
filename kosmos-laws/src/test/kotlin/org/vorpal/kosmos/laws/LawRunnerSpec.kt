@@ -21,25 +21,23 @@ private fun failing(name: String, message: String = "$name is false") =
 private fun erroring(name: String, t: Throwable = ArithmeticException("division by zero")) =
     TestingLaw.named(name) { throw t }
 
-/** A legacy-style suite: flat lists, compact and full differ. */
+/** A suite with a fixed list of laws. */
 private class ToySuite(
     override val name: String,
-    private val compact: List<TestingLaw>,
-    private val extra: List<TestingLaw> = emptyList()
+    private val laws: List<TestingLaw>
 ) : LawSuite {
-    override fun laws() = compact
-    override fun fullLaws() = extra + compact
+    override fun children() = laws.asNodes()
 }
 
 class LawRunnerSpec : FunSpec({
 
     context("composition") {
-        test("an ad hoc graph mixes an adapted suite and standalone laws, in order") {
+        test("an ad hoc graph mixes a suite and standalone laws, in order") {
             val ran = mutableListOf<String>()
-            val suite = ToySuite("Toy", listOf(passing("a", ran), passing("b", ran)), listOf(passing("x", ran)))
+            val suite = ToySuite("Toy", listOf(passing("x", ran), passing("a", ran), passing("b", ran)))
 
             val graph = lawGraph("Mixed") {
-                suite(suite, LawMode.FULL)
+                suite(suite)
                 law(passing("standalone", ran))
             }
 
@@ -54,12 +52,6 @@ class LawRunnerSpec : FunSpec({
                 "Mixed > standalone"
             )
             report.throwIfFailed()
-        }
-
-        test("the legacy adapter wraps the selected flat view") {
-            val suite = ToySuite("Toy", listOf(passing("a")), listOf(passing("x")))
-            suite.node(LawMode.COMPACT).flatten().map { it.name } shouldContainExactly listOf("a")
-            suite.node(LawMode.FULL).flatten().map { it.name } shouldContainExactly listOf("x", "a")
         }
 
         test("flatten is occurrence based: a shared node contributes once per path") {
@@ -202,27 +194,17 @@ class LawRunnerSpec : FunSpec({
         }
     }
 
-    context("legacy API compatibility") {
-        test("runLawSuite collects every result") {
-            val report = runLawSuite("Legacy", listOf(passing("a"), failing("b"), erroring("c")))
-            report.totalCount shouldBe 3
-            report.failedCount shouldBe 2
-            report.results.map { it.name } shouldContainExactly listOf("a", "b", "c")
-            shouldThrow<AssertionError> { report.throwIfFailed() }
-        }
-
+    context("plain entry points") {
         test("runLaws is fail-fast") {
             val ran = mutableListOf<String>()
             shouldThrow<AssertionError> { runLaws(passing("a", ran), failing("b"), passing("c", ran)) }
             ran shouldContainExactly listOf("a")
         }
 
-        test("test() and fullTest() use the compact and full views") {
-            val suite = ToySuite("Toy", listOf(passing("a")), listOf(failing("x")))
-            suite.test().success shouldBe true
-            suite.fullTest().failedCount shouldBe 1
-            listOf(suite).flatten(full = false).map { it.name } shouldContainExactly listOf("a")
-            listOf(suite).flatten(full = true).map { it.name } shouldContainExactly listOf("x", "a")
+        test("verify runs a suite's whole graph") {
+            val suite = ToySuite("Toy", listOf(passing("a"), failing("x")))
+            suite.verify().counts shouldBe LawCounts(passed = 1, failed = 1)
+            shouldThrow<AssertionError> { suite.verify().throwIfFailed() }
         }
     }
 })

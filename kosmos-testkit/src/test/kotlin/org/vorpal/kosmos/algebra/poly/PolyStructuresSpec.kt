@@ -35,6 +35,7 @@ import org.vorpal.kosmos.laws.algebra.RingLaws
 import org.vorpal.kosmos.laws.algebra.SemiringLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -61,7 +62,7 @@ class PolyStructuresSpec : FunSpec({
             semiring = nn.polySemiring(NaturalAlgebras.eqNatural),
             arb = ArbPoly.poly(kit, ArbPoly.smallNatural),
             eq = polyEq(NaturalAlgebras.eqNatural)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℕ[x] satisfies CommutativeSemiringLaws") {
@@ -70,7 +71,7 @@ class PolyStructuresSpec : FunSpec({
             semiring = nn.polyCommutativeSemiring(NaturalAlgebras.eqNatural),
             arb = ArbPoly.poly(kit, ArbPoly.smallNatural),
             eq = polyEq(NaturalAlgebras.eqNatural)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℤ[x] satisfies CommutativeRingLaws") {
@@ -78,14 +79,14 @@ class PolyStructuresSpec : FunSpec({
             ring = zz.polyCommutativeRing(eqZ),
             arb = ArbPoly.poly(zz.polyKit(eqZ), ArbPoly.smallInteger),
             eq = polyEq(eqZ)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℚ[x] satisfies CommutativeRingLaws") {
         CommutativeRingLaws(
             ring = qq.polyCommutativeRing(),
             arb = ArbPoly.poly(qq.polyKit(), ArbPoly.smallRational, maxDegree = 3),
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     listOf(2, 3, 5).forEach { p ->
@@ -94,7 +95,7 @@ class PolyStructuresSpec : FunSpec({
             CommutativeRingLaws(
                 ring = field.polyCommutativeRing(),
                 arb = ArbPoly.poly(field.polyKit(), ArbPoly.residue(p)),
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 
@@ -102,14 +103,14 @@ class PolyStructuresSpec : FunSpec({
         CommutativeRingLaws(
             ring = z4.polyCommutativeRing(),
             arb = ArbPoly.poly(z4.polyKit(), ArbPoly.residue(4)),
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℍ_ℚ[x] satisfies RingLaws") {
         RingLaws(
             ring = hq.polyRing(),
             arb = ArbPoly.poly(hq.polyKit(), ArbRationalQuaternion.smallRationalQuaternion, maxDegree = 2),
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℤ[x] seen only as a Ring still satisfies RingLaws") {
@@ -117,7 +118,7 @@ class PolyStructuresSpec : FunSpec({
         RingLaws(
             ring = asRing.polyRing(eqZ),
             arb = ArbPoly.poly(zz.polyKit(eqZ), ArbPoly.smallInteger),
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     /* --------------------------
@@ -149,7 +150,7 @@ class PolyStructuresSpec : FunSpec({
             domain = zz,
             codomain = zz.polyCommutativeRing(eqZ),
             arb = ArbPoly.smallInteger,
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = kit::embed, arbA = ArbPoly.smallInteger).test()
     }
 
@@ -160,7 +161,7 @@ class PolyStructuresSpec : FunSpec({
             domain = hq,
             codomain = hq.polyRing(),
             arb = ArbRationalQuaternion.smallRationalQuaternion,
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
         injectivityLaw(hom = kit::embed, arbA = ArbRationalQuaternion.smallRationalQuaternion).test()
     }
 

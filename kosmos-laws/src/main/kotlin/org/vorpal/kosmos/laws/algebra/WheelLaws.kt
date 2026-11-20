@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.Wheel
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.InvolutionLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -24,7 +23,7 @@ class WheelLaws<A : Any>(
     arb: Arb<A>,
     eq: Eq<A> = Eq.default(),
     pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
     override val name = suiteName(
         "Wheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
     )
@@ -35,11 +34,11 @@ class WheelLaws<A : Any>(
     private val mulMonoidLaws = CommutativeMonoidLaws(wheel.mul, arb, eq, pr)
     private val involutionLaw = InvolutionLaw(wheel.inv, arb, eq, pr)
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         listOf(involutionLaw)
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(addMonoidLaws.node(mode), mulMonoidLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(addMonoidLaws.node(), mulMonoidLaws.node()) +
             structureLaws.asNodes()
 
 }

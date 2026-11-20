@@ -14,12 +14,12 @@ import org.vorpal.kosmos.algebra.structures.CommutativeSemiring
 import org.vorpal.kosmos.algebra.structures.Ring
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.NaturalAlgebras
-import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.core.math.Natural
 import org.vorpal.kosmos.functional.datastructures.Option
 import org.vorpal.kosmos.hypercomplex.quaternion.RationalQuaternionAlgebras
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.CommutativeSemiringLaws
-import org.vorpal.kosmos.core.math.Natural
+import org.vorpal.kosmos.laws.verify
 import java.math.BigInteger
 
 /**
@@ -123,7 +123,7 @@ class PolyKitSpec : FunSpec({
             ring = zxy.poly as CommutativeRing<Poly<Poly<BigInteger>>>,
             arb = ArbPoly.poly(zxy, inner, maxDegree = 2),
             eq = polyEq(polyEq(eqZ))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℤ[x][y]: (x + y)² = x² + 2xy + y²") {
@@ -206,7 +206,7 @@ class PolyKitSpec : FunSpec({
             semiring = nxy.poly as CommutativeSemiring<Poly<Poly<Natural>>>,
             arb = ArbPoly.poly(nxy, inner, maxDegree = 2),
             eq = polyEq(polyEq(NaturalAlgebras.eqNatural))
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     test("ℕ[x][y][z] stays commutative all the way up") {

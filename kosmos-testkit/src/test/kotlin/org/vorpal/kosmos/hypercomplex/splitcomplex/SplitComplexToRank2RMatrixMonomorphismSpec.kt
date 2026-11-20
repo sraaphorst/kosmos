@@ -4,6 +4,7 @@ import io.kotest.core.spec.style.StringSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 
 /**
@@ -33,7 +34,7 @@ class SplitComplexToRank2RMatrixMonomorphismSpec : StringSpec({
             eqB = eqM,
             prA = prA,
             prB = prM
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "splitComplexToRank2MatrixMonomorphism is injective" {

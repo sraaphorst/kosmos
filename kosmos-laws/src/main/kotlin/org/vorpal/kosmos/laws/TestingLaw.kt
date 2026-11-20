@@ -8,13 +8,22 @@ import io.kotest.property.arbitrary.pair
 import io.kotest.property.arbitrary.triple
 
 /**
- * A single property / law that can be checked.
+ * A single property / law that can be checked: one leaf of a law graph.
  *
- * Implementations should throw assertion failures (Kotest, etc.)
- * if the law does not hold.
+ * Implementations signal a false law with [lawCheck] / [LawViolation] (see [lawCheckAll]).
  */
-fun interface TestingLaw {
+fun interface TestingLaw : LawComponent {
     suspend fun test()
+
+    /**
+     * What this law is bound to (see [LawBinding]): normally `LawBinding.of(this, <every argument that changes the
+     * check>)`. Within one run, laws with equal bindings execute once, wherever they appear in the graph.
+     * Null (the default) means this law is never shared with a different instance.
+     */
+    val binding: LawBinding?
+        get() = null
+
+    override fun node(): LawNode = LawNode.Leaf(this)
 
     /**
      * Human-readable label for this law.
@@ -26,9 +35,14 @@ fun interface TestingLaw {
         get() = this::class.simpleName ?: "UnnamedLaw"
 
     companion object {
-        fun named(name: String, test: suspend () -> Unit): TestingLaw =
+        /**
+         * A law from a lambda. Without a [binding] it is never shared with another instance; give one (for example
+         * `LawBinding.named("my law", op, arb, eq)`) when the same check may be registered more than once.
+         */
+        fun named(name: String, binding: LawBinding? = null, test: suspend () -> Unit): TestingLaw =
             object : TestingLaw {
                 override val name: String = name
+                override val binding: LawBinding? = binding
                 override suspend fun test() = test()
             }
 

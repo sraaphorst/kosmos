@@ -209,7 +209,7 @@ data class LawReport(
 
     /**
      * Number of leaf executions in this run: leaves that ran, counted once however many paths reach them.
-     * [counts] counts occurrences (one per path), like the flat `laws()` / `fullLaws()` views.
+     * [counts] counts occurrences (one per path), like [LawNode.flatten].
      */
     val executions: Int get() = root.leaves().count { it.sharedFrom == null && it.status != LawStatus.SKIPPED }
 

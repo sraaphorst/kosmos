@@ -9,6 +9,7 @@ import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.VectorSpaceLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Law-based tests for the structures [BicomplexAlgebras] builds on top of the Cayley-Dickson ring:
@@ -42,7 +43,7 @@ class BicomplexStructuresSpec : StringSpec({
                 eqA = eqB,
                 prR = prR,
                 prA = prB
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 
@@ -74,7 +75,7 @@ class BicomplexStructuresSpec : StringSpec({
             eqV = eqB,
             prF = prR,
             prV = prB
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "BicomplexComplexVectorSpace satisfies VectorSpaceLaws" {
@@ -86,7 +87,7 @@ class BicomplexStructuresSpec : StringSpec({
             eqV = eqB,
             prF = prC,
             prV = prB
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the complex scalar action is multiplication through the embedding ℂ ↪ 𝔹" {
@@ -106,7 +107,7 @@ class BicomplexStructuresSpec : StringSpec({
             eqB = eqB,
             prA = prC,
             prB = prB
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     listOf(
@@ -122,7 +123,7 @@ class BicomplexStructuresSpec : StringSpec({
                 eqB = eqC,
                 prA = prB,
                 prB = prC
-            ).fullTest().throwIfFailed()
+            ).verify().throwIfFailed()
         }
     }
 

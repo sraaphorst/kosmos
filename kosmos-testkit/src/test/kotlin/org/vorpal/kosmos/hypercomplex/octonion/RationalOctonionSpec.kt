@@ -17,6 +17,7 @@ import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
 import org.vorpal.kosmos.laws.property.NormSqMultiplicativeLaw
+import org.vorpal.kosmos.laws.verify
 
 /**
  * Property tests for the rational octonions `𝕆_ℚ = CD⟨ℍ_ℚ⟩`.
@@ -37,15 +38,15 @@ class RationalOctonionSpec : StringSpec({
             arb = arb,
             eq = eq,
             pr = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "rational octonion multiplication is exactly alternative" {
-        AlternativityLaw(ring.mul.op, arb, eq, pr).test()
+        AlternativityLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "rational octonion multiplication exactly satisfies the Moufang identities" {
-        MoufangLaw(ring.mul.op, arb, eq, pr).test()
+        MoufangLaw(ring.mul.op, arb, eq, pr).verify().throwIfFailed()
     }
 
     "rational octonion multiplication is not associative: (e₁e₂)e₄ = -e₁(e₂e₄)" {
@@ -83,7 +84,7 @@ class RationalOctonionSpec : StringSpec({
             eqV = eq,
             prF = RationalAlgebras.printableRational,
             prV = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "all 168 embeddings ℍ_ℚ ↪ 𝕆_ℚ are multiplicative" {
@@ -107,7 +108,7 @@ class RationalOctonionSpec : StringSpec({
             eqB = eq,
             prA = RationalQuaternionAlgebras.printableRationalQuaternion,
             prB = pr
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
 
         injectivityLaw(
             hom = mono::invoke,
@@ -128,7 +129,7 @@ class RationalOctonionSpec : StringSpec({
             eqB = OctonionAlgebras.eqOctonion,
             prA = pr,
             prB = OctonionAlgebras.printableOctonionPretty
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "RationalOctonionDivisionAlgebra satisfies NormedDivisionAlgebraLaws exactly" {
@@ -141,7 +142,7 @@ class RationalOctonionSpec : StringSpec({
             prA = pr,
             prN = RationalAlgebras.printableRational,
             zeroN = Option.Some(Rational.ZERO)
-        ).fullTest().throwIfFailed()
+        ).verify().throwIfFailed()
     }
 
     "the reciprocal in 𝕆_ℚ is conj(x)/N(x), and x · x⁻¹ = x⁻¹ · x = 1 exactly" {
