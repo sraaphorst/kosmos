@@ -47,7 +47,30 @@ lawTests(lawGraph("IntegerCommutativeRing") {
 })
 ```
 
-Keep ordinary examples, edge cases and expected exceptions as plain tests next to the laws.
+Everything a spec checks lives in its graph. A check that belongs to one type only (an example, an edge case, an
+expected exception, a property of a concrete class) is a **spec-local law**, added with `local` from
+`kosmos-testkit`:
+
+```kotlin
+lawTests(lawGraph("ℚ") {
+    suite(OrderedFieldLaws(q, RationalRelations.RationalTotalOrder, arb, eq, pr))
+    branch("rounding") {
+        local("floor(r) ≤ r < floor(r) + 1") {
+            lawCheckAll(arb) { r ->
+                val f = r.floor().toRational()
+                lawCheck(f <= r && r < f + Rational.ONE) { "floor($r) = $f" }
+            }
+        }
+    }
+    local("zero has no reciprocal") {
+        lawCheck(throwsA<ArithmeticException> { Rational.ZERO.reciprocal() }) { "no exception" }
+    }
+})
+```
+
+A local law has no binding, so it is never shared. Kotest matchers (`shouldBe`, `shouldThrow`) also work inside
+one; their failures read as `FAILED`, but only `lawCheck` gives the failure a message of the law's own. A check
+that more than one structure needs belongs in a reusable law class instead.
 
 The aggregated form still works when one test per structure reads better:
 
