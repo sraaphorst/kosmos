@@ -21,9 +21,9 @@ structure, finds out whether an implementation deserves the name.
 ## A small example
 
 ```kotlin
-// A structure is a value.
+// A structure is a value. Here, q is of type Field<Rational>.
 val q = RationalAlgebras.RationalField
-q.mul.op(Rational.of(2, 3), Rational.of(3, 4))   // 1/2
+q.mul(Rational.of(2, 3), Rational.of(3, 4))   // 1/2
 
 // Its laws are a graph, registered as nested Kotest tests.
 class RationalFieldSpec : FunSpec({
@@ -57,7 +57,7 @@ break it.
 * **`kosmos-testkit`** holds the generators (Kotest `Arb`s) for Kosmos types, the integration that turns a law graph
   into nested Kotest tests, and the specs that test Kosmos itself.
 
-* **`kosmos-noise`** is an experimental module for noise and random fields.
+* **`kosmos-noise`** is an experimental module for noise and random fields. (outdated)
 
 ## Where to go next
 
