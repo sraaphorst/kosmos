@@ -35,6 +35,21 @@ private class CountingAdd(broken: Boolean = false) {
     val monoid = Monoid.of(0, op)
 }
 
+/** Equal to every other [Shift] with the same name, whatever its [offset]: `equals` says nothing about behaviour. */
+private data class Shift(val name: String) {
+    var offset = 0
+    fun apply(x: Int): Int = x + offset
+}
+
+/** `f(0) = 0`, bound to the function under test. */
+private class PreservesZeroLaw(private val f: (Int) -> Int) : TestingLaw {
+    override val name = "preserves zero"
+    override val binding = LawBinding.of(this, f)
+    override suspend fun test() {
+        lawCheck(f(0) == 0) { "f(0) = ${f(0)}" }
+    }
+}
+
 private fun NodeReport.find(vararg labels: String): NodeReport =
     labels.fold(this) { node, l -> (node as NodeReport.BranchReport).children.first { it.label == l } }
 
@@ -177,6 +192,36 @@ class SharedNodeSpec : FunSpec({
             LawBinding.of(owner, first) shouldBe LawBinding.of(owner, second)
             LawBinding.of(owner, first).hashCode() shouldBe LawBinding.of(owner, second).hashCode()
             LawBinding.of(owner, first) shouldNotBe LawBinding.of(owner, third)
+        }
+
+        test("references to the same function on one receiver are the same check") {
+            val shift = Shift("s")
+            val report = LawNode.branch("Root", PreservesZeroLaw(shift::apply).asNode(), PreservesZeroLaw(shift::apply).asNode())
+                .verify()
+            report.executions shouldBe 1
+        }
+
+        test("references on equal but distinct receivers are different checks") {
+            val good = Shift("s")
+            val bad = Shift("s").apply { offset = 1 }
+            good shouldBe bad   // equal by data class equals, different by behaviour
+
+            LawBinding.of(Any(), good::apply) shouldNotBe LawBinding.of(Any(), bad::apply)
+            PreservesZeroLaw(good::apply).binding shouldNotBe PreservesZeroLaw(bad::apply).binding
+
+            PreservesZeroLaw(bad::apply).verify().status shouldBe LawStatus.FAILED
+
+            val root = LawNode.branch("Root", PreservesZeroLaw(good::apply).asNode(), PreservesZeroLaw(bad::apply).asNode())
+            val report = root.verify()
+            report.executions shouldBe 2
+            report.root.find("preserves zero").status shouldBe LawStatus.PASSED
+            (report.root as NodeReport.BranchReport).children[1].status shouldBe LawStatus.FAILED
+
+            // The leaf-at-a-time session (the Kotest adapter's path) must not merge them either.
+            val session = LawSession(root)
+            session.leaf(listOf(0)).status shouldBe LawStatus.PASSED
+            session.leaf(listOf(1)).status shouldBe LawStatus.FAILED
+            session.executions shouldBe 2
         }
     }
 
