@@ -50,8 +50,7 @@ test, nested the way the structure is built:
 ```kotlin
 class RationalFieldSpec : FunSpec({
     lawTests(
-        FieldLaws(RationalField, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty),
-        LawMode.FULL
+        FieldLaws(RationalField, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty)
     )
 })
 ```

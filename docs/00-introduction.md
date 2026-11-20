@@ -27,7 +27,7 @@ q.mul(Rational.of(2, 3), Rational.of(3, 4))   // 1/2
 
 // Its laws are a graph, registered as nested Kotest tests.
 class RationalFieldSpec : FunSpec({
-    lawTests(FieldLaws(q, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty), LawMode.FULL)
+    lawTests(FieldLaws(q, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty))
 })
 ```
 

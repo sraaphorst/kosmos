@@ -9,8 +9,9 @@ This page covers how to write a law spec, how law suites are structured, and wha
 
 | Piece | What it is |
 |---|---|
-| `TestingLaw` | One law, e.g. `AssociativityLaw(op, arb, eq, pr)`. `suspend fun test()` checks it. |
-| `LawSuite` / `StructuredLawSuite` | The laws of a structure, e.g. `FieldLaws(field, arb, eq, pr)`, built from smaller suites. |
+| `TestingLaw` | One atomic law, e.g. `AssociativityLaw(op, arb, eq, pr)`. `suspend fun test()` checks it. |
+| `LawSuite` | The laws of a structure, e.g. `FieldLaws(field, arb, eq, pr)`, built from smaller suites. A compound law such as `IdentityLaw` (left and right identity) is a small suite too. |
+| `LawComponent` | Either of the two: anything with a `node()`, which `verify()` and `lawTests(...)` accept. |
 | `LawNode` | A law graph: `Leaf(law)` or `Branch(label, children)`. A node may appear under several parents. |
 | `LawRunner` / `LawSession` | Run a graph (all at once / one leaf at a time) and produce a `LawReport`. |
 | `LawReport` | The result tree: status, counts, failure details, seed. Renders as text or JSON. |
@@ -24,7 +25,7 @@ The recommended form registers the law graph with Kotest, so each law is its own
 class RationalFieldSpec : FunSpec({
     val field = RationalAlgebras.RationalField
 
-    lawTests(FieldLaws(field, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty), LawMode.FULL)
+    lawTests(FieldLaws(field, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty))
 
     test("reciprocal throws on zero") {
         shouldThrow<ArithmeticException> { field.reciprocal(Rational.ZERO) }
@@ -36,8 +37,8 @@ Suites and standalone laws can be mixed in one graph with `lawGraph`:
 
 ```kotlin
 lawTests(lawGraph("IntegerCommutativeRing") {
-    suite(CommutativeRingLaws(ring, arb, eq, pr), LawMode.FULL)
-    suite(InvolutiveRingLaws(ring, arb, eq, pr), LawMode.FULL)
+    suite(CommutativeRingLaws(ring, arb, eq, pr))
+    suite(InvolutiveRingLaws(ring, arb, eq, pr))   // its ring laws are shared with the commutative ring's: they run once
     branch("norm squared") {
         law(NormSqMultiplicativeLaw(...))
         law(NormSqNonnegativeLaw(...))
@@ -52,11 +53,11 @@ The aggregated form still works when one test per structure reads better:
 
 ```kotlin
 test("Q is a field") {
-    FieldLaws(field, arb, eq, pr).verify(LawMode.FULL).throwIfFailed()
+    FieldLaws(field, arb, eq, pr).verify().throwIfFailed()
 }
 ```
 
-`suite.test()`, `fullTest()`, `testAll()` and `runLaws(...)` are the older entry points; they remain for existing specs.
+`verify()` works on any law or suite. `runLaws(...)` (fail-fast, no report) remains for a quick list of laws.
 
 ## Writing a law
 
@@ -78,26 +79,40 @@ override suspend fun test() {
 
 ## Suites are graphs
 
-A suite declares its children; `laws()` and `fullLaws()` are flattenings of its graph.
+A suite declares its children. Each suite is the **complete** contract of its structure: it composes the suites of
+its parent structures, as the mathematics does, without trying to avoid their overlap.
 
 ```kotlin
-class RingLaws<A : Any>(ring: Ring<A>, arb: Arb<A>, eq: Eq<A> = Eq.default(), pr: Printable<A> = Printable.default()) :
-    StructuredLawSuite {
+class RingLaws<A : Any>(
+    private val ring: Ring<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = suiteName("Ring", ring.add.op.symbol, ring.mul.op.symbol)
     override val binding = LawBinding.of(this, ring, arb, eq, pr)
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(RngLaws(ring, arb, eq, pr).node(mode)) +
-            listOf(IdentityLaw(ring.mul.op, ring.mul.identity, arb, eq, pr)).asNodes()
+    override fun children(): List<LawNode> =
+        listOf(
+            RngLaws(ring, arb, eq, pr),
+            SemiringLaws(ring, arb, eq, pr),
+            NonAssociativeRingLaws(ring, arb, eq, pr)
+        ).asNodes()
 }
 ```
 
-- **Compact and full views.** `LawMode.COMPACT` is the suite's own short list (`laws()`); `LawMode.FULL` descends
-  into every constituent suite (`fullLaws()`). For example, a field's multiplicative associativity is only in the
-  full view, at `Field > DivisionRing > Ring > Rng > Hemiring > Semigroup (*) > associativity (*)`.
+- **No compact view.** There is one graph per suite. For example, a field's multiplicative associativity is reached
+  at `Field > DivisionRing > Ring > Rng > Hemiring > Semigroup (*) > associativity (*)` and at eleven other paths,
+  and runs once.
+- **Atomic leaves.** Every leaf is one check. Compound laws are suites of their halves: `IdentityLaw` has
+  `left identity` and `right identity`, `DistributivityLaw` has left and right distributivity, `MoufangLaw` has
+  left, right and middle Moufang. A failure names the half that failed.
+- **Inverses are required.** `InvertibilityLaw` has three children: `inverse exists` fails when the inverse returns
+  null or throws on an element of the domain (the generator minus `exclude`, e.g. zero for a field's
+  multiplication); left and right invertibility check `a⁻¹a = e` and `aa⁻¹ = e` where the inverse exists.
 - **Paths.** Labels carry the operation roles, so a failure path says which operation is at fault.
-- **Binding.** `binding` lists everything the suite's checks depend on: every constructor argument. Always pass all
-  of them.
+- **Binding.** `binding` lists everything the checks depend on: every constructor argument (a suite's binding may
+  include its printable; an atomic law's leaves it out, since it only affects messages). Always pass all of them.
 
 ## Shared checks run once
 
@@ -105,13 +120,23 @@ Bigger structures repeat smaller ones: an algebra over ℚ reaches the additive 
 module and its algebra. Within one run, a node reached again is not executed again; its result is shown under every
 path, marked `sharedFrom` (the path where it ran).
 
-Two nodes are the same check when they are the same node object, or suites of the same class whose bindings match:
-every argument is the **same object** (same operation, generator, equality, printable), and plain values
-(numbers, strings, booleans, enums) are equal. Labels, names and symbols never count, so two different operations
-both called `+` are two checks. Compact and full views of a suite are different nodes. Nothing is reused across runs.
+Every atomic law is bound, so this works at the level of single checks, across the whole graph: two leaves are the
+same check when they are the same node object, or laws of the same class whose bindings match. Suites are matched
+the same way, so a repeated suite is shared as a whole. Bindings match when:
 
-`LawReport.counts` counts occurrences (one per path, like `fullLaws()`); `LawReport.executions` counts what ran.
-For example, the full `StarAlgebra(ℚ over ℚ)` graph has 52 law occurrences and 32 executions.
+- every argument is the **same object** (same operation, generator, equality);
+- plain values (numbers, strings, booleans, chars, enums) are equal;
+- callable references (`shift::apply`) refer to the same function on the **same receiver object** (two receivers
+  that are merely `equals` stay separate).
+
+Labels, names and symbols never count, so two different operations both called `+` are two checks. A law with no
+class of its own (`TestingLaw.named`) shares only if it is given a binding (`LawBinding.named(kind, args...)`).
+`Eq.default()` and `Printable.default()` return one shared object, so suites built with default arguments share
+their checks. A law that restricts its generator (the inverse laws drop `exclude`) builds the restricted generator
+inside the check, so its binding is the original generator plus `exclude`. Nothing is reused across runs.
+
+`LawReport.counts` counts occurrences (one per path); `LawReport.executions` counts what ran. For example, the
+`StarAlgebra(ℚ over ℚ)` graph has 394 law occurrences and 39 executions.
 
 ## Outcomes
 
@@ -142,7 +167,7 @@ Ring (+, *)  ERRORED [2/5 passed]
 │  └─ Semigroup (*)  FAILED [0/1 passed]
 │     └─ associativity (*)  FAILED
 └─ AbelianGroup (+)  ERRORED [1/2 passed]
-   └─ inverse (+)  ERRORED
+   └─ inverse exists (-)  ERRORED
 
 #1 FAILED: Ring (+, *) > Hemiring (+, *) > Semigroup (*) > associativity (*)
   counterexample: a = 1, b = 2, c = 3
@@ -170,7 +195,7 @@ are missing and why (`LeafDiagnostics.unavailable`).
 
 ## Kotest integration (`kosmos-testkit`)
 
-`lawTests(root)` / `lawTests(suite, mode)` registers the graph in a `FunSpec`, at the root or inside a `context`.
+`lawTests(root)` / `lawTests(suite)` registers the graph in a `FunSpec`, at the root or inside a `context`.
 
 - One `LawSession` per execution of the root container: shared checks run once, and a new run starts afresh.
 - Running a single law with a Kotest filter executes it even if the other paths to the same shared check are

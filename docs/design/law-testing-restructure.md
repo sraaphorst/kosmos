@@ -298,3 +298,19 @@ baseline; kept by decision).
   `NonAssociativeDivisionAlgebraLaws`, `RngHomomorphismLaws`, `NonAssociativeRngHomomorphismLaws`,
   `EquivalenceRelationLaws`, `SetoidLaws`; `InnerProductSpaceLaws` has no instance yet.
 - New laws written in specs should use `lawCheck` / `lawCheckAll`, so they get Failed vs Errored, seeds and replay.
+
+## Follow-up: #61 step 1 (complete suites)
+
+This history describes `LawMode` and compact/full views. #61 removed them:
+
+- Every suite is its complete contract, composed from its parent suites; `LawMode`, `laws()`/`fullLaws()`,
+  `StructuredLawSuite`, `test()`/`fullTest()`/`testAll()` and `runLawSuite` are gone. `verify()` runs any
+  `LawComponent` (a law or a suite).
+- Every atomic law carries a binding, so identical checks dedupe across the whole graph, not only whole suites.
+  Callable references match by function plus receiver identity.
+- Compound laws (identity, distributivity, annihilation, Moufang, ...) are suites of their atomic halves.
+- Inverses are required: `InverseExistenceLaw` fails when the inverse is missing or throws on the domain.
+- The compact view was a subset of the full view for all 45 inventoried suites, so no coverage was lost. Test time
+  rose from about 162 s to 214 s of test execution, from the added checks.
+
+The current behaviour is documented in [`03-kosmos-laws.md`](../03-kosmos-laws.md).
