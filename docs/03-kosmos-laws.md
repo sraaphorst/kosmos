@@ -173,8 +173,8 @@ are missing and why (`LeafDiagnostics.unavailable`).
 `lawTests(root)` / `lawTests(suite, mode)` registers the graph in a `FunSpec`, at the root or inside a `context`.
 
 - One `LawSession` per execution of the root container: shared checks run once, and a new run starts afresh.
-- Running a single law (IDE gutter, or a filter) executes it even if the other paths to the same shared check are
-  filtered out.
+- Running a single law with a Kotest filter executes it even if the other paths to the same shared check are
+  filtered out. (Selecting a single law from the IntelliJ gutter has not been verified yet.)
 - A retried test executes the law again rather than reusing the previous attempt.
 - Repeated sibling labels get ` [2]`, ` [3]`, ... so every Kotest name is unique.
 
