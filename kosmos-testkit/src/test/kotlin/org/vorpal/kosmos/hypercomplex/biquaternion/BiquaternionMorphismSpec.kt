@@ -1,10 +1,9 @@
 package org.vorpal.kosmos.hypercomplex.biquaternion
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.bind
-import io.kotest.property.checkAll
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.RealComplex
 import org.vorpal.kosmos.hypercomplex.multi.ArbBicomplex
@@ -15,201 +14,207 @@ import org.vorpal.kosmos.hypercomplex.splitquaternion.ArbSplitQuaternion
 import org.vorpal.kosmos.hypercomplex.splitquaternion.SplitQuaternionAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
 import org.vorpal.kosmos.linear.values.DenseMat
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * The maps into and out of the biquaternions: the center ℂ, the two real forms ℍ and ℍ', the
  * bicomplex numbers, and the isomorphism with `M₂(ℂ)`.
  */
-class BiquaternionMorphismSpec : StringSpec({
-    val ring = BiquaternionAlgebras.BiquaternionRing
-    val eq = BiquaternionAlgebras.eqBiquaternion
-    val pr = BiquaternionAlgebras.printableBiquaternionPretty
-    val arb = ArbBiquaternion.biquaternion
-    val complexField = ComplexAlgebras.ComplexField
-    val complexStar = ComplexAlgebras.ComplexStarAlgebra
-    val eqC = ComplexAlgebras.eqComplex
-    val prC = ComplexAlgebras.printableComplexPretty
+class BiquaternionMorphismSpec : FunSpec({
+    lawTests(lawGraph("biquaternion morphisms") {
+        val ring = BiquaternionAlgebras.BiquaternionRing
+        val eq = BiquaternionAlgebras.eqBiquaternion
+        val pr = BiquaternionAlgebras.printableBiquaternionPretty
+        val arb = ArbBiquaternion.biquaternion
+        val complexField = ComplexAlgebras.ComplexField
+        val complexStar = ComplexAlgebras.ComplexStarAlgebra
+        val eqC = ComplexAlgebras.eqComplex
+        val prC = ComplexAlgebras.printableComplexPretty
 
-    val iso = BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism
-    val matrices = DenseMatAlgebras.DenseMatRing(complexField, 2)
-    val eqM = DenseMatAlgebras.liftEq(eqC)
-    val prM = DenseMatAlgebras.liftPrintablePretty(prC)
+        val iso = BiquaternionAlgebras.BiquaternionToComplexMatrixIsomorphism
+        val matrices = DenseMatAlgebras.DenseMatRing(complexField, 2)
+        val eqM = DenseMatAlgebras.liftEq(eqC)
+        val prM = DenseMatAlgebras.liftPrintablePretty(prC)
 
-    val arbMatrix: Arb<DenseMat<RealComplex>> =
-        ArbBiquaternion.smallComplex.let { c ->
-            Arb.bind(c, c, c, c) { p, q, r, s -> DenseMat.ofRows(listOf(listOf(p, q), listOf(r, s))) }
-        }
+        val arbMatrix: Arb<DenseMat<RealComplex>> =
+            ArbBiquaternion.smallComplex.let { c ->
+                Arb.bind(c, c, c, c) { p, q, r, s -> DenseMat.ofRows(listOf(listOf(p, q), listOf(r, s))) }
+            }
 
-    fun det(m: DenseMat<RealComplex>): RealComplex =
-        complexField.add(
-            complexField.mul(m[0, 0], m[1, 1]),
-            complexField.add.inverse(complexField.mul(m[0, 1], m[1, 0]))
-        )
-
-    fun conjugateTranspose(m: DenseMat<RealComplex>): DenseMat<RealComplex> =
-        DenseMat.ofRows(
-            listOf(
-                listOf(complexStar.conj(m[0, 0]), complexStar.conj(m[1, 0])),
-                listOf(complexStar.conj(m[0, 1]), complexStar.conj(m[1, 1]))
+        fun det(m: DenseMat<RealComplex>): RealComplex =
+            complexField.add(
+                complexField.mul(m[0, 0], m[1, 1]),
+                complexField.add.inverse(complexField.mul(m[0, 1], m[1, 0]))
             )
-        )
 
-    "ℂ ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism onto the center" {
-        val mono = BiquaternionAlgebras.ComplexToBiquaternionMonomorphism
-        RingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = complexField,
-            codomain = ring,
-            arb = ArbBiquaternion.smallComplex,
-            eqB = eq,
-            prA = prC,
-            prB = pr
-        ).verify().throwIfFailed()
+        fun conjugateTranspose(m: DenseMat<RealComplex>): DenseMat<RealComplex> =
+            DenseMat.ofRows(
+                listOf(
+                    listOf(complexStar.conj(m[0, 0]), complexStar.conj(m[1, 0])),
+                    listOf(complexStar.conj(m[0, 1]), complexStar.conj(m[1, 1]))
+                )
+            )
 
-        injectivityLaw(mono::invoke, ArbBiquaternion.smallComplex, eqC, eq, prC, pr).test()
-
-        checkAll(ArbBiquaternion.smallComplex, arb) { c, q ->
-            check(eq(ring.mul(mono(c), q), ring.mul(q, mono(c))))
+        branch("ℂ ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism onto the center") {
+            val mono = BiquaternionAlgebras.ComplexToBiquaternionMonomorphism
+            suite(RingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = complexField,
+                codomain = ring,
+                arb = ArbBiquaternion.smallComplex,
+                eqB = eq,
+                prA = prC,
+                prB = pr
+            ))
+            law(injectivityLaw(mono::invoke, ArbBiquaternion.smallComplex, eqC, eq, prC, pr))
+            local("the image is central") {
+                lawCheckAll(ArbBiquaternion.smallComplex, arb) { c, q ->
+                    lawCheck(eq(ring.mul(mono(c), q), ring.mul(q, mono(c))))
+                }
+            }
         }
-    }
 
-    "ℍ ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism onto the fixed ring of the complex conjugate" {
-        val mono = BiquaternionAlgebras.QuaternionToBiquaternionMonomorphism
-        val quaternions = QuaternionAlgebras.QuaternionDivisionRing
-        RingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = quaternions,
-            codomain = ring,
-            arb = ArbQuaternion.quaternion,
-            eqB = eq,
-            prA = QuaternionAlgebras.printableQuaternionPretty,
-            prB = pr
-        ).verify().throwIfFailed()
+        branch("ℍ ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism onto the fixed ring of the complex conjugate") {
+            val mono = BiquaternionAlgebras.QuaternionToBiquaternionMonomorphism
+            val quaternions = QuaternionAlgebras.QuaternionDivisionRing
+            suite(RingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = quaternions,
+                codomain = ring,
+                arb = ArbQuaternion.quaternion,
+                eqB = eq,
+                prA = QuaternionAlgebras.printableQuaternionPretty,
+                prB = pr
+            ))
+            law(injectivityLaw(
+                mono::invoke, ArbQuaternion.quaternion, QuaternionAlgebras.eqQuaternion, eq,
+                QuaternionAlgebras.printableQuaternionPretty, pr
+            ))
+            local("basis, conjugations and norm") {
+                quaternions.basis.map(mono::invoke) shouldBe ring.basis
 
-        injectivityLaw(
-            mono::invoke, ArbQuaternion.quaternion, QuaternionAlgebras.eqQuaternion, eq,
-            QuaternionAlgebras.printableQuaternionPretty, pr
-        ).test()
-
-        quaternions.basis.map(mono::invoke) shouldBe ring.basis
-
-        checkAll(ArbQuaternion.quaternion) { q ->
-            check(eq(ring.complexConj(mono(q)), mono(q)))
-            // On the real form the three conjugations collapse to two: conj and the identity.
-            check(eq(ring.hermitianConj(mono(q)), mono(quaternions.conj(q))))
-            check(eqC(ring.normSq(mono(q)), CDReal(quaternions.normSq(q))))
+                lawCheckAll(ArbQuaternion.quaternion) { q ->
+                    lawCheck(eq(ring.complexConj(mono(q)), mono(q)))
+                    // On the real form the three conjugations collapse to two: conj and the identity.
+                    lawCheck(eq(ring.hermitianConj(mono(q)), mono(quaternions.conj(q))))
+                    lawCheck(eqC(ring.normSq(mono(q)), CDReal(quaternions.normSq(q))))
+                }
+            }
         }
-    }
 
-    "ℍ' ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism: i ↦ i, j ↦ h·j, k ↦ h·k" {
-        val mono = BiquaternionAlgebras.SplitQuaternionToBiquaternionMonomorphism
-        val split = SplitQuaternionAlgebras.RealSplitQuaternionRing
-        RingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = split,
-            codomain = ring,
-            arb = ArbSplitQuaternion.smallSplitQuaternion,
-            eqB = eq,
-            prA = SplitQuaternionAlgebras.printableSplitQuaternionPretty,
-            prB = pr
-        ).verify().throwIfFailed()
+        branch("ℍ' ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism: i ↦ i, j ↦ h·j, k ↦ h·k") {
+            val mono = BiquaternionAlgebras.SplitQuaternionToBiquaternionMonomorphism
+            val split = SplitQuaternionAlgebras.RealSplitQuaternionRing
+            suite(RingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = split,
+                codomain = ring,
+                arb = ArbSplitQuaternion.smallSplitQuaternion,
+                eqB = eq,
+                prA = SplitQuaternionAlgebras.printableSplitQuaternionPretty,
+                prB = pr
+            ))
+            law(injectivityLaw(
+                mono::invoke, ArbSplitQuaternion.smallSplitQuaternion, SplitQuaternionAlgebras.eqSplitQuaternion, eq,
+                SplitQuaternionAlgebras.printableSplitQuaternionPretty, pr
+            ))
+            local("basis images and norm") {
+                lawCheck(eq(mono(SplitQuaternionAlgebras.i), ring.i))
+                lawCheck(eq(mono(SplitQuaternionAlgebras.j), ring.mul(ring.h, ring.j)))
+                lawCheck(eq(mono(SplitQuaternionAlgebras.k), ring.mul(ring.h, ring.k)))
 
-        injectivityLaw(
-            mono::invoke, ArbSplitQuaternion.smallSplitQuaternion, SplitQuaternionAlgebras.eqSplitQuaternion, eq,
-            SplitQuaternionAlgebras.printableSplitQuaternionPretty, pr
-        ).test()
-
-        check(eq(mono(SplitQuaternionAlgebras.i), ring.i))
-        check(eq(mono(SplitQuaternionAlgebras.j), ring.mul(ring.h, ring.j)))
-        check(eq(mono(SplitQuaternionAlgebras.k), ring.mul(ring.h, ring.k)))
-
-        checkAll(ArbSplitQuaternion.smallSplitQuaternion) { q ->
-            check(eqC(ring.normSq(mono(q)), CDReal(split.normSq(q))))
+                lawCheckAll(ArbSplitQuaternion.smallSplitQuaternion) { q ->
+                    lawCheck(eqC(ring.normSq(mono(q)), CDReal(split.normSq(q))))
+                }
+            }
         }
-    }
 
-    "𝔹 ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism: j_𝔹 ↦ i and i_𝔹 ↦ h" {
-        val mono = BiquaternionAlgebras.BicomplexToBiquaternionMonomorphism
-        val bicomplex = BicomplexAlgebras.BicomplexCommutativeRing
-        RingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = bicomplex,
-            codomain = ring,
-            arb = ArbBicomplex.bicomplex,
-            eqB = eq,
-            prA = BicomplexAlgebras.printableBicomplexPretty,
-            prB = pr
-        ).verify().throwIfFailed()
+        branch("𝔹 ↪ ℍ ⊗ ℂ is an injective unital ring homomorphism: j_𝔹 ↦ i and i_𝔹 ↦ h") {
+            val mono = BiquaternionAlgebras.BicomplexToBiquaternionMonomorphism
+            val bicomplex = BicomplexAlgebras.BicomplexCommutativeRing
+            suite(RingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = bicomplex,
+                codomain = ring,
+                arb = ArbBicomplex.bicomplex,
+                eqB = eq,
+                prA = BicomplexAlgebras.printableBicomplexPretty,
+                prB = pr
+            ))
+            law(injectivityLaw(
+                mono::invoke, ArbBicomplex.bicomplex, BicomplexAlgebras.eqBicomplex, eq,
+                BicomplexAlgebras.printableBicomplexPretty, pr
+            ))
+            local("basis images and conjugation") {
+                lawCheck(eq(mono(bicomplex.j), ring.i))
+                lawCheck(eq(mono(bicomplex.i), ring.h))
 
-        injectivityLaw(
-            mono::invoke, ArbBicomplex.bicomplex, BicomplexAlgebras.eqBicomplex, eq,
-            BicomplexAlgebras.printableBicomplexPretty, pr
-        ).test()
-
-        check(eq(mono(bicomplex.j), ring.i))
-        check(eq(mono(bicomplex.i), ring.h))
-
-        // The Cayley-Dickson conjugation of 𝔹 (conj2) is the restriction of the quaternion conjugate.
-        checkAll(ArbBicomplex.bicomplex) { b ->
-            check(eq(mono(bicomplex.conj2(b)), ring.conj(mono(b))))
+                // The Cayley-Dickson conjugation of 𝔹 (conj2) is the restriction of the quaternion conjugate.
+                lawCheckAll(ArbBicomplex.bicomplex) { b ->
+                    lawCheck(eq(mono(bicomplex.conj2(b)), ring.conj(mono(b))))
+                }
+            }
         }
-    }
 
-    "ℍ ⊗ ℂ → M₂(ℂ) is a unital ring homomorphism" {
-        RingHomomorphismLaws(
-            hom = iso::invoke,
-            domain = ring,
-            codomain = matrices,
-            arb = arb,
-            eqB = eqM,
-            prA = pr,
-            prB = prM
-        ).verify().throwIfFailed()
-    }
-
-    "M₂(ℂ) → ℍ ⊗ ℂ is a unital ring homomorphism" {
-        RingHomomorphismLaws(
-            hom = iso.backward::invoke,
-            domain = matrices,
-            codomain = ring,
-            arb = arbMatrix,
-            eqB = eq,
-            prA = prM,
-            prB = pr
-        ).verify().throwIfFailed()
-    }
-
-    "the isomorphism ℍ ⊗ ℂ ≅ M₂(ℂ) and its inverse are mutually inverse" {
-        checkAll(arb) { q ->
-            check(eq(iso.backward(iso(q)), q))
+        branch("ℍ ⊗ ℂ → M₂(ℂ) is a unital ring homomorphism") {
+            suite(RingHomomorphismLaws(
+                hom = iso::invoke,
+                domain = ring,
+                codomain = matrices,
+                arb = arb,
+                eqB = eqM,
+                prA = pr,
+                prB = prM
+            ))
         }
-        checkAll(arbMatrix) { m ->
-            check(eqM(iso(iso.backward(m)), m))
-        }
-    }
 
-    "under ℍ ⊗ ℂ ≅ M₂(ℂ) the norm is the determinant" {
-        checkAll(arb) { q ->
-            check(eqC(det(iso(q)), ring.normSq(q)))
+        branch("M₂(ℂ) → ℍ ⊗ ℂ is a unital ring homomorphism") {
+            suite(RingHomomorphismLaws(
+                hom = iso.backward::invoke,
+                domain = matrices,
+                codomain = ring,
+                arb = arbMatrix,
+                eqB = eq,
+                prA = prM,
+                prB = pr
+            ))
         }
-    }
 
-    "under ℍ ⊗ ℂ ≅ M₂(ℂ) the Hermitian conjugate is the conjugate transpose" {
-        checkAll(arb) { q ->
-            check(eqM(iso(ring.hermitianConj(q)), conjugateTranspose(iso(q))))
+        local("the isomorphism ℍ ⊗ ℂ ≅ M₂(ℂ) and its inverse are mutually inverse") {
+            lawCheckAll(arb) { q ->
+                lawCheck(eq(iso.backward(iso(q)), q))
+            }
+            lawCheckAll(arbMatrix) { m ->
+                lawCheck(eqM(iso(iso.backward(m)), m))
+            }
         }
-    }
 
-    "restricted to ℍ, the isomorphism is the classical representation ℍ ↪ M₂(ℂ)" {
-        val classical = QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism
-        val embed = BiquaternionAlgebras.QuaternionToBiquaternionMonomorphism
-        checkAll(ArbQuaternion.quaternion) { q ->
-            check(eqM(iso(embed(q)), classical(q)))
+        local("under ℍ ⊗ ℂ ≅ M₂(ℂ) the norm is the determinant") {
+            lawCheckAll(arb) { q ->
+                lawCheck(eqC(det(iso(q)), ring.normSq(q)))
+            }
         }
-    }
+
+        local("under ℍ ⊗ ℂ ≅ M₂(ℂ) the Hermitian conjugate is the conjugate transpose") {
+            lawCheckAll(arb) { q ->
+                lawCheck(eqM(iso(ring.hermitianConj(q)), conjugateTranspose(iso(q))))
+            }
+        }
+
+        local("restricted to ℍ, the isomorphism is the classical representation ℍ ↪ M₂(ℂ)") {
+            val classical = QuaternionAlgebras.QuaternionToComplexMatrixMonomorphism
+            val embed = BiquaternionAlgebras.QuaternionToBiquaternionMonomorphism
+            lawCheckAll(ArbQuaternion.quaternion) { q ->
+                lawCheck(eqM(iso(embed(q)), classical(q)))
+            }
+        }
+    })
 })
 
 /** The real number `r` as a complex number. */

@@ -1,11 +1,12 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.laws.property.AlternativityLaw
 import org.vorpal.kosmos.laws.property.BolIdentityLaw
 import org.vorpal.kosmos.laws.property.FlexibilityLaw
 import org.vorpal.kosmos.laws.property.MoufangLaw
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.testing.laws.lawTests
 
 /**
  * The quaternions are associative, so they satisfy every "weak associativity" identity in the loop
@@ -19,26 +20,25 @@ import org.vorpal.kosmos.laws.verify
  *     acting as a regression guard — in particular for [MoufangLaw], whose middle identity was recently
  *     corrected, and for the [BolIdentityLaw]/[FlexibilityLaw] formulas.
  */
-class QuaternionWeakAssociativitySpec : StringSpec({
+class QuaternionWeakAssociativitySpec : FunSpec({
+    lawTests(lawGraph("ℍ weak associativity") {
+        val op = QuaternionAlgebras.QuaternionDivisionRing.mul.op
+        val arb = ArbQuaternion.quaternion
+        val eq = QuaternionAlgebras.eqQuaternion
+        val pr = QuaternionAlgebras.printableQuaternionPretty
 
-    val op = QuaternionAlgebras.QuaternionDivisionRing.mul.op
-    val arb = ArbQuaternion.quaternion
-    val eq = QuaternionAlgebras.eqQuaternion
-    val pr = QuaternionAlgebras.printableQuaternionPretty
+        branch("quaternion multiplication is alternative") {
+            suite(AlternativityLaw(op, arb, eq, pr))
+        }
 
-    "quaternion multiplication is alternative" {
-        AlternativityLaw(op, arb, eq, pr).verify().throwIfFailed()
-    }
+        branch("quaternion multiplication satisfies the Moufang identities") {
+            suite(MoufangLaw(op, arb, eq, pr))
+        }
 
-    "quaternion multiplication satisfies the Moufang identities" {
-        MoufangLaw(op, arb, eq, pr).verify().throwIfFailed()
-    }
+        branch("quaternion multiplication satisfies both Bol identities") {
+            suite(BolIdentityLaw(op, arb, eq, pr))
+        }
 
-    "quaternion multiplication satisfies both Bol identities" {
-        BolIdentityLaw(op, arb, eq, pr).verify().throwIfFailed()
-    }
-
-    "quaternion multiplication is flexible" {
-        FlexibilityLaw(op, arb, eq, pr).test()
-    }
+        law("quaternion multiplication is flexible", FlexibilityLaw(op, arb, eq, pr))
+    })
 })

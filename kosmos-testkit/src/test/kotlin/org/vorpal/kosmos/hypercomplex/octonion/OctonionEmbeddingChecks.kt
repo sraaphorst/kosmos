@@ -3,6 +3,7 @@ package org.vorpal.kosmos.hypercomplex.octonion
 import org.vorpal.kosmos.algebra.morphisms.NonAssociativeRingHomomorphism
 import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
+import org.vorpal.kosmos.laws.lawCheck
 
 /**
  * Check that every one of the signed-basis-unit embeddings `ℍ ↪ 𝕆` in [embeddings] is multiplicative,
@@ -20,16 +21,16 @@ internal fun <Q : Any, O : Any> checkAllQuaternionEmbeddingsMultiplicative(
     eqO: Eq<O>,
     expectedCount: Int = 168
 ) {
-    check(embeddings.size == expectedCount) { "Expected $expectedCount embeddings, got ${embeddings.size}" }
-    check(quaternionBasis.size == 4) { "Expected a quaternion basis of size 4, got ${quaternionBasis.size}" }
+    lawCheck(embeddings.size == expectedCount) { "Expected $expectedCount embeddings, got ${embeddings.size}" }
+    lawCheck(quaternionBasis.size == 4) { "Expected a quaternion basis of size 4, got ${quaternionBasis.size}" }
 
     embeddings.forEach { (spec, phi) ->
-        check(eqO(phi(quaternionRing.one), octonionRing.one)) { "$spec does not preserve 1" }
+        lawCheck(eqO(phi(quaternionRing.one), octonionRing.one)) { "$spec does not preserve 1" }
         quaternionBasis.forEach { p ->
             quaternionBasis.forEach { q ->
                 val lhs = phi(quaternionRing.mul(p, q))
                 val rhs = octonionRing.mul(phi(p), phi(q))
-                check(eqO(lhs, rhs)) { "$spec is not multiplicative on basis units $p, $q" }
+                lawCheck(eqO(lhs, rhs)) { "$spec is not multiplicative on basis units $p, $q" }
             }
         }
     }

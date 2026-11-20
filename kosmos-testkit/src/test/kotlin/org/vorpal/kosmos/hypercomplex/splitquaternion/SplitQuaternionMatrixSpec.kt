@@ -1,21 +1,23 @@
 package org.vorpal.kosmos.hypercomplex.splitquaternion
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
-import io.kotest.property.checkAll
+import java.math.BigInteger
 import org.vorpal.kosmos.algebra.structures.instances.FiniteFieldAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.linear.instances.FixedMatAlgebras
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.arbMat2
-import java.math.BigInteger
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * The split-quaternions are a matrix algebra: `SplitQuaternion<F> ≅ M₂(F)` when 2 is invertible.
@@ -24,100 +26,102 @@ import java.math.BigInteger
  * inverse and is itself a homomorphism, and the norm is the determinant. Over ℤ the map is injective
  * but not surjective, and over 𝔽₂ the isomorphism is refused.
  */
-class SplitQuaternionMatrixSpec : StringSpec({
-    val q = RationalAlgebras.RationalField
-    val ring = SplitQuaternionAlgebras.splitQuaternionRing(q)
-    val normSq = SplitQuaternionAlgebras.normSq(q)
-    val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(q)
-    val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(q)
-    val matrices = FixedMatAlgebras.mat2Ring(q)
-    val arb = ArbSplitQuaternion.rationalSplitQuaternion
+class SplitQuaternionMatrixSpec : FunSpec({
+    lawTests(lawGraph("ℍ′ ≅ M₂") {
+        val q = RationalAlgebras.RationalField
+        val ring = SplitQuaternionAlgebras.splitQuaternionRing(q)
+        val normSq = SplitQuaternionAlgebras.normSq(q)
+        val mono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(q)
+        val iso = SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(q)
+        val matrices = FixedMatAlgebras.mat2Ring(q)
+        val arb = ArbSplitQuaternion.rationalSplitQuaternion
 
-    val arbMatrix: Arb<Mat2<Rational>> = arbMat2(ArbSplitQuaternion.smallRational)
-    val det = FixedMatAlgebras.normSq(q)
+        val arbMatrix: Arb<Mat2<Rational>> = arbMat2(ArbSplitQuaternion.smallRational)
+        val det = FixedMatAlgebras.normSq(q)
 
-    fun matrix(a: Int, b: Int, c: Int, d: Int): Mat2<Rational> =
-        Mat2(Rational.of(a), Rational.of(b), Rational.of(c), Rational.of(d))
+        fun matrix(a: Int, b: Int, c: Int, d: Int): Mat2<Rational> =
+            Mat2(Rational.of(a), Rational.of(b), Rational.of(c), Rational.of(d))
 
-    "the images of the units: i ↦ [[0,-1],[1,0]], j ↦ [[0,1],[1,0]], k ↦ [[-1,0],[0,1]]" {
-        val (one, i, j, k) = SplitQuaternionAlgebras.basis(q)
-        mono(one) shouldBe matrix(1, 0, 0, 1)
-        mono(i) shouldBe matrix(0, -1, 1, 0)
-        mono(j) shouldBe matrix(0, 1, 1, 0)
-        mono(k) shouldBe matrix(-1, 0, 0, 1)
-    }
-
-    "SplitQuaternion<ℚ> ↪ M₂(ℚ) is a unital ring homomorphism" {
-        RingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = ring,
-            codomain = matrices,
-            arb = arb
-        ).verify().throwIfFailed()
-    }
-
-    "SplitQuaternion<ℚ> ↪ M₂(ℚ) is injective" {
-        injectivityLaw(hom = mono::invoke, arbA = arb).test()
-    }
-
-    "the norm is the determinant: N(q) = det(M(q))" {
-        checkAll(arb) { x ->
-            det(mono(x)) shouldBe normSq(x)
+        local("the images of the units: i ↦ [[0,-1],[1,0]], j ↦ [[0,1],[1,0]], k ↦ [[-1,0],[0,1]]") {
+            val (one, i, j, k) = SplitQuaternionAlgebras.basis(q)
+            mono(one) shouldBe matrix(1, 0, 0, 1)
+            mono(i) shouldBe matrix(0, -1, 1, 0)
+            mono(j) shouldBe matrix(0, 1, 1, 0)
+            mono(k) shouldBe matrix(-1, 0, 0, 1)
         }
-    }
 
-    "the isomorphism and its inverse are mutually inverse" {
-        checkAll(arb) { x ->
-            iso.backward(iso(x)) shouldBe x
+        branch("SplitQuaternion<ℚ> ↪ M₂(ℚ) is a unital ring homomorphism") {
+            suite(RingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = ring,
+                codomain = matrices,
+                arb = arb
+            ))
         }
-        checkAll(arbMatrix) { m ->
-            iso(iso.backward(m)) shouldBe m
+
+        law("SplitQuaternion<ℚ> ↪ M₂(ℚ) is injective", injectivityLaw(hom = mono::invoke, arbA = arb))
+
+        local("the norm is the determinant: N(q) = det(M(q))") {
+            lawCheckAll(arb) { x ->
+                det(mono(x)) shouldBe normSq(x)
+            }
         }
-    }
 
-    "the inverse M₂(ℚ) → SplitQuaternion<ℚ> is a unital ring homomorphism" {
-        RingHomomorphismLaws(
-            hom = iso.backward::invoke,
-            domain = matrices,
-            codomain = ring,
-            arb = arbMatrix
-        ).verify().throwIfFailed()
-    }
-
-    "the matrix units correspond to (1 ± k)/2 and (j ∓ i)/2" {
-        val half = Rational.of(1, 2)
-        val zero = Rational.ZERO
-        iso.backward(matrix(1, 0, 0, 0)) shouldBe splitQuaternion(half, zero, zero, -half)
-        iso.backward(matrix(0, 0, 0, 1)) shouldBe splitQuaternion(half, zero, zero, half)
-        iso.backward(matrix(0, 1, 0, 0)) shouldBe splitQuaternion(zero, -half, half, zero)
-        iso.backward(matrix(0, 0, 1, 0)) shouldBe splitQuaternion(zero, half, half, zero)
-    }
-
-    "over ℤ the embedding is injective but not surjective: entries on each diagonal share a parity" {
-        val z = IntegerAlgebras.IntegerCommutativeRing
-        val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(z)
-        val two = BigInteger.TWO
-
-        checkAll(ArbSplitQuaternion.integerSplitQuaternion) { x ->
-            val m = integerMono(x)
-            (m.a - m.d).mod(two) shouldBe BigInteger.ZERO
-            (m.b - m.c).mod(two) shouldBe BigInteger.ZERO
+        local("the isomorphism and its inverse are mutually inverse") {
+            lawCheckAll(arb) { x ->
+                iso.backward(iso(x)) shouldBe x
+            }
+            lawCheckAll(arbMatrix) { m ->
+                iso(iso.backward(m)) shouldBe m
+            }
         }
-        injectivityLaw(hom = integerMono::invoke, arbA = ArbSplitQuaternion.integerSplitQuaternion).test()
-    }
 
-    "over 𝔽₂ the matrix map is a homomorphism but not injective: 1 and k both map to the identity" {
-        val f2 = FiniteFieldAlgebras.F2
-        val hom = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(f2)
-        val basis = SplitQuaternionAlgebras.basis(f2)
-        (basis[0] == basis[3]) shouldBe false
-        hom(basis[0]) shouldBe hom(basis[3])
-        hom(basis[3]) shouldBe FixedMatAlgebras.mat2Ring(f2).one
-    }
-
-    "the isomorphism is refused in characteristic 2, where 2 is not invertible" {
-        shouldThrow<IllegalArgumentException> {
-            SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(FiniteFieldAlgebras.F2)
+        branch("the inverse M₂(ℚ) → SplitQuaternion<ℚ> is a unital ring homomorphism") {
+            suite(RingHomomorphismLaws(
+                hom = iso.backward::invoke,
+                domain = matrices,
+                codomain = ring,
+                arb = arbMatrix
+            ))
         }
-    }
+
+        local("the matrix units correspond to (1 ± k)/2 and (j ∓ i)/2") {
+            val half = Rational.of(1, 2)
+            val zero = Rational.ZERO
+            iso.backward(matrix(1, 0, 0, 0)) shouldBe splitQuaternion(half, zero, zero, -half)
+            iso.backward(matrix(0, 0, 0, 1)) shouldBe splitQuaternion(half, zero, zero, half)
+            iso.backward(matrix(0, 1, 0, 0)) shouldBe splitQuaternion(zero, -half, half, zero)
+            iso.backward(matrix(0, 0, 1, 0)) shouldBe splitQuaternion(zero, half, half, zero)
+        }
+
+        branch("over ℤ the embedding is injective but not surjective: entries on each diagonal share a parity") {
+            val z = IntegerAlgebras.IntegerCommutativeRing
+            val integerMono = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(z)
+            val two = BigInteger.TWO
+
+            law(injectivityLaw(hom = integerMono::invoke, arbA = ArbSplitQuaternion.integerSplitQuaternion))
+            local("diagonal entries share a parity") {
+                lawCheckAll(ArbSplitQuaternion.integerSplitQuaternion) { x ->
+                    val m = integerMono(x)
+                    (m.a - m.d).mod(two) shouldBe BigInteger.ZERO
+                    (m.b - m.c).mod(two) shouldBe BigInteger.ZERO
+                }
+            }
+        }
+
+        local("over 𝔽₂ the matrix map is a homomorphism but not injective: 1 and k both map to the identity") {
+            val f2 = FiniteFieldAlgebras.F2
+            val hom = SplitQuaternionAlgebras.splitQuaternionToRank2MatrixHomomorphism(f2)
+            val basis = SplitQuaternionAlgebras.basis(f2)
+            (basis[0] == basis[3]) shouldBe false
+            hom(basis[0]) shouldBe hom(basis[3])
+            hom(basis[3]) shouldBe FixedMatAlgebras.mat2Ring(f2).one
+        }
+
+        local("the isomorphism is refused in characteristic 2, where 2 is not invertible") {
+            shouldThrow<IllegalArgumentException> {
+                SplitQuaternionAlgebras.splitQuaternionMatrixIsomorphism(FiniteFieldAlgebras.F2)
+            }
+        }
+    })
 })

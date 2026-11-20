@@ -1,9 +1,10 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
 
 /**
  * Property tests for [OctonionAlgebras.OctonionDivisionAlgebra] as a
@@ -18,15 +19,17 @@ import org.vorpal.kosmos.laws.verify
  * We draw from [ArbOctonion.reciprocalSafeOctonion] so that the invertibility law never hits the
  * `normSq ≈ 0` guard in the reciprocal, and the multiplicative norm law stays numerically well-conditioned.
  */
-class OctonionRealNormedDivisionAlgebraSpec : StringSpec({
-    "OctonionDivisionAlgebra satisfies RealNormedDivisionAlgebraLaws" {
-        RealNormedDivisionAlgebraLaws(
-            algebra = OctonionAlgebras.OctonionDivisionAlgebra,
-            arb = ArbOctonion.reciprocalSafeOctonion,
-            eqA = OctonionAlgebras.eqOctonion,
-            eqReal = RealAlgebras.eqRealApprox,
-            prA = OctonionAlgebras.printableOctonionPretty,
-            prReal = RealAlgebras.printableRealPretty
-        ).verify().throwIfFailed()
-    }
+class OctonionRealNormedDivisionAlgebraSpec : FunSpec({
+    lawTests(lawGraph("𝕆 normed division algebra") {
+        branch("OctonionDivisionAlgebra satisfies RealNormedDivisionAlgebraLaws") {
+            suite(RealNormedDivisionAlgebraLaws(
+                algebra = OctonionAlgebras.OctonionDivisionAlgebra,
+                arb = ArbOctonion.reciprocalSafeOctonion,
+                eqA = OctonionAlgebras.eqOctonion,
+                eqReal = RealAlgebras.eqRealApprox,
+                prA = OctonionAlgebras.printableOctonionPretty,
+                prReal = RealAlgebras.printableRealPretty
+            ))
+        }
+    })
 })

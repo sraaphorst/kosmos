@@ -153,6 +153,41 @@ suspend fun <A, B, C> lawCheckAll(
     }
 }
 
+/** Four-generator form of [lawCheckAll]; [render] receives all four values. */
+suspend fun <A, B, C, D> lawCheckAll(
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    render: (A, B, C, D) -> String = { a, b, c, d ->
+        listOf(a, b, c, d).joinToString(", ") { renderSample(it) }
+    },
+    property: suspend PropertyContext.(A, B, C, D) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution), genA, genB, genC, genD) { a, b, c, d ->
+        recording(execution, { render(a, b, c, d) }) { property(a, b, c, d) }
+    }
+}
+
+/** Five-generator form of [lawCheckAll]; [render] receives all five values. */
+suspend fun <A, B, C, D, E> lawCheckAll(
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    genE: Gen<E>,
+    render: (A, B, C, D, E) -> String = { a, b, c, d, e ->
+        listOf(a, b, c, d, e).joinToString(", ") { renderSample(it) }
+    },
+    property: suspend PropertyContext.(A, B, C, D, E) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution), genA, genB, genC, genD, genE) { a, b, c, d, e ->
+        recording(execution, { render(a, b, c, d, e) }) { property(a, b, c, d, e) }
+    }
+}
+
 private suspend fun enter(): LawExecution? =
     currentCoroutineContext()[LawExecution]?.also { it.capture.explicit = true }
 

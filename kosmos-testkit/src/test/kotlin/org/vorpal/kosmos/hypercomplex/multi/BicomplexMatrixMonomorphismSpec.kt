@@ -1,11 +1,12 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
+import org.vorpal.kosmos.testing.laws.lawTests
 
 /**
  * Property tests for the two ring monomorphisms `𝔹 ↪ M₂(ℂ)`:
@@ -16,58 +17,56 @@ import org.vorpal.kosmos.linear.instances.DenseMatAlgebras
  * and multiplicative identities) together with injectivity — the property that makes them
  * *mono*morphisms in the first place.
  */
-class BicomplexMatrixMonomorphismSpec : StringSpec({
-    val canonical = BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism
-    val diagonal = BicomplexAlgebras.BicomplexToDiagonalMatrixMonomorphism
+class BicomplexMatrixMonomorphismSpec : FunSpec({
+    lawTests(lawGraph("bicomplex ↪ M₂(ℂ)") {
+        val canonical = BicomplexAlgebras.BicomplexToComplexMatrixMonomorphism
+        val diagonal = BicomplexAlgebras.BicomplexToDiagonalMatrixMonomorphism
 
-    val eqB = BicomplexAlgebras.eqBicomplex
-    val prB = BicomplexAlgebras.printableBicomplexPretty
-    val eqM = DenseMatAlgebras.liftEq(ComplexAlgebras.eqComplex)
-    val prM = DenseMatAlgebras.liftPrintablePretty(ComplexAlgebras.printableComplexPretty)
+        val eqB = BicomplexAlgebras.eqBicomplex
+        val prB = BicomplexAlgebras.printableBicomplexPretty
+        val eqM = DenseMatAlgebras.liftEq(ComplexAlgebras.eqComplex)
+        val prM = DenseMatAlgebras.liftPrintablePretty(ComplexAlgebras.printableComplexPretty)
 
-    "BicomplexToComplexMatrixMonomorphism (canonical basis) satisfies UnitalRingHomomorphismLaws" {
-        RingHomomorphismLaws(
-            hom = canonical::invoke,
-            domain = canonical.domain,
-            codomain = canonical.codomain,
-            arb = ArbBicomplex.bicomplex,
-            eqB = eqM,
-            prA = prB,
-            prB = prM
-        ).verify().throwIfFailed()
-    }
+        branch("BicomplexToComplexMatrixMonomorphism (canonical basis) satisfies UnitalRingHomomorphismLaws") {
+            suite(RingHomomorphismLaws(
+                hom = canonical::invoke,
+                domain = canonical.domain,
+                codomain = canonical.codomain,
+                arb = ArbBicomplex.bicomplex,
+                eqB = eqM,
+                prA = prB,
+                prB = prM
+            ))
+        }
 
-    "BicomplexToComplexMatrixMonomorphism (canonical basis) is injective" {
-        injectivityLaw(
-            hom = canonical::invoke,
-            arbA = ArbBicomplex.bicomplex,
-            eqA = eqB,
-            eqB = eqM,
-            prA = prB,
-            prB = prM
-        ).test()
-    }
+        law("BicomplexToComplexMatrixMonomorphism (canonical basis) is injective", injectivityLaw(
+                hom = canonical::invoke,
+                arbA = ArbBicomplex.bicomplex,
+                eqA = eqB,
+                eqB = eqM,
+                prA = prB,
+                prB = prM
+            ))
 
-    "BicomplexToDiagonalMatrixMonomorphism (idempotent basis) satisfies UnitalRingHomomorphismLaws" {
-        RingHomomorphismLaws(
-            hom = diagonal::invoke,
-            domain = diagonal.domain,
-            codomain = diagonal.codomain,
-            arb = ArbBicomplex.bicomplex,
-            eqB = eqM,
-            prA = prB,
-            prB = prM
-        ).verify().throwIfFailed()
-    }
+        branch("BicomplexToDiagonalMatrixMonomorphism (idempotent basis) satisfies UnitalRingHomomorphismLaws") {
+            suite(RingHomomorphismLaws(
+                hom = diagonal::invoke,
+                domain = diagonal.domain,
+                codomain = diagonal.codomain,
+                arb = ArbBicomplex.bicomplex,
+                eqB = eqM,
+                prA = prB,
+                prB = prM
+            ))
+        }
 
-    "BicomplexToDiagonalMatrixMonomorphism (idempotent basis) is injective" {
-        injectivityLaw(
-            hom = diagonal::invoke,
-            arbA = ArbBicomplex.bicomplex,
-            eqA = eqB,
-            eqB = eqM,
-            prA = prB,
-            prB = prM
-        ).test()
-    }
+        law("BicomplexToDiagonalMatrixMonomorphism (idempotent basis) is injective", injectivityLaw(
+                hom = diagonal::invoke,
+                arbA = ArbBicomplex.bicomplex,
+                eqA = eqB,
+                eqB = eqM,
+                prA = prB,
+                prB = prM
+            ))
+    })
 })

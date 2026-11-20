@@ -1,95 +1,100 @@
 package org.vorpal.kosmos.hypercomplex.multi
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.ComplexAlgebras
 import org.vorpal.kosmos.hypercomplex.complex.complex
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
-import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
-class BicomplexCommutativeRingSpec : StringSpec({
-    val ring = BicomplexAlgebras.BicomplexCommutativeRing
-    val eqB = BicomplexAlgebras.eqBicomplex
-    val prB = BicomplexAlgebras.printableBicomplex
+class BicomplexCommutativeRingSpec : FunSpec({
+    lawTests(lawGraph("bicomplex ring") {
+        val ring = BicomplexAlgebras.BicomplexCommutativeRing
+        val eqB = BicomplexAlgebras.eqBicomplex
+        val prB = BicomplexAlgebras.printableBicomplex
 
-    "BicomplexCommutativeRing satisfies CommutativeRingLaws" {
-        CommutativeRingLaws(
-            ring = ring,
-            arb = ArbBicomplex.bicomplex,
-            eq = eqB,
-            pr = prB
-        ).verify().throwIfFailed()
-    }
-
-    "reciprocal exists for an invertible bicomplex number" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
-            complex(2.0, 1.0),
-            complex(3.0, -4.0)
-        )
-
-        check(ring.hasReciprocal(z))
-        val inv = ring.reciprocal(z)
-
-        check(eqB(ring.mul(z, inv), ring.one))
-        check(eqB(ring.mul(inv, z), ring.one))
-    }
-
-    "reciprocal fails for a nonzero zero divisor" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
-            complex(0.0, 0.0),
-            complex(1.0, 2.0)
-        )
-
-        check(!ring.hasReciprocal(z))
-
-        try {
-            ring.reciprocal(z)
-            error("Expected ArithmeticException for reciprocal of non-invertible bicomplex number")
-        } catch (_: ArithmeticException) {
-            // expected
+        branch("BicomplexCommutativeRing satisfies CommutativeRingLaws") {
+            suite(CommutativeRingLaws(
+                ring = ring,
+                arb = ArbBicomplex.bicomplex,
+                eq = eqB,
+                pr = prB
+            ))
         }
-    }
 
-    "reciprocal fails for zero" {
-        val z = ring.zero
+        local("reciprocal exists for an invertible bicomplex number") {
+            val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
+                complex(2.0, 1.0),
+                complex(3.0, -4.0)
+            )
 
-        check(!ring.hasReciprocal(z))
+            lawCheck(ring.hasReciprocal(z))
+            val inv = ring.reciprocal(z)
 
-        try {
-            ring.reciprocal(z)
-            error("Expected ArithmeticException for reciprocal of zero")
-        } catch (_: ArithmeticException) {
-            // expected
+            lawCheck(eqB(ring.mul(z, inv), ring.one))
+            lawCheck(eqB(ring.mul(inv, z), ring.one))
         }
-    }
 
-    "complex embedding lands on diagonal idempotent coordinates" {
-        val z = complex(2.5, -1.25)
-        val embedded = BicomplexAlgebras.complexToBicomplexMonomorphism(z)
+        local("reciprocal fails for a nonzero zero divisor") {
+            val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
+                complex(0.0, 0.0),
+                complex(1.0, 2.0)
+            )
 
-        check(ComplexAlgebras.eqComplex(embedded.alpha, z))
-        check(ComplexAlgebras.eqComplex(embedded.beta, z))
-    }
+            lawCheck(!ring.hasReciprocal(z))
 
-    "first projection returns alpha" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
-            complex(1.0, 2.0),
-            complex(3.0, 4.0)
-        )
+            try {
+                ring.reciprocal(z)
+                error("Expected ArithmeticException for reciprocal of non-invertible bicomplex number")
+            } catch (_: ArithmeticException) {
+                // expected
+            }
+        }
 
-        val projected = BicomplexAlgebras.BicomplexFirstProjectionHomomorphism(z)
+        local("reciprocal fails for zero") {
+            val z = ring.zero
 
-        check(ComplexAlgebras.eqComplex(projected, z.alpha))
-    }
+            lawCheck(!ring.hasReciprocal(z))
 
-    "second projection returns beta" {
-        val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
-            complex(1.0, 2.0),
-            complex(3.0, 4.0)
-        )
+            try {
+                ring.reciprocal(z)
+                error("Expected ArithmeticException for reciprocal of zero")
+            } catch (_: ArithmeticException) {
+                // expected
+            }
+        }
 
-        val projected = BicomplexAlgebras.BicomplexSecondProjectionHomomorphism(z)
+        local("complex embedding lands on diagonal idempotent coordinates") {
+            val z = complex(2.5, -1.25)
+            val embedded = BicomplexAlgebras.complexToBicomplexMonomorphism(z)
 
-        check(ComplexAlgebras.eqComplex(projected, z.beta))
-    }
+            lawCheck(ComplexAlgebras.eqComplex(embedded.alpha, z))
+            lawCheck(ComplexAlgebras.eqComplex(embedded.beta, z))
+        }
+
+        local("first projection returns alpha") {
+            val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
+                complex(1.0, 2.0),
+                complex(3.0, 4.0)
+            )
+
+            val projected = BicomplexAlgebras.BicomplexFirstProjectionHomomorphism(z)
+
+            lawCheck(ComplexAlgebras.eqComplex(projected, z.alpha))
+        }
+
+        local("second projection returns beta") {
+            val z = BicomplexAlgebras.ofIdempotent(RealAlgebras.RealField,
+                complex(1.0, 2.0),
+                complex(3.0, 4.0)
+            )
+
+            val projected = BicomplexAlgebras.BicomplexSecondProjectionHomomorphism(z)
+
+            lawCheck(ComplexAlgebras.eqComplex(projected, z.beta))
+        }
+    })
 })
