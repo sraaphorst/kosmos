@@ -1,5 +1,9 @@
 # Law testing restructure: stage 0 baseline
 
+> **Historical document.** This records the #252 restructure as it was planned and built. Some of it (`LawMode`,
+> compact/full views, `StructuredLawSuite`, the old entry points) was later removed by #61. For the current design,
+> see the [law-testing guide](../03-kosmos-laws.md).
+
 Recorded before any runner code was added, for the restructure in
 [`law-testing-restructure.md`](law-testing-restructure.md) (issues #252, #131, #61).
 

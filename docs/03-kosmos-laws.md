@@ -61,9 +61,12 @@ test("Q is a field") {
 
 ## Writing a law
 
-A law signals that it is **false** with `lawCheck` and draws its inputs with `lawCheckAll`:
+A law signals that it is **false** with `lawCheck` and draws its inputs with `lawCheckAll`, and declares what it is
+bound to so that equal checks can be shared:
 
 ```kotlin
+override val binding = LawBinding.of(this, op, arb, eq)
+
 override suspend fun test() {
     lawCheckAll(TestingLaw.arbTriple(arb), render = renderWith(pr)) { (a, b, c) ->
         lawCheck(eq(op(op(a, b), c), op(a, op(b, c)))) { "($a $s $b) $s $c ≠ $a $s ($b $s $c)" }
@@ -71,6 +74,8 @@ override suspend fun test() {
 }
 ```
 
+- `binding` lists every argument that changes the check (not the printable, which only affects messages). A law
+  without a binding is never shared with another: correct, but it runs again on every path that reaches it.
 - `lawCheck(holds) { message }` throws a `LawViolation` when `holds` is false. The message is built only on failure.
   (Kotest's `withClue` does not attach its clue to exceptions it did not create, so the message goes here.)
 - `lawCheckAll(gen, render)` is Kotest's `checkAll` with the same budget and shrinking, plus: under the runner it uses
@@ -104,9 +109,10 @@ class RingLaws<A : Any>(
 - **No compact view.** There is one graph per suite. For example, a field's multiplicative associativity is reached
   at `Field > DivisionRing > Ring > Rng > Hemiring > Semigroup (*) > associativity (*)` and at eleven other paths,
   and runs once.
-- **Atomic leaves.** Every leaf is one check. Compound laws are suites of their halves: `IdentityLaw` has
+- **Atomic leaves.** The convention is one check per leaf. The compound laws are suites of their halves: `IdentityLaw` has
   `left identity` and `right identity`, `DistributivityLaw` has left and right distributivity, `MoufangLaw` has
-  left, right and middle Moufang. A failure names the half that failed.
+  left, right and middle Moufang. A failure names the half that failed. A few laws still check more than one
+condition in a single leaf (for example `PositiveDefiniteLaw`: non-negativity and non-degeneracy).
 - **Inverses are required.** `InvertibilityLaw` has three children: `inverse exists` fails when the inverse returns
   null or throws on an element of the domain (the generator minus `exclude`, e.g. zero for a field's
   multiplication); left and right invertibility check `a⁻¹a = e` and `aa⁻¹ = e` where the inverse exists.
@@ -120,7 +126,7 @@ Bigger structures repeat smaller ones: an algebra over ℚ reaches the additive 
 module and its algebra. Within one run, a node reached again is not executed again; its result is shown under every
 path, marked `sharedFrom` (the path where it ran).
 
-Every atomic law is bound, so this works at the level of single checks, across the whole graph: two leaves are the
+Every built-in atomic law supplies a binding, so this works at the level of single checks, across the whole graph: two leaves are the
 same check when they are the same node object, or laws of the same class whose bindings match. Suites are matched
 the same way, so a repeated suite is shared as a whole. Bindings match when:
 
@@ -150,8 +156,11 @@ inside the check, so its binding is the original generator plus `exclude`. Nothi
 A branch takes its worst child (errored > failed > passed > skipped). A run in which no law passed is not evidence,
 and `throwIfFailed()` rejects it by default.
 
-`TotalityLaw` is the exception that proves the rule: for totality, "the operation throws" *is* the law being false,
-so a throwing operation gives `totality` **Failed** and the other laws on it **Errored**.
+Two laws are deliberate exceptions, because for them "the operation throws" *is* the law being false:
+
+- `TotalityLaw`: a throwing operation gives `totality` **Failed** and the other laws on it **Errored**.
+- `InverseExistenceLaw`: an inverse that throws (or returns null) on the domain gives `inverse exists` **Failed**,
+  with the exception kept as the cause. Left and right invertibility skip such elements.
 
 Older laws that use plain `check` inside `checkAll` cannot tell the two apart (Kotest wraps every exception in an
 `AssertionError`), so for them an `AssertionError` reads as `FAILED` and they have no seed.
@@ -167,13 +176,16 @@ Ring (+, *)  ERRORED [2/5 passed]
 │  └─ Semigroup (*)  FAILED [0/1 passed]
 │     └─ associativity (*)  FAILED
 └─ AbelianGroup (+)  ERRORED [1/2 passed]
-   └─ inverse exists (-)  ERRORED
+   └─ commutativity (+)  ERRORED
 
 #1 FAILED: Ring (+, *) > Hemiring (+, *) > Semigroup (*) > associativity (*)
   counterexample: a = 1, b = 2, c = 3
   seed: 812... (replay: LawRunner.replay(root, listOf(0, 1, 0), 812...L))
   cause: org.vorpal.kosmos.laws.LawViolation: (a*b)*c ≠ a*(b*c)
 ```
+
+Here multiplication is not associative (**Failed**), and the addition threw on some pair of inputs, so commutativity
+of `+` could not be evaluated (**Errored**).
 
 `report.renderTree()` shows the whole tree; a shared repeat is one line, `(shared: same check as <path>)`.
 Pass `timing = true` to either for elapsed times.

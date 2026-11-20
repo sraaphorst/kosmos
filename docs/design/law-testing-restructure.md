@@ -1,5 +1,9 @@
 # Kosmos law testing restructure
 
+> **Historical document.** This records the #252 restructure as it was planned and built. Some of it (`LawMode`,
+> compact/full views, `StructuredLawSuite`, the old entry points) was later removed by #61. For the current design,
+> see the [law-testing guide](../03-kosmos-laws.md).
+
 [Testing restructuring (#252)](https://github.com/sraaphorst/kosmos/issues/252) is the implementation brief. Its [design follow-up](https://github.com/sraaphorst/kosmos/issues/252#issuecomment-6076577794) calls for a directed acyclic graph (DAG) from the outset, separate definition, execution, and reporting layers, and separate identities for laws and executions. [More unified law testing / Law runner / Improved reporting (#131)](https://github.com/sraaphorst/kosmos/issues/131) adds the requirement to compose standalone laws and existing suites in the same spec. [Major testing refactor (#61)](https://github.com/sraaphorst/kosmos/issues/61) covers the subsequent cleanup of concrete specs.
 
 Progress notes and departures from this plan are recorded at the end of this file.
