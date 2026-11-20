@@ -27,6 +27,7 @@ Kosmos is in early development. The APIs change freely, and there is no publishe
 
 ```kotlin
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
+import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras.RationalField
 import org.vorpal.kosmos.core.rational.Rational
 
 fun main() {
