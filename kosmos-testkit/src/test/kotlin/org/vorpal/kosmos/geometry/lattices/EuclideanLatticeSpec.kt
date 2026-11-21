@@ -16,9 +16,7 @@ import org.vorpal.kosmos.hypercomplex.quaternion.ArbLipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.HurwitzQuaternionAlgebras
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternion
 import org.vorpal.kosmos.hypercomplex.quaternion.LipschitzQuaternionAlgebras
-import org.vorpal.kosmos.laws.LawReport
 import org.vorpal.kosmos.laws.lawGraph
-import org.vorpal.kosmos.laws.leaves
 import org.vorpal.kosmos.laws.property.BilinearFormLaw
 import org.vorpal.kosmos.laws.property.BilinearityLaw
 import org.vorpal.kosmos.laws.property.LeftBilinearFormLaw
@@ -28,6 +26,7 @@ import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.numberfields.quadratic.EisensteinInt
 import org.vorpal.kosmos.numberfields.quadratic.EisensteinIntAlgebras
 import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.failedLabels
 import org.vorpal.kosmos.testing.laws.local
 import java.math.BigInteger
 
@@ -59,9 +58,6 @@ private val skewed: (LipschitzQuaternion, LipschitzQuaternion) -> BigInteger = {
 private val notBilinear: (LipschitzQuaternion, LipschitzQuaternion) -> BigInteger = { p, q ->
     lipschitz.dot(lipschitz.addV.op(p, q), lipschitz.addV.op(p, q))
 }
-
-private fun LawReport.failingLabels(): Set<String> =
-    root.leaves().filter { it.status.isProblem }.map { it.path.toString() }.toSet()
 
 class EuclideanLatticeSpec : FunSpec({
     lawTests(lawGraph("Euclidean lattices") {
@@ -96,15 +92,15 @@ class EuclideanLatticeSpec : FunSpec({
         branch("forms that fall short") {
             local("p.w · q.x is bilinear but not symmetric") {
                 BilinearFormLaw(skewed, Z.add.op, Z.mul.op, lipschitz.addV.op, lipschitz.scale, scalars, lq).verify()
-                    .failingLabels() shouldBe emptySet()
-                SymmetryLaw(skewed, lq).verify().failingLabels().single() shouldContain "symmetry"
+                    .failedLabels() shouldBe emptySet()
+                SymmetryLaw(skewed, lq).verify().failedLabels().single() shouldContain "symmetry"
             }
             local("N(p + q) is symmetric but not linear in either argument") {
-                SymmetryLaw(notBilinear, lq).verify().failingLabels() shouldBe emptySet()
+                SymmetryLaw(notBilinear, lq).verify().failedLabels() shouldBe emptySet()
                 LeftBilinearFormLaw(notBilinear, Z.add.op, Z.mul.op, lipschitz.addV.op, lipschitz.scale, scalars, lq)
-                    .verify().failingLabels().isNotEmpty() shouldBe true
+                    .verify().failedLabels().isNotEmpty() shouldBe true
                 RightBilinearFormLaw(notBilinear, Z.add.op, Z.mul.op, lipschitz.addV.op, lipschitz.scale, scalars, lq)
-                    .verify().failingLabels().isNotEmpty() shouldBe true
+                    .verify().failedLabels().isNotEmpty() shouldBe true
             }
         }
     })

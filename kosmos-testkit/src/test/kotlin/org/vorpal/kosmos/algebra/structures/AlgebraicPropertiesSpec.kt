@@ -30,11 +30,9 @@ import org.vorpal.kosmos.hypercomplex.sextonion.Sextonion
 import org.vorpal.kosmos.hypercomplex.sextonion.SextonionAlgebras
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplex
 import org.vorpal.kosmos.hypercomplex.splitcomplex.SplitComplexAlgebras
-import org.vorpal.kosmos.laws.LawReport
 import org.vorpal.kosmos.laws.algebra.RngLaws
 import org.vorpal.kosmos.laws.homomorphism.RngHomomorphismLaws
 import org.vorpal.kosmos.laws.lawGraph
-import org.vorpal.kosmos.laws.leaves
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.property.CommutativityLaw
 import org.vorpal.kosmos.laws.property.JordanIdentityLaw
@@ -51,6 +49,7 @@ import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.numberfields.quadratic.ArbGaussianInt
 import org.vorpal.kosmos.numberfields.quadratic.GaussianIntAlgebras
 import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.failedLabels
 import org.vorpal.kosmos.testing.laws.local
 import java.math.BigInteger
 
@@ -104,9 +103,6 @@ private val exactDual = Arb.bind(smallExactReal, smallExactReal) { a, b -> Dual(
 private val twoZ: Rng<BigInteger> = Rng.of(Z.add, Z.mul)
 private val evens: Arb<BigInteger> = smallInts.map { it * BigInteger.TWO }
 
-private fun LawReport.failingLabels(): Set<String> =
-    root.leaves().filter { it.status.isProblem }.map { it.path.toString() }.toSet()
-
 class AlgebraicPropertiesSpec : FunSpec({
     lawTests(lawGraph("algebraic properties") {
 
@@ -117,7 +113,7 @@ class AlgebraicPropertiesSpec : FunSpec({
                 law(PowerAssociativityLaw(jordanLipschitz, ArbLipschitzQuaternion.lipschitzQuaternion))
             }
             local("the Jordan product is not associative") {
-                AssociativityLaw(jordanLipschitz, ArbLipschitzQuaternion.lipschitzQuaternion).verify().failingLabels()
+                AssociativityLaw(jordanLipschitz, ArbLipschitzQuaternion.lipschitzQuaternion).verify().failedLabels()
                     .single() shouldContain "associativity"
             }
             branch("alternative algebras satisfy it (Artin: x and y generate an associative subalgebra)") {
@@ -125,7 +121,7 @@ class AlgebraicPropertiesSpec : FunSpec({
                 law(JordanIdentityLaw(rationalSextonions.mul.op, ArbSextonion.rationalSextonion))
             }
             local("ab + 1 on ℤ is commutative but not Jordan") {
-                JordanIdentityLaw(abPlusOne, smallInts).verify().failingLabels().single() shouldContain "jordan"
+                JordanIdentityLaw(abPlusOne, smallInts).verify().failedLabels().single() shouldContain "jordan"
             }
         }
 
@@ -134,11 +130,11 @@ class AlgebraicPropertiesSpec : FunSpec({
             law(MedialLaw(midpoint, ArbRational.small))
             law(MedialLaw(minus, smallInts))
             local("subtraction is medial without being commutative or associative") {
-                CommutativityLaw(minus, smallInts).verify().failingLabels().size shouldBe 1
-                AssociativityLaw(minus, smallInts).verify().failingLabels().size shouldBe 1
+                CommutativityLaw(minus, smallInts).verify().failedLabels().size shouldBe 1
+                AssociativityLaw(minus, smallInts).verify().failedLabels().size shouldBe 1
             }
             local("quaternion multiplication is not medial: it needs bc = cb") {
-                MedialLaw(lipschitz.mul.op, ArbLipschitzQuaternion.lipschitzQuaternion).verify().failingLabels()
+                MedialLaw(lipschitz.mul.op, ArbLipschitzQuaternion.lipschitzQuaternion).verify().failedLabels()
                     .single() shouldContain "medial"
             }
         }
@@ -147,7 +143,7 @@ class AlgebraicPropertiesSpec : FunSpec({
             law(PowerAssociativityLaw(rationalOctonions.mul.op, ArbRationalOctonion.smallRationalOctonion))
             law(PowerAssociativityLaw(rationalSextonions.mul.op, ArbSextonion.rationalSextonion))
             local("ab + 1 on ℤ is not power-associative: x²x² ≠ x⁴") {
-                PowerAssociativityLaw(abPlusOne, smallInts).verify().failingLabels().single() shouldContain
+                PowerAssociativityLaw(abPlusOne, smallInts).verify().failedLabels().single() shouldContain
                     "power-associativity"
             }
         }
@@ -157,9 +153,9 @@ class AlgebraicPropertiesSpec : FunSpec({
             law(NilpotentLaw(rationalSextonions.mul.op, 2, rationalSextonions.zero, sextonionRadical))
             local("the dual numbers are not nilpotent (1 · 1 = 1), and εℚ has index exactly 2, not 3") {
                 NilpotentLaw(rationalDuals.mul.op, 2, rationalDuals.zero, ArbDual.rationalDual).verify()
-                    .failingLabels().size shouldBe 1
+                    .failedLabels().size shouldBe 1
                 NilpotentLaw(rationalDuals.mul.op, 3, rationalDuals.zero, epsilonQ).verify()
-                    .failingLabels().size shouldBe 1
+                    .failedLabels().size shouldBe 1
             }
         }
 
@@ -180,21 +176,21 @@ class AlgebraicPropertiesSpec : FunSpec({
             }
             local("zero divisors: ε · ε = 0, (1 + j)(1 − j) = 0, and the sextonion radical squares to zero") {
                 val eps = Arb.element(Dual(Rational.ZERO, q(1)), Dual(Rational.ZERO, q(2)))
-                NoZeroDivisorsLaw(rationalDuals.mul.op, rationalDuals.zero, eps).verify().failingLabels().size shouldBe 1
+                NoZeroDivisorsLaw(rationalDuals.mul.op, rationalDuals.zero, eps).verify().failedLabels().size shouldBe 1
 
                 val split = SplitComplexAlgebras.splitComplexRing(Z)
                 val oneJ = SplitComplex(BigInteger.ONE, BigInteger.ONE)
                 val oneMinusJ = SplitComplex(BigInteger.ONE, BigInteger.ONE.negate())
                 split.mul.op(oneJ, oneMinusJ) shouldBe split.zero
                 NoZeroDivisorsLaw(split.mul.op, split.zero, Arb.element(oneJ, oneMinusJ)).verify()
-                    .failingLabels().size shouldBe 1
+                    .failedLabels().size shouldBe 1
 
                 val nu = Arb.element(
                     Sextonion(Mat2(q(0), q(0), q(0), q(0)), Vec2(q(1), q(0))),
                     Sextonion(Mat2(q(0), q(0), q(0), q(0)), Vec2(q(0), q(1)))
                 )
                 NoZeroDivisorsLaw(rationalSextonions.mul.op, rationalSextonions.zero, nu).verify()
-                    .failingLabels().size shouldBe 1
+                    .failedLabels().size shouldBe 1
             }
         }
 
@@ -204,11 +200,11 @@ class AlgebraicPropertiesSpec : FunSpec({
             local("the split-complex norm a² − b² is indefinite, and the dual norm a² is degenerate") {
                 val splitZero = SplitComplexAlgebras.RealSplitComplexRing.zero
                 NormLaw(SplitComplexAlgebras.splitComplexNormSq, splitZero, exactSplitComplex).verify()
-                    .failingLabels().size shouldBe 1
+                    .failedLabels().size shouldBe 1
 
                 val dualNorm = DualAlgebras.normSq(RealAlgebras.RealField)
                 dualNorm(Dual(0.0, 1.0)) shouldBe 0.0
-                NormLaw(dualNorm, DualAlgebras.RealDualRing.zero, exactDual).verify().failingLabels().size shouldBe 1
+                NormLaw(dualNorm, DualAlgebras.RealDualRing.zero, exactDual).verify().failedLabels().size shouldBe 1
             }
         }
 
@@ -217,7 +213,7 @@ class AlgebraicPropertiesSpec : FunSpec({
             branch("2ℤ ↪ ℤ") { suite(RngHomomorphismLaws({ it }, twoZ, Z, evens)) }
             local("x ↦ 2x on ℤ preserves addition and 0 but not multiplication") {
                 val failing = RngHomomorphismLaws({ x: BigInteger -> x * BigInteger.TWO }, Z, Z, smallInts).verify()
-                    .failingLabels()
+                    .failedLabels()
                 failing.single() shouldContain "multiplicat"
             }
         }

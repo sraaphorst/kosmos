@@ -22,9 +22,7 @@ import org.vorpal.kosmos.core.relations.instances.WheelZRelations
 import org.vorpal.kosmos.core.setoid.Setoid
 import org.vorpal.kosmos.core.tropical.TropicalMax
 import org.vorpal.kosmos.core.tropical.TropicalMin
-import org.vorpal.kosmos.laws.LawReport
 import org.vorpal.kosmos.laws.lawGraph
-import org.vorpal.kosmos.laws.leaves
 import org.vorpal.kosmos.laws.relation.AsymmetryLaw
 import org.vorpal.kosmos.laws.relation.ConnexityLaw
 import org.vorpal.kosmos.laws.relation.CoreflexivityLaw
@@ -38,6 +36,7 @@ import org.vorpal.kosmos.laws.relation.TotalOrderLaws
 import org.vorpal.kosmos.laws.setoid.SetoidLaws
 import org.vorpal.kosmos.laws.verify
 import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.failedLabels
 import org.vorpal.kosmos.testing.laws.local
 import java.math.BigInteger
 
@@ -73,9 +72,6 @@ private val tropicalMin: Arb<TropicalMin> = Arb.choice(
     Arb.int(-5..5).map { TropicalMin.Finite(it.toDouble()) }
 )
 
-private fun LawReport.failingLabels(): Set<String> =
-    root.leaves().filter { it.status.isProblem }.map { it.path.toString() }.toSet()
-
 class RelationsSpec : FunSpec({
     lawTests(lawGraph("relations") {
 
@@ -90,18 +86,18 @@ class RelationsSpec : FunSpec({
             suite(QuasiReflexivityLaw(IntRelations.IntLE, smallInts))
 
             local("≤ is not symmetric") {
-                SymmetryLaw(IntRelations.IntLE, smallInts).verify().failingLabels().single() shouldContain "symmetry"
+                SymmetryLaw(IntRelations.IntLE, smallInts).verify().failedLabels().single() shouldContain "symmetry"
             }
             local("< is connex (on distinct pairs) but not strongly connex: a < a fails") {
-                StrongConnexityLaw(IntRelations.IntLT, smallInts).verify().failingLabels().single() shouldContain
+                StrongConnexityLaw(IntRelations.IntLT, smallInts).verify().failedLabels().single() shouldContain
                     "strong connexity"
             }
             local("< is neither left nor right quasi-reflexive") {
-                val failing = QuasiReflexivityLaw(IntRelations.IntLT, smallInts).verify().failingLabels()
+                val failing = QuasiReflexivityLaw(IntRelations.IntLT, smallInts).verify().failedLabels()
                 failing.size shouldBe 2
             }
             local("≤ is not asymmetric") {
-                AsymmetryLaw(IntRelations.IntLE, smallInts).verify().failingLabels().single() shouldContain "asymmetry"
+                AsymmetryLaw(IntRelations.IntLE, smallInts).verify().failedLabels().single() shouldContain "asymmetry"
             }
         }
 
@@ -109,7 +105,7 @@ class RelationsSpec : FunSpec({
             suite(EquivalenceRelationLaws(mod5, ints12))
             suite(SetoidLaws(Setoid.of(mod5Eq), ints12))
             local("congruence mod 5 is not coreflexive: 0 ≡ 5 but 0 ≠ 5") {
-                CoreflexivityLaw(mod5, ints12).verify().failingLabels().single() shouldContain "coreflexivity"
+                CoreflexivityLaw(mod5, ints12).verify().failedLabels().single() shouldContain "coreflexivity"
             }
         }
 
@@ -117,7 +113,7 @@ class RelationsSpec : FunSpec({
             suite(PartialOrderLaws(divides, oneTo30))
             suite(QuasiReflexivityLaw(divides, oneTo30))
             local("divisibility is not connex: neither 2 | 3 nor 3 | 2") {
-                ConnexityLaw(divides, oneTo30).verify().failingLabels().single() shouldContain "connexity"
+                ConnexityLaw(divides, oneTo30).verify().failedLabels().single() shouldContain "connexity"
             }
         }
 
@@ -125,7 +121,7 @@ class RelationsSpec : FunSpec({
             suite(TotalOrderLaws(RealRelations.RealTotalOrder.le, finiteReals))
             suite(StrictTotalOrderLaws(RealRelations.RealLT, finiteReals))
             local("approximate equality is reflexive and symmetric but not transitive") {
-                val failing = EquivalenceRelationLaws(RealRelations.RealEqApprox, nearTolerance).verify().failingLabels()
+                val failing = EquivalenceRelationLaws(RealRelations.RealEqApprox, nearTolerance).verify().failedLabels()
                 failing.single() shouldContain "transitivity"
                 RealRelations.RealEqApprox(0.0, 6.0e-9) shouldBe true
                 RealRelations.RealEqApprox(6.0e-9, 1.2e-8) shouldBe true
@@ -151,7 +147,7 @@ class RelationsSpec : FunSpec({
             local("≤ on the wheel is not total: ⊥ is comparable only to itself") {
                 WheelZRelations.WheelZLe(WheelZ.BOTTOM, WheelZ.ZERO) shouldBe false
                 WheelZRelations.WheelZLe(WheelZ.ZERO, WheelZ.BOTTOM) shouldBe false
-                ConnexityLaw(WheelZRelations.WheelZLe, ArbWheelZ).verify().failingLabels().single() shouldContain
+                ConnexityLaw(WheelZRelations.WheelZLe, ArbWheelZ).verify().failedLabels().single() shouldContain
                     "connexity"
             }
         }
