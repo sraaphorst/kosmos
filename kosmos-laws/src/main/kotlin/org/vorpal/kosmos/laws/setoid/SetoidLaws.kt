@@ -18,6 +18,8 @@ class SetoidLaws<A : Any>(
     private val arb: Arb<A>,
     private val pr: Printable<A> = Printable.default()
 ) : LawSuite {
+    override val name = "Setoid"
+
     override val binding = LawBinding.of(this, setoid, arb, pr)
 
     override fun children(): List<LawNode> =

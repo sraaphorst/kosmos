@@ -17,8 +17,10 @@ import org.vorpal.kosmos.laws.asNodes
 class EquivalenceRelationLaws<A : Any>(
     relation: Relation<A>,
     arb: Arb<A>,
-    pr: Printable<A>
+    pr: Printable<A> = Printable.default()
 ) : LawSuite {
+    override val name = "EquivalenceRelation (${relation.symbol})"
+
     private val reflexivityLaw = ReflexivityLaw(relation, arb, pr)
     private val symmetryLaw = SymmetryLaw(relation, arb, pr)
     private val transitivityLaw = TransitivityLaw(relation, arb, pr)

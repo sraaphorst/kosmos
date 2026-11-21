@@ -42,7 +42,7 @@ private sealed interface QuasiReflexivityCore<A: Any> {
     private fun rightFailureMessage(a: A, b: A): () -> String = {
         val sa = pr(a)
         val sb = pr(b)
-        "Right quasi-reflexive check failed: $sa ${rel.symbol} $sb but not $sb {symbol.rel} $sb"
+        "Right quasi-reflexive check failed: $sa ${rel.symbol} $sb but not $sb ${rel.symbol} $sb"
     }
 }
 

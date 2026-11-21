@@ -9,6 +9,7 @@ import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.renderWith
 
 /** Connexity (Totality): a ≠ b ⇒ (a R b) ∨ (b R a) */
 class ConnexityLaw<A : Any>(
@@ -24,7 +25,7 @@ class ConnexityLaw<A : Any>(
     override val name: String = "connexity ($symbol)"
 
     override suspend fun test() {
-        lawCheckAll(TestingLaw.arbPair(arb).filterNot { (a, b) -> eq(a, b) }) { (a, b) ->
+        lawCheckAll(TestingLaw.arbPair(arb).filterNot { (a, b) -> eq(a, b) }, render = renderWith(pr)) { (a, b) ->
             val ab = rel(a, b)
             val ba = rel(b, a)
 
