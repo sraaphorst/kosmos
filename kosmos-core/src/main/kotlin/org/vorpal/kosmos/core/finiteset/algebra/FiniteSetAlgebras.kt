@@ -16,6 +16,13 @@ import org.vorpal.kosmos.core.ops.LeftAction
 import java.math.BigInteger
 
 /**
+ * Algebraic structures on finite sets.
+ *
+ * Every structure here has carrier [FiniteSet.Unordered]: these are structures on *sets*, so two operands with the
+ * same elements must be equal. [FiniteSet.Ordered] compares by order as well (`{1, 2} ≠ {2, 1}`), which would break
+ * commutativity of `∪`, `∩` and `Δ` and make `Ø` differ from the results of the operations. To use an ordered set,
+ * convert it with [FiniteSet.toUnordered].
+ *
  * Main structures:
  * - [finiteSetIntersectionMonoid] over a universe
  * - [finiteSetUnionMonoid] (optionally over a universe)
@@ -24,33 +31,46 @@ import java.math.BigInteger
  * - [finiteSetSemiring] over a universe
  * - [finiteSetBooleanAlgebra] over a universe
  * - [finiteSetF2VectorSpace] over a universe
+ *
+ * The structures over a universe `S` check that every operand is a subset of `S`.
  */
 object FiniteSetAlgebras {
-    private fun <A> intersection(universe: FiniteSet<A>): BinOp<FiniteSet<A>> =
+    private fun <A> requireSubset(set: FiniteSet.Unordered<A>, universe: FiniteSet.Unordered<A>) =
+        check(set isSubsetOf universe) { "Set $set is not a subset of $universe" }
+
+    private fun <A> unionOp(): BinOp<FiniteSet.Unordered<A>> =
+        BinOp(Symbols.SET_UNION) { a, b -> (a union b).toUnordered() }
+
+    private fun <A> symmetricDifferenceOp(): BinOp<FiniteSet.Unordered<A>> =
+        BinOp(Symbols.SET_SYMM_DIFF) { a, b -> (a symmetricDifference b).toUnordered() }
+
+    private fun <A> intersection(universe: FiniteSet.Unordered<A>): BinOp<FiniteSet.Unordered<A>> =
         BinOp(Symbols.SET_INTERSECTION) { a, b ->
-            check(a.isSubsetOf(universe)) { "Set $a is not a subset of $universe" }
-            check(b.isSubsetOf(universe)) { "Set $b is not a subset of $universe" }
-            a intersect b
+            requireSubset(a, universe)
+            requireSubset(b, universe)
+            (a intersect b).toUnordered()
         }
 
-    private fun <A> union(universe: FiniteSet<A>): BinOp<FiniteSet<A>> =
+    private fun <A> union(universe: FiniteSet.Unordered<A>): BinOp<FiniteSet.Unordered<A>> =
         BinOp(Symbols.SET_UNION) { a, b ->
-            check(a.isSubsetOf(universe)) { "Set $a is not a subset of $universe" }
-            check(b.isSubsetOf(universe)) { "Set $b is not a subset of $universe" }
-            a union b
+            requireSubset(a, universe)
+            requireSubset(b, universe)
+            (a union b).toUnordered()
         }
 
-    private fun <A> symmetricDifference(universe: FiniteSet<A>): BinOp<FiniteSet<A>> =
+    private fun <A> symmetricDifference(universe: FiniteSet.Unordered<A>): BinOp<FiniteSet.Unordered<A>> =
         BinOp(Symbols.SET_SYMM_DIFF) { a, b ->
-            check(a.isSubsetOf(universe)) { "Set $a is not a subset of $universe" }
-            check(b.isSubsetOf(universe)) { "Set $b is not a subset of $universe" }
-            a symmetricDifference b
+            requireSubset(a, universe)
+            requireSubset(b, universe)
+            (a symmetricDifference b).toUnordered()
         }
 
     /**
      * For a finite set `S` (the parameter [universe]), create the commutative monoid `(P(S), ∩, S)`.
      */
-    fun <A> finiteSetIntersectionMonoid(universe: FiniteSet<A>): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
+    fun <A> finiteSetIntersectionMonoid(
+        universe: FiniteSet.Unordered<A>
+    ): CommutativeMonoid<FiniteSet.Unordered<A>> = CommutativeMonoid.of(
         identity = universe,
         op = intersection(universe)
     )
@@ -58,16 +78,18 @@ object FiniteSetAlgebras {
     /**
      * Create a commutative monoid on all finite sets of elements of type [A] under union with identity `Ø`.
      */
-    fun <A> finiteSetUnionMonoid(): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
-        identity = FiniteSet.of(),
-        op = BinOp(Symbols.SET_UNION) { a, b -> a union b }
+    fun <A> finiteSetUnionMonoid(): CommutativeMonoid<FiniteSet.Unordered<A>> = CommutativeMonoid.of(
+        identity = FiniteSet.emptyUnordered(),
+        op = unionOp()
     )
 
     /**
      * For a finite set `S` (the parameter [universe]), create the commutative monoid `(P(S), ∪, Ø)`.
      */
-    fun <A> finiteSetUnionMonoid(universe: FiniteSet<A>): CommutativeMonoid<FiniteSet<A>> = CommutativeMonoid.of(
-        identity = FiniteSet.of(),
+    fun <A> finiteSetUnionMonoid(
+        universe: FiniteSet.Unordered<A>
+    ): CommutativeMonoid<FiniteSet.Unordered<A>> = CommutativeMonoid.of(
+        identity = FiniteSet.emptyUnordered(),
         op = union(universe)
     )
 
@@ -76,9 +98,9 @@ object FiniteSetAlgebras {
      *
      * Note that every element is its own inverse: characteristic 2.
      */
-    fun <A> finiteSetSymmetricDifferenceAbelianGroup(): AbelianGroup<FiniteSet<A>> = AbelianGroup.of(
-        identity = FiniteSet.of(),
-        op = BinOp(Symbols.SET_SYMM_DIFF) { a, b -> a symmetricDifference b },
+    fun <A> finiteSetSymmetricDifferenceAbelianGroup(): AbelianGroup<FiniteSet.Unordered<A>> = AbelianGroup.of(
+        identity = FiniteSet.emptyUnordered(),
+        op = symmetricDifferenceOp(),
         inverse = Endo(Symbols.NOTHING, Identity())
     )
 
@@ -87,8 +109,10 @@ object FiniteSetAlgebras {
      *
      * Note that every element is its own inverse: characteristic 2.
      */
-    fun <A> finiteSetSymmetricDifferenceAbelianGroup(universe: FiniteSet<A>): AbelianGroup<FiniteSet<A>> = AbelianGroup.of(
-        identity = FiniteSet.of(),
+    fun <A> finiteSetSymmetricDifferenceAbelianGroup(
+        universe: FiniteSet.Unordered<A>
+    ): AbelianGroup<FiniteSet.Unordered<A>> = AbelianGroup.of(
+        identity = FiniteSet.emptyUnordered(),
         op = symmetricDifference(universe),
         inverse = Endo(Symbols.NOTHING, Identity())
     )
@@ -98,7 +122,9 @@ object FiniteSetAlgebras {
      * - addition: `a Δ b` (symmetric difference), identity `Ø`
      * - multiplication: `a ∩ b` (intersection), identity `S`
      */
-    fun <A> finiteSetBooleanRing(universe: FiniteSet<A>): CommutativeRing<FiniteSet<A>> = CommutativeRing.of(
+    fun <A> finiteSetBooleanRing(
+        universe: FiniteSet.Unordered<A>
+    ): CommutativeRing<FiniteSet.Unordered<A>> = CommutativeRing.of(
         add = finiteSetSymmetricDifferenceAbelianGroup(universe),
         mul = finiteSetIntersectionMonoid(universe)
     )
@@ -110,7 +136,9 @@ object FiniteSetAlgebras {
      *
      * Distribution works in both directions.
      */
-    fun <A> finiteSetSemiring(universe: FiniteSet<A>): Semiring<FiniteSet<A>> = Semiring.of(
+    fun <A> finiteSetSemiring(
+        universe: FiniteSet.Unordered<A>
+    ): Semiring<FiniteSet.Unordered<A>> = Semiring.of(
         add = finiteSetUnionMonoid(universe),
         mul = finiteSetIntersectionMonoid(universe)
     )
@@ -121,14 +149,16 @@ object FiniteSetAlgebras {
      *  - join = `∪`, meet = `∩`
      *  - not(a) = `aᶜ`
      */
-    fun <A> finiteSetBooleanAlgebra(universe: FiniteSet<A>): BooleanAlgebra<FiniteSet<A>> = BooleanAlgebra.of(
+    fun <A> finiteSetBooleanAlgebra(
+        universe: FiniteSet.Unordered<A>
+    ): BooleanAlgebra<FiniteSet.Unordered<A>> = BooleanAlgebra.of(
         join = union(universe),
         meet = intersection(universe),
-        bottom = FiniteSet.of(),
+        bottom = FiniteSet.emptyUnordered(),
         top = universe,
         not = Endo(Symbols.SET_COMPLEMENT_POST) { set ->
-            check(set isSubsetOf universe) { "Set $set is not a subset of $universe" }
-            universe - set
+            requireSubset(set, universe)
+            (universe - set).toUnordered()
         }
     )
 
@@ -143,15 +173,17 @@ object FiniteSetAlgebras {
      * - complement
      * - top element
      */
-    fun <A> finiteSetF2VectorSpace(universe: FiniteSet<A>): FiniteVectorSpace<BigInteger, FiniteSet<A>> =
+    fun <A> finiteSetF2VectorSpace(
+        universe: FiniteSet.Unordered<A>
+    ): FiniteVectorSpace<BigInteger, FiniteSet.Unordered<A>> =
         FiniteVectorSpace.of(
             scalars = FiniteFieldAlgebras.F2,
             add = finiteSetSymmetricDifferenceAbelianGroup(universe),
             dimension = universe.size,
             leftAction = LeftAction { s, set ->
-                check(set.isSubsetOf(universe)) { "Set $set is not a subset of $universe" }
+                requireSubset(set, universe)
                 when (s) {
-                    BigInteger.ZERO -> FiniteSet.of()
+                    BigInteger.ZERO -> FiniteSet.emptyUnordered()
                     BigInteger.ONE -> set
                     else -> throw IllegalArgumentException("s must be 0 or 1, got $s")
                 }
