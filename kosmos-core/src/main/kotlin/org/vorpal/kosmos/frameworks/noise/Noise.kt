@@ -18,7 +18,7 @@ fun interface Noise {
          * Constructs a *fractal Brownian motion* (fBm) noise generator from a base [Noise] function.
          *
          * Fractal Brownian motion combines multiple octaves of coherent noise
-         * (such as [PerlinNoise] or [SimplexNoise])
+         * (such as Perlin or simplex noise)
          * at increasing frequencies and decreasing amplitudes to create complex, natural-looking textures.
          *
          * Formally:
@@ -43,20 +43,16 @@ fun interface Noise {
          *
          * * ### Example
          * ```kotlin
-         * // Create a base noise generator (e.g., Perlin noise)
-         * val perlin = PerlinNoise(Random(seed = 42))
-         *
-         * // Construct an fBm noise with 5 octaves, doubling frequency and halving amplitude each layer
-         * val fbmNoise = Noise.fbm(
-         *     base = perlin,
-         *     octaves = 5,
-         *     lacunarity = 2.0,
-         *     gain = 0.5
-         * )
-         *
-         * // Sample the fBm noise in 3D space
-         * val height = fbmNoise(12.5, 8.3, 0.0)
-         * println("fBm height = $height")
+         * fun sampleFractal(baseNoise: Noise): Real {
+         *     // Combine 5 octaves of the supplied noise function.
+         *     val fbmNoise = Noise.fbm(
+         *         base = baseNoise,
+         *         octaves = 5,
+         *         lacunarity = 2.0,
+         *         gain = 0.5
+         *     )
+         *     return fbmNoise(12.5, 8.3, 0.0)
+         * }
          * ```
          *
          * @see Noise for the general functional interface representing 3D noise mappings.
