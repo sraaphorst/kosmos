@@ -58,9 +58,11 @@ class GenericComplexSpec : FunSpec({
         branch("Complex<𝔽₇> and Complex<𝔽₅> are commutative involutive rings") {
             listOf(f7 to 7, f5 to 5).forEach { (field, p) ->
                 val ring = ComplexAlgebras.complexRing(field)
+                // One generator for both suites, so the ring laws they share run once.
+                val arb = arbOver(p)
                 branch("Complex<𝔽$p>") {
-                    suite(CommutativeRingLaws(ring, arbOver(p)))
-                    suite(InvolutiveRingLaws(ring, arbOver(p)))
+                    suite(CommutativeRingLaws(ring, arb))
+                    suite(InvolutiveRingLaws(ring, arb))
                 }
             }
         }

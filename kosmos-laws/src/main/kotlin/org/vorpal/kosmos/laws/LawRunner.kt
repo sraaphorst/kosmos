@@ -62,6 +62,9 @@ object LawRunner {
      * Classify how a leaf ended.
      *
      * - The final failure is a [LawViolation]: the law is false ([LeafOutcome.Failed]).
+     * - The law asserts with matchers ([TestingLaw.assertionsAreViolations]) and one of its own assertions failed
+     *   outside a property: [LeafOutcome.Failed] (inside a property, [lawCheckAll] already turned it into a
+     *   [LawViolation]).
      * - The law signals falsity explicitly (it uses [lawCheckAll]) and something else was thrown:
      *   [LeafOutcome.Errored] (the operation, generator, equality or harness failed).
      * - Legacy laws (no explicit signal): an [AssertionError] is [LeafOutcome.Failed], anything else
@@ -77,6 +80,7 @@ object LawRunner {
         )
         return when {
             cause is LawViolation -> LeafOutcome.Failed(thrown, diagnostics)
+            capture.assertionsAreViolations && isOwnAssertion(cause) -> LeafOutcome.Failed(thrown, diagnostics)
             capture.explicit -> LeafOutcome.Errored(thrown, diagnostics)
             thrown is AssertionError -> LeafOutcome.Failed(thrown, diagnostics)
             else -> LeafOutcome.Errored(thrown, diagnostics)
@@ -87,7 +91,7 @@ object LawRunner {
         generateSequence(t) { it.cause.takeIf { c -> c !== it } }.firstOrNull { it is LawViolation }
 
     internal suspend fun execute(law: TestingLaw, seed: Long): LeafOutcome {
-        val capture = PropertyCapture()
+        val capture = PropertyCapture().also { it.assertionsAreViolations = law.assertionsAreViolations }
         // Catch inside withContext and return the throwable as a value: an exception crossing the
         // withContext boundary can be replaced by a copy (kotlinx.coroutines stack-trace recovery),
         // and the report must keep the original instance.

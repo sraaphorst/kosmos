@@ -68,9 +68,14 @@ lawTests(lawGraph("ℚ") {
 })
 ```
 
-A local law has no binding, so it is never shared. Kotest matchers (`shouldBe`, `shouldThrow`) also work inside
-one; their failures read as `FAILED`, but only `lawCheck` gives the failure a message of the law's own. A check
-that more than one structure needs belongs in a reusable law class instead.
+A local law has no binding, so it is never shared. Kotest matchers (`shouldBe`, `shouldThrow`, ...) also work inside
+one, inside or outside `lawCheckAll`: a local law is created with `assertionsAreViolations = true`, so a failed
+matcher reads as `FAILED`, like `lawCheck`, while an exception from the code under test still reads as `ERRORED`.
+Reusable law classes leave that flag off and signal falsity only with `lawCheck`. A check that more than one
+structure needs belongs in a reusable law class instead.
+
+`throwsA<T> { ... }` is true exactly when the block throws a `T`. A `CancellationException` is never an answer: it
+propagates, as it does everywhere in the runner.
 
 The aggregated form still works when one test per structure reads better:
 
@@ -172,7 +177,7 @@ inside the check, so its binding is the original generator plus `exclude`. Nothi
 | Status | Meaning |
 |---|---|
 | `PASSED` | The law held on every sample. |
-| `FAILED` | The law is false: a `LawViolation` (from `lawCheck`) was the final failure. |
+| `FAILED` | The law is false: a `LawViolation` (from `lawCheck`) was the final failure, or, in a law that asserts with matchers (such as a local law), a failed matcher. |
 | `ERRORED` | The law could not be evaluated: something else was thrown (e.g. the operation threw). |
 | `SKIPPED` | Deliberately not executed, with a reason. |
 

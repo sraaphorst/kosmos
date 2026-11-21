@@ -92,7 +92,17 @@ class PropertyCapture internal constructor() {
 
     /** Number of property checks the law has started; the k-th gets its own seed (see [lawCheckAll]). */
     internal var checks: Int = 0
+
+    /** Copied from [TestingLaw.assertionsAreViolations] of the law being executed. */
+    internal var assertionsAreViolations: Boolean = false
 }
+
+/**
+ * An [AssertionError] raised by the law's own assertion rather than wrapped around another exception (Kotest's
+ * `checkAll` wraps whatever a property throws in an [AssertionError]): nothing in its cause chain is anything else.
+ */
+internal fun isOwnAssertion(t: Throwable): Boolean =
+    t is AssertionError && generateSequence(t.cause) { c -> c.cause.takeIf { it !== c } }.all { it is AssertionError }
 
 /**
  * Coroutine context element the runner installs around one leaf execution.
@@ -214,12 +224,15 @@ private suspend inline fun recording(
         throw c
     } catch (t: Throwable) {
         // Kotest's assumption mechanism skips an iteration with an exception; that is not a failure.
-        if (t::class.simpleName != "IterationSkippedException") {
-            execution?.capture?.let {
-                it.counterexample = runCatching { render() }.getOrElse { e -> "<could not render input: $e>" }
-                it.lastCause = t
-            }
-        }
-        throw t
+        if (t::class.simpleName == "IterationSkippedException") throw t
+        val capture = execution?.capture ?: throw t
+        // A matcher failure in a law that asserts with matchers is the law being false.
+        val signal =
+            if (capture.assertionsAreViolations && t !is LawViolation && isOwnAssertion(t))
+                LawViolation(t.message ?: "Assertion failed.", t)
+            else t
+        capture.counterexample = runCatching { render() }.getOrElse { e -> "<could not render input: $e>" }
+        capture.lastCause = signal
+        throw signal
     }
 }

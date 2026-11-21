@@ -23,6 +23,18 @@ fun interface TestingLaw : LawComponent {
     val binding: LawBinding?
         get() = null
 
+    /**
+     * Whether an [AssertionError] from this law's own code (a Kotest matcher such as `shouldBe`, inside or outside
+     * [lawCheckAll]) means the law is false, as a [LawViolation] does.
+     *
+     * False (the default) for reusable laws, which signal falsity only with [lawCheck]: there an [AssertionError]
+     * from inside a property is an error like any other exception. True for spec-local laws, whose assertions are
+     * written with matchers. Either way, any other exception (from the operation, the generator, the equality) is an
+     * error, not a failure.
+     */
+    val assertionsAreViolations: Boolean
+        get() = false
+
     override fun node(): LawNode = LawNode.Leaf(this)
 
     /**
@@ -38,11 +50,18 @@ fun interface TestingLaw : LawComponent {
         /**
          * A law from a lambda. Without a [binding] it is never shared with another instance; give one (for example
          * `LawBinding.named("my law", op, arb, eq)`) when the same check may be registered more than once.
+         * Set [assertionsAreViolations] when the body asserts with Kotest matchers (see [TestingLaw.assertionsAreViolations]).
          */
-        fun named(name: String, binding: LawBinding? = null, test: suspend () -> Unit): TestingLaw =
+        fun named(
+            name: String,
+            binding: LawBinding? = null,
+            assertionsAreViolations: Boolean = false,
+            test: suspend () -> Unit
+        ): TestingLaw =
             object : TestingLaw {
                 override val name: String = name
                 override val binding: LawBinding? = binding
+                override val assertionsAreViolations: Boolean = assertionsAreViolations
                 override suspend fun test() = test()
             }
 
