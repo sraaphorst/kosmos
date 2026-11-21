@@ -70,14 +70,18 @@ lawTests(lawGraph("ℚ") {
 
 A local law has no binding, so it is never shared. Kotest matchers (`shouldBe`, `shouldThrow`, ...) also work inside
 one, inside or outside `lawCheckAll`: a local law is created with `assertionsAreViolations = true`, so a failed
-matcher reads as `FAILED`, like `lawCheck`, while an exception from the code under test still reads as `ERRORED`.
-Reusable law classes leave that flag off and signal falsity only with `lawCheck`. A check that more than one
-structure needs belongs in a reusable law class instead.
+matcher reads as `FAILED`, like `lawCheck`. An exception from the code under test still reads as `ERRORED`, with
+one limitation: the runner classifies by exception type, not by where it was thrown, so an `AssertionError` thrown
+by the code under test (an internal invariant check) also reads as `FAILED` in a local law. It is still a problem
+leaf, so nothing broken passes; only the diagnosis is coarser. Reusable law classes leave the flag off and signal
+falsity only with `lawCheck`, so for them the distinction is exact. A check that more than one structure needs
+belongs in a reusable law class instead.
 
-**Where tests live.** Every spec about a Kosmos structure or algorithm is a law graph: reusable suites plus local
-laws, so nothing is checked outside the graph. The exception is the law framework's own specs (`kosmos-laws` tests,
-`laws/graph`, `laws/inventory`, `testing/laws`): they test the runner, sessions, deduplication and reports from the
-outside, often with laws built to fail, so they stay plain Kotest tests.
+**Where tests live.** The rule follows what a test checks, not its module or package. A test that checks a Kosmos
+structure or algorithm is part of a law graph: reusable suites plus local laws, so nothing is checked outside the
+graph. A test whose subject is a law graph itself (the runner, sessions, deduplication, the inventory, the Kotest
+adapter, the helpers, serialization) stays a plain Kotest test: it builds graphs, often with laws made to fail, and
+asserts on their reports from the outside.
 
 `throwsA<T> { ... }` is true exactly when the block throws a `T`. A `CancellationException` is never an answer: it
 propagates, as it does everywhere in the runner.

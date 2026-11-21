@@ -60,6 +60,19 @@ class AssertingLawSpec : FunSpec({
             outside.shouldBeInstanceOf<LeafOutcome.Errored>()
         }
 
+        test("limitation: an AssertionError thrown by the code under test reads as Failed here, Errored in a reusable law") {
+            // Classification is by exception type, not throw site (see TestingLaw.assertionsAreViolations).
+            val invariant: (Int) -> Int = { x -> if (x < 0) throw AssertionError("invariant broken") else x }
+            val local = outcomeOf(asserting("invariant, local") { lawCheckAll(ints) { x -> invariant(x) shouldBe x } })
+            local.shouldBeInstanceOf<LeafOutcome.Failed>()
+            val reusable = outcomeOf(TestingLaw.named("invariant, reusable") {
+                lawCheckAll(ints) { x -> lawCheck(invariant(x) == x) }
+            })
+            reusable.shouldBeInstanceOf<LeafOutcome.Errored>()
+            // Either way it is a problem, so the check cannot pass.
+            listOf(local, reusable).all { it.status.isProblem } shouldBe true
+        }
+
         test("a passing law passes") {
             outcomeOf(asserting("x = x") { lawCheckAll(ints) { x -> x shouldBe x } }) shouldBe LeafOutcome.Passed
         }

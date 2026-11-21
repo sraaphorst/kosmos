@@ -24,13 +24,17 @@ fun interface TestingLaw : LawComponent {
         get() = null
 
     /**
-     * Whether an [AssertionError] from this law's own code (a Kotest matcher such as `shouldBe`, inside or outside
+     * Whether an [AssertionError] raised while this law runs (a Kotest matcher such as `shouldBe`, inside or outside
      * [lawCheckAll]) means the law is false, as a [LawViolation] does.
      *
      * False (the default) for reusable laws, which signal falsity only with [lawCheck]: there an [AssertionError]
      * from inside a property is an error like any other exception. True for spec-local laws, whose assertions are
-     * written with matchers. Either way, any other exception (from the operation, the generator, the equality) is an
-     * error, not a failure.
+     * written with matchers.
+     *
+     * The classification is by exception type, not by throw site: in a law with this flag, an [AssertionError]
+     * thrown by the code under test (an internal invariant check, say) also reads as failed, not errored. Either way
+     * the leaf is a problem, so nothing broken passes; only the failed/errored diagnosis is weaker. Every other
+     * exception (from the operation, the generator, the equality) is an error, not a failure.
      */
     val assertionsAreViolations: Boolean
         get() = false
