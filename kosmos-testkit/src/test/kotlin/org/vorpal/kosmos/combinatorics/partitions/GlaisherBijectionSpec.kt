@@ -1,11 +1,14 @@
 package org.vorpal.kosmos.combinatorics.partitions
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
-import io.kotest.property.checkAll
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * Tests for [GlaisherBijection]: the general k >= 2 correspondence between k-regular
@@ -23,154 +26,155 @@ import io.kotest.property.checkAll
  * the "agrees with EulerGlaisherBijection at k = 2" section below for the check tying
  * the two together.
  */
-class GlaisherBijectionSpec : StringSpec({
+class GlaisherBijectionSpec : FunSpec({
+    lawTests(lawGraph("Glaisher bijection") {
+        // ---- k must be at least 2 ------------------------------------------------
 
-    // ---- k must be at least 2 ------------------------------------------------
-
-    "kRegularToBoundedMultiplicities rejects k < 2" {
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(), 1)
+        local("kRegularToBoundedMultiplicities rejects k < 2") {
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(), 1)
+            }
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(), 0)
+            }
         }
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(), 0)
+
+        local("boundedMultiplicitiesToKRegular rejects k < 2") {
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(), 1)
+            }
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(), 0)
+            }
         }
-    }
 
-    "boundedMultiplicitiesToKRegular rejects k < 2" {
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(), 1)
+        // ---- domain checking ------------------------------------------------------
+
+        local("kRegularToBoundedMultiplicities rejects a partition with a part divisible by k") {
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(6, 2, 1), 3)
+            }
         }
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(), 0)
+
+        local("boundedMultiplicitiesToKRegular rejects a partition with a part occurring k or more times") {
+            shouldThrow<IllegalArgumentException> {
+                GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(2, 2, 2), 3)
+            }
         }
-    }
 
-    // ---- domain checking ------------------------------------------------------
+        // ---- lands in the right codomain, across several moduli --------------------
 
-    "kRegularToBoundedMultiplicities rejects a partition with a part divisible by k" {
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.kRegularToBoundedMultiplicities(Partition.of(6, 2, 1), 3)
+        local("kRegularToBoundedMultiplicities always produces multiplicities bounded by k") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
+                GlaisherBijection.kRegularToBoundedMultiplicities(p, k).hasMultiplicitiesLessThan(k) shouldBe true
+            }
         }
-    }
 
-    "boundedMultiplicitiesToKRegular rejects a partition with a part occurring k or more times" {
-        shouldThrow<IllegalArgumentException> {
-            GlaisherBijection.boundedMultiplicitiesToKRegular(Partition.of(2, 2, 2), 3)
+        local("boundedMultiplicitiesToKRegular always produces a k-regular partition") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
+                GlaisherBijection.boundedMultiplicitiesToKRegular(q, k).hasNoPartDivisibleBy(k) shouldBe true
+            }
         }
-    }
 
-    // ---- lands in the right codomain, across several moduli --------------------
+        // ---- weight preservation, across several moduli -----------------------------
 
-    "kRegularToBoundedMultiplicities always produces multiplicities bounded by k" {
-        checkAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
-            GlaisherBijection.kRegularToBoundedMultiplicities(p, k).hasMultiplicitiesLessThan(k) shouldBe true
+        local("kRegularToBoundedMultiplicities preserves weight") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
+                GlaisherBijection.kRegularToBoundedMultiplicities(p, k).weight shouldBe p.weight
+            }
         }
-    }
 
-    "boundedMultiplicitiesToKRegular always produces a k-regular partition" {
-        checkAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
-            GlaisherBijection.boundedMultiplicitiesToKRegular(q, k).hasNoPartDivisibleBy(k) shouldBe true
+        local("boundedMultiplicitiesToKRegular preserves weight") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
+                GlaisherBijection.boundedMultiplicitiesToKRegular(q, k).weight shouldBe q.weight
+            }
         }
-    }
 
-    // ---- weight preservation, across several moduli -----------------------------
+        // ---- mutual inverses (round-trip), across several moduli --------------------
 
-    "kRegularToBoundedMultiplicities preserves weight" {
-        checkAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
-            GlaisherBijection.kRegularToBoundedMultiplicities(p, k).weight shouldBe p.weight
+        local("boundedMultiplicitiesToKRegular undoes kRegularToBoundedMultiplicities") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
+                val roundTrip = GlaisherBijection.boundedMultiplicitiesToKRegular(
+                    GlaisherBijection.kRegularToBoundedMultiplicities(p, k),
+                    k
+                )
+                roundTrip shouldBe p
+            }
         }
-    }
 
-    "boundedMultiplicitiesToKRegular preserves weight" {
-        checkAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
-            GlaisherBijection.boundedMultiplicitiesToKRegular(q, k).weight shouldBe q.weight
+        local("kRegularToBoundedMultiplicities undoes boundedMultiplicitiesToKRegular") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
+                val roundTrip = GlaisherBijection.kRegularToBoundedMultiplicities(
+                    GlaisherBijection.boundedMultiplicitiesToKRegular(q, k),
+                    k
+                )
+                roundTrip shouldBe q
+            }
         }
-    }
 
-    // ---- mutual inverses (round-trip), across several moduli --------------------
+        // ---- the empty partition is a (trivial) fixed point, for any k --------------
 
-    "boundedMultiplicitiesToKRegular undoes kRegularToBoundedMultiplicities" {
-        checkAll(GlaisherTestingCombinations.arbKAndKRegularPartition()) { (k, p) ->
-            val roundTrip = GlaisherBijection.boundedMultiplicitiesToKRegular(
-                GlaisherBijection.kRegularToBoundedMultiplicities(p, k),
-                k
-            )
-            roundTrip shouldBe p
+        local("the empty partition maps to itself in both directions, for any k") {
+            lawCheckAll(Arb.int(2..8)) { k ->
+                val empty = Partition.of()
+                GlaisherBijection.kRegularToBoundedMultiplicities(empty, k) shouldBe empty
+                GlaisherBijection.boundedMultiplicitiesToKRegular(empty, k) shouldBe empty
+            }
         }
-    }
 
-    "kRegularToBoundedMultiplicities undoes boundedMultiplicitiesToKRegular" {
-        checkAll(GlaisherTestingCombinations.arbKAndBoundedMultiplicityPartition()) { (k, q) ->
-            val roundTrip = GlaisherBijection.kRegularToBoundedMultiplicities(
-                GlaisherBijection.boundedMultiplicitiesToKRegular(q, k),
-                k
-            )
-            roundTrip shouldBe q
+        // ---- k-regular-and-bounded partitions are fixed points of both directions ---
+
+        local("partitions that are k-regular and k-bounded are fixed points of both directions") {
+            lawCheckAll(GlaisherTestingCombinations.arbKAndKRegularBoundedPartition()) { (k, p) ->
+                GlaisherBijection.kRegularToBoundedMultiplicities(p, k) shouldBe p
+                GlaisherBijection.boundedMultiplicitiesToKRegular(p, k) shouldBe p
+            }
         }
-    }
 
-    // ---- the empty partition is a (trivial) fixed point, for any k --------------
+        // ---- agrees with EulerGlaisherBijection at k = 2 ----------------------------
 
-    "the empty partition maps to itself in both directions, for any k" {
-        checkAll(Arb.int(2..8)) { k ->
-            val empty = Partition.of()
-            GlaisherBijection.kRegularToBoundedMultiplicities(empty, k) shouldBe empty
-            GlaisherBijection.boundedMultiplicitiesToKRegular(empty, k) shouldBe empty
+        local("kRegularToBoundedMultiplicities at k = 2 agrees with EulerGlaisherBijection") {
+            lawCheckAll(ArbPartition.arbOdd()) { p ->
+                GlaisherBijection.kRegularToBoundedMultiplicities(p, 2) shouldBe
+                    EulerGlaisherBijection.oddPartitionToDistinctPartition(p)
+            }
         }
-    }
 
-    // ---- k-regular-and-bounded partitions are fixed points of both directions ---
-
-    "partitions that are k-regular and k-bounded are fixed points of both directions" {
-        checkAll(GlaisherTestingCombinations.arbKAndKRegularBoundedPartition()) { (k, p) ->
-            GlaisherBijection.kRegularToBoundedMultiplicities(p, k) shouldBe p
-            GlaisherBijection.boundedMultiplicitiesToKRegular(p, k) shouldBe p
+        local("boundedMultiplicitiesToKRegular at k = 2 agrees with EulerGlaisherBijection") {
+            lawCheckAll(ArbPartition.arbDistinct()) { q ->
+                GlaisherBijection.boundedMultiplicitiesToKRegular(q, 2) shouldBe
+                    EulerGlaisherBijection.distinctPartitionToOddPartition(q)
+            }
         }
-    }
 
-    // ---- agrees with EulerGlaisherBijection at k = 2 ----------------------------
+        // ---- fixed, hand-verified examples ------------------------------------------
 
-    "kRegularToBoundedMultiplicities at k = 2 agrees with EulerGlaisherBijection" {
-        checkAll(ArbPartition.arbOdd()) { p ->
-            GlaisherBijection.kRegularToBoundedMultiplicities(p, 2) shouldBe
-                EulerGlaisherBijection.oddPartitionToDistinctPartition(p)
+        local("k = 2, n = 15: {3,3,3,3,3} <-> {12,3} (multiplicity 5 = 0b101 spans two bits)") {
+            val kRegular = Partition.of(3, 3, 3, 3, 3)
+            val bounded = Partition.of(12, 3)
+            GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 2) shouldBe bounded
+            GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 2) shouldBe kRegular
         }
-    }
 
-    "boundedMultiplicitiesToKRegular at k = 2 agrees with EulerGlaisherBijection" {
-        checkAll(ArbPartition.arbDistinct()) { q ->
-            GlaisherBijection.boundedMultiplicitiesToKRegular(q, 2) shouldBe
-                EulerGlaisherBijection.distinctPartitionToOddPartition(q)
+        local("k = 2, mixed odd parts are mapped canonically") {
+            val kRegular = Partition.of(5, 5, 5, 3, 3, 1)
+            val bounded = Partition.of(10, 6, 5, 1)
+            GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 2) shouldBe bounded
+            GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 2) shouldBe kRegular
         }
-    }
 
-    // ---- fixed, hand-verified examples ------------------------------------------
+        local("k = 3, n = 20: {5,5,5,5} <-> {15,5} (multiplicity 4 = 12 in base 3 spans two digits)") {
+            val kRegular = Partition.of(5, 5, 5, 5)
+            val bounded = Partition.of(15, 5)
+            GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 3) shouldBe bounded
+            GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 3) shouldBe kRegular
+        }
 
-    "k = 2, n = 15: {3,3,3,3,3} <-> {12,3} (multiplicity 5 = 0b101 spans two bits)" {
-        val kRegular = Partition.of(3, 3, 3, 3, 3)
-        val bounded = Partition.of(12, 3)
-        GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 2) shouldBe bounded
-        GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 2) shouldBe kRegular
-    }
-
-    "k = 2, mixed odd parts are mapped canonically" {
-        val kRegular = Partition.of(5, 5, 5, 3, 3, 1)
-        val bounded = Partition.of(10, 6, 5, 1)
-        GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 2) shouldBe bounded
-        GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 2) shouldBe kRegular
-    }
-
-    "k = 3, n = 20: {5,5,5,5} <-> {15,5} (multiplicity 4 = 12 in base 3 spans two digits)" {
-        val kRegular = Partition.of(5, 5, 5, 5)
-        val bounded = Partition.of(15, 5)
-        GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 3) shouldBe bounded
-        GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 3) shouldBe kRegular
-    }
-
-    "k = 3, mixed 3-regular parts are mapped canonically" {
-        val kRegular = Partition.of(2, 2, 2, 2, 2, 1)
-        val bounded = Partition.of(6, 2, 2, 1)
-        GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 3) shouldBe bounded
-        GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 3) shouldBe kRegular
-    }
+        local("k = 3, mixed 3-regular parts are mapped canonically") {
+            val kRegular = Partition.of(2, 2, 2, 2, 2, 1)
+            val bounded = Partition.of(6, 2, 2, 1)
+            GlaisherBijection.kRegularToBoundedMultiplicities(kRegular, 3) shouldBe bounded
+            GlaisherBijection.boundedMultiplicitiesToKRegular(bounded, 3) shouldBe kRegular
+        }
+    })
 })

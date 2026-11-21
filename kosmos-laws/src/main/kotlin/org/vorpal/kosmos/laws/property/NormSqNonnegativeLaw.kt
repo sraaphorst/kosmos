@@ -3,6 +3,7 @@ package org.vorpal.kosmos.laws.property
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -26,6 +27,7 @@ class NormSqNonnegativeLaw<A : Any, N : Any>(
     private val prA: Printable<A> = Printable.default(),
     private val prN: Printable<N> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, normSq, arbA, isNonnegative)
 
     override val name: String = "normSq nonnegative: N(a) ≥ 0"
 

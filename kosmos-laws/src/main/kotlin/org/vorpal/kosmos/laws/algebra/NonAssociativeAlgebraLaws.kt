@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeAlgebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.suiteName
 
@@ -27,7 +26,7 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
-) : StructuredLawSuite {
+) : LawSuite {
 
     private val scalarDescription =
         "R[${algebra.scalars.add.op.symbol}${algebra.scalars.mul.op.symbol}]"
@@ -50,7 +49,7 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
     private val ringLaws = NonAssociativeRingLaws(algebra, algebraArb, eqA, prA)
     private val moduleLaws = RModuleLaws(algebra, scalarArb, algebraArb, eqR, eqA, prR, prA)
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         algebraMulBilinearityLaws(
             act = algebra.leftAction,
             mulA = algebra.mul.op,
@@ -61,7 +60,7 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
             prA = prA
         )
 
-    private val derivedLaws: List<TestingLaw> = listOf(
+    private val derivedLaws: List<LawComponent> = listOf(
         scalarActsAsLeftMultiplicationLaw(
             act = algebra.leftAction,
             mulA = algebra.mul.op,
@@ -104,13 +103,9 @@ class NonAssociativeAlgebraLaws<R : Any, A : Any>(
         ),
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> listOf(ringLaws.node(LawMode.COMPACT), moduleLaws.node(LawMode.COMPACT)) +
-                structureLaws.asNodes()
-            LawMode.FULL -> listOf(scalarRingLaws.node(LawMode.FULL), ringLaws.node(LawMode.FULL), moduleLaws.node(LawMode.FULL)) +
-                structureLaws.asNodes() +
-                derivedLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(scalarRingLaws.node(), ringLaws.node(), moduleLaws.node()) +
+            structureLaws.asNodes() +
+            derivedLaws.asNodes()
 
 }

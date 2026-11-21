@@ -35,6 +35,21 @@ private class CountingAdd(broken: Boolean = false) {
     val monoid = Monoid.of(0, op)
 }
 
+/** Equal to every other [Shift] with the same name, whatever its [offset]: `equals` says nothing about behaviour. */
+private data class Shift(val name: String) {
+    var offset = 0
+    fun apply(x: Int): Int = x + offset
+}
+
+/** `f(0) = 0`, bound to the function under test. */
+private class PreservesZeroLaw(private val f: (Int) -> Int) : TestingLaw {
+    override val name = "preserves zero"
+    override val binding = LawBinding.of(this, f)
+    override suspend fun test() {
+        lawCheck(f(0) == 0) { "f(0) = ${f(0)}" }
+    }
+}
+
 private fun NodeReport.find(vararg labels: String): NodeReport =
     labels.fold(this) { node, l -> (node as NodeReport.BranchReport).children.first { it.label == l } }
 
@@ -113,16 +128,18 @@ class SharedNodeSpec : FunSpec({
         test("two suites bound to the same arguments run once") {
             val add = CountingAdd()
             val report = lawGraph("Root") {
-                suite(MonoidLaws(add.monoid, ints, eqInt, prInt), LawMode.FULL)
-                suite(MonoidLaws(add.monoid, ints, eqInt, prInt), LawMode.FULL)
+                suite(MonoidLaws(add.monoid, ints, eqInt, prInt))
+                suite(MonoidLaws(add.monoid, ints, eqInt, prInt))
             }.verify(LawRunConfig(seed = 5))
 
             val single = CountingAdd()
-            MonoidLaws(single.monoid, ints, eqInt, prInt).verify(LawMode.FULL, LawRunConfig(seed = 5))
+            MonoidLaws(single.monoid, ints, eqInt, prInt).verify(LawRunConfig(seed = 5))
 
             add.calls shouldBe single.calls
-            report.counts.total shouldBe 6
-            report.executions shouldBe 3
+            // Monoid = Semigroup (totality, associativity) + NonAssociativeMonoid (totality, left and right
+            // identity): 5 occurrences and 4 checks per suite.
+            report.counts.total shouldBe 10
+            report.executions shouldBe 4
         }
 
         test("suites whose operations share a symbol but are different objects both run") {
@@ -133,11 +150,13 @@ class SharedNodeSpec : FunSpec({
                 suite(MonoidLaws(one.monoid, ints, eqInt, prInt))
                 suite(MonoidLaws(other.monoid, ints, eqInt, prInt))
             }.verify()
-            report.executions shouldBe report.counts.total
+            // Within each suite totality is reached twice and runs once: 4 checks per suite, none shared across.
+            report.counts.total shouldBe 10
+            report.executions shouldBe 8
             (one.calls > 0 && other.calls > 0) shouldBe true
         }
 
-        test("the same suite bound to a different equality or printable is a different check") {
+        test("a different equality is a different check; a different printable is not") {
             val add = CountingAdd()
             val otherEq = Eq<Int> { a, b -> a == b }
             val otherPr = Printable<Int> { "<$it>" }
@@ -146,20 +165,12 @@ class SharedNodeSpec : FunSpec({
                 suite(MonoidLaws(add.monoid, ints, otherEq, prInt))
                 suite(MonoidLaws(add.monoid, ints, eqInt, otherPr))
             }.verify()
-            // 3 x (totality, associativity, identity). Totality (MagmaLaws) does not use the equality,
-            // so the first two suites share it; everything else runs once per suite.
-            report.counts.total shouldBe 9
-            report.executions shouldBe 8
-            val shared = report.root.leaves().single { it.sharedFrom != null }
-            shared.label shouldBe "totality (+)"
-            shared.path.indices.first() shouldBe 1
-            shared.sharedFrom!!.indices.first() shouldBe 0
-        }
-
-        test("compact and full views of the same suite are different nodes") {
-            val suite = MonoidLaws(CountingAdd().monoid, ints, eqInt, prInt)
-            suite.node(LawMode.COMPACT).key shouldNotBe suite.node(LawMode.FULL).key
-            suite.node(LawMode.FULL).key shouldBe suite.node(LawMode.FULL).key
+            // 3 x 5 occurrences. The first suite runs its 4 checks. The second shares totality (it does not
+            // use the equality) and runs associativity and both identities again. The third differs only in
+            // how it prints, so it runs nothing new.
+            report.counts.total shouldBe 15
+            report.executions shouldBe 7
+            report.root.leaves().filter { it.path.indices.first() == 2 }.all { it.sharedFrom != null } shouldBe true
         }
 
         test("plain values in a binding compare by value, objects by identity") {
@@ -169,6 +180,48 @@ class SharedNodeSpec : FunSpec({
             LawBinding.of(owner, op, 1e-9) shouldNotBe LawBinding.of(owner, op, 1e-6)
             LawBinding.of(owner, op) shouldNotBe LawBinding.of(owner, BinOp<Int>("+") { a, b -> a + b })
             LawBinding.of(owner, op) shouldNotBe LawBinding.of("another kind", op)
+        }
+
+        test("bound callable references compare by receiver and function") {
+            val op = BinOp<Int>("+") { a, b -> a + b }
+            val other = BinOp<Int>("+") { a, b -> a + b }
+            val owner = Any()
+            val first: (Int, Int) -> Int = op::invoke
+            val second: (Int, Int) -> Int = op::invoke
+            val third: (Int, Int) -> Int = other::invoke
+            LawBinding.of(owner, first) shouldBe LawBinding.of(owner, second)
+            LawBinding.of(owner, first).hashCode() shouldBe LawBinding.of(owner, second).hashCode()
+            LawBinding.of(owner, first) shouldNotBe LawBinding.of(owner, third)
+        }
+
+        test("references to the same function on one receiver are the same check") {
+            val shift = Shift("s")
+            val report = LawNode.branch("Root", PreservesZeroLaw(shift::apply).asNode(), PreservesZeroLaw(shift::apply).asNode())
+                .verify()
+            report.executions shouldBe 1
+        }
+
+        test("references on equal but distinct receivers are different checks") {
+            val good = Shift("s")
+            val bad = Shift("s").apply { offset = 1 }
+            good shouldBe bad   // equal by data class equals, different by behaviour
+
+            LawBinding.of(Any(), good::apply) shouldNotBe LawBinding.of(Any(), bad::apply)
+            PreservesZeroLaw(good::apply).binding shouldNotBe PreservesZeroLaw(bad::apply).binding
+
+            PreservesZeroLaw(bad::apply).verify().status shouldBe LawStatus.FAILED
+
+            val root = LawNode.branch("Root", PreservesZeroLaw(good::apply).asNode(), PreservesZeroLaw(bad::apply).asNode())
+            val report = root.verify()
+            report.executions shouldBe 2
+            report.root.find("preserves zero").status shouldBe LawStatus.PASSED
+            (report.root as NodeReport.BranchReport).children[1].status shouldBe LawStatus.FAILED
+
+            // The leaf-at-a-time session (the Kotest adapter's path) must not merge them either.
+            val session = LawSession(root)
+            session.leaf(listOf(0)).status shouldBe LawStatus.PASSED
+            session.leaf(listOf(1)).status shouldBe LawStatus.FAILED
+            session.executions shouldBe 2
         }
     }
 

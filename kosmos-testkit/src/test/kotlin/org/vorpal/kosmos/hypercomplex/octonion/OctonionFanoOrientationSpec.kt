@@ -1,10 +1,13 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
 import io.kotest.assertions.fail
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.combinatorics.FanoPlane
 import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * Verifies that [OctonionFanoOrientations.deriveFromCurrentBasis] recovers the *signed* Fano-line
@@ -21,59 +24,60 @@ import org.vorpal.kosmos.core.finiteset.toUnorderedFiniteSet
  * would spuriously fail a structural comparison even though the values are mathematically equal. The
  * algebra's own `Eq` compares through real equality, where `0.0 == -0.0`.
  */
-class OctonionFanoOrientationSpec : StringSpec({
+class OctonionFanoOrientationSpec : FunSpec({
+    lawTests(lawGraph("𝕆 Fano orientation") {
+        val ring = OctonionAlgebras.OctonionDivisionAlgebra
+        val eq = OctonionAlgebras.eqOctonionStrict
+        val pr = OctonionAlgebras.printableOctonionStrict
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebra
-    val eq = OctonionAlgebras.eqOctonionStrict
-    val pr = OctonionAlgebras.printableOctonionStrict
+        val basis = (1..7).associateWith { ring.basisMap.getValue(it) }
+        fun neg(i: Int) = ring.add.inverse(basis.getValue(i))
 
-    val basis = (1..7).associateWith { ring.basisMap.getValue(it) }
-    fun neg(i: Int) = ring.add.inverse(basis.getValue(i))
-
-    // Signed-zero-safe octonion equality assertion (see class kdoc).
-    infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
-        if (eq.neqv(this, expected))
-            fail("expected ${pr(expected)} but was ${pr(this)}")
-    }
-
-    "derived orientation matches the underlying (unoriented) Fano plane" {
-        val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
-        val underlying = orientation.lines.map { it.toFiniteSet() }.toUnorderedFiniteSet()
-        val expected = FanoPlane.lines.map { it.toFiniteSet() }.toUnorderedFiniteSet()
-        underlying shouldBe expected
-    }
-
-    "each oriented line (a,b,c) is a positively cyclic quaternionic triple: e_a e_b = e_c, e_b e_c = e_a, e_c e_a = e_b" {
-        val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
-        orientation.lines.forEach { line ->
-            ring.mul(basis.getValue(line.a), basis.getValue(line.b)) shouldEqualOctonion basis.getValue(line.c)
-            ring.mul(basis.getValue(line.b), basis.getValue(line.c)) shouldEqualOctonion basis.getValue(line.a)
-            ring.mul(basis.getValue(line.c), basis.getValue(line.a)) shouldEqualOctonion basis.getValue(line.b)
+        // Signed-zero-safe octonion equality assertion (see class kdoc).
+        infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
+            if (eq.neqv(this, expected))
+                fail("expected ${pr(expected)} but was ${pr(this)}")
         }
-    }
 
-    // This is the strongest check: it ties the OctonionFanoOrientation API (sign + thirdPoint),
-    // i.e. OrientedFanoLine.signOfOrderedPair, directly to the octonion product for ALL 42 ordered
-    // pairs of distinct basis indices. Every distinct pair lies on exactly one Fano line, so this
-    // exhausts the multiplication table for the imaginary basis units.
-    "sign(i,j) and thirdPoint(i,j) reproduce the basis multiplication for every ordered pair" {
-        val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
-        for (i in 1..7) for (j in 1..7) {
-            if (i == j) continue
-            val k = orientation.thirdPoint(i, j)
-            val sign = orientation.sign(i, j)
-            val expected = if (sign == 1) basis.getValue(k) else neg(k)
-            ring.mul(basis.getValue(i), basis.getValue(j)) shouldEqualOctonion expected
+        local("derived orientation matches the underlying (unoriented) Fano plane") {
+            val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
+            val underlying = orientation.lines.map { it.toFiniteSet() }.toUnorderedFiniteSet()
+            val expected = FanoPlane.lines.map { it.toFiniteSet() }.toUnorderedFiniteSet()
+            underlying shouldBe expected
         }
-    }
 
-    // signOfOrderedPair must be exactly antisymmetric: reversing an ordered pair flips the sign,
-    // mirroring anticommutativity e_i e_j = - e_j e_i of the imaginary octonion units.
-    "orientation sign is antisymmetric in its arguments" {
-        val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
-        for (i in 1..7) for (j in 1..7) {
-            if (i == j) continue
-            orientation.sign(i, j) shouldBe -orientation.sign(j, i)
+        local("each oriented line (a,b,c) is a positively cyclic quaternionic triple: e_a e_b = e_c, e_b e_c = e_a, e_c e_a = e_b") {
+            val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
+            orientation.lines.forEach { line ->
+                ring.mul(basis.getValue(line.a), basis.getValue(line.b)) shouldEqualOctonion basis.getValue(line.c)
+                ring.mul(basis.getValue(line.b), basis.getValue(line.c)) shouldEqualOctonion basis.getValue(line.a)
+                ring.mul(basis.getValue(line.c), basis.getValue(line.a)) shouldEqualOctonion basis.getValue(line.b)
+            }
         }
-    }
+
+        // This is the strongest check: it ties the OctonionFanoOrientation API (sign + thirdPoint),
+        // i.e. OrientedFanoLine.signOfOrderedPair, directly to the octonion product for ALL 42 ordered
+        // pairs of distinct basis indices. Every distinct pair lies on exactly one Fano line, so this
+        // exhausts the multiplication table for the imaginary basis units.
+        local("sign(i,j) and thirdPoint(i,j) reproduce the basis multiplication for every ordered pair") {
+            val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
+            for (i in 1..7) for (j in 1..7) {
+                if (i == j) continue
+                val k = orientation.thirdPoint(i, j)
+                val sign = orientation.sign(i, j)
+                val expected = if (sign == 1) basis.getValue(k) else neg(k)
+                ring.mul(basis.getValue(i), basis.getValue(j)) shouldEqualOctonion expected
+            }
+        }
+
+        // signOfOrderedPair must be exactly antisymmetric: reversing an ordered pair flips the sign,
+        // mirroring anticommutativity e_i e_j = - e_j e_i of the imaginary octonion units.
+        local("orientation sign is antisymmetric in its arguments") {
+            val orientation = OctonionFanoOrientations.deriveFromCurrentBasis()
+            for (i in 1..7) for (j in 1..7) {
+                if (i == j) continue
+                orientation.sign(i, j) shouldBe -orientation.sign(j, i)
+            }
+        }
+    })
 })

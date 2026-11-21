@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 private sealed interface AbsorptionCore<A : Any> {
     val absorb: BinOp<A>
@@ -91,6 +94,8 @@ class AbsorbOverLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ): TestingLaw, AbsorptionCore<A> {
+    override val binding = LawBinding.of(this, absorb, over, arb, eq)
+
     override val name = "absorb-over: ${absorb.symbol} over ${over.symbol}"
     override suspend fun test() = absorbOverCheck()
 }
@@ -107,6 +112,8 @@ class OverAbsorbLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ): TestingLaw, AbsorptionCore<A> {
+    override val binding = LawBinding.of(this, absorb, over, arb, eq)
+
     override val name = "over-absorb: ${over.symbol} over ${absorb.symbol}"
     override suspend fun test() = overAbsorbCheck()
 }
@@ -119,16 +126,18 @@ class OverAbsorbLaw<A : Any>(
  * These typically apply to lattices and logic.
  */
 class AbsorptionLaw<A : Any>(
-    override val absorb: BinOp<A>,
-    override val over: BinOp<A>,
-    override val arb: Arb<A>,
-    override val eq: Eq<A> = Eq.default(),
-    override val pr: Printable<A> = Printable.default()
-) : TestingLaw, AbsorptionCore<A> {
+    private val absorb: BinOp<A>,
+    private val over: BinOp<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = "absorption: ${absorb.symbol} over ${over.symbol} (both directions)"
 
-    override suspend fun test() {
-        absorbOverCheck()
-        overAbsorbCheck()
-    }
+    override val binding = LawBinding.of(this, absorb, over, arb, eq)
+
+    override fun children(): List<LawNode> = listOf(
+        AbsorbOverLaw(absorb, over, arb, eq, pr),
+        OverAbsorbLaw(absorb, over, arb, eq, pr)
+    ).asNodes()
 }

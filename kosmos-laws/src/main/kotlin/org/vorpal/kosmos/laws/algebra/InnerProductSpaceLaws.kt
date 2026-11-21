@@ -7,10 +7,9 @@ import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.innerproduct.realInnerBilinearityLaws
 import org.vorpal.kosmos.laws.innerproduct.realInnerSymmetryLaw
@@ -28,7 +27,7 @@ class InnerProductSpaceLaws<V : Any>(
     prV: Printable<V> = Printable.default(),
     prR: Printable<Real> = Printable.default(),
     includeNormLaw: Boolean = false,
-) : StructuredLawSuite {
+) : LawSuite {
 
     override val name = suiteName(
         "InnerProductSpace",
@@ -44,7 +43,7 @@ class InnerProductSpaceLaws<V : Any>(
         VectorSpaceLaws(space, scalarArb, vectorArb, eqReal, eqV, prR, prV)
     }
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         buildList {
             addAll(
                 realInnerBilinearityLaws(
@@ -97,11 +96,8 @@ class InnerProductSpaceLaws<V : Any>(
             }
         }
 
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> structureLaws.asNodes()
-            LawMode.FULL -> listOf(vectorSpaceLaws.node(LawMode.FULL)) +
-                structureLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(vectorSpaceLaws.node()) +
+            structureLaws.asNodes()
 
 }

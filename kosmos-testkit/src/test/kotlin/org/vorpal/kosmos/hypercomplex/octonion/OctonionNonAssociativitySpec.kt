@@ -1,7 +1,10 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
 import io.kotest.assertions.fail
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * Confirms that [OctonionAlgebras.OctonionDivisionAlgebra] is *genuinely* non-associative, i.e. that
@@ -22,35 +25,36 @@ import io.kotest.core.spec.style.StringSpec
  * RealOctonion products are compared with [OctonionAlgebras.eqOctonionStrict] (signed-zero-safe), never the
  * structural `shouldBe`; see [OctonionFanoOrientationSpec].
  */
-class OctonionNonAssociativitySpec : StringSpec({
+class OctonionNonAssociativitySpec : FunSpec({
+    lawTests(lawGraph("𝕆 is not associative") {
+        val ring = OctonionAlgebras.OctonionDivisionAlgebra
+        val eq = OctonionAlgebras.eqOctonionStrict
+        val pr = OctonionAlgebras.printableOctonionStrict
 
-    val ring = OctonionAlgebras.OctonionDivisionAlgebra
-    val eq = OctonionAlgebras.eqOctonionStrict
-    val pr = OctonionAlgebras.printableOctonionStrict
+        fun e(i: Int): RealOctonion = ring.basisMap.getValue(i)
 
-    fun e(i: Int): RealOctonion = ring.basisMap.getValue(i)
+        /** The associator [a, b, c] = (a b) c - a (b c). */
+        fun associator(a: RealOctonion, b: RealOctonion, c: RealOctonion): RealOctonion =
+            ring.add(
+                ring.mul(ring.mul(a, b), c),
+                ring.add.inverse(ring.mul(a, ring.mul(b, c)))
+            )
 
-    /** The associator [a, b, c] = (a b) c - a (b c). */
-    fun associator(a: RealOctonion, b: RealOctonion, c: RealOctonion): RealOctonion =
-        ring.add(
-            ring.mul(ring.mul(a, b), c),
-            ring.add.inverse(ring.mul(a, ring.mul(b, c)))
-        )
+        infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
+            if (eq.neqv(this, expected))
+                fail("expected ${pr(expected)} but was ${pr(this)}")
+        }
 
-    infix fun RealOctonion.shouldEqualOctonion(expected: RealOctonion) {
-        if (eq.neqv(this, expected))
-            fail("expected ${pr(expected)} but was ${pr(this)}")
-    }
+        local("octonion multiplication is genuinely non-associative: the off-line associator [e1, e2, e4] is non-zero") {
+            val assoc = associator(e(1), e(2), e(4))
+            if (eq(assoc, ring.zero))
+                fail("expected a non-zero associator [e1, e2, e4], proving non-associativity, but it vanished")
+            // Sharper, structural form: the associator is exactly 2 e7.
+            assoc shouldEqualOctonion ring.add(e(7), e(7))
+        }
 
-    "octonion multiplication is genuinely non-associative: the off-line associator [e1, e2, e4] is non-zero" {
-        val assoc = associator(e(1), e(2), e(4))
-        if (eq(assoc, ring.zero))
-            fail("expected a non-zero associator [e1, e2, e4], proving non-associativity, but it vanished")
-        // Sharper, structural form: the associator is exactly 2 e7.
-        assoc shouldEqualOctonion ring.add(e(7), e(7))
-    }
-
-    "the associator vanishes within an on-line (quaternionic) triple [e1, e2, e3]" {
-        associator(e(1), e(2), e(3)) shouldEqualOctonion ring.zero
-    }
+        local("the associator vanishes within an on-line (quaternionic) triple [e1, e2, e3]") {
+            associator(e(1), e(2), e(3)) shouldEqualOctonion ring.zero
+        }
+    })
 })

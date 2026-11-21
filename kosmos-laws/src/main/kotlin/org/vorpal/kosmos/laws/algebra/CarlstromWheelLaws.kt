@@ -7,15 +7,15 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
-import org.vorpal.kosmos.laws.renderWith
 import org.vorpal.kosmos.laws.property.AnnihilationLaw
+import org.vorpal.kosmos.laws.renderWith
 import org.vorpal.kosmos.laws.suiteName
 
 /**
@@ -56,7 +56,7 @@ class CarlstromWheelLaws<A : Any>(
     val arb: Arb<A>,
     val eq: Eq<A> = Eq.default(),
     val pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     override val name = suiteName(
         "CarlstromWheel", wheel.add.op.symbol, wheel.mul.op.symbol, wheel.inv.symbol
@@ -158,7 +158,7 @@ class CarlstromWheelLaws<A : Any>(
         }
     }
 
-    private val structureLaws: List<TestingLaw> = listOf(
+    private val structureLaws: List<LawComponent> = listOf(
         bottomDominatesAdd,
         bottomDominatesMul,
         specialInvLaws,
@@ -167,8 +167,8 @@ class CarlstromWheelLaws<A : Any>(
         rightWeakDistributivityLaw
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(wheelLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(wheelLaws.node()) +
             structureLaws.asNodes()
 
 }

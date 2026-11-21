@@ -1,34 +1,32 @@
 package org.vorpal.kosmos.laws.algebra
 
 import io.kotest.property.Arb
-import io.kotest.property.arbitrary.filterNot
 import org.vorpal.kosmos.algebra.structures.DivisionRing
 import org.vorpal.kosmos.core.Eq
-import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
+import org.vorpal.kosmos.laws.property.DistinctIdentitiesLaw
 import org.vorpal.kosmos.laws.property.InvertibilityLaw
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [DivisionRing] laws:
  * - [RingLaws]
- * - [InvertibilityLaw]
+ * - [InvertibilityLaw] on multiplication, for every nonzero element
+ * - [DistinctIdentitiesLaw] (0 ≠ 1)
  *
- * Note: reciprocal is typically undefined at the additive identity, so we treat it as "no inverse".
+ * Every nonzero element (under [eq], so approximate rings decide what "zero" means) must have a two-sided
+ * reciprocal; a missing reciprocal fails.
  */
 class DivisionRingLaws<A : Any>(
-    ring: DivisionRing<A>,
-    arb: Arb<A>,
-    eq: Eq<A> = Eq.default(),
-    pr: Printable<A> = Printable.default()
-) : StructuredLawSuite {
-
+    private val ring: DivisionRing<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = suiteName(
         "DivisionRing",
         ring.add.op.symbol,
@@ -38,26 +36,10 @@ class DivisionRingLaws<A : Any>(
 
     override val binding = LawBinding.of(this, ring, arb, eq, pr)
 
-    private val ringLaws = RingLaws(ring, arb, eq, pr)
-
-    private val reciprocalOrNull: UnaryOp<A, A?> =
-        UnaryOp(ring.reciprocal.symbol) { a ->
-            // Exclude zero (under the provided Eq, so approximate rings can decide what "zero" means).
-            if (eq(a, ring.zero)) null
-            else ring.reciprocal(a)
-        }
-
-    private val structureLaws: List<TestingLaw> = listOf(
-        InvertibilityLaw(
-            op = ring.mul.op,
-            identity = ring.mul.identity,
-            arb = arb.filterNot { eq(it, ring.zero) },
-            inverseOrNull = reciprocalOrNull,
-            eq = eq,
-            pr = pr
-        )
-    )
-
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(ringLaws.node(mode)) + structureLaws.asNodes()
+    override fun children(): List<LawNode> =
+        listOf(
+            RingLaws(ring, arb, eq, pr),
+            InvertibilityLaw(ring.mul.op, ring.mul.identity, arb, ring.reciprocal, eq, pr, exclude = ring.zero),
+            DistinctIdentitiesLaw(ring.add.identity, ring.mul.identity, eq, pr)
+        ).asNodes()
 }

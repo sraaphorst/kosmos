@@ -1,13 +1,13 @@
 package org.vorpal.kosmos.hypercomplex.sextonion
 
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.matchers.shouldNotBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.map
-import io.kotest.property.checkAll
+import java.math.BigInteger
 import org.vorpal.kosmos.algebra.structures.CommutativeRing
 import org.vorpal.kosmos.algebra.structures.Field
 import org.vorpal.kosmos.algebra.structures.PrimeField
@@ -28,10 +28,13 @@ import org.vorpal.kosmos.hypercomplex.zorn.ZornAlgebras
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.injectivityLaw
+import org.vorpal.kosmos.laws.lawCheckAll
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.linear.values.Mat2
 import org.vorpal.kosmos.linear.values.Vec2
 import org.vorpal.kosmos.linear.values.Vec3
-import java.math.BigInteger
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 
 /**
  * The sextonions inside the Zorn vector-matrices and the split-octonions.
@@ -47,214 +50,218 @@ import java.math.BigInteger
  * `splitQuaternionToSplitOctonionMonomorphism` (the span of `1, e₁, e₄, e₅`) but is not equal to it:
  * the two differ by the automorphism `α : i ↦ −i, j ↦ −k, k ↦ −j` of `H′`.
  */
-class SextonionZornSpec : StringSpec({
-    val q = RationalAlgebras.RationalField
-    val z = IntegerAlgebras.IntegerCommutativeRing
-    val sextonions = SextonionAlgebras.sextonionRing(q)
-    val zorns = ZornAlgebras.zornRing(q)
-    val phi = ZornAlgebras.sextonionToZornMonomorphism(q)
-    val arb = ArbSextonion.rationalSextonion
+class SextonionZornSpec : FunSpec({
+    lawTests(lawGraph("sextonions and Zorn") {
+        val q = RationalAlgebras.RationalField
+        val z = IntegerAlgebras.IntegerCommutativeRing
+        val sextonions = SextonionAlgebras.sextonionRing(q)
+        val zorns = ZornAlgebras.zornRing(q)
+        val phi = ZornAlgebras.sextonionToZornMonomorphism(q)
+        val arb = ArbSextonion.rationalSextonion
 
-    val (zero, one) = Rational.ZERO to Rational.ONE
-    val zeroVec3 = Vec3(zero, zero, zero)
+        val (zero, one) = Rational.ZERO to Rational.ONE
+        val zeroVec3 = Vec3(zero, zero, zero)
 
-    /** The coordinate projection Zorn<R> → Sextonion<R>, dropping v₃ and w₂. */
-    fun <R : Any> project(base: CommutativeRing<R>, x: Zorn<R>): Sextonion<R> {
-        val (a, v, w, d) = x
-        return Sextonion(Mat2(a, v.x, w.x, d), Vec2(v.y, base.add.inverse(w.z)))
-    }
-
-    // ---------- Sextonion → Zorn ----------
-
-    "φ : Sextonion<ℚ> → Zorn<ℚ> is a unital ring homomorphism, and injective" {
-        NonAssociativeRingHomomorphismLaws(hom = phi::invoke, domain = sextonions, codomain = zorns, arb = arb)
-            .fullTest().throwIfFailed()
-        injectivityLaw(hom = phi::invoke, arbA = arb).test()
-    }
-
-    "φ is defined over ℤ and over 𝔽₂ too: an injective homomorphism over any commutative ring" {
-        val phiZ = ZornAlgebras.sextonionToZornMonomorphism(z)
-        NonAssociativeRingHomomorphismLaws(
-            hom = phiZ::invoke,
-            domain = SextonionAlgebras.sextonionRing(z),
-            codomain = ZornAlgebras.zornRing(z),
-            arb = ArbSextonion.integerSextonion
-        ).fullTest().throwIfFailed()
-        injectivityLaw(hom = phiZ::invoke, arbA = ArbSextonion.integerSextonion).test()
-
-        val f2 = FiniteFieldAlgebras.F2
-        val phi2 = ZornAlgebras.sextonionToZornMonomorphism(f2)
-        NonAssociativeRingHomomorphismLaws(
-            hom = phi2::invoke,
-            domain = SextonionAlgebras.sextonionRing(f2),
-            codomain = ZornAlgebras.zornRing(f2),
-            arb = ArbSextonion.sextonionOf(Arb.int(0..1).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
-    }
-
-    "φ([[a, b], [c, d]], (e, f)) = [[a, (b, e, 0)], [(c, 0, −f), d]]" {
-        checkAll(arb) { x ->
-            val (m, nu) = x
-            phi(x) shouldBe Zorn(m.a, Vec3(m.b, nu.x, zero), Vec3(m.c, zero, -nu.y), m.d)
+        /** The coordinate projection Zorn<R> → Sextonion<R>, dropping v₃ and w₂. */
+        fun <R : Any> project(base: CommutativeRing<R>, x: Zorn<R>): Sextonion<R> {
+            val (a, v, w, d) = x
+            return Sextonion(Mat2(a, v.x, w.x, d), Vec2(v.y, base.add.inverse(w.z)))
         }
-    }
 
-    "φ commutes with conjugation and carries det A to the Zorn norm ad − v·w" {
-        val sNorm = SextonionAlgebras.normSq(q)
-        val zNorm = ZornAlgebras.normSq(q)
-        checkAll(arb) { x ->
-            phi(sextonions.conj(x)) shouldBe zorns.conj(phi(x))
-            zNorm(phi(x)) shouldBe sNorm(x)
+        // ---------- Sextonion → Zorn ----------
+
+        branch("φ : Sextonion<ℚ> → Zorn<ℚ> is a unital ring homomorphism, and injective") {
+            suite(NonAssociativeRingHomomorphismLaws(hom = phi::invoke, domain = sextonions, codomain = zorns, arb = arb))
+            law(injectivityLaw(hom = phi::invoke, arbA = arb))
         }
-    }
 
-    // ---------- The projection back (hand-written until #270) ----------
-
-    "the projection π : Zorn → Sextonion undoes φ, and is additive and ℚ-linear" {
-        checkAll(arb) { x -> project(q, phi(x)) shouldBe x }
-        val action = ZornAlgebras.zornLeftAction(q)
-        val sAction = SextonionAlgebras.sextonionLeftAction(q)
-        checkAll(ArbZorn.rationalZorn, ArbZorn.rationalZorn, ArbSplitQuaternion.smallRational) { x, y, r ->
-            project(q, zorns.add(x, y)) shouldBe sextonions.add(project(q, x), project(q, y))
-            project(q, action(r, x)) shouldBe sAction(r, project(q, x))
+        branch("φ is defined over ℤ and over 𝔽₂ too: an injective homomorphism over any commutative ring") {
+            val phiZ = ZornAlgebras.sextonionToZornMonomorphism(z)
+            suite(NonAssociativeRingHomomorphismLaws(
+                hom = phiZ::invoke,
+                domain = SextonionAlgebras.sextonionRing(z),
+                codomain = ZornAlgebras.zornRing(z),
+                arb = ArbSextonion.integerSextonion
+            ))
+            law(injectivityLaw(hom = phiZ::invoke, arbA = ArbSextonion.integerSextonion))
+            val f2 = FiniteFieldAlgebras.F2
+            val phi2 = ZornAlgebras.sextonionToZornMonomorphism(f2)
+            suite(NonAssociativeRingHomomorphismLaws(
+                hom = phi2::invoke,
+                domain = SextonionAlgebras.sextonionRing(f2),
+                codomain = ZornAlgebras.zornRing(f2),
+                arb = ArbSextonion.sextonionOf(Arb.int(0..1).map(Int::toBigInteger))
+            ))
         }
-        project(q, zorns.zero) shouldBe sextonions.zero
-    }
 
-    "π is not multiplicative: π(U₃) = 0, so π(U₃)π(W₃) = 0, but π(U₃W₃) = (E₁₁, 0)" {
-        val e3 = Vec3(zero, zero, one)
-        val u3 = Zorn(zero, e3, zeroVec3, zero)
-        val w3 = Zorn(zero, zeroVec3, e3, zero)
-        project(q, u3) shouldBe sextonions.zero
-        sextonions.mul(project(q, u3), project(q, w3)) shouldBe sextonions.zero
-        project(q, zorns.mul(u3, w3)) shouldBe SextonionAlgebras.basis(q)[0]
-    }
-
-    // ---------- Sextonion → SplitOctonion ----------
-
-    "Sextonion<ℚ> ↪ SplitOctonion<ℚ> is an injective unital homomorphism compatible with conj and norm" {
-        val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
-        val splitOctonions = SplitOctonionAlgebras.splitOctonionRing(q)
-        NonAssociativeRingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = sextonions,
-            codomain = splitOctonions,
-            arb = arb
-        ).fullTest().throwIfFailed()
-        injectivityLaw(hom = mono::invoke, arbA = arb).test()
-        val sNorm = SextonionAlgebras.normSq(q)
-        val oNorm = SplitOctonionAlgebras.normSq(q)
-        checkAll(arb) { x ->
-            mono(sextonions.conj(x)) shouldBe splitOctonions.conj(mono(x))
-            oNorm(mono(x)) shouldBe sNorm(x)
+        local("φ([[a, b], [c, d]], (e, f)) = [[a, (b, e, 0)], [(c, 0, −f), d]]") {
+            lawCheckAll(arb) { x ->
+                val (m, nu) = x
+                phi(x) shouldBe Zorn(m.a, Vec3(m.b, nu.x, zero), Vec3(m.c, zero, -nu.y), m.d)
+            }
         }
-    }
 
-    "the idempotent (E₁₁, 0) lands on (1 + e₄)/2: the half is unavoidable" {
-        val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
-        val h = Rational.of(1, 2)
-        mono(SextonionAlgebras.basis(q)[0]) shouldBe splitOctonion(h, zero, zero, zero, h, zero, zero, zero)
-    }
+        local("φ commutes with conjugation and carries det A to the Zorn norm ad − v·w") {
+            val sNorm = SextonionAlgebras.normSq(q)
+            val zNorm = ZornAlgebras.normSq(q)
+            lawCheckAll(arb) { x ->
+                phi(sextonions.conj(x)) shouldBe zorns.conj(phi(x))
+                zNorm(phi(x)) shouldBe sNorm(x)
+            }
+        }
 
-    "every split-octonion satisfies x² = 2w·x − N(x), so over ℤ an idempotent has (2w − 1)·v = 0" {
-        val ring = SplitOctonionAlgebras.splitOctonionRing(z)
-        val normSq = SplitOctonionAlgebras.normSq(z)
-        val two = BigInteger.TWO
-        checkAll(ArbSplitOctonion.splitOctonionOf(Arb.int(-20..20).map(Int::toBigInteger))) { x ->
-            val (scale, scalar) = two * x.w to splitOctonion(
-                normSq(x), BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO,
-                BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO
+        // ---------- The projection back (hand-written until #270) ----------
+
+        local("the projection π : Zorn → Sextonion undoes φ, and is additive and ℚ-linear") {
+            lawCheckAll(arb) { x -> project(q, phi(x)) shouldBe x }
+            val action = ZornAlgebras.zornLeftAction(q)
+            val sAction = SextonionAlgebras.sextonionLeftAction(q)
+            lawCheckAll(ArbZorn.rationalZorn, ArbZorn.rationalZorn, ArbSplitQuaternion.smallRational) { x, y, r ->
+                project(q, zorns.add(x, y)) shouldBe sextonions.add(project(q, x), project(q, y))
+                project(q, action(r, x)) shouldBe sAction(r, project(q, x))
+            }
+            project(q, zorns.zero) shouldBe sextonions.zero
+        }
+
+        local("π is not multiplicative: π(U₃) = 0, so π(U₃)π(W₃) = 0, but π(U₃W₃) = (E₁₁, 0)") {
+            val e3 = Vec3(zero, zero, one)
+            val u3 = Zorn(zero, e3, zeroVec3, zero)
+            val w3 = Zorn(zero, zeroVec3, e3, zero)
+            project(q, u3) shouldBe sextonions.zero
+            sextonions.mul(project(q, u3), project(q, w3)) shouldBe sextonions.zero
+            project(q, zorns.mul(u3, w3)) shouldBe SextonionAlgebras.basis(q)[0]
+        }
+
+        // ---------- Sextonion → SplitOctonion ----------
+
+        branch("Sextonion<ℚ> ↪ SplitOctonion<ℚ> is an injective unital homomorphism compatible with conj and norm") {
+            val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+            val splitOctonions = SplitOctonionAlgebras.splitOctonionRing(q)
+            suite(NonAssociativeRingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = sextonions,
+                codomain = splitOctonions,
+                arb = arb
+            ))
+            law(injectivityLaw(hom = mono::invoke, arbA = arb))
+            val sNorm = SextonionAlgebras.normSq(q)
+            val oNorm = SplitOctonionAlgebras.normSq(q)
+            local("compatible with conj and norm") {
+                lawCheckAll(arb) { x ->
+                    mono(sextonions.conj(x)) shouldBe splitOctonions.conj(mono(x))
+                    oNorm(mono(x)) shouldBe sNorm(x)
+                }
+            }
+        }
+
+        local("the idempotent (E₁₁, 0) lands on (1 + e₄)/2: the half is unavoidable") {
+            val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+            val h = Rational.of(1, 2)
+            mono(SextonionAlgebras.basis(q)[0]) shouldBe splitOctonion(h, zero, zero, zero, h, zero, zero, zero)
+        }
+
+        local("every split-octonion satisfies x² = 2w·x − N(x), so over ℤ an idempotent has (2w − 1)·v = 0") {
+            val ring = SplitOctonionAlgebras.splitOctonionRing(z)
+            val normSq = SplitOctonionAlgebras.normSq(z)
+            val two = BigInteger.TWO
+            lawCheckAll(ArbSplitOctonion.splitOctonionOf(Arb.int(-20..20).map(Int::toBigInteger))) { x ->
+                val (scale, scalar) = two * x.w to splitOctonion(
+                    normSq(x), BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO,
+                    BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO, BigInteger.ZERO
+                )
+                val scaled = SplitOctonionAlgebras.splitOctonionLeftAction(z)(scale, x)
+                ring.mul(x, x) shouldBe ring.add(scaled, ring.add.inverse(scalar))
+            }
+        }
+
+        local("over 𝔽₂ the only idempotents of the split-octonions are 0 and 1, so no embedding exists") {
+            val f2 = FiniteFieldAlgebras.F2
+            val ring = SplitOctonionAlgebras.splitOctonionRing(f2)
+            val bits = listOf(BigInteger.ZERO, BigInteger.ONE)
+            val all = (0 until 256).map { n ->
+                val c = (0 until 8).map { i -> bits[(n shr i) and 1] }
+                splitOctonion(c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7])
+            }
+            all.filter { x -> ring.mul(x, x) == x }.toSet() shouldBe setOf(ring.zero, ring.one)
+
+            val sextonionsF2 = SextonionAlgebras.sextonionRing(f2)
+            val e11 = SextonionAlgebras.basis(f2)[0]
+            sextonionsF2.mul(e11, e11) shouldBe e11
+            e11 shouldNotBe sextonionsF2.zero
+            e11 shouldNotBe sextonionsF2.one
+
+            shouldThrow<IllegalArgumentException> { ZornAlgebras.sextonionToSplitOctonionMonomorphism(f2) }
+        }
+
+        branch("over 𝔽₃ the embedding into the split-octonions exists and is a homomorphism") {
+            val f3 = PrimeField(BigInteger.valueOf(3))
+            val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(f3)
+            suite(NonAssociativeRingHomomorphismLaws(
+                hom = mono::invoke,
+                domain = SextonionAlgebras.sextonionRing(f3),
+                codomain = SplitOctonionAlgebras.splitOctonionRing(f3),
+                arb = ArbSextonion.sextonionOf(Arb.int(0..2).map(Int::toBigInteger))
+            ))
+        }
+
+        // ---------- H′ → S → 𝕆′ against the direct H′ → 𝕆′ ----------
+
+        /**
+         * The automorphism `α` of H′ with `i ↦ −i`, `j ↦ −k`, `k ↦ −j`, which is the difference between
+         * the two routes H′ → 𝕆′.
+         */
+        fun <R : Any> alpha(base: CommutativeRing<R>, x: SplitQuaternion<R>): SplitQuaternion<R> {
+            val neg = base.add.inverse
+            return splitQuaternion(x.w, neg(x.x), neg(x.z), neg(x.y))
+        }
+
+        branch("α : w + xi + yj + zk ↦ w − xi − zj − yk is an involutive ring automorphism of H′(ℚ)") {
+            val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
+            val arbH = ArbSplitQuaternion.rationalSplitQuaternion
+            suite(RingHomomorphismLaws(
+                hom = { x: SplitQuaternion<Rational> -> alpha(q, x) },
+                domain = splitQuaternions,
+                codomain = splitQuaternions,
+                arb = arbH
+            ))
+            local("α is an involution") {
+                lawCheckAll(arbH) { x -> alpha(q, alpha(q, x)) shouldBe x }
+            }
+        }
+
+        local("H′ → S → 𝕆′ sends w + xi + yj + zk to w − x·e₁ − z·e₄ − y·e₅") {
+            val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
+            val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+            lawCheckAll(ArbSplitQuaternion.rationalSplitQuaternion) { x ->
+                val neg = q.add.inverse
+                toO(toS(x)) shouldBe splitOctonion(x.w, neg(x.x), zero, zero, neg(x.z), neg(x.y), zero, zero)
+            }
+        }
+
+        local("H′ → S → 𝕆′ is the direct embedding H′ ↪ 𝕆′ twisted by α, over ℚ and 𝔽₃") {
+            suspend fun <F : Any> sameRoute(field: Field<F>, arbH: Arb<SplitQuaternion<F>>) {
+                val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(field)
+                val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)
+                val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(field)
+                lawCheckAll(arbH) { x -> toO(toS(x)) shouldBe direct(alpha(field, x)) }
+            }
+
+            sameRoute(q, ArbSplitQuaternion.rationalSplitQuaternion)
+            sameRoute(
+                PrimeField(BigInteger.valueOf(3)),
+                ArbSplitQuaternion.splitQuaternionOf(Arb.int(0..2).map(Int::toBigInteger))
             )
-            val scaled = SplitOctonionAlgebras.splitOctonionLeftAction(z)(scale, x)
-            ring.mul(x, x) shouldBe ring.add(scaled, ring.add.inverse(scalar))
-        }
-    }
-
-    "over 𝔽₂ the only idempotents of the split-octonions are 0 and 1, so no embedding exists" {
-        val f2 = FiniteFieldAlgebras.F2
-        val ring = SplitOctonionAlgebras.splitOctonionRing(f2)
-        val bits = listOf(BigInteger.ZERO, BigInteger.ONE)
-        val all = (0 until 256).map { n ->
-            val c = (0 until 8).map { i -> bits[(n shr i) and 1] }
-            splitOctonion(c[0], c[1], c[2], c[3], c[4], c[5], c[6], c[7])
-        }
-        all.filter { x -> ring.mul(x, x) == x }.toSet() shouldBe setOf(ring.zero, ring.one)
-
-        val sextonionsF2 = SextonionAlgebras.sextonionRing(f2)
-        val e11 = SextonionAlgebras.basis(f2)[0]
-        sextonionsF2.mul(e11, e11) shouldBe e11
-        e11 shouldNotBe sextonionsF2.zero
-        e11 shouldNotBe sextonionsF2.one
-
-        shouldThrow<IllegalArgumentException> { ZornAlgebras.sextonionToSplitOctonionMonomorphism(f2) }
-    }
-
-    "over 𝔽₃ the embedding into the split-octonions exists and is a homomorphism" {
-        val f3 = PrimeField(BigInteger.valueOf(3))
-        val mono = ZornAlgebras.sextonionToSplitOctonionMonomorphism(f3)
-        NonAssociativeRingHomomorphismLaws(
-            hom = mono::invoke,
-            domain = SextonionAlgebras.sextonionRing(f3),
-            codomain = SplitOctonionAlgebras.splitOctonionRing(f3),
-            arb = ArbSextonion.sextonionOf(Arb.int(0..2).map(Int::toBigInteger))
-        ).fullTest().throwIfFailed()
-    }
-
-    // ---------- H′ → S → 𝕆′ against the direct H′ → 𝕆′ ----------
-
-    /**
-     * The automorphism `α` of H′ with `i ↦ −i`, `j ↦ −k`, `k ↦ −j`, which is the difference between
-     * the two routes H′ → 𝕆′.
-     */
-    fun <R : Any> alpha(base: CommutativeRing<R>, x: SplitQuaternion<R>): SplitQuaternion<R> {
-        val neg = base.add.inverse
-        return splitQuaternion(x.w, neg(x.x), neg(x.z), neg(x.y))
-    }
-
-    "α : w + xi + yj + zk ↦ w − xi − zj − yk is an involutive ring automorphism of H′(ℚ)" {
-        val splitQuaternions = SplitQuaternionAlgebras.splitQuaternionRing(q)
-        val arbH = ArbSplitQuaternion.rationalSplitQuaternion
-        RingHomomorphismLaws(
-            hom = { x: SplitQuaternion<Rational> -> alpha(q, x) },
-            domain = splitQuaternions,
-            codomain = splitQuaternions,
-            arb = arbH
-        ).fullTest().throwIfFailed()
-        checkAll(arbH) { x -> alpha(q, alpha(q, x)) shouldBe x }
-    }
-
-    "H′ → S → 𝕆′ sends w + xi + yj + zk to w − x·e₁ − z·e₄ − y·e₅" {
-        val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
-        val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
-        checkAll(ArbSplitQuaternion.rationalSplitQuaternion) { x ->
-            val neg = q.add.inverse
-            toO(toS(x)) shouldBe splitOctonion(x.w, neg(x.x), zero, zero, neg(x.z), neg(x.y), zero, zero)
-        }
-    }
-
-    "H′ → S → 𝕆′ is the direct embedding H′ ↪ 𝕆′ twisted by α, over ℚ and 𝔽₃" {
-        suspend fun <F : Any> sameRoute(field: Field<F>, arbH: Arb<SplitQuaternion<F>>) {
-            val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(field)
-            val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(field)
-            val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(field)
-            checkAll(arbH) { x -> toO(toS(x)) shouldBe direct(alpha(field, x)) }
         }
 
-        sameRoute(q, ArbSplitQuaternion.rationalSplitQuaternion)
-        sameRoute(
-            PrimeField(BigInteger.valueOf(3)),
-            ArbSplitQuaternion.splitQuaternionOf(Arb.int(0..2).map(Int::toBigInteger))
-        )
-    }
+        local("the two routes differ: H′ → S → 𝕆′ sends i to −e₁, the direct embedding sends i to e₁") {
+            val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
+            val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
+            val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(q)
+            val i = splitQuaternion(zero, one, zero, zero)
+            val minusOne = q.add.inverse(one)
 
-    "the two routes differ: H′ → S → 𝕆′ sends i to −e₁, the direct embedding sends i to e₁" {
-        val toS = SextonionAlgebras.splitQuaternionToSextonionHomomorphism(q)
-        val toO = ZornAlgebras.sextonionToSplitOctonionMonomorphism(q)
-        val direct = SplitOctonionAlgebras.splitQuaternionToSplitOctonionMonomorphism(q)
-        val i = splitQuaternion(zero, one, zero, zero)
-        val minusOne = q.add.inverse(one)
-
-        direct(i) shouldBe splitOctonion(zero, one, zero, zero, zero, zero, zero, zero)
-        toO(toS(i)) shouldBe splitOctonion(zero, minusOne, zero, zero, zero, zero, zero, zero)
-    }
+            direct(i) shouldBe splitOctonion(zero, one, zero, zero, zero, zero, zero, zero)
+            toO(toS(i)) shouldBe splitOctonion(zero, minusOne, zero, zero, zero, zero, zero, zero)
+        }
+    })
 })

@@ -7,7 +7,11 @@ import org.vorpal.kosmos.core.Symbols
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.util.midfix
@@ -172,7 +176,8 @@ private sealed interface BilinearityCore<S : Any, V : Any, W : Any, X : Any> {
     }
 }
 
-class LinearInFirstArgLaw<S : Any, V : Any, W : Any, X : Any>(
+/** `f(x + y, z) = f(x, z) + f(y, z)` */
+class FirstArgAdditivityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val f: (V, W) -> X,
     override val addX: BinOp<X>,
     override val addV: BinOp<V>,
@@ -189,14 +194,14 @@ class LinearInFirstArgLaw<S : Any, V : Any, W : Any, X : Any>(
     override val prW: Printable<W> = Printable.default(),
     override val prX: Printable<X> = Printable.default()
 ) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "linearity (1st arg) $symbol"
-    override suspend fun test() {
-        leftAdditivityCheck()
-        leftHomogeneityCheck()
-    }
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "additivity (1st arg) $symbol"
+    override suspend fun test() = leftAdditivityCheck()
 }
 
-class LinearInSecondArgLaw<S : Any, V : Any, W : Any, X : Any>(
+/** `f(a · x, z) = a ⋅ f(x, z)` */
+class FirstArgHomogeneityLaw<S : Any, V : Any, W : Any, X : Any>(
     override val f: (V, W) -> X,
     override val addX: BinOp<X>,
     override val addV: BinOp<V>,
@@ -213,15 +218,118 @@ class LinearInSecondArgLaw<S : Any, V : Any, W : Any, X : Any>(
     override val prW: Printable<W> = Printable.default(),
     override val prX: Printable<X> = Printable.default()
 ) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "linearity (2nd arg) $symbol"
-    override suspend fun test() {
-        rightAdditivityCheck()
-        rightHomogeneityCheck()
-    }
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "homogeneity (1st arg) $symbol"
+    override suspend fun test() = leftHomogeneityCheck()
+}
+
+/** `f(x, y + z) = f(x, y) + f(x, z)` */
+class SecondArgAdditivityLaw<S : Any, V : Any, W : Any, X : Any>(
+    override val f: (V, W) -> X,
+    override val addX: BinOp<X>,
+    override val addV: BinOp<V>,
+    override val addW: BinOp<W>,
+    override val scalarActionV: LeftAction<S, V>,
+    override val scalarActionW: LeftAction<S, W>,
+    override val scalarActionX: LeftAction<S, X>,
+    override val scalarArb: Arb<S>,
+    override val arbV: Arb<V>,
+    override val arbW: Arb<W>,
+    override val eq: Eq<X> = Eq.default(),
+    override val prS: Printable<S> = Printable.default(),
+    override val prV: Printable<V> = Printable.default(),
+    override val prW: Printable<W> = Printable.default(),
+    override val prX: Printable<X> = Printable.default()
+) : TestingLaw, BilinearityCore<S, V, W, X> {
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "additivity (2nd arg) $symbol"
+    override suspend fun test() = rightAdditivityCheck()
+}
+
+/** `f(x, b · z) = b ⋅ f(x, z)` */
+class SecondArgHomogeneityLaw<S : Any, V : Any, W : Any, X : Any>(
+    override val f: (V, W) -> X,
+    override val addX: BinOp<X>,
+    override val addV: BinOp<V>,
+    override val addW: BinOp<W>,
+    override val scalarActionV: LeftAction<S, V>,
+    override val scalarActionW: LeftAction<S, W>,
+    override val scalarActionX: LeftAction<S, X>,
+    override val scalarArb: Arb<S>,
+    override val arbV: Arb<V>,
+    override val arbW: Arb<W>,
+    override val eq: Eq<X> = Eq.default(),
+    override val prS: Printable<S> = Printable.default(),
+    override val prV: Printable<V> = Printable.default(),
+    override val prW: Printable<W> = Printable.default(),
+    override val prX: Printable<X> = Printable.default()
+) : TestingLaw, BilinearityCore<S, V, W, X> {
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "homogeneity (2nd arg) $symbol"
+    override suspend fun test() = rightHomogeneityCheck()
+}
+
+/** Linearity of `f : V × W → X` in its first argument: additivity and homogeneity. */
+class LinearInFirstArgLaw<S : Any, V : Any, W : Any, X : Any>(
+    private val f: (V, W) -> X,
+    private val addX: BinOp<X>,
+    private val addV: BinOp<V>,
+    private val addW: BinOp<W>,
+    private val scalarActionV: LeftAction<S, V>,
+    private val scalarActionW: LeftAction<S, W>,
+    private val scalarActionX: LeftAction<S, X>,
+    private val scalarArb: Arb<S>,
+    private val arbV: Arb<V>,
+    private val arbW: Arb<W>,
+    private val eq: Eq<X> = Eq.default(),
+    private val prS: Printable<S> = Printable.default(),
+    private val prV: Printable<V> = Printable.default(),
+    private val prW: Printable<W> = Printable.default(),
+    private val prX: Printable<X> = Printable.default()
+) : LawSuite {
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "linearity (1st arg) ${Symbols.BILINEAR}"
+
+    override fun children(): List<LawNode> = listOf(
+        FirstArgAdditivityLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX),
+        FirstArgHomogeneityLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX)
+    ).asNodes()
+}
+
+/** Linearity of `f : V × W → X` in its second argument: additivity and homogeneity. */
+class LinearInSecondArgLaw<S : Any, V : Any, W : Any, X : Any>(
+    private val f: (V, W) -> X,
+    private val addX: BinOp<X>,
+    private val addV: BinOp<V>,
+    private val addW: BinOp<W>,
+    private val scalarActionV: LeftAction<S, V>,
+    private val scalarActionW: LeftAction<S, W>,
+    private val scalarActionX: LeftAction<S, X>,
+    private val scalarArb: Arb<S>,
+    private val arbV: Arb<V>,
+    private val arbW: Arb<W>,
+    private val eq: Eq<X> = Eq.default(),
+    private val prS: Printable<S> = Printable.default(),
+    private val prV: Printable<V> = Printable.default(),
+    private val prW: Printable<W> = Printable.default(),
+    private val prX: Printable<X> = Printable.default()
+) : LawSuite {
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "linearity (2nd arg) ${Symbols.BILINEAR}"
+
+    override fun children(): List<LawNode> = listOf(
+        SecondArgAdditivityLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX),
+        SecondArgHomogeneityLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX)
+    ).asNodes()
 }
 
 /**
- * Bilinearity of a map `f : V × W → X` over a scalar type `S`:
+ * Bilinearity of a map `f : V × W → X` over a scalar type `S`: linearity in each argument.
  *
  * 1. `f(x + y, z) = f(x, z) + f(y, z)`
  * 2. `f(a · x, z) = a ⋅ f(x, z)`
@@ -229,29 +337,30 @@ class LinearInSecondArgLaw<S : Any, V : Any, W : Any, X : Any>(
  * 4. `f(x, b · z) = b ⋅ f(x, z)`
  */
 class BilinearityLaw<S : Any, V : Any, W : Any, X : Any>(
-    override val f: (V, W) -> X,
-    override val addX: BinOp<X>,
-    override val addV: BinOp<V>,
-    override val addW: BinOp<W>,
-    override val scalarActionV: LeftAction<S, V>,
-    override val scalarActionW: LeftAction<S, W>,
-    override val scalarActionX: LeftAction<S, X>,
-    override val scalarArb: Arb<S>,
-    override val arbV: Arb<V>,
-    override val arbW: Arb<W>,
-    override val eq: Eq<X> = Eq.default(),
-    override val prS: Printable<S> = Printable.default(),
-    override val prV: Printable<V> = Printable.default(),
-    override val prW: Printable<W> = Printable.default(),
-    override val prX: Printable<X> = Printable.default()
-) : TestingLaw, BilinearityCore<S, V, W, X> {
-    override val name = "bilinearity $symbol"
-    override suspend fun test() {
-        leftAdditivityCheck()
-        leftHomogeneityCheck()
-        rightAdditivityCheck()
-        rightHomogeneityCheck()
-    }
+    private val f: (V, W) -> X,
+    private val addX: BinOp<X>,
+    private val addV: BinOp<V>,
+    private val addW: BinOp<W>,
+    private val scalarActionV: LeftAction<S, V>,
+    private val scalarActionW: LeftAction<S, W>,
+    private val scalarActionX: LeftAction<S, X>,
+    private val scalarArb: Arb<S>,
+    private val arbV: Arb<V>,
+    private val arbW: Arb<W>,
+    private val eq: Eq<X> = Eq.default(),
+    private val prS: Printable<S> = Printable.default(),
+    private val prV: Printable<V> = Printable.default(),
+    private val prW: Printable<W> = Printable.default(),
+    private val prX: Printable<X> = Printable.default()
+) : LawSuite {
+    override val binding = LawBinding.of(this, f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq)
+
+    override val name = "bilinearity ${Symbols.BILINEAR}"
+
+    override fun children(): List<LawNode> = listOf(
+        LinearInFirstArgLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX),
+        LinearInSecondArgLaw(f, addX, addV, addW, scalarActionV, scalarActionW, scalarActionX, scalarArb, arbV, arbW, eq, prS, prV, prW, prX)
+    ).asNodes()
 }
 
 /**
@@ -272,7 +381,7 @@ object LeftBilinearFormLaw {
         eq: Eq<S> = Eq.default(),
         prS: Printable<S> = Printable.default(),
         prV: Printable<V> = Printable.default()
-    ): TestingLaw = LinearInFirstArgLaw(
+    ): LawSuite = LinearInFirstArgLaw(
         f, addS, addV, addV,
         scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,
@@ -298,7 +407,7 @@ object RightBilinearFormLaw {
         eq: Eq<S> = Eq.default(),
         prS: Printable<S> = Printable.default(),
         prV: Printable<V> = Printable.default()
-    ): TestingLaw = LinearInSecondArgLaw(
+    ): LawSuite = LinearInSecondArgLaw(
         f, addS, addV, addV,
         scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,
@@ -326,7 +435,7 @@ object BilinearFormLaw {
         eq: Eq<S> = Eq.default(),
         prS: Printable<S> = Printable.default(),
         prV: Printable<V> = Printable.default()
-    ): TestingLaw = BilinearityLaw(
+    ): LawSuite = BilinearityLaw(
         f, addS, addV, addV,
         scalarAction, scalarAction, mulS,
         scalarArb, vectorArb, vectorArb,

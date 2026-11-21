@@ -6,6 +6,7 @@ import org.vorpal.kosmos.core.Eqs
 import org.vorpal.kosmos.core.math.Real
 import org.vorpal.kosmos.core.ops.UnaryOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -27,6 +28,7 @@ class NormLaw<A : Any>(
     private val eqA: Eq<A> = Eq.default(),
     private val prA: Printable<A> = Printable.default(),
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, normSq, zero, arb, tolerance, eqReal, eqA)
 
     override val name: String = "norm (non-negativity & definiteness)"
 

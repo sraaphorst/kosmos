@@ -31,13 +31,14 @@ class SuiteDiagnosticsSpec : FunSpec({
             if (a == 7 || b == 7) throw ArithmeticException("seven") else a + b
         })
 
-        val report = MonoidLaws(touchy, ints, eqInt, prInt).verify(LawMode.FULL, LawRunConfig(seed = 3))
+        val report = MonoidLaws(touchy, ints, eqInt, prInt).verify(LawRunConfig(seed = 3))
 
         val byLaw = report.root.leaves().associate { it.label to it.status }
         byLaw shouldBe mapOf(
             "totality (+)" to LawStatus.FAILED,       // "the operation is total" is exactly what is false
             "associativity (+)" to LawStatus.ERRORED, // the other laws cannot be evaluated
-            "identity (+)" to LawStatus.ERRORED
+            "left identity (+)" to LawStatus.ERRORED,
+            "right identity (+)" to LawStatus.ERRORED
         )
 
         val totality = report.problems.first { it.label == "totality (+)" }.diagnostics.shouldNotBeNull()
@@ -52,13 +53,14 @@ class SuiteDiagnosticsSpec : FunSpec({
 
     test("a false law in a suite is Failed, with a Printable counterexample, and replays") {
         val subtraction = Monoid.of(0, BinOp<Int>("+") { a, b -> a - b })
-        val root = MonoidLaws(subtraction, ints, eqInt, prInt).node(LawMode.FULL)
+        val root = MonoidLaws(subtraction, ints, eqInt, prInt).node()
         val report = root.verify(LawRunConfig(seed = 11))
 
-        report.problems.map { it.label } shouldContainExactly listOf("associativity (+)", "identity (+)")
+        // a - 0 = a, but 0 - a = -a: only the left identity fails.
+        report.problems.map { it.label } shouldContainExactly listOf("associativity (+)", "left identity (+)")
         report.problems.forEach { it.status shouldBe LawStatus.FAILED }
 
-        val identity = report.problems.first { it.label == "identity (+)" }
+        val identity = report.problems.first { it.label == "left identity (+)" }
         val d = identity.diagnostics.shouldNotBeNull()
         d.counterexample.shouldNotBeNull() shouldStartWith "⟨"
 

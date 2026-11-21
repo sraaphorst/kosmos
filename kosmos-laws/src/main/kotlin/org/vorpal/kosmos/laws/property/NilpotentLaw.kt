@@ -6,6 +6,7 @@ import io.kotest.property.arbitrary.take
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -27,6 +28,7 @@ class NilpotentLaw<A : Any>(
     private val pr: Printable<A> = Printable.default(),
     private val checkAllBracketings: Boolean = false
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, n, zero, arb, nonzeroAttempts, eq, checkAllBracketings)
 
     init {
         require(n >= 2) { "Nilpotent law requires n ≥ 2, but got $n" }

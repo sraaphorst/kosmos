@@ -3,7 +3,6 @@ package org.vorpal.kosmos.algebra.structures.instances
 import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.core.Identity
 import org.vorpal.kosmos.core.ops.Endo
-import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.algebra.CommutativeRingLaws
 import org.vorpal.kosmos.laws.algebra.ConjugationLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
@@ -24,9 +23,9 @@ class IntegerCommutativeRingSpec : FunSpec({
     // Suites and standalone laws in one graph. The ring suites are built from the same ring, generator,
     // equality and printable, so the sub-suites they have in common run once.
     lawTests(lawGraph("IntegerCommutativeRing") {
-        suite(CommutativeRingLaws(ring, arb, eq, pr), LawMode.FULL)
-        suite(InvolutiveRingLaws(ring, arb, eq, pr), LawMode.FULL)
-        suite(ConjugationLaws(conj = ring.conj, add = ring.add, mul = ring.mul, arb = arb, eq = eq, pr = pr), LawMode.FULL)
+        suite(CommutativeRingLaws(ring, arb, eq, pr))
+        suite(InvolutiveRingLaws(ring, arb, eq, pr))
+        suite(ConjugationLaws(conj = ring.conj, add = ring.add, mul = ring.mul, arb = arb, eq = eq, pr = pr))
 
         branch("norm squared (${ring.normSq.symbol})") {
             law(NormSqDefiniteLaw(

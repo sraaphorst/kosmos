@@ -5,33 +5,29 @@ import org.vorpal.kosmos.algebra.structures.Monoid
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.asNode
-import org.vorpal.kosmos.laws.property.IdentityLaw
+import org.vorpal.kosmos.laws.LawSuite
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.suiteName
 
 /**
  * [Monoid] Laws:
  * - [SemigroupLaws]
- * - [IdentityLaw]
+ * - [NonAssociativeMonoidLaws]
  */
 class MonoidLaws<A : Any>(
     private val monoid: Monoid<A>,
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): StructuredLawSuite {
-
+): LawSuite {
     override val name = suiteName("Monoid", monoid.op.symbol)
 
     override val binding = LawBinding.of(this, monoid, arb, eq, pr)
 
-    // This could be SemigroupLaws + NonAssociativeMonoidLaws but this would duplicate laws.
-    override fun children(mode: LawMode): List<LawNode> =
+    override fun children(): List<LawNode> =
         listOf(
-            SemigroupLaws(monoid, arb, eq, pr).node(mode),
-            IdentityLaw(monoid.op, monoid.identity, arb, eq, pr).asNode()
-        )
+            SemigroupLaws(monoid, arb, eq, pr),
+            NonAssociativeMonoidLaws(monoid, arb, eq, pr)
+        ).asNodes()
 }

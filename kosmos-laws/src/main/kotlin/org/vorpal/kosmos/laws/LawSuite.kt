@@ -1,148 +1,34 @@
 package org.vorpal.kosmos.laws
 
-import kotlinx.coroutines.CancellationException
-
 /**
- * A bundle of [TestingLaw]s that collectively describe the axioms expected
- * from some algebraic structure implementation.
+ * The laws of a structure, as one branch of a law graph.
+ *
+ * A suite is the **complete** contract of its structure: it lists its parent suites (as their own nodes) and the
+ * laws it adds (as leaves). For example, `MonoidLaws` = `SemigroupLaws` + `NonAssociativeMonoidLaws`. A check
+ * reached through several parents is not repeated: every suite and law has a [binding], and within one run equal
+ * bindings execute once (see [LawRunner]).
+ *
+ * Compound laws (such as both-sided distributivity) are suites too: one branch whose children are the atomic laws.
  */
-interface LawSuite {
+interface LawSuite : LawComponent {
 
     /** Human-readable label for this suite. */
     val name: String
         get() = this::class.simpleName ?: "UnnamedLawSuite"
 
-    /** The core laws to check for this structure. */
-    fun laws(): List<TestingLaw>
-
     /**
-     * Full laws: include constituent structure checks (e.g. "Ring" includes "AbelianGroup" on +).
-     * Default is just the core laws.
+     * What this suite is bound to (see [LawBinding]): normally `LawBinding.of(this, <every constructor argument>)`.
+     * Two suites of the same class built from the same arguments are then run once per run and shared.
+     * Null disables sharing for this suite (its laws can still be shared one by one).
      */
-    fun fullLaws(): List<TestingLaw> = laws()
+    val binding: LawBinding?
+        get() = null
 
-    /**
-     * This suite as a [LawNode] graph in the given view.
-     *
-     * The default is the compatibility adapter: one branch named after the suite whose leaves are
-     * the selected flat list ([laws] or [fullLaws]). Suites that declare their hierarchy override this.
-     */
-    fun node(mode: LawMode = LawMode.COMPACT): LawNode =
-        LawNode.flat(name, if (mode == LawMode.FULL) fullLaws() else laws())
+    /** The ordered children of this suite's branch: parent suites first, then the laws this suite adds. */
+    fun children(): List<LawNode>
 
-    /**
-     * Run all laws and collect results instead of failing fast.
-     *
-     * If you want fail-fast behaviour inside Kotest, prefer:
-     * `runLaws(*laws().toTypedArray())`
-     */
-    suspend fun test(): LawSuiteReport = runLawSuite(name, laws())
-    suspend fun fullTest(): LawSuiteReport = runLawSuite(name, fullLaws())
-}
-
-suspend fun List<LawSuite>.testAll(): List<LawSuiteReport> =
-    map { it.test() }
-
-suspend fun List<LawSuite>.fullTestAll(): List<LawSuiteReport> =
-    map { it.fullTest() }
-
-fun List<LawSuite>.flatten(full: Boolean): List<TestingLaw> =
-    flatMap { if (full) it.fullLaws() else it.laws() }
-
-/**
- * Result of running an entire [LawSuite].
- */
-data class LawSuiteReport(
-    val suiteName: String,
-    val results: List<LawResult>
-) {
-    val failures: List<LawResult.Failure>
-        get() = results.filterIsInstance<LawResult.Failure>()
-
-    val successes: List<LawResult.Success>
-        get() = results.filterIsInstance<LawResult.Success>()
-
-    val failedCount: Int
-        get() = failures.size
-
-    val passedCount: Int
-        get() = results.size - failedCount
-
-    val totalCount: Int
-        get() = results.size
-
-    val failure: Boolean
-        get() = failures.isNotEmpty()
-
-    val success: Boolean
-        get() = !failure
-
-    /**
-     * Throws an [AssertionError] summarizing failures.
-     * Useful when you ran in collecting mode but still want the test to fail.
-     */
-    fun throwIfFailed() {
-        if (success) return
-
-        val msg = buildString {
-            appendLine("Law suite failed: $suiteName")
-            appendLine("Passed: $passedCount / $totalCount")
-            appendLine("Failed: $failedCount")
-            appendLine()
-
-            failures.forEachIndexed { i, f ->
-                appendLine("#${i + 1}: ${f.name}")
-                val m = f.error.message
-                if (!m.isNullOrBlank()) {
-                    appendLine(m)
-                } else {
-                    appendLine("(no error message)")
-                }
-                appendLine()
-            }
-        }
-
-        // Keep the first failure as the cause so IDEs show a useful stacktrace.
-        throw AssertionError(msg, failures.first().error)
-    }
-}
-
-/**
- * Result of running a single [TestingLaw].
- */
-sealed interface LawResult {
-    val name: String
-    val success: Boolean
-
-    data class Success(override val name: String) : LawResult {
-      override val success = true
-    }
-    data class Failure(
-        override val name: String,
-        val error: Throwable): LawResult {
-        override val success = false
-    }
-}
-
-/**
- * Run laws, collecting pass/fail results rather than throwing immediately.
- */
-suspend fun runLawSuite(
-    suiteName: String,
-    laws: List<TestingLaw>
-): LawSuiteReport {
-    val results = laws.map { law ->
-        try {
-            law.test()
-            LawResult.Success(name = law.name)
-        } catch (t: CancellationException) {
-            throw t
-        } catch (t: Throwable) {
-            LawResult.Failure(name = law.name, error = t)
-        }
-    }
-
-    return LawSuiteReport(suiteName = suiteName, results = results)
+    override fun node(): LawNode =
+        LawNode.Branch(name, children(), binding)
 }
 
 /**

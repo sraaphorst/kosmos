@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 private sealed interface AnnihilationCore<A : Any> {
     val op: BinOp<A>
@@ -82,6 +85,8 @@ class LeftAnnihilationLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, AnnihilationCore<A> {
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
     override val name = "left annihilator (${op.symbol})"
     override suspend fun test() = leftAnnihilationCheck()
 }
@@ -96,6 +101,8 @@ class RightAnnihilationLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, AnnihilationCore<A> {
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
     override val name = "right annihilator (${op.symbol})"
     override suspend fun test() = rightAnnihilationCheck()
 }
@@ -108,16 +115,18 @@ class RightAnnihilationLaw<A : Any>(
  * - Right annihilation: `a0 = 0`
  */
 class AnnihilationLaw<A : Any>(
-    override val op: BinOp<A>,
-    override val zero: A,
-    override val arb: Arb<A>,
-    override val eq: Eq<A> = Eq.default(),
-    override val pr: Printable<A> = Printable.default(),
-) : TestingLaw, AnnihilationCore<A> {
+    private val op: BinOp<A>,
+    private val zero: A,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = "annihilator (${op.symbol})"
 
-    override suspend fun test() {
-        leftAnnihilationCheck()
-        rightAnnihilationCheck()
-    }
+    override val binding = LawBinding.of(this, op, zero, arb, eq)
+
+    override fun children(): List<LawNode> = listOf(
+        LeftAnnihilationLaw(op, zero, arb, eq, pr),
+        RightAnnihilationLaw(op, zero, arb, eq, pr)
+    ).asNodes()
 }

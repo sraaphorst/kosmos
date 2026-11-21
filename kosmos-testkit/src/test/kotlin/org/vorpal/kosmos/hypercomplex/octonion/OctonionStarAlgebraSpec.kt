@@ -1,9 +1,11 @@
 package org.vorpal.kosmos.hypercomplex.octonion
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.algebra.structures.instances.ArbReal
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
 
 /**
  * Property tests for [OctonionAlgebras.OctonionStarAlgebra] as a
@@ -15,16 +17,18 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
  * the central real action), the conjugation laws (involution and the order-reversing `(xy)* = y* x*`), and
  * commutation of the star with the scalar action.
  */
-class OctonionStarAlgebraSpec : StringSpec({
-    "OctonionStarAlgebra satisfies NonAssociativeStarAlgebraLaws" {
-        NonAssociativeStarAlgebraLaws(
-            algebra = OctonionAlgebras.OctonionStarAlgebra,
-            scalarArb = ArbReal.smallReal,
-            algebraArb = ArbOctonion.octonion,
-            eqR = RealAlgebras.eqRealApprox,
-            eqA = OctonionAlgebras.eqOctonion,
-            prR = RealAlgebras.printableRealPretty,
-            prA = OctonionAlgebras.printableOctonionPretty
-        ).fullTest().throwIfFailed()
-    }
+class OctonionStarAlgebraSpec : FunSpec({
+    lawTests(lawGraph("𝕆 star algebra") {
+        branch("OctonionStarAlgebra satisfies NonAssociativeStarAlgebraLaws") {
+            suite(NonAssociativeStarAlgebraLaws(
+                algebra = OctonionAlgebras.OctonionStarAlgebra,
+                scalarArb = ArbReal.smallReal,
+                algebraArb = ArbOctonion.octonion,
+                eqR = RealAlgebras.eqRealApprox,
+                eqA = OctonionAlgebras.eqOctonion,
+                prR = RealAlgebras.printableRealPretty,
+                prA = OctonionAlgebras.printableOctonionPretty
+            ))
+        }
+    })
 })

@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 private sealed interface DistributivityCore<A : Any> {
     val mul: BinOp<A>
@@ -129,6 +132,8 @@ class LeftDistributivityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, DistributivityCore<A> {
+    override val binding = LawBinding.of(this, mul, add, arb, eq)
+
     override val name = "distributivity (left: ${mul.symbol} over ${add.symbol})"
     override suspend fun test() = leftDistributivityCheck()
 }
@@ -146,6 +151,8 @@ class RightDistributivityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default()
 ) : TestingLaw, DistributivityCore<A> {
+    override val binding = LawBinding.of(this, mul, add, arb, eq)
+
     override val name = "distributivity (right: ${mul.symbol} over ${add.symbol})"
     override suspend fun test() = rightDistributivityCheck()
 }
@@ -158,15 +165,18 @@ class RightDistributivityLaw<A : Any>(
  *
  */
 class DistributivityLaw<A : Any>(
-    override val mul: BinOp<A>,
-    override val add: BinOp<A>,
-    override val arb: Arb<A>,
-    override val eq: Eq<A> = Eq.default(),
-    override val pr: Printable<A> = Printable.default()
-) : TestingLaw, DistributivityCore<A> {
+    private val mul: BinOp<A>,
+    private val add: BinOp<A>,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = "distributivity (both: ${mul.symbol} over ${add.symbol})"
-    override suspend fun test() {
-        leftDistributivityCheck()
-        rightDistributivityCheck()
-    }
+
+    override val binding = LawBinding.of(this, mul, add, arb, eq)
+
+    override fun children(): List<LawNode> = listOf(
+        LeftDistributivityLaw(mul, add, arb, eq, pr),
+        RightDistributivityLaw(mul, add, arb, eq, pr)
+    ).asNodes()
 }

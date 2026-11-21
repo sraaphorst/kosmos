@@ -4,11 +4,14 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
+import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 private sealed interface IdentityCore<A : Any> {
     val op: BinOp<A>
@@ -84,6 +87,8 @@ class LeftIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, IdentityCore<A> {
+    override val binding = LawBinding.of(this, op, identity, arb, eq)
+
     override val name = "left identity (${op.symbol})"
     override suspend fun test() =
         leftIdentityCheck()
@@ -101,6 +106,8 @@ class RightIdentityLaw<A : Any>(
     override val eq: Eq<A> = Eq.default(),
     override val pr: Printable<A> = Printable.default(),
 ) : TestingLaw, IdentityCore<A> {
+    override val binding = LawBinding.of(this, op, identity, arb, eq)
+
     override val name = "right identity (${op.symbol})"
     override suspend fun test() =
         rightIdentityCheck()
@@ -113,15 +120,18 @@ class RightIdentityLaw<A : Any>(
  *    ea = a
  */
 class IdentityLaw<A : Any>(
-    override val op: BinOp<A>,
-    override val identity: A,
-    override val arb: Arb<A>,
-    override val eq: Eq<A> = Eq.default(),
-    override val pr: Printable<A> = Printable.default(),
-) : TestingLaw, IdentityCore<A> {
+    private val op: BinOp<A>,
+    private val identity: A,
+    private val arb: Arb<A>,
+    private val eq: Eq<A> = Eq.default(),
+    private val pr: Printable<A> = Printable.default()
+) : LawSuite {
     override val name = "identity (${op.symbol})"
-    override suspend fun test() {
-        leftIdentityCheck()
-        rightIdentityCheck()
-    }
+
+    override val binding = LawBinding.of(this, op, identity, arb, eq)
+
+    override fun children(): List<LawNode> = listOf(
+        LeftIdentityLaw(op, identity, arb, eq, pr),
+        RightIdentityLaw(op, identity, arb, eq, pr)
+    ).asNodes()
 }

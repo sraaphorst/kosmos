@@ -4,17 +4,18 @@ import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 import io.kotest.property.Arb
 import io.kotest.property.arbitrary.boolean
-import java.io.File
 import org.vorpal.kosmos.algebra.structures.instances.ArbInteger
 import org.vorpal.kosmos.algebra.structures.instances.BooleanAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.IntegerAlgebras
 import org.vorpal.kosmos.algebra.structures.instances.RationalAlgebras
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.setoid.Setoid
+import org.vorpal.kosmos.laws.LawNode
 import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.AbelianHeapLaws
+import org.vorpal.kosmos.laws.algebra.AbsoluteValueLaws
 import org.vorpal.kosmos.laws.algebra.AlgebraLaws
 import org.vorpal.kosmos.laws.algebra.BooleanAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.BoundedLatticeLaws
@@ -30,6 +31,7 @@ import org.vorpal.kosmos.laws.algebra.FieldLaws
 import org.vorpal.kosmos.laws.algebra.GroupLaws
 import org.vorpal.kosmos.laws.algebra.HeapLaws
 import org.vorpal.kosmos.laws.algebra.HemiringLaws
+import org.vorpal.kosmos.laws.algebra.IntegerPowerLaws
 import org.vorpal.kosmos.laws.algebra.InvolutiveRingLaws
 import org.vorpal.kosmos.laws.algebra.JoinSemilatticeLaws
 import org.vorpal.kosmos.laws.algebra.LatticeLaws
@@ -45,6 +47,7 @@ import org.vorpal.kosmos.laws.algebra.NonAssociativeMonoidLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeRingLaws
 import org.vorpal.kosmos.laws.algebra.NonAssociativeStarAlgebraLaws
 import org.vorpal.kosmos.laws.algebra.NormedDivisionAlgebraLaws
+import org.vorpal.kosmos.laws.algebra.OrderedFieldLaws
 import org.vorpal.kosmos.laws.algebra.QuasigroupLaws
 import org.vorpal.kosmos.laws.algebra.RModuleLaws
 import org.vorpal.kosmos.laws.algebra.RingLaws
@@ -52,20 +55,27 @@ import org.vorpal.kosmos.laws.algebra.RngLaws
 import org.vorpal.kosmos.laws.algebra.SemigroupLaws
 import org.vorpal.kosmos.laws.algebra.SemiringLaws
 import org.vorpal.kosmos.laws.algebra.StarAlgebraLaws
+import org.vorpal.kosmos.laws.flatten
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.NonAssociativeRngHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RingHomomorphismLaws
 import org.vorpal.kosmos.laws.homomorphism.RngHomomorphismLaws
 import org.vorpal.kosmos.laws.relation.EquivalenceRelationLaws
+import org.vorpal.kosmos.laws.relation.StrictTotalOrderLaws
+import org.vorpal.kosmos.laws.relation.TotalOrderLaws
 import org.vorpal.kosmos.laws.setoid.SetoidLaws
+import org.vorpal.kosmos.core.ops.Endo
+import org.vorpal.kosmos.core.rational.Rational
+import org.vorpal.kosmos.core.relations.instances.RationalRelations
+import java.io.File
 
 /**
- * Golden snapshot of the ordered law inventory of representative suites, in both
- * compact (`laws()`) and full (`fullLaws()`) modes.
+ * Golden snapshot of the law inventory of representative suites: the distinct checks each suite's graph
+ * executes (in first-occurrence order), and how many occurrences (paths) the graph has.
  *
- * Purpose: the law-testing restructure (#252) changes how suites are assembled.
- * This spec pins down *which* laws each suite runs, in which order and how many
- * times, so a structural refactor cannot silently drop, add or reorder coverage.
+ * Purpose: pin down *which* checks each suite runs, so a structural change cannot silently drop, add or
+ * duplicate coverage. A check is distinct by its binding, exactly as [org.vorpal.kosmos.laws.LawRunner]
+ * shares results within a run.
  *
  * Nothing is executed here: only the law lists are built and compared.
  *
@@ -97,13 +107,28 @@ class LawInventorySpec : StringSpec({
         private fun lawLine(law: TestingLaw): String =
             "${law::class.simpleName ?: "<anonymous>"} | ${law.name}"
 
+        /** The distinct checks of [root] in first-occurrence order, skipping repeats the way a run shares them. */
+        private fun distinctLaws(root: LawNode): List<TestingLaw> {
+            val seen = HashSet<Any>()
+            val out = mutableListOf<TestingLaw>()
+            fun visit(node: LawNode) {
+                if (!seen.add(node.key ?: node)) return
+                when (node) {
+                    is LawNode.Leaf -> out += node.law
+                    is LawNode.Branch -> node.children.forEach(::visit)
+                }
+            }
+            visit(root)
+            return out
+        }
+
         fun renderInventory(suites: List<Pair<String, LawSuite>>): String = buildString {
             suites.forEach { (label, suite) ->
-                listOf("compact" to suite.laws(), "full" to suite.fullLaws()).forEach { (mode, laws) ->
-                    appendLine("## $label [$mode] (${laws.size})")
-                    laws.forEach { appendLine(lawLine(it)) }
-                    appendLine()
-                }
+                val root = suite.node()
+                val laws = distinctLaws(root)
+                appendLine("## $label (${laws.size} checks, ${root.flatten().size} occurrences)")
+                laws.forEach { appendLine(lawLine(it)) }
+                appendLine()
             }
         }
 
@@ -152,6 +177,11 @@ class LawInventorySpec : StringSpec({
                 // Division ring / field on Q.
                 "DivisionRing(Q)" to DivisionRingLaws(q, qArb, qEq, qPr),
                 "Field(Q)" to FieldLaws(q, qArb, qEq, qPr),
+                "OrderedField(Q)" to OrderedFieldLaws(q, RationalRelations.RationalTotalOrder, qArb, qEq, qPr),
+                "AbsoluteValue(Q)" to AbsoluteValueLaws(
+                    q, RationalRelations.RationalTotalOrder, Endo("|·|") { it.abs() }, qArb, qEq, qPr
+                ),
+                "IntegerPowers(Q)" to IntegerPowerLaws(q.mul, q.reciprocal, Rational::pow, qArb, Rational.ZERO, 10, qEq, qPr),
 
                 // Modules and algebras over Q (and Z).
                 "LeftRModule(Q over Q)" to LeftRModuleLaws(q, qArb, qArb, qEq, qEq, qPr, qPr),
@@ -186,6 +216,9 @@ class LawInventorySpec : StringSpec({
                 // Relations.
                 "EquivalenceRelation(Z, =)" to EquivalenceRelationLaws(Setoid.of(zEq).relation, zArb, zPr),
                 "Setoid(Z)" to SetoidLaws(Setoid.of(zEq), zArb, zPr),
+                "TotalOrder(Q, ≤)" to TotalOrderLaws(RationalRelations.RationalTotalOrder.relation, qArb, qEq, qPr),
+                "StrictTotalOrder(Q, <)" to
+                    StrictTotalOrderLaws(RationalRelations.RationalTotalStrictOrder.strictRelation, qArb, qEq, qPr),
             )
         }
     }

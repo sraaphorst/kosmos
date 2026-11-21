@@ -5,10 +5,10 @@ import io.kotest.property.arbitrary.filter
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
-
 
 /**
  * Property: two endomorphisms commute on a given domain:
@@ -23,6 +23,7 @@ class EndomorphismCommutationLaw<A : Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, f, g, arb, inDomain, eq)
 
     private val fSymbol: String = f.symbol
     private val gSymbol: String = g.symbol

@@ -8,6 +8,7 @@ import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.ops.RightAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -30,7 +31,7 @@ fun <R : Any, M : Any> leftActionDistributesOverAdditionLaw(
 ): TestingLaw {
     val pairM = TestingLaw.arbPair(arbM)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("leftActionDistributesOverAdditionLaw", act, addM, arbR, arbM, eqM)) {
         lawCheckAll(arbR, pairM) { r, (x, y) ->
             val left = act(r, addM(x, y))
             val right = addM(act(r, x), act(r, y))
@@ -71,7 +72,7 @@ fun <R : Any, M : Any> leftActionRespectsScalarAdditionLaw(
 ): TestingLaw {
     val pairR = TestingLaw.arbPair(arbR)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("leftActionRespectsScalarAdditionLaw", addR, act, addM, arbR, arbM, eqM)) {
         lawCheckAll(pairR, arbM) { (r, s), x ->
             val left = act(addR(r, s), x)
             val right = addM(act(r, x), act(s, x))
@@ -111,7 +112,7 @@ fun <R : Any, M : Any> leftActionAssociatesWithScalarMultiplicationLaw(
 ): TestingLaw {
     val pairR = TestingLaw.arbPair(arbR)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("leftActionAssociatesWithScalarMultiplicationLaw", mulR, act, arbR, arbM, eqM)) {
         lawCheckAll(pairR, arbM) { (r, s), x ->
             val left = act(mulR(r, s), x)
             val right = act(r, act(s, x))
@@ -148,7 +149,7 @@ fun <R : Any, M : Any> leftUnitActsAsIdentityLaw(
     prM: Printable<M> = Printable.default(),
     label: String = "module: scalar unit acts as identity"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("leftUnitActsAsIdentityLaw", oneR, act, arbM, eqM)) {
         lawCheckAll(arbM, render = renderWith(prM)) { x ->
             val left = act(oneR, x)
 
@@ -184,7 +185,7 @@ fun <M : Any, R : Any> rightActionDistributesOverAdditionLaw(
 ): TestingLaw {
     val pairM = TestingLaw.arbPair(arbM)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("rightActionDistributesOverAdditionLaw", act, addM, arbM, arbR, eqM)) {
         lawCheckAll(pairM, arbR) { (x, y), r ->
             val left = act(addM(x, y), r)
             val right = addM(act(x, r), act(y, r))
@@ -225,7 +226,7 @@ fun <M : Any, R : Any> rightActionRespectsScalarAdditionLaw(
 ): TestingLaw {
     val pairR = TestingLaw.arbPair(arbR)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("rightActionRespectsScalarAdditionLaw", addR, act, addM, arbM, arbR, eqM)) {
         lawCheckAll(arbM, pairR) { x, (r, s) ->
             val left = act(x, addR(r, s))
             val right = addM(act(x, r), act(x, s))
@@ -265,7 +266,7 @@ fun <M : Any, R : Any> rightActionAssociatesWithScalarMultiplicationLaw(
 ): TestingLaw {
     val pairR = TestingLaw.arbPair(arbR)
 
-    return TestingLaw.named(label) {
+    return TestingLaw.named(label, LawBinding.named("rightActionAssociatesWithScalarMultiplicationLaw", mulR, act, arbM, arbR, eqM)) {
         lawCheckAll(arbM, pairR) { x, (r, s) ->
             val left = act(x, mulR(r, s))
             val right = act(act(x, r), s)
@@ -302,7 +303,7 @@ fun <M : Any, R : Any> rightUnitActsAsIdentityLaw(
     prR: Printable<R> = Printable.default(),
     label: String = "module: scalar unit acts as identity"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("rightUnitActsAsIdentityLaw", oneR, act, arbM, eqM)) {
         lawCheckAll(arbM, render = renderWith(prM)) { x ->
             val left = act(x, oneR)
 
@@ -336,7 +337,7 @@ fun <R : Any, M : Any, S : Any> bimoduleCompatibilityLaw(
     prR: Printable<R> = Printable.default(),
     prM: Printable<M> = Printable.default(),
     prS: Printable<S> = Printable.default()
-): TestingLaw = TestingLaw.named("bimodule compatibility: (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)") {
+): TestingLaw = TestingLaw.named("bimodule compatibility: (r ⊳ m) ⊲ s = r ⊳ (m ⊲ s)", LawBinding.named("bimoduleCompatibilityLaw", leftAct, rightAct, arbR, arbM, arbS, eqM)) {
     lawCheckAll(arbR, arbM, arbS) { r, m, s ->
         val left = rightAct(leftAct(r, m), s)
         val right = leftAct(r, rightAct(m, s))

@@ -1,57 +1,41 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.algebra.structures.AbelianHeap
 import org.vorpal.kosmos.algebra.structures.toAbelianGroup
 import org.vorpal.kosmos.algebra.structures.toAbelianHeap
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.laws.algebra.AbelianGroupLaws
 import org.vorpal.kosmos.laws.algebra.AbelianHeapLaws
+import org.vorpal.kosmos.laws.lawCheck
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.laws.verify
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 import java.math.BigInteger
 
-private val IntegerAdditive = IntegerAlgebras.IntegerCommutativeRing.add
+/**
+ * ℤ as an abelian heap, and the round trips between abelian groups and abelian heaps.
+ */
+class IntegerAbelianHeapSpec : FunSpec({
+    val arb = ArbInteger.small
+    val eq = IntegerAlgebras.eqInteger
+    val pr = IntegerAlgebras.printableInteger
 
-class IntegerAbelianHeapSpec : StringSpec({
-    "IntegerAbelianHeap satisfies AbelianHeapLaws" {
-        AbelianHeapLaws(
-            heap = IntegerAlgebras.IntegerAbelianHeap,
-            arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInteger,
-            pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
-    }
-
-    "IntegerAdditive.toAbelianHeap() agrees with IntegerAbelianHeap" {
-        // After fixing BiunitaryLaw, this is the free property check that
-        // AbelianGroup → AbelianHeap → laws holds.
-        AbelianHeapLaws(
-            heap = IntegerAdditive.toAbelianHeap(),
-            arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInteger,
-            pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
-    }
-
-    "IntegerAbelianHeap.toAbelianGroup(0) recovers IntegerAdditive on operations" {
-        val g = IntegerAlgebras.IntegerAbelianHeap.toAbelianGroup(BigInteger.ZERO)
-        AbelianGroupLaws(
-            group = g,
-            arb = ArbInteger.small,
-            eq = IntegerAlgebras.eqInteger,
-            pr = IntegerAlgebras.printableInteger
-        ).fullTest().throwIfFailed()
-    }
-
-    "negative test: non-heap is rejected by AbelianHeapLaws" {
-        val fake = AbelianHeap.of(TernOp<BigInteger> { x, y, z -> x + y + z })
-        shouldThrow<AssertionError> {
-            AbelianHeapLaws(
-                heap = fake,
-                arb = ArbInteger.small,
-                eq = IntegerAlgebras.eqInteger,
-                pr = IntegerAlgebras.printableInteger
-            ).fullTest().throwIfFailed()
+    lawTests(lawGraph("ℤ as an abelian heap") {
+        branch("IntegerAbelianHeap") {
+            suite(AbelianHeapLaws(IntegerAlgebras.IntegerAbelianHeap, arb, eq, pr))
         }
-    }
+        branch("(ℤ, +).toAbelianHeap()") {
+            suite(AbelianHeapLaws(IntegerAlgebras.IntegerCommutativeRing.add.toAbelianHeap(), arb, eq, pr))
+        }
+        branch("IntegerAbelianHeap.toAbelianGroup(0)") {
+            suite(AbelianGroupLaws(IntegerAlgebras.IntegerAbelianHeap.toAbelianGroup(BigInteger.ZERO), arb, eq, pr))
+        }
+        local("AbelianHeapLaws reject x + y + z, which is not a heap") {
+            val fake = AbelianHeap.of(TernOp<BigInteger> { x, y, z -> x + y + z })
+            val report = AbelianHeapLaws(fake, arb, eq, pr).verify()
+            lawCheck(report.status.isProblem) { "x + y + z passed AbelianHeapLaws (${report.status})" }
+        }
+    })
 })

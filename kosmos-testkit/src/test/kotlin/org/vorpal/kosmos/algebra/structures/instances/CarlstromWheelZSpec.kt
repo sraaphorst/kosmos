@@ -1,15 +1,10 @@
 package org.vorpal.kosmos.algebra.structures.instances
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.core.rational.ArbWheelZ
 import org.vorpal.kosmos.laws.algebra.CarlstromWheelLaws
+import org.vorpal.kosmos.testing.laws.lawTests
 
-class CarlstromWheelZSpec : StringSpec({
-    "CarlstromWheelZ satisfies CarlstromWheelLaws" {
-        val wheel = WheelAlgebras.CarlstromWheelZ
-        val arb = ArbWheelZ
-
-        val laws = CarlstromWheelLaws(wheel, arb)
-        laws.fullTest().throwIfFailed()
-    }
+class CarlstromWheelZSpec : FunSpec({
+    lawTests(CarlstromWheelLaws(WheelAlgebras.CarlstromWheelZ, ArbWheelZ))
 })

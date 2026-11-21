@@ -1,18 +1,12 @@
 package org.vorpal.kosmos.laws
 
 /**
- * Which view of a [LawSuite] to use.
- *
- * - [COMPACT] is what [LawSuite.laws] returns: the axioms a suite adds, plus whatever
- *   each suite has historically chosen to include from its constituents.
- * - [FULL] is what [LawSuite.fullLaws] returns: the compact laws together with the
- *   full checks of the constituent structures (e.g. a ring includes its additive group).
- *
- * The two views are defined by each suite: a suite may pick a different mode for a child
- * than its own (for example, the full view of a hemiring uses the full view of its
- * additive commutative monoid).
+ * Anything that can be placed in a law graph: a single [TestingLaw] (a leaf) or a [LawSuite] (a branch).
  */
-enum class LawMode { COMPACT, FULL }
+interface LawComponent {
+    /** This component as a node of a law graph. */
+    fun node(): LawNode
+}
 
 /**
  * One node of a law graph: either a single law ([Leaf]) or an ordered group of nodes ([Branch]).
@@ -27,11 +21,11 @@ sealed interface LawNode {
     val label: String
 
     /**
-     * Identity of the check this node performs, if known. Within one run, nodes with equal keys are executed
-     * once and the result is shown under every parent. The same node *instance* reached twice is always
-     * shared; a null key never matches a different instance.
+     * Identity of the check this node performs, if known (see [LawBinding]). Within one run, nodes with equal
+     * keys are executed once and the result is shown under every parent. The same node *instance* reached twice
+     * is always shared; a null key never matches a different instance, and neither does a skipped leaf.
      */
-    val key: LawNodeKey?
+    val key: LawBinding?
 
     /**
      * A single [TestingLaw].
@@ -43,7 +37,7 @@ sealed interface LawNode {
         val law: TestingLaw,
         override val label: String = law.name,
         val skip: String? = null,
-        override val key: LawNodeKey? = null
+        override val key: LawBinding? = law.binding
     ) : LawNode {
         override fun toString(): String = "Leaf($label)"
     }
@@ -52,35 +46,24 @@ sealed interface LawNode {
     class Branch(
         override val label: String,
         val children: List<LawNode>,
-        override val key: LawNodeKey? = null
+        override val key: LawBinding? = null
     ) : LawNode {
         override fun toString(): String = "Branch($label, ${children.size} children)"
     }
 
     companion object {
-        /** Lift a single law into the graph. */
-        fun of(law: TestingLaw): LawNode = Leaf(law)
-
-        /** Lift a suite into the graph, using the given view. */
-        fun of(suite: LawSuite, mode: LawMode = LawMode.COMPACT): LawNode = suite.node(mode)
+        /** Lift a single law or a suite into the graph. */
+        fun of(component: LawComponent): LawNode = component.node()
 
         /** Group nodes under one label. */
         fun branch(label: String, vararg children: LawNode): LawNode = Branch(label, children.toList())
-
-        /**
-         * Compatibility adapter: wrap a suite's selected flat law list as a branch of leaves.
-         *
-         * This is the default [LawSuite.node] for suites that do not declare their hierarchy.
-         */
-        fun flat(label: String, laws: List<TestingLaw>): LawNode = Branch(label, laws.map(::Leaf))
     }
 }
 
 /**
  * Flatten a node to its leaves in depth-first, left-to-right order.
  *
- * This is occurrence-based: a node reachable along several paths contributes its laws once per path,
- * which is exactly how the legacy [LawSuite.laws] / [LawSuite.fullLaws] lists behave.
+ * This is occurrence-based: a node reachable along several paths contributes its laws once per path.
  */
 fun LawNode.flatten(): List<TestingLaw> {
     LawGraphs.requireAcyclic(this)
@@ -99,7 +82,6 @@ class LawGraphCycleException(val cycle: List<String>) :
     IllegalArgumentException("Law graph contains a cycle: ${cycle.joinToString(" > ")}")
 
 object LawGraphs {
-    /** The node reached from [root] by taking child [indices] in turn (a [LawPath.indices] selector). */
     /** The [LawPath] of the node at [indices] below [root]: labels from the root down, and the indices. */
     fun path(root: LawNode, indices: List<Int>): LawPath {
         var node = root
@@ -113,6 +95,7 @@ object LawGraphs {
         return path
     }
 
+    /** The node reached from [root] by taking child [indices] in turn (a [LawPath.indices] selector). */
     fun select(root: LawNode, indices: List<Int>): LawNode =
         indices.fold(root) { node, i ->
             require(node is LawNode.Branch) { "Cannot descend into leaf ${node.label} with index $i." }
@@ -150,8 +133,8 @@ object LawGraphs {
     }
 }
 
-/** Lift this law into a graph leaf. */
-fun TestingLaw.asNode(): LawNode = LawNode.Leaf(this)
+/** Lift this law or suite into a graph node. */
+fun LawComponent.asNode(): LawNode = node()
 
-/** Lift these laws into graph leaves, in order. */
-fun List<TestingLaw>.asNodes(): List<LawNode> = map { LawNode.Leaf(it) }
+/** Lift these laws and suites into graph nodes, in order. */
+fun List<LawComponent>.asNodes(): List<LawNode> = map { it.node() }

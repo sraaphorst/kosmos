@@ -3,6 +3,7 @@ package org.vorpal.kosmos.laws.relation
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.relations.Relation
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -16,6 +17,7 @@ class StrongConnexityLaw<A : Any>(
     private val arb: Arb<A>,
     private val pr: Printable<A> = Printable.default()
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, rel, arb)
 
     private val symbol = rel.symbol
 

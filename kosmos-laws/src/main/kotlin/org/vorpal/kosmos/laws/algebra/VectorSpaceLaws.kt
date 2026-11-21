@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.VectorSpace
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.module.leftRModuleLaws
 import org.vorpal.kosmos.laws.suiteName
@@ -28,7 +27,7 @@ class VectorSpaceLaws<F : Any, V : Any>(
     eqV: Eq<V> = Eq.default(),
     prF: Printable<F> = Printable.default(),
     prV: Printable<V> = Printable.default()
-) : StructuredLawSuite {
+) : LawSuite {
 
     private val fieldDescription =
         "F[${space.scalars.add.op.symbol}${space.scalars.mul.op.symbol}]"
@@ -52,14 +51,11 @@ class VectorSpaceLaws<F : Any, V : Any>(
         AbelianGroupLaws(space.add, vectorArb, eqV, prV)
     }
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         leftRModuleLaws(space, scalarArb, vectorArb, eqV, prF, prV)
 
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> structureLaws.asNodes()
-            LawMode.FULL -> listOf(fieldLaws.node(LawMode.FULL), groupLaws.node(LawMode.FULL)) +
-                structureLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(fieldLaws.node(), groupLaws.node()) +
+            structureLaws.asNodes()
 
 }

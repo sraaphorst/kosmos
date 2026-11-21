@@ -92,7 +92,17 @@ class PropertyCapture internal constructor() {
 
     /** Number of property checks the law has started; the k-th gets its own seed (see [lawCheckAll]). */
     internal var checks: Int = 0
+
+    /** Copied from [TestingLaw.assertionsAreViolations] of the law being executed. */
+    internal var assertionsAreViolations: Boolean = false
 }
+
+/**
+ * An [AssertionError] raised by the law's own assertion rather than wrapped around another exception (Kotest's
+ * `checkAll` wraps whatever a property throws in an [AssertionError]): nothing in its cause chain is anything else.
+ */
+internal fun isOwnAssertion(t: Throwable): Boolean =
+    t is AssertionError && generateSequence(t.cause) { c -> c.cause.takeIf { it !== c } }.all { it is AssertionError }
 
 /**
  * Coroutine context element the runner installs around one leaf execution.
@@ -107,7 +117,7 @@ internal class LawExecution(
 }
 
 /**
- * Kotest's `checkAll` for laws: same generator, same default iteration budget and shrinking, plus
+ * Kotest's `checkAll` for laws: same generators, same default iteration budget and shrinking, plus
  *
  * - when run by [LawRunner], a seed is injected (`PropTestConfig(seed = ...)`), so the run can be replayed: the first
  *   check of a leaf uses the leaf's seed, and the k-th further check in the same leaf a seed derived from it, so
@@ -115,41 +125,186 @@ internal class LawExecution(
  * - every failing evaluation's input is rendered with [render] and recorded, so the final (shrunk)
  *   counterexample is available in the report without parsing Kotest's message.
  *
- * Outside [LawRunner] (legacy `test()`, `runLaws`, direct calls) this is exactly `checkAll(arb, property)`.
+ * There are forms for one to six generators, each also with a leading `iterations` count (as Kotest's
+ * `checkAll(iterations, ...)`). Outside [LawRunner] (legacy `test()`, `runLaws`, direct calls) this is exactly
+ * `checkAll(...)`.
  */
-suspend fun <T> lawCheckAll(
-    gen: Gen<T>,
-    render: (T) -> String = ::renderSample,
-    property: suspend PropertyContext.(T) -> Unit
+suspend fun <A> lawCheckAll(
+    gen: Gen<A>,
+    render: (A) -> String = ::renderSample,
+    property: suspend PropertyContext.(A) -> Unit
 ): PropertyContext {
     val execution = enter()
-    return checkAll(config(execution), gen) { a -> recording(execution, { render(a) }) { property(a) } }
+    return checkAll(config(execution, null), gen) { a ->
+        recording(execution, { render(a) }) { property(a) }
+    }
 }
 
-/** Two-generator form of [lawCheckAll]; [render] receives both values. */
+/** One-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A> lawCheckAll(
+    iterations: Int,
+    gen: Gen<A>,
+    render: (A) -> String = ::renderSample,
+    property: suspend PropertyContext.(A) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), gen) { a ->
+        recording(execution, { render(a) }) { property(a) }
+    }
+}
+
+/** Two-generator form of [lawCheckAll]. */
 suspend fun <A, B> lawCheckAll(
     genA: Gen<A>,
     genB: Gen<B>,
-    render: (A, B) -> String = { a, b -> "${renderSample(a)}, ${renderSample(b)}" },
+    render: (A, B) -> String = { a, b -> listOf<Any?>(a, b).joinToString(", ") { renderSample(it) } },
     property: suspend PropertyContext.(A, B) -> Unit
 ): PropertyContext {
     val execution = enter()
-    return checkAll(config(execution), genA, genB) { a, b ->
+    return checkAll(config(execution, null), genA, genB) { a, b ->
         recording(execution, { render(a, b) }) { property(a, b) }
     }
 }
 
-/** Three-generator form of [lawCheckAll]; [render] receives all three values. */
+/** Two-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A, B> lawCheckAll(
+    iterations: Int,
+    genA: Gen<A>,
+    genB: Gen<B>,
+    render: (A, B) -> String = { a, b -> listOf<Any?>(a, b).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), genA, genB) { a, b ->
+        recording(execution, { render(a, b) }) { property(a, b) }
+    }
+}
+
+/** Three-generator form of [lawCheckAll]. */
 suspend fun <A, B, C> lawCheckAll(
     genA: Gen<A>,
     genB: Gen<B>,
     genC: Gen<C>,
-    render: (A, B, C) -> String = { a, b, c -> "${renderSample(a)}, ${renderSample(b)}, ${renderSample(c)}" },
+    render: (A, B, C) -> String = { a, b, c -> listOf<Any?>(a, b, c).joinToString(", ") { renderSample(it) } },
     property: suspend PropertyContext.(A, B, C) -> Unit
 ): PropertyContext {
     val execution = enter()
-    return checkAll(config(execution), genA, genB, genC) { a, b, c ->
+    return checkAll(config(execution, null), genA, genB, genC) { a, b, c ->
         recording(execution, { render(a, b, c) }) { property(a, b, c) }
+    }
+}
+
+/** Three-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A, B, C> lawCheckAll(
+    iterations: Int,
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    render: (A, B, C) -> String = { a, b, c -> listOf<Any?>(a, b, c).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), genA, genB, genC) { a, b, c ->
+        recording(execution, { render(a, b, c) }) { property(a, b, c) }
+    }
+}
+
+/** Four-generator form of [lawCheckAll]. */
+suspend fun <A, B, C, D> lawCheckAll(
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    render: (A, B, C, D) -> String = { a, b, c, d -> listOf<Any?>(a, b, c, d).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, null), genA, genB, genC, genD) { a, b, c, d ->
+        recording(execution, { render(a, b, c, d) }) { property(a, b, c, d) }
+    }
+}
+
+/** Four-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A, B, C, D> lawCheckAll(
+    iterations: Int,
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    render: (A, B, C, D) -> String = { a, b, c, d -> listOf<Any?>(a, b, c, d).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), genA, genB, genC, genD) { a, b, c, d ->
+        recording(execution, { render(a, b, c, d) }) { property(a, b, c, d) }
+    }
+}
+
+/** Five-generator form of [lawCheckAll]. */
+suspend fun <A, B, C, D, E> lawCheckAll(
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    genE: Gen<E>,
+    render: (A, B, C, D, E) -> String = { a, b, c, d, e -> listOf<Any?>(a, b, c, d, e).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D, E) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, null), genA, genB, genC, genD, genE) { a, b, c, d, e ->
+        recording(execution, { render(a, b, c, d, e) }) { property(a, b, c, d, e) }
+    }
+}
+
+/** Five-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A, B, C, D, E> lawCheckAll(
+    iterations: Int,
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    genE: Gen<E>,
+    render: (A, B, C, D, E) -> String = { a, b, c, d, e -> listOf<Any?>(a, b, c, d, e).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D, E) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), genA, genB, genC, genD, genE) { a, b, c, d, e ->
+        recording(execution, { render(a, b, c, d, e) }) { property(a, b, c, d, e) }
+    }
+}
+
+/** Six-generator form of [lawCheckAll]. */
+suspend fun <A, B, C, D, E, F> lawCheckAll(
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    genE: Gen<E>,
+    genF: Gen<F>,
+    render: (A, B, C, D, E, F) -> String = { a, b, c, d, e, f -> listOf<Any?>(a, b, c, d, e, f).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D, E, F) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, null), genA, genB, genC, genD, genE, genF) { a, b, c, d, e, f ->
+        recording(execution, { render(a, b, c, d, e, f) }) { property(a, b, c, d, e, f) }
+    }
+}
+
+/** Six-generator form of [lawCheckAll], with an iteration count. */
+suspend fun <A, B, C, D, E, F> lawCheckAll(
+    iterations: Int,
+    genA: Gen<A>,
+    genB: Gen<B>,
+    genC: Gen<C>,
+    genD: Gen<D>,
+    genE: Gen<E>,
+    genF: Gen<F>,
+    render: (A, B, C, D, E, F) -> String = { a, b, c, d, e, f -> listOf<Any?>(a, b, c, d, e, f).joinToString(", ") { renderSample(it) } },
+    property: suspend PropertyContext.(A, B, C, D, E, F) -> Unit
+): PropertyContext {
+    val execution = enter()
+    return checkAll(config(execution, iterations), genA, genB, genC, genD, genE, genF) { a, b, c, d, e, f ->
+        recording(execution, { render(a, b, c, d, e, f) }) { property(a, b, c, d, e, f) }
     }
 }
 
@@ -164,8 +319,8 @@ private fun nextSeed(execution: LawExecution): Long {
 
 // PropTestConfig(seed = ...) is marked experimental in Kotest 6.0.5; it is the supported way to inject a seed.
 @OptIn(ExperimentalKotest::class)
-private fun config(execution: LawExecution?): PropTestConfig =
-    if (execution == null) PropTestConfig() else PropTestConfig(seed = nextSeed(execution))
+private fun config(execution: LawExecution?, iterations: Int?): PropTestConfig =
+    PropTestConfig(seed = execution?.let(::nextSeed), iterations = iterations)
 
 private suspend inline fun recording(
     execution: LawExecution?,
@@ -179,12 +334,15 @@ private suspend inline fun recording(
         throw c
     } catch (t: Throwable) {
         // Kotest's assumption mechanism skips an iteration with an exception; that is not a failure.
-        if (t::class.simpleName != "IterationSkippedException") {
-            execution?.capture?.let {
-                it.counterexample = runCatching { render() }.getOrElse { e -> "<could not render input: $e>" }
-                it.lastCause = t
-            }
-        }
-        throw t
+        if (t::class.simpleName == "IterationSkippedException") throw t
+        val capture = execution?.capture ?: throw t
+        // A matcher failure in a law that asserts with matchers is the law being false.
+        val signal =
+            if (capture.assertionsAreViolations && t !is LawViolation && isOwnAssertion(t))
+                LawViolation(t.message ?: "Assertion failed.", t)
+            else t
+        capture.counterexample = runCatching { render() }.getOrElse { e -> "<could not render input: $e>" }
+        capture.lastCause = signal
+        throw signal
     }
 }

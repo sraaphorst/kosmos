@@ -1,8 +1,10 @@
 package org.vorpal.kosmos.hypercomplex.quaternion
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.algebra.structures.instances.RealAlgebras
 import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
+import org.vorpal.kosmos.laws.lawGraph
+import org.vorpal.kosmos.testing.laws.lawTests
 
 /**
  * Property tests for [QuaternionAlgebras.QuaternionDivisionRing] as a
@@ -17,15 +19,17 @@ import org.vorpal.kosmos.laws.algebra.RealNormedDivisionAlgebraLaws
  * We draw from [ArbQuaternion.reciprocalSafeQuaternion] so the invertibility law never hits the
  * `normSq ≈ 0` guard in the reciprocal and the multiplicative-norm law stays well-conditioned.
  */
-class QuaternionRealNormedDivisionAlgebraSpec : StringSpec({
-    "QuaternionDivisionRing satisfies RealNormedDivisionAlgebraLaws" {
-        RealNormedDivisionAlgebraLaws(
-            algebra = QuaternionAlgebras.QuaternionDivisionRing,
-            arb = ArbQuaternion.reciprocalSafeQuaternion,
-            eqA = QuaternionAlgebras.eqQuaternion,
-            eqReal = RealAlgebras.eqRealApprox,
-            prA = QuaternionAlgebras.printableQuaternionPretty,
-            prReal = RealAlgebras.printableRealPretty
-        ).fullTest().throwIfFailed()
-    }
+class QuaternionRealNormedDivisionAlgebraSpec : FunSpec({
+    lawTests(lawGraph("ℍ normed division algebra") {
+        branch("QuaternionDivisionRing satisfies RealNormedDivisionAlgebraLaws") {
+            suite(RealNormedDivisionAlgebraLaws(
+                algebra = QuaternionAlgebras.QuaternionDivisionRing,
+                arb = ArbQuaternion.reciprocalSafeQuaternion,
+                eqA = QuaternionAlgebras.eqQuaternion,
+                eqReal = RealAlgebras.eqRealApprox,
+                prA = QuaternionAlgebras.printableQuaternionPretty,
+                prReal = RealAlgebras.printableRealPretty
+            ))
+        }
+    })
 })

@@ -4,11 +4,11 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
 import org.vorpal.kosmos.laws.renderWith
-
 
 /**
  * Flexibility is a condition that is implied by but strictly weaker than alternativity:
@@ -25,6 +25,8 @@ class FlexibilityLaw<A : Any>(
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default(),
 ) : TestingLaw {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     override val name: String = "flexibility (${op.symbol})"
 
     suspend fun flexibilityCheck() {

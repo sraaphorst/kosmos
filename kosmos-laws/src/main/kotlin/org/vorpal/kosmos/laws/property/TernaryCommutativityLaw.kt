@@ -4,6 +4,7 @@ import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.TernOp
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -15,6 +16,8 @@ class TernaryCommutativityLaw<H : Any>(
     val eq: Eq<H> = Eq.default(),
     val pr: Printable<H> = Printable.default()
 ): TestingLaw {
+    override val binding = LawBinding.of(this, op, arb, eq)
+
     private val arbTriple = TestingLaw.arbTriple(arb)
 
     private fun expr(left: String, middle: String, right: String) =

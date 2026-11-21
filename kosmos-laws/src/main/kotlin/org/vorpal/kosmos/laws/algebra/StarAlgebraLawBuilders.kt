@@ -5,6 +5,7 @@ import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -23,7 +24,7 @@ fun <R : Any, A : Any> starCommutesWithScalarActionLaw(
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
     label: String = "star: (r ⊳ a)* = r ⊳ (a*)"
-): TestingLaw = TestingLaw.named(label) {
+): TestingLaw = TestingLaw.named(label, LawBinding.named("starCommutesWithScalarActionLaw", act, star, arbR, arbA, eqA)) {
     lawCheckAll(arbR, arbA) { r, a ->
         val left = star(act(r, a))
         val right = act(r, star(a))

@@ -7,6 +7,7 @@ import org.vorpal.kosmos.core.ops.BilinearForm
 import org.vorpal.kosmos.core.ops.BinOp
 import org.vorpal.kosmos.core.ops.LeftAction
 import org.vorpal.kosmos.core.render.Printable
+import org.vorpal.kosmos.laws.LawBinding
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.lawCheckAll
@@ -21,7 +22,7 @@ fun <F : Any, V : Any> bilinearAddLeftLaw(
     prF: Printable<F> = Printable.default(),
     label: String = "bilinear: additivity in left argument"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("bilinearAddLeftLaw", form, addV, addF, arbV, eqF)) {
         lawCheckAll(Arb.pair(arbV, arbV), arbV) { (v1, v2), w ->
             val left = form(addV(v1, v2), w)
             val right = addF(form(v1, w), form(v2, w))
@@ -51,7 +52,7 @@ fun <F : Any, V : Any> bilinearScalarLeftLaw(
     prF: Printable<F> = Printable.default(),
     label: String = "bilinear: homogeneity in left argument"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("bilinearScalarLeftLaw", form, act, mulF, arbF, arbV, eqF)) {
         lawCheckAll(arbF, arbV, arbV) { r, v, w ->
             val left = form(act(r, v), w)
             val right = mulF(r, form(v, w))
@@ -80,7 +81,7 @@ fun <F : Any, V : Any> bilinearAddRightLaw(
     prF: Printable<F> = Printable.default(),
     label: String = "bilinear: additivity in right argument"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("bilinearAddRightLaw", form, addV, addF, arbV, eqF)) {
         lawCheckAll(arbV, Arb.pair(arbV, arbV)) { v, (w1, w2) ->
             val left = form(v, addV(w1, w2))
             val right = addF(form(v, w1), form(v, w2))
@@ -110,7 +111,7 @@ fun <F : Any, V : Any> bilinearScalarRightLaw(
     prF: Printable<F> = Printable.default(),
     label: String = "bilinear: homogeneity in right argument"
 ): TestingLaw =
-    TestingLaw.named(label) {
+    TestingLaw.named(label, LawBinding.named("bilinearScalarRightLaw", form, act, mulF, arbF, arbV, eqF)) {
         lawCheckAll(arbF, arbV, arbV) { r, v, w ->
             val left = form(v, act(r, w))
             val right = mulF(r, form(v, w))

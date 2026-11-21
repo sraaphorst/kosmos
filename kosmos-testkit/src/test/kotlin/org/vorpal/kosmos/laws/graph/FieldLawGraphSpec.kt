@@ -3,7 +3,6 @@ package org.vorpal.kosmos.laws.graph
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.collections.shouldContainExactlyInAnyOrder
-import io.kotest.matchers.collections.shouldNotContain
 import io.kotest.matchers.shouldBe
 import io.kotest.property.arbitrary.map
 import org.vorpal.kosmos.algebra.structures.AbelianGroup
@@ -16,11 +15,9 @@ import org.vorpal.kosmos.core.ops.Endo
 import org.vorpal.kosmos.core.rational.ArbRational
 import org.vorpal.kosmos.core.rational.Rational
 import org.vorpal.kosmos.core.render.Printable
-import org.vorpal.kosmos.laws.LawMode
 import org.vorpal.kosmos.laws.LawStatus
 import org.vorpal.kosmos.laws.NodeReport
 import org.vorpal.kosmos.laws.algebra.FieldLaws
-import org.vorpal.kosmos.laws.flatten
 import org.vorpal.kosmos.laws.leaves
 import org.vorpal.kosmos.laws.verify
 
@@ -76,29 +73,25 @@ class FieldLawGraphSpec : FunSpec({
 
     val brokenLaws = FieldLaws(nonAssociativeField, arbTagged, eqTagged, prTagged)
 
-    test("the full Field graph reaches multiplicative associativity through Hemiring > Semigroup(*)") {
-        val paths = brokenLaws.node(LawMode.FULL).verify().root.leaves().map { it.shortPath() }
-        paths.filter { it.last() == "associativity (*)" } shouldContainExactly listOf(
+    test("every path to multiplicative associativity goes through a semigroup on *, and it runs once") {
+        val report = brokenLaws.verify()
+        val paths = report.root.leaves().filter { it.label == "associativity (*)" }
+        paths.size shouldBe 12
+        paths.forEach { it.shortPath().dropLast(1).last() shouldBe "Semigroup" }
+        paths.count { it.sharedFrom == null } shouldBe 1
+        paths.first().shortPath() shouldContainExactly
             listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "Semigroup", "associativity (*)")
-        )
     }
 
-    test("the compact Field view keeps its recorded coverage, without multiplicative associativity") {
-        brokenLaws.laws().map { it.name } shouldNotContain "associativity (*)"
-        brokenLaws.node(LawMode.COMPACT).flatten().map { it.name } shouldContainExactly
-            brokenLaws.laws().map { it.name }
-    }
-
-    test("a non-associative multiplication fails exactly that leaf and its ancestors in full mode") {
-        val report = brokenLaws.verify(LawMode.FULL)
+    test("a non-associative multiplication fails exactly that check, and only branches above it fail") {
+        val report = brokenLaws.verify()
 
         report.status shouldBe LawStatus.FAILED
-        report.counts.failed shouldBe 1
         report.counts.errored shouldBe 0
-        report.problems.single().shortPath() shouldContainExactly
-            listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "Semigroup", "associativity (*)")
+        report.problems.map { it.label }.toSet() shouldBe setOf("associativity (*)")
+        report.problems.count { it.sharedFrom == null } shouldBe 1
 
-        // Every branch on the failing path fails; every other branch passes.
+        // Every branch on a failing path fails; every other branch passes.
         fun walk(node: NodeReport, onPath: Boolean) {
             if (node is NodeReport.BranchReport) {
                 node.status shouldBe if (onPath) LawStatus.FAILED else LawStatus.PASSED
@@ -110,24 +103,24 @@ class FieldLawGraphSpec : FunSpec({
         walk(report.root, onPath = true)
     }
 
-    test("the same structure passes the compact view, which does not check multiplicative associativity") {
-        brokenLaws.verify(LawMode.COMPACT).status shouldBe LawStatus.PASSED
-    }
-
-    test("a structure violating several axioms reports every resulting failure") {
+    test("a structure violating several axioms reports every resulting failure, each checked once") {
         val report = FieldLaws(
             subtractionField,
             ArbRational.small,
             RationalAlgebras.eqRational,
             RationalAlgebras.printableRationalPretty
-        ).verify(LawMode.FULL)
+        ).verify()
 
         report.status shouldBe LawStatus.FAILED
-        report.problems.map { it.shortPath() } shouldContainExactlyInAnyOrder listOf(
+        // a - b: not associative or commutative; 0 is only a right identity (0 - a = -a); -a is not an inverse
+        // ((-a) - a = -2a); and left division a \ b = (-a) - b does not solve a - x = b.
+        report.problems.filter { it.sharedFrom == null }.map { it.shortPath() } shouldContainExactlyInAnyOrder listOf(
             listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "CommutativeMonoid", "Monoid", "Semigroup", "associativity (+)"),
-            listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "CommutativeMonoid", "Monoid", "identity (+)"),
-            listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "CommutativeMonoid", "commutativity (+)"),
-            listOf("Field", "DivisionRing", "Ring", "Rng", "invertibility (+)")
+            listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "CommutativeMonoid", "Monoid", "NonAssociativeMonoid", "identity", "left identity (+)"),
+            listOf("Field", "DivisionRing", "Ring", "Rng", "Hemiring", "CommutativeMonoid", "CommutativeSemigroup", "commutativity (+)"),
+            listOf("Field", "DivisionRing", "Ring", "Rng", "AbelianGroup", "Group", "Loop", "Quasigroup", "left-division (+, \\)"),
+            listOf("Field", "DivisionRing", "Ring", "Rng", "AbelianGroup", "Group", "invertibility", "left invertibility (+)"),
+            listOf("Field", "DivisionRing", "Ring", "Rng", "AbelianGroup", "Group", "invertibility", "right invertibility (+)")
         )
     }
 })

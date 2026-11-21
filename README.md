@@ -36,7 +36,7 @@ fun main() {
     // You can preface add and reciprocal with RationalField and not use the embedded run if you prefer.
     RationalField.run {
         val rHalf = Rational.of(1, 2)
-        val rOne = add(half, half)
+        val rOne = add(rHalf, rHalf)
         println(pr(rOne))              // prints 1
         val threeOverTwo = reciprocal(Rational.of(2, 3))
         println(pr(threeOverTwo))      // prints 3/2
@@ -50,8 +50,7 @@ test, nested the way the structure is built:
 ```kotlin
 class RationalFieldSpec : FunSpec({
     lawTests(
-        FieldLaws(RationalField, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty),
-        LawMode.FULL
+        FieldLaws(RationalField, ArbRational.small, RationalAlgebras.eqRational, RationalAlgebras.printableRationalPretty)
     )
 })
 ```

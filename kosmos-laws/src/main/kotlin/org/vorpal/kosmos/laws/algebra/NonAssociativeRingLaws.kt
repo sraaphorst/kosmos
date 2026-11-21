@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.NonAssociativeRing
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.DistributivityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -24,26 +23,23 @@ class NonAssociativeRingLaws<A : Any>(
     private val arb: Arb<A>,
     private val eq: Eq<A> = Eq.default(),
     private val pr: Printable<A> = Printable.default()
-): StructuredLawSuite {
+): LawSuite {
 
     override val name = suiteName("NonAssociativeRing",
         ring.add.op.symbol, ring.mul.op.symbol)
 
     override val binding = LawBinding.of(this, ring, arb, eq, pr)
 
-    private val structureLaws: List<TestingLaw> =
+    private val structureLaws: List<LawComponent> =
         listOf(DistributivityLaw(ring.mul.op, ring.add.op, arb, eq, pr))
 
     /**
      * Compact: only distributivity.
      * Full: the full additive abelian group and multiplicative non-associative monoid graphs come first.
      */
-    override fun children(mode: LawMode): List<LawNode> =
-        when (mode) {
-            LawMode.COMPACT -> structureLaws.asNodes()
-            LawMode.FULL -> listOf(
-                AbelianGroupLaws(ring.add, arb, eq, pr).node(LawMode.FULL),
-                NonAssociativeMonoidLaws(ring.mul, arb, eq, pr).node(LawMode.FULL)
-            ) + structureLaws.asNodes()
-        }
+    override fun children(): List<LawNode> =
+        listOf(
+            AbelianGroupLaws(ring.add, arb, eq, pr).node(),
+            NonAssociativeMonoidLaws(ring.mul, arb, eq, pr).node()
+        ) + structureLaws.asNodes()
 }

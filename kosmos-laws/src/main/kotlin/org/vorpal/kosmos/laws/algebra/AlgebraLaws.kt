@@ -5,10 +5,9 @@ import org.vorpal.kosmos.algebra.structures.Algebra
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.render.Printable
 import org.vorpal.kosmos.laws.LawBinding
-import org.vorpal.kosmos.laws.LawMode
+import org.vorpal.kosmos.laws.LawComponent
 import org.vorpal.kosmos.laws.LawNode
-import org.vorpal.kosmos.laws.StructuredLawSuite
-import org.vorpal.kosmos.laws.TestingLaw
+import org.vorpal.kosmos.laws.LawSuite
 import org.vorpal.kosmos.laws.asNodes
 import org.vorpal.kosmos.laws.property.AssociativityLaw
 import org.vorpal.kosmos.laws.suiteName
@@ -26,7 +25,7 @@ class AlgebraLaws<R : Any, A : Any>(
     eqA: Eq<A> = Eq.default(),
     prR: Printable<R> = Printable.default(),
     prA: Printable<A> = Printable.default(),
-) : StructuredLawSuite {
+) : LawSuite {
 
     private val scalarDescription =
         "R[${algebra.scalars.add.op.symbol}${algebra.scalars.mul.op.symbol}]"
@@ -47,14 +46,14 @@ class AlgebraLaws<R : Any, A : Any>(
         algebra, scalarArb, algebraArb, eqR, eqA, prR, prA
     )
 
-    private val structureLaws: List<TestingLaw> = listOf(
+    private val structureLaws: List<LawComponent> = listOf(
         AssociativityLaw(
             algebra.mul.op, algebraArb, eqA, prA
         )
     )
 
-    override fun children(mode: LawMode): List<LawNode> =
-        listOf(nonAssociativeAlgebraLaws.node(mode)) +
+    override fun children(): List<LawNode> =
+        listOf(nonAssociativeAlgebraLaws.node()) +
             structureLaws.asNodes()
 
 }
