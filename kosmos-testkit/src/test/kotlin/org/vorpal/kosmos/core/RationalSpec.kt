@@ -54,9 +54,7 @@ private val absRational = Endo<Rational>("|·|") { it.abs() }
  * The structure laws draw from [ArbRational.mixed], small and 64-bit rationals together.
  */
 class RationalSpec : FunSpec({
-
     lawTests(lawGraph("ℚ") {
-
         branch("structures") {
             suite(OrderedFieldLaws(q, RationalRelations.RationalTotalOrder, arb, eq, pr))
             suite(StrictTotalOrderLaws(RationalRelations.RationalTotalStrictOrder.strictRelation, arb, eq, pr))

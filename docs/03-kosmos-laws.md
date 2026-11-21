@@ -74,6 +74,11 @@ matcher reads as `FAILED`, like `lawCheck`, while an exception from the code und
 Reusable law classes leave that flag off and signal falsity only with `lawCheck`. A check that more than one
 structure needs belongs in a reusable law class instead.
 
+**Where tests live.** Every spec about a Kosmos structure or algorithm is a law graph: reusable suites plus local
+laws, so nothing is checked outside the graph. The exception is the law framework's own specs (`kosmos-laws` tests,
+`laws/graph`, `laws/inventory`, `testing/laws`): they test the runner, sessions, deduplication and reports from the
+outside, often with laws built to fail, so they stay plain Kotest tests.
+
 `throwsA<T> { ... }` is true exactly when the block throws a `T`. A `CancellationException` is never an answer: it
 propagates, as it does everywhere in the runner.
 
@@ -107,7 +112,8 @@ override suspend fun test() {
 - `lawCheck(holds) { message }` throws a `LawViolation` when `holds` is false. The message is built only on failure.
   (Kotest's `withClue` does not attach its clue to exceptions it did not create, so the message goes here.)
 - `lawCheckAll(gen, render)` is Kotest's `checkAll` with the same budget and shrinking, plus: under the runner it uses
-  the leaf's seed, and it records the final (shrunk) failing input, rendered with the law's `Printable`.
+  the leaf's seed, and it records the final (shrunk) failing input, rendered with the law's `Printable`. It takes one
+  to six generators, optionally after an iteration count (`lawCheckAll(100, gen) { ... }`), as `checkAll` does.
 - Anything else that is thrown (the operation, the generator, the equality) means the law could not be evaluated.
 
 ## Suites are graphs

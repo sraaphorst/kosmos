@@ -1,9 +1,12 @@
 package org.vorpal.kosmos.analysis
 
-import io.kotest.core.spec.style.StringSpec
+import io.kotest.core.spec.style.FunSpec
 import org.vorpal.kosmos.analysis.Derivative.dReal
 import org.vorpal.kosmos.core.math.Real
+import org.vorpal.kosmos.laws.lawGraph
 import org.vorpal.kosmos.linear.values.Vec2
+import org.vorpal.kosmos.testing.laws.lawTests
+import org.vorpal.kosmos.testing.laws.local
 import org.vorpal.kosmos.testutils.shouldBeApproximately
 
 /**
@@ -14,51 +17,52 @@ import org.vorpal.kosmos.testutils.shouldBeApproximately
  *  ∇f = (2x, 2y)
  *  and  D_v f(p) = ∇f(p) · v
  */
-class DerivativeSpec : StringSpec({
+class DerivativeSpec : FunSpec({
+    lawTests(lawGraph("derivatives") {
+        val space = vec2Space  // assumed to exist, the usual ℝ² vector space
 
-    val space = vec2Space  // assumed to exist, the usual ℝ² vector space
+        val f = ScalarField.of(space) { p: Vec2<Real> ->
+            p.x * p.x + p.y * p.y
+        }
 
-    val f = ScalarField.of(space) { p: Vec2<Real> ->
-        p.x * p.x + p.y * p.y
-    }
+        local("directional derivative matches analytical gradient") {
+            val p = Vec2(1.0, 2.0)
+            val v = Vec2(3.0, -1.0)
 
-    "directional derivative matches analytical gradient" {
-        val p = Vec2(1.0, 2.0)
-        val v = Vec2(3.0, -1.0)
+            val expected = 2 * p.x * v.x + 2 * p.y * v.y
 
-        val expected = 2 * p.x * v.x + 2 * p.y * v.y
+            val numeric = Derivative.derivativeAt(
+                space,
+                f::invoke,
+                p,
+                v,
+                1e-6
+            )
 
-        val numeric = Derivative.derivativeAt(
-            space,
-            f::invoke,
-            p,
-            v,
-            1e-6
-        )
+            numeric shouldBeApproximately expected
+        }
 
-        numeric shouldBeApproximately expected
-    }
+        local("dReal produces covector field equivalent to gradient") {
+            val df = f.dReal()
 
-    "dReal produces covector field equivalent to gradient" {
-        val df = f.dReal()
+            val p = Vec2(1.5, -2.0)
+            val v = Vec2(1.0, 1.0)
 
-        val p = Vec2(1.5, -2.0)
-        val v = Vec2(1.0, 1.0)
+            val expected = 2 * p.x * v.x + 2 * p.y * v.y
+            val result = df(p)(v)
 
-        val expected = 2 * p.x * v.x + 2 * p.y * v.y
-        val result = df(p)(v)
+            result shouldBeApproximately expected
+        }
 
-        result shouldBeApproximately expected
-    }
+        local("gradient corresponds to (2x, 2y)") {
+            val df = f.dReal()
+            val p = Vec2(1.0, 2.0)
 
-    "gradient corresponds to (2x, 2y)" {
-        val df = f.dReal()
-        val p = Vec2(1.0, 2.0)
+            val gradX = df(p)(Vec2(1.0, 0.0))
+            val gradY = df(p)(Vec2(0.0, 1.0))
 
-        val gradX = df(p)(Vec2(1.0, 0.0))
-        val gradY = df(p)(Vec2(0.0, 1.0))
-
-        gradX shouldBeApproximately (2 * p.x)
-        gradY shouldBeApproximately (2 * p.y)
-    }
+            gradX shouldBeApproximately (2 * p.x)
+            gradY shouldBeApproximately (2 * p.y)
+        }
+    })
 })
