@@ -2,9 +2,15 @@ package org.vorpal.kosmos.testing.laws
 
 import io.kotest.core.names.DuplicateTestNameMode
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContain
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldContainExactly
+import io.kotest.matchers.collections.shouldNotContain
+import io.kotest.matchers.string.shouldContain
 import io.kotest.matchers.shouldBe
 import org.vorpal.kosmos.laws.LawNode
+import org.vorpal.kosmos.laws.LawSession
+import org.vorpal.kosmos.laws.lawCheck
 import org.vorpal.kosmos.laws.TestingLaw
 import org.vorpal.kosmos.laws.asNode
 import org.vorpal.kosmos.laws.lawGraph
@@ -28,7 +34,7 @@ class KotestLawsSpec : FunSpec({
     duplicateTestNameMode = DuplicateTestNameMode.Error
 
     val sharedNode = shared.asNode()
-    lawTests(lawGraph("Graph") {
+    val graph = lawGraph("Graph") {
         branch("Left") { node(sharedNode) }
         branch("Right") { node(sharedNode) }
         law(first)
@@ -38,14 +44,45 @@ class KotestLawsSpec : FunSpec({
         skipped(Counting("a"), "x")
         law("a (skipped: x)", Counting("active"))
         skipped(Counting("never"), "not applicable")
-    })
+    }
+    lawTests(graph)
 
     context("Nested") {
         lawTests(LawNode.branch("Inner", Counting("inner").asNode()))
     }
 
-    test("the shared leaf ran once for both displayed paths") {
+    test("the shared leaf ran once") {
         shared.runs shouldBe 1
+    }
+
+    test("a check reached along two paths is registered once, at its first path; its other paths are kept") {
+        val session = LawSession(graph)
+        // Left and Left > shared are registered; Right holds only the repeat, so neither it nor the leaf is.
+        val registered = registeredPositions(session)
+        registered shouldContainAll listOf(emptyList(), listOf(0), listOf(0, 0))
+        registered shouldNotContain listOf(1)
+        registered shouldNotContain listOf(1, 0)
+        // Every other leaf is distinct, so it is registered (skipped ones as disabled tests).
+        (2..7).forEach { registered shouldContain listOf(it) }
+        session.uniqueLeafIndices.size shouldBe session.leafIndices.size - 1
+
+        session.sharedPaths(listOf(0, 0)).map { it.toString() } shouldContainExactly listOf("Graph > Right > shared")
+        session.sharedPaths(listOf(2)) shouldBe emptyList()
+    }
+
+    test("a failing check's message lists the other paths that reach it") {
+        // One node reached along twelve paths (an unbound law is shared only as the same node).
+        val failing = TestingLaw.named("always false") { lawCheck(false) { "nope" } }.asNode()
+        val root = lawGraph("Root") {
+            (1..12).forEach { i -> branch("B$i") { node(failing) } }
+        }
+        val session = LawSession(root)
+        val message = failureMessage(session.leaf(listOf(0, 0)), session.sharedPaths(listOf(0, 0)))
+        message shouldContain "FAILED: Root > B1 > always false"
+        message shouldContain "also reached via 11 other path(s)"
+        message shouldContain "Root > B2 > always false"
+        message shouldContain "... and 1 more"
+        registeredPositions(session) shouldBe setOf(emptyList(), listOf(0), listOf(0, 0))
     }
 
     test("separately built leaves with the same label both ran, under distinct names") {

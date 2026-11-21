@@ -15,7 +15,7 @@ This page covers how to write a law spec, how law suites are structured, and wha
 | `LawNode` | A law graph: `Leaf(law)` or `Branch(label, children)`. A node may appear under several parents. |
 | `LawRunner` / `LawSession` | Run a graph (all at once / one leaf at a time) and produce a `LawReport`. |
 | `LawReport` | The result tree: status, counts, failure details, seed. Renders as text or JSON. |
-| `lawTests(...)` (testkit) | Registers a graph in a Kotest `FunSpec`: one container per branch, one test per law. |
+| `lawTests(...)` (testkit) | Registers a graph in a Kotest `FunSpec`: one container per branch, one test per distinct check. |
 
 ## Writing a spec
 
@@ -170,7 +170,8 @@ their checks. A law that restricts its generator (the inverse laws drop `exclude
 inside the check, so its binding is the original generator plus `exclude`. Nothing is reused across runs.
 
 `LawReport.counts` counts occurrences (one per path); `LawReport.executions` counts what ran. For example, the
-`StarAlgebra(ℚ over ℚ)` graph has 394 law occurrences and 39 executions.
+`StarAlgebra(ℚ over ℚ)` graph has 394 law occurrences and 39 executions. Kotest shows one test per distinct check
+(see [Kotest integration](#kotest-integration-kosmos-testkit)).
 
 ## Outcomes
 
@@ -237,9 +238,12 @@ are missing and why (`LeafDiagnostics.unavailable`).
 
 `lawTests(root)` / `lawTests(suite)` registers the graph in a `FunSpec`, at the root or inside a `context`.
 
-- One `LawSession` per execution of the root container: shared checks run once, and a new run starts afresh.
-- Running a single law with a Kotest filter executes it even if the other paths to the same shared check are
-  filtered out. (Selecting a single law from the IntelliJ gutter has not been verified yet.)
+- **One test per distinct check.** A check reached along several paths is registered once, at its first path
+  (depth-first); containers holding only repeats are not registered. So Kotest's count is the number of distinct
+  checks, not the number of paths. When that test fails, its message lists the other paths that reach the same
+  check, and `verify()` still reports every path.
+- One `LawSession` per execution of the root container: each check runs once, and a new run starts afresh.
+  (Selecting a single law from the IntelliJ gutter has not been verified yet.)
 - A retried test executes the law again rather than reusing the previous attempt.
 - Repeated sibling labels get ` [2]`, ` [3]`, ... so every Kotest name is unique.
 
@@ -247,7 +251,7 @@ Selecting one law from Gradle uses Kotest's test filter (a regex over the test p
 match too):
 
 ```
-kotest_filter_tests='.*Graph( -- Right( -- shared)?)?' ./gradlew :kosmos-testkit:test --tests 'org.vorpal.kosmos.testing.laws.KotestLawsSpec'
+kotest_filter_tests='.*Graph( -- Left( -- shared)?)?' ./gradlew :kosmos-testkit:test --tests 'org.vorpal.kosmos.testing.laws.KotestLawsSpec'
 ```
 
 Gradle's own `--tests` filter selects specs, not nested tests.

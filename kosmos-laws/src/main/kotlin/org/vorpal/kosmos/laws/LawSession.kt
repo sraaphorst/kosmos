@@ -62,6 +62,18 @@ class LawSession(val root: LawNode, val config: LawRunConfig = LawRunConfig()) {
     /** Positions of all leaf occurrences, depth-first. */
     val leafIndices: List<List<Int>> get() = leaves.keys.toList()
 
+    /**
+     * Positions of the distinct checks, depth-first: each leaf occurrence that is its own canonical leaf (the first
+     * occurrence of its binding). Every other occurrence shares the result of one of these.
+     */
+    val uniqueLeafIndices: List<List<Int>> get() = leaves.keys.filter { canonical.getValue(it) == it }
+
+    /** The paths of every other occurrence of the check at [indices] (the occurrences that share its result). */
+    fun sharedPaths(indices: List<Int>): List<LawPath> {
+        val target = canonical[indices] ?: throw IllegalArgumentException("No leaf at $indices in ${root.label}.")
+        return canonical.entries.filter { (at, t) -> t == target && at != indices }.map { pathOf(it.key) }
+    }
+
     /** Number of leaves executed so far in this session. */
     var executions: Int = 0
         private set
