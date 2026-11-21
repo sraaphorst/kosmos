@@ -301,6 +301,8 @@ baseline; kept by decision).
 - Specs for suites that no spec exercises yet: the lattice family, `BooleanAlgebraLaws`,
   `NonAssociativeDivisionAlgebraLaws`, `RngHomomorphismLaws`, `NonAssociativeRngHomomorphismLaws`,
   `EquivalenceRelationLaws`, `SetoidLaws`; `InnerProductSpaceLaws` has no instance yet.
+  (Done in #61 step 5: `LatticeSpec`, `RelationsSpec`, `AlgebraicPropertiesSpec`, `EuclideanLatticeSpec`. The
+  division-algebra and homomorphism suites turned out to be exercised through the suites that compose them.)
 - New laws written in specs should use `lawCheck` / `lawCheckAll`, so they get Failed vs Errored, seeds and replay.
 
 ## Follow-up: #61 step 1 (complete suites)

@@ -1,3 +1,5 @@
+package org.vorpal.kosmos.laws.property
+
 import io.kotest.property.Arb
 import org.vorpal.kosmos.core.Eq
 import org.vorpal.kosmos.core.ops.BinOp
